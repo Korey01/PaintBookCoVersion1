@@ -48,15 +48,18 @@ export default function Support(){
             <div className="text-lg font-semibold">Contact support</div>
             <div>
               <Label>Email</Label>
-              <Input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/>
+              <Input aria-invalid={!!errors.email} className={errors.email? 'border-destructive':''} value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/>
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </div>
             <div>
               <Label>Subject</Label>
-              <Input value={subject} onChange={e=>setSubject(e.target.value)} />
+              <Input aria-invalid={!!errors.subject} className={errors.subject? 'border-destructive':''} value={subject} onChange={e=>setSubject(e.target.value)} />
+              {errors.subject && <p className="text-xs text-red-500 mt-1">{errors.subject}</p>}
             </div>
             <div>
               <Label>Message</Label>
-              <Textarea rows={5} value={message} onChange={e=>setMessage(e.target.value)} />
+              <Textarea aria-invalid={!!errors.message} className={errors.message? 'border-destructive':''} rows={5} value={message} onChange={e=>setMessage(e.target.value)} />
+              {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
             </div>
             <Button onClick={submit}>Submit ticket</Button>
           </CardContent>

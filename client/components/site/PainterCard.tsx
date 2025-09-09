@@ -44,13 +44,18 @@ export default function PainterCard({ painter }: { painter: Painter }) {
           <BadgeCheck className="h-4 w-4 text-primary"/> ID verified
           <ShieldCheck className="h-4 w-4 text-primary"/> Insured
         </div>
-        <div className="flex gap-2 pt-2">
+        <div className="flex items-center gap-2 pt-2">
           <Button asChild className="flex-1">
             <Link to={`/painter/${painter.id}`}>View Profile</Link>
           </Button>
           <Button asChild variant="secondary" className="flex-1">
             <Link to={`/post-job?painter=${painter.id}`}>Request Quote</Link>
           </Button>
+          <button
+            aria-label="Save to favourites"
+            onClick={(e)=>{ e.preventDefault(); const key='paintbook:favs'; const cur: string[] = JSON.parse(localStorage.getItem(key)||'[]'); const next = cur.includes(painter.id) ? cur.filter(id=>id!==painter.id) : [...cur, painter.id]; localStorage.setItem(key, JSON.stringify(next)); }}
+            className="ml-auto rounded-full border px-3 py-2 text-sm hover:bg-secondary"
+          >♡</button>
         </div>
       </CardContent>
     </Card>

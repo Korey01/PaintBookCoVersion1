@@ -61,6 +61,16 @@ export default function Estimator() {
 
   const materialCost = useMemo(() => Math.round(litres * pricePerLitre), [litres, pricePerLitre]);
 
+  const brandEstimates = useMemo(() => {
+    return Object.entries(BRAND_INFO).map(([name, info]) => {
+      const { coverage, pricePerLitre } = info[paintType];
+      const perCoat = wallArea / coverage;
+      const litres = Math.ceil((perCoat * coats) * 10) / 10;
+      const cost = Math.round(litres * pricePerLitre);
+      return { name, coverage, pricePerLitre, litres, cost };
+    });
+  }, [paintType, wallArea, coats]);
+
   function attachToPost() {
     const qp = new URLSearchParams({
       estimate: JSON.stringify({ length, width, height, coats, openings, openingArea, coverage, litres, materialCost })

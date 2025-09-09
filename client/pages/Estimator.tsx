@@ -164,6 +164,7 @@ export default function Estimator() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Button onClick={attachToPost}>Attach to Post Job <ArrowRight className="ml-2 h-4 w-4"/></Button>
               <Button variant="outline" onClick={()=>navigate('/find-painter')}>Find a Painter</Button>
+              <Button variant="secondary" onClick={()=>{ const list = JSON.parse(localStorage.getItem('paintbook:estimates')||'[]'); list.unshift({ createdAt: new Date().toISOString(), wallArea, coats, litres, materialCost }); localStorage.setItem('paintbook:estimates', JSON.stringify(list)); }}>Save estimate</Button>
             </div>
           </CardContent>
         </Card>

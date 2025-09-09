@@ -15,7 +15,7 @@ export default function FindPainters() {
   const [price, setPrice] = useState<number[]>([15, 40]);
   const [minRating, setMinRating] = useState(4);
   const [available, setAvailable] = useState(true);
-  const [tier, setTier] = useState<string>("");
+  const [tier, setTier] = useState<string>("any");
 
   const filtered = useMemo(() => {
     const loc = params.get("location")?.toLowerCase() || "";
@@ -26,7 +26,7 @@ export default function FindPainters() {
       const rateLow = parseInt(p.priceRange.replace(/[^0-9]/g, "").slice(0,2));
       const inPrice = rateLow >= price[0] && rateLow <= price[1];
       const inRating = p.rating >= minRating;
-      const inTier = !tier || p.tier === tier;
+      const inTier = tier === "any" || p.tier === tier;
       return inLoc && inType && inPrice && inRating && inTier;
     });
   }, [params, price, minRating, tier]);
@@ -57,10 +57,10 @@ export default function FindPainters() {
           <Label className="text-sm">Experience Tier</Label>
           <Select value={tier} onValueChange={setTier}>
             <SelectTrigger>
-              <SelectValue placeholder="Any" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any</SelectItem>
+              <SelectItem value="any">Any</SelectItem>
               <SelectItem value="Starter">Starter</SelectItem>
               <SelectItem value="Pro">Pro</SelectItem>
               <SelectItem value="Premium">Premium</SelectItem>

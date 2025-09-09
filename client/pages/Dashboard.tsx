@@ -180,7 +180,7 @@ export default function Dashboard(){
                       ) : (
                         <Button onClick={()=>expressInterest(j.id)}>Express interest</Button>
                       )}
-                      <Button variant="outline"><Mail className="mr-2 h-4 w-4"/> Message</Button>
+                      <a href={`/messages?job=${j.id}`} className="inline-flex items-center gap-2 rounded-full border border-primary px-4 py-2 text-primary hover:bg-primary/10"><Mail className="h-4 w-4"/> Message</a>
                     </div>
                   </div>
                 </CardContent>

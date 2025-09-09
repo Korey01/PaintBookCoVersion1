@@ -11,17 +11,33 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import Layout from "@/components/site/Layout";
+import FindPainters from "./pages/FindPainters";
+import Placeholder from "./pages/Placeholder";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/find-painter" element={<FindPainters />} />
+            <Route path="/post-job" element={<Placeholder />} />
+            <Route path="/estimator" element={<Placeholder />} />
+            <Route path="/join-painter" element={<Placeholder />} />
+            <Route path="/dashboard" element={<Placeholder />} />
+            <Route path="/help" element={<Placeholder />} />
+            <Route path="/privacy" element={<Placeholder />} />
+            <Route path="/terms" element={<Placeholder />} />
+            <Route path="/cookies" element={<Placeholder />} />
+            <Route path="/painter/:id" element={<Placeholder />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

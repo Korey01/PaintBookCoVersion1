@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/privacy" element={<Placeholder />} />
             <Route path="/terms" element={<Placeholder />} />
             <Route path="/cookies" element={<Placeholder />} />
+            <Route path="/about" element={<About />} />
             <Route path="/painter/:id" element={<PainterProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

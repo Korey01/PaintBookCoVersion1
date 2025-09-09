@@ -44,15 +44,15 @@ const samplePainters: Painter[] = [
 
 export default function Index() {
   const navigate = useNavigate();
+  const [jobType, setJobType] = useState<string>("");
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const location = String(form.get("location") || "").trim();
-    const type = String(form.get("type") || "").trim();
     const q = new URLSearchParams();
     if (location) q.set("location", location);
-    if (type) q.set("type", type);
+    if (jobType) q.set("type", jobType);
     navigate(`/find-painter?${q.toString()}`);
   }
 

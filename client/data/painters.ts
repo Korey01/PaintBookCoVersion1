@@ -9,7 +9,7 @@ export type PainterFull = Painter & {
   certifications: string[];
   services: Service[];
   portfolio: string[];
-  reviews: Review[];
+  reviewList: Review[];
   availability: string[];
 };
 
@@ -37,7 +37,7 @@ export const painters: PainterFull[] = [
       "https://images.unsplash.com/photo-1503951458645-643d53bfd28f?q=80&w=1974&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=1974&auto=format&fit=crop",
     ],
-    reviews: [
+    reviewList: [
       { id: "r1", author: "Ella R.", rating: 5, comment: "Faultless finish and friendly.", date: "2024-05-18" },
       { id: "r2", author: "Josh M.", rating: 5, comment: "On time and very tidy.", date: "2024-02-09" },
     ],
@@ -64,7 +64,7 @@ export const painters: PainterFull[] = [
       "https://images.unsplash.com/photo-1541976076758-347942db1970?q=80&w=1887&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=1974&auto=format&fit=crop",
     ],
-    reviews: [
+    reviewList: [
       { id: "r3", author: "Monica P.", rating: 4.5, comment: "Great prep and weatherproofing.", date: "2024-03-02" },
     ],
     availability: ["Next week"],
@@ -90,7 +90,7 @@ export const painters: PainterFull[] = [
       "https://images.unsplash.com/photo-1556911073-52527ac437f5?q=80&w=1974&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1523419409543-8fc58a320246?q=80&w=1887&auto=format&fit=crop",
     ],
-    reviews: [
+    reviewList: [
       { id: "r4", author: "Rajan S.", rating: 5, comment: "Kitchen looks brand new!", date: "2024-01-14" },
     ],
     availability: ["This week"],

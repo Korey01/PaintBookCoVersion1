@@ -48,12 +48,17 @@ const App = () => (
             <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/disputes" element={<Disputes />} />
-            <Route path="/help" element={<Placeholder />} />
-            <Route path="/privacy" element={<Placeholder />} />
-            <Route path="/terms" element={<Placeholder />} />
-            <Route path="/cookies" element={<Placeholder />} />
+            <Route path="/help" element={<Support />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/cookies" element={<Cookies />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/estimates/saved" element={<Estimates />} />
             <Route path="/about" element={<About />} />
             <Route path="/painter/:id" element={<PainterProfile />} />
+            <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -5,43 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, BadgeCheck, ArrowRight, Quote, Sparkles, Calculator, MapPin, PaintBucket } from "lucide-react";
-import PainterCard, { Painter } from "@/components/site/PainterCard";
-
-const samplePainters: Painter[] = [
-  {
-    id: "1",
-    name: "Amina Ade - ColourCraft",
-    photo: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1887&auto=format&fit=crop",
-    location: "London",
-    priceRange: "£20–£35/hr",
-    rating: 4.9,
-    reviews: 142,
-    skills: ["Interior", "Feature walls", "Plaster repair"],
-    tier: "Premium",
-  },
-  {
-    id: "2",
-    name: "Lucas Khan - PrimeCoat",
-    photo: "https://images.unsplash.com/photo-1523419409543-8fc58a320246?q=80&w=1887&auto=format&fit=crop",
-    location: "Manchester",
-    priceRange: "£18–£30/hr",
-    rating: 4.7,
-    reviews: 98,
-    skills: ["Exterior", "Fences", "Decking"],
-    tier: "Pro",
-  },
-  {
-    id: "3",
-    name: "Maya Cole - StudioHue",
-    photo: "https://images.unsplash.com/photo-1503951458645-643d53bfd28f?q=80&w=1974&auto=format&fit=crop",
-    location: "Birmingham",
-    priceRange: "£22–£38/hr",
-    rating: 5.0,
-    reviews: 63,
-    skills: ["Kitchens", "Cabinets", "Wallpaper"],
-    tier: "Premium",
-  },
-];
+import PainterCard from "@/components/site/PainterCard";
+import { painters } from "@/data/painters";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -61,7 +26,7 @@ export default function Index() {
     <div className="space-y-24">
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <img src="https://images.unsplash.com/photo-1504148455329-4ca38794061b?q=80&w=2069&auto=format&fit=crop" alt="Painter at work" className="h-[540px] w-full object-cover opacity-30"/>
+          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F6a440303ba6e42bd817b07b0544d4451?format=webp&width=1600" alt="Painter at work" className="h-[540px] w-full object-cover opacity-40"/>
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background"/>
         </div>
         <div className="container mx-auto px-4 pt-16 pb-12">
@@ -110,7 +75,7 @@ export default function Index() {
         <h2 className="text-2xl font-bold">Top rated near you</h2>
         <p className="mt-1 text-muted-foreground">Compare profiles at a glance and contact instantly.</p>
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {samplePainters.map((p) => (
+          {painters.slice(0,3).map((p) => (
             <PainterCard key={p.id} painter={p} />
           ))}
         </div>
@@ -118,7 +83,7 @@ export default function Index() {
 
       <section className="container mx-auto px-4">
         <div className="grid items-center gap-8 md:grid-cols-2">
-          <img src="https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=1974&auto=format&fit=crop" alt="Estimate tools" className="rounded-xl shadow-lg"/>
+          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fc1db86da96eb40bd97ce4e112a273df4?format=webp&width=1200" alt="Estimate tools" className="rounded-xl shadow-lg"/>
           <div>
             <h3 className="text-2xl font-bold">Estimate your paint in minutes</h3>
             <p className="mt-2 text-muted-foreground">Enter room dimensions, number of coats and openings. Get litres required and a baseline material cost. Attach to your job post with one click.</p>

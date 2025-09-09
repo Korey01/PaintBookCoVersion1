@@ -91,7 +91,12 @@ export default function Estimator() {
   }, [length, width, height, coats, openings, openingArea, coverage, pricePerLitre]);
 
   return (
-    <div className="container mx-auto px-4 py-10">
+    <div className="relative">
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-[-5]">
+        <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fe18bb9f89de1478cadd8e962e4c0ccbc?format=webp&width=2000" alt="" className="h-full w-full object-cover object-left" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent" />
+      </div>
+      <div className="container mx-auto px-4 py-10">
       <div className="mb-6 flex items-center gap-3">
         <Calculator className="h-6 w-6 text-primary"/>
         <h1 className="text-2xl font-bold">Paint Estimator</h1>
@@ -185,6 +190,7 @@ export default function Estimator() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

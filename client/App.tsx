@@ -34,7 +34,7 @@ const App = () => (
             <Route path="/estimator" element={<Estimator />} />
             <Route path="/join-painter" element={<JoinPainter />} />
             <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
-            <Route path="/dashboard" element={<Placeholder />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/help" element={<Placeholder />} />
             <Route path="/privacy" element={<Placeholder />} />
             <Route path="/terms" element={<Placeholder />} />

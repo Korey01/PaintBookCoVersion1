@@ -9,6 +9,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 function num(v: string | number) { const n = typeof v === 'number' ? v : parseFloat(v || '0'); return isNaN(n) ? 0 : n; }
 
+type PaintType = "interior_matt" | "satinwood" | "exterior_masonry";
+
+const BRAND_INFO: Record<string, Record<PaintType, { coverage: number; pricePerLitre: number }>> = {
+  "Dulux": {
+    interior_matt: { coverage: 13, pricePerLitre: 20 },
+    satinwood: { coverage: 12, pricePerLitre: 22 },
+    exterior_masonry: { coverage: 11, pricePerLitre: 21 },
+  },
+  "JOHNSTONE'S": {
+    interior_matt: { coverage: 12, pricePerLitre: 18 },
+    satinwood: { coverage: 11, pricePerLitre: 19 },
+    exterior_masonry: { coverage: 10, pricePerLitre: 19 },
+  },
+  "wilko": {
+    interior_matt: { coverage: 10, pricePerLitre: 12 },
+    satinwood: { coverage: 9, pricePerLitre: 13 },
+    exterior_masonry: { coverage: 8, pricePerLitre: 12 },
+  },
+  "Leyland": {
+    interior_matt: { coverage: 12, pricePerLitre: 16 },
+    satinwood: { coverage: 11, pricePerLitre: 17 },
+    exterior_masonry: { coverage: 10, pricePerLitre: 17 },
+  },
+};
+
 export default function Estimator() {
   const navigate = useNavigate();
   const [params] = useSearchParams();

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, ArrowRight, CheckCircle2 } from "lucide-react";
+import { z } from "zod";
 
 export default function PostJob() {
   const navigate = useNavigate();
@@ -40,10 +41,41 @@ export default function PostJob() {
     });
   }
 
-  function next() { setStep((s)=> Math.min(3, (s+1) as Step)); }
+  const [errors, setErrors] = useState<Record<string,string>>({});
+
+  const schemaStep1 = z.object({
+    jobType: z.string().min(1, "Select a job type"),
+    desc: z.string().min(10, "Add at least 10 characters"),
+  });
+  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
+  const schemaStep2 = z.object({
+    budgetMin: z.number().min(0),
+    budgetMax: z.number().min(0),
+    postcode: z.string().regex(ukPostcode, "Enter a valid UK postcode (e.g. SW1A 1AA)"),
+  }).refine(v => (typeof v.budgetMin==='number' && typeof v.budgetMax==='number' ? v.budgetMax >= v.budgetMin : false), { message: "Max must be greater than min", path: ["budgetMax"] });
+  const schemaStep3 = z.object({
+    email: z.string().email("Enter a valid email"),
+    phone: z.string().min(7, "Enter a valid phone")
+  });
+
+  function next() {
+    if (step === 1) {
+      const r = schemaStep1.safeParse({ jobType, desc });
+      if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
+      setErrors({});
+    }
+    if (step === 2) {
+      const r = schemaStep2.safeParse({ budgetMin: budgetMin || 0, budgetMax: budgetMax || 0, postcode });
+      if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
+      setErrors({});
+    }
+    setStep((s)=> Math.min(3, (s+1) as Step));
+  }
   function back() { setStep((s)=> Math.max(1, (s-1) as Step)); }
 
   function submit() {
+    const r = schemaStep3.safeParse({ email, phone });
+    if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
     const job = { jobType, desc, budgetMin, budgetMax, postcode, email, phone, images, attachedEstimate, painter: prePainter, createdAt: new Date().toISOString() };
     const list = JSON.parse(localStorage.getItem('paintbook:jobs') || '[]');
     list.push(job);
@@ -70,7 +102,7 @@ export default function PostJob() {
             <div className="sm:col-span-2">
               <Label>Job type</Label>
               <Select value={jobType} onValueChange={setJobType}>
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!errors.jobType}>
                   <SelectValue placeholder="Select job type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -80,10 +112,12 @@ export default function PostJob() {
                   <SelectItem value="wallpaper">Wallpaper</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.jobType && <p className="text-xs text-red-500 mt-1">{errors.jobType}</p>}
             </div>
             <div className="sm:col-span-2">
               <Label>Short description</Label>
-              <Textarea value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="Share details for accurate quotes" rows={5}/>
+              <Textarea aria-invalid={!!errors.desc} className={errors.desc? 'border-destructive':''} value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="Share details for accurate quotes" rows={5}/>
+              {errors.desc && <p className="text-xs text-red-500 mt-1">{errors.desc}</p>}
             </div>
             <div className="sm:col-span-2">
               <Label className="mb-2 block">Upload area photos</Label>
@@ -113,15 +147,17 @@ export default function PostJob() {
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div>
               <Label>Budget min (£)</Label>
-              <Input type="number" value={budgetMin} onChange={(e)=>setBudgetMin(e.target.value ? Number(e.target.value): "")}/>
+              <Input type="number" min={0} aria-invalid={!!errors.budgetMin} className={errors.budgetMin? 'border-destructive':''} value={budgetMin} onChange={(e)=>setBudgetMin(e.target.value ? Number(e.target.value): "")}/>
             </div>
             <div>
               <Label>Budget max (£)</Label>
-              <Input type="number" value={budgetMax} onChange={(e)=>setBudgetMax(e.target.value ? Number(e.target.value): "")}/>
+              <Input type="number" min={0} aria-invalid={!!errors.budgetMax} className={errors.budgetMax? 'border-destructive':''} value={budgetMax} onChange={(e)=>setBudgetMax(e.target.value ? Number(e.target.value): "")}/>
+              {errors.budgetMax && <p className="text-xs text-red-500 mt-1">{errors.budgetMax}</p>}
             </div>
             <div>
               <Label>Postcode / address</Label>
-              <Input value={postcode} onChange={(e)=>setPostcode(e.target.value)} placeholder="e.g. SW1A 1AA"/>
+              <Input aria-invalid={!!errors.postcode} className={errors.postcode? 'border-destructive':''} value={postcode} onChange={(e)=>setPostcode(e.target.value)} placeholder="e.g. SW1A 1AA"/>
+              {errors.postcode && <p className="text-xs text-red-500 mt-1">{errors.postcode}</p>}
             </div>
             <div className="sm:col-span-2 flex justify-between">
               <Button variant="secondary" onClick={back}>Back</Button>
@@ -136,11 +172,13 @@ export default function PostJob() {
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div>
               <Label>Email</Label>
-              <Input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@example.com"/>
+              <Input type="email" aria-invalid={!!errors.email} className={errors.email? 'border-destructive':''} value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@example.com"/>
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </div>
             <div>
               <Label>Phone</Label>
-              <Input value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="07..."/>
+              <Input aria-invalid={!!errors.phone} className={errors.phone? 'border-destructive':''} value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="07..."/>
+              {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
             <div className="sm:col-span-2 rounded-lg bg-secondary p-4 text-sm">
               We'll notify nearby verified painters. Your contact is shared only after you accept a quote. Deposits are held in escrow for protection.

@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/join-painter" element={<JoinPainter />} />
             <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/disputes" element={<Disputes />} />
             <Route path="/help" element={<Placeholder />} />
             <Route path="/privacy" element={<Placeholder />} />
             <Route path="/terms" element={<Placeholder />} />

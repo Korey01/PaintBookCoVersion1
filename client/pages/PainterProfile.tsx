@@ -51,7 +51,7 @@ export default function PainterProfile(){
           <div className="mt-6">
             <h2 className="text-lg font-semibold">Reviews</h2>
             <div className="mt-2 grid gap-3">
-              {painter.reviews.map(r => (
+              {painter.reviewList.map(r => (
                 <Card key={r.id}>
                   <CardContent className="p-4 text-sm">
                     <div className="flex items-center gap-2">

@@ -20,7 +20,7 @@ export default function FindPainters() {
   const filtered = useMemo(() => {
     const loc = params.get("location")?.toLowerCase() || "";
     const type = params.get("type")?.toLowerCase() || "";
-    return PAINTERS.filter(p => {
+    return painters.filter(p => {
       const inLoc = !loc || p.location.toLowerCase().includes(loc);
       const inType = !type || p.skills.some(s => s.toLowerCase().includes(type));
       const rateLow = parseInt(p.priceRange.replace(/[^0-9]/g, "").slice(0,2));

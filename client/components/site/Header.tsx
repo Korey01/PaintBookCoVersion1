@@ -18,11 +18,13 @@ export default function Header() {
   return (
     <header className={`sticky top-0 z-40 w-full transition-all ${scrolled ? "backdrop-blur bg-background/70 border-b" : "bg-transparent"}`}>
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow">
-            <Paintbrush className="h-5 w-5" />
-          </span>
-          <span className="text-xl">PaintBookco</span>
+        <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight" aria-label="PaintBookco home">
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Ff85a8b4281414a85bdd042d944e0b3d9?format=webp&width=320"
+            alt="PaintBookco logo"
+            className="h-9 w-auto sm:h-10"
+          />
+          <span className="sr-only">PaintBookco</span>
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
           <NavLink to="/find-painter" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Find a Painter</NavLink>

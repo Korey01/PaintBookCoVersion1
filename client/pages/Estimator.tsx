@@ -115,6 +115,19 @@ export default function Estimator() {
               <Label>Number of coats</Label>
               <Input type="number" step="1" value={coats} onChange={e=>setCoats(num(e.target.value))}/>
             </div>
+            <div className="sm:col-span-2">
+              <Label>Paint type</Label>
+              <Select value={paintType} onValueChange={(v)=>setPaintType(v as PaintType)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interior_matt">Interior Matt (Emulsion)</SelectItem>
+                  <SelectItem value="satinwood">Satinwood (Trim/Woodwork)</SelectItem>
+                  <SelectItem value="exterior_masonry">Exterior Masonry</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label>Openings (doors/windows)</Label>
               <Input type="number" step="1" value={openings} onChange={e=>setOpenings(num(e.target.value))}/>

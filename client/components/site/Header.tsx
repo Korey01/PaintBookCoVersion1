@@ -2,9 +2,20 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Paintbrush, Search, LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const { search } = useLocation();
   const navigate = useNavigate();
 
@@ -14,6 +25,15 @@ export default function Header() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  function goToFind(params: Record<string, string | undefined>) {
+    const q = new URLSearchParams();
+    if (params.location) q.set("location", params.location);
+    if (params.type) q.set("type", params.type);
+    setOpen(false);
+    setQuery("");
+    navigate(`/find-painter?${q.toString()}`);
+  }
 
   return (
     <header className={`sticky top-0 z-40 w-full transition-all ${scrolled ? "backdrop-blur bg-background/70 border-b" : "bg-transparent"}`}>
@@ -34,12 +54,38 @@ export default function Header() {
           <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
         </nav>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" className="hidden sm:inline-flex" onClick={() => navigate("/find-painter")}> <Search className="mr-2 h-4 w-4"/> Search</Button>
+          <Button variant="ghost" className="hidden sm:inline-flex" onClick={() => setOpen(true)}>
+            <Search className="mr-2 h-4 w-4"/> Search
+          </Button>
           <Button asChild className="shadow-md">
             <Link to="/join-painter"><LogIn className="mr-2 h-4 w-4"/> Join as Painter</Link>
           </Button>
         </div>
       </div>
+
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <CommandInput
+          placeholder="Search by postcode/city or job type..."
+          onValueChange={(v) => setQuery(v)}
+        />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          {query && (
+            <CommandGroup heading="Search">
+              <CommandItem onSelect={() => goToFind({ location: query })}>
+                Find painters in "{query}"
+              </CommandItem>
+            </CommandGroup>
+          )}
+          <CommandSeparator />
+          <CommandGroup heading="Popular job types">
+            <CommandItem onSelect={() => goToFind({ type: "interior" })}>Interior painting</CommandItem>
+            <CommandItem onSelect={() => goToFind({ type: "exterior" })}>Exterior painting</CommandItem>
+            <CommandItem onSelect={() => goToFind({ type: "kitchen" })}>Kitchen cabinets</CommandItem>
+            <CommandItem onSelect={() => goToFind({ type: "wallpaper" })}>Wallpaper</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
     </header>
   );
 }

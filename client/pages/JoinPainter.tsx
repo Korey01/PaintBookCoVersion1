@@ -194,7 +194,7 @@ export function JoinPainterComplete(){
   return (
     <div className="container mx-auto px-4 py-16 text-center">
       <CheckCircle2 className="mx-auto h-12 w-12 text-primary"/>
-      <h1 className="mt-4 text-2xl font-bold">Welcome to PaintBook</h1>
+      <h1 className="mt-4 text-2xl font-bold">Welcome to PaintBookco</h1>
       <p className="mt-2 text-muted-foreground">Your painter profile is set up. Start your 14‑day trial and browse nearby jobs.</p>
       <div className="mt-6 flex justify-center gap-3">
         <Button onClick={()=>navigate('/dashboard')}>Go to Dashboard</Button>

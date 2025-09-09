@@ -70,7 +70,10 @@ export default function Dashboard(){
         <Card className="md:col-span-2">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4"/> Welcome back</div>
-            <div className="mt-2 text-2xl font-bold">Painter Dashboard</div>
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-2xl font-bold">Painter Dashboard</div>
+              <a href="/disputes" className="text-sm text-primary underline">Dispute log</a>
+            </div>
             <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
               <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Jobs this week</div><div className="text-xl font-bold">{NEARBY_JOBS.length}</div></div>
               <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Messages</div><div className="text-xl font-bold">3</div></div>

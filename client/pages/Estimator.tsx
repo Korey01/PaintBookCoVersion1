@@ -41,6 +41,7 @@ export default function Estimator() {
   const [width, setWidth] = useState(Number(params.get('width') || 3));
   const [height, setHeight] = useState(Number(params.get('height') || 2.6));
   const [coats, setCoats] = useState(Number(params.get('coats') || 2));
+  const [paintType, setPaintType] = useState<PaintType>('interior_matt');
   const [openings, setOpenings] = useState(Number(params.get('openings') || 2));
   const [openingArea, setOpeningArea] = useState(Number(params.get('openingArea') || 1.9));
   const [coverage, setCoverage] = useState(Number(params.get('coverage') || 10)); // m2 per litre

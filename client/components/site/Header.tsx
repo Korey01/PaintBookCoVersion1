@@ -22,7 +22,7 @@ export default function Header() {
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow">
             <Paintbrush className="h-5 w-5" />
           </span>
-          <span className="text-xl">PaintBook</span>
+          <span className="text-xl">PaintBookco</span>
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
           <NavLink to="/find-painter" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Find a Painter</NavLink>

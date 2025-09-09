@@ -18,6 +18,7 @@ import Estimator from "./pages/Estimator";
 import PostJob, { PostJobConfirmation } from "./pages/PostJob";
 import PainterProfile from "./pages/PainterProfile";
 import JoinPainter, { JoinPainterComplete } from "./pages/JoinPainter";
+import Dashboard from "./pages/Dashboard";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

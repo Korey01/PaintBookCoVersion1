@@ -17,7 +17,7 @@ export const painters: PainterFull[] = [
   {
     id: "1",
     name: "Amina Ade - ColourCraft",
-    photo: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1887&auto=format&fit=crop",
+    photo: "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fcb59103ceadd4ea48c06e1b1d34f5724?format=webp&width=800",
     location: "London",
     priceRange: "£20–£35/hr",
     rating: 4.9,
@@ -33,9 +33,9 @@ export const painters: PainterFull[] = [
       { name: "Plaster repair", priceRange: "£80–£180" },
     ],
     portfolio: [
-      "https://images.unsplash.com/photo-1523419409543-8fc58a320246?q=80&w=1887&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1503951458645-643d53bfd28f?q=80&w=1974&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=1974&auto=format&fit=crop",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fb64b99f1669c4fea84908870389ce077?format=webp&width=800",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F02ea2b8fe91044b595e115b66afbddef?format=webp&width=800",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F913436e60029497d8742ae0816f567c7?format=webp&width=800",
     ],
     reviewList: [
       { id: "r1", author: "Ella R.", rating: 5, comment: "Faultless finish and friendly.", date: "2024-05-18" },
@@ -46,7 +46,7 @@ export const painters: PainterFull[] = [
   {
     id: "2",
     name: "Lucas Khan - PrimeCoat",
-    photo: "https://images.unsplash.com/photo-1523419409543-8fc58a320246?q=80&w=1887&auto=format&fit=crop",
+    photo: "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F2b9cbee924fd4eeabca9f0bc3d2a4fd3?format=webp&width=800",
     location: "Manchester",
     priceRange: "£18–£30/hr",
     rating: 4.7,
@@ -61,8 +61,8 @@ export const painters: PainterFull[] = [
       { name: "Decking staining", priceRange: "£120–£300" },
     ],
     portfolio: [
-      "https://images.unsplash.com/photo-1541976076758-347942db1970?q=80&w=1887&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=1974&auto=format&fit=crop",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F6a440303ba6e42bd817b07b0544d4451?format=webp&width=800",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fc1db86da96eb40bd97ce4e112a273df4?format=webp&width=800",
     ],
     reviewList: [
       { id: "r3", author: "Monica P.", rating: 4.5, comment: "Great prep and weatherproofing.", date: "2024-03-02" },
@@ -72,7 +72,7 @@ export const painters: PainterFull[] = [
   {
     id: "3",
     name: "Maya Cole - StudioHue",
-    photo: "https://images.unsplash.com/photo-1503951458645-643d53bfd28f?q=80&w=1974&auto=format&fit=crop",
+    photo: "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F913436e60029497d8742ae0816f567c7?format=webp&width=800",
     location: "Birmingham",
     priceRange: "£22–£38/hr",
     rating: 5.0,
@@ -87,8 +87,8 @@ export const painters: PainterFull[] = [
       { name: "Wallpaper install", priceRange: "£180–£420/room" },
     ],
     portfolio: [
-      "https://images.unsplash.com/photo-1556911073-52527ac437f5?q=80&w=1974&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1523419409543-8fc58a320246?q=80&w=1887&auto=format&fit=crop",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F02ea2b8fe91044b595e115b66afbddef?format=webp&width=800",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fb64b99f1669c4fea84908870389ce077?format=webp&width=800",
     ],
     reviewList: [
       { id: "r4", author: "Rajan S.", rating: 5, comment: "Kitchen looks brand new!", date: "2024-01-14" },

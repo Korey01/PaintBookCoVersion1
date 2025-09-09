@@ -32,7 +32,7 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t py-4 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} The PaintBook Book Company Ltd. All rights reserved.</div>
+      <div className="border-t py-4 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} The PaintBook Company Ltd. All rights reserved.</div>
     </footer>
   );
 }

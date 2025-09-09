@@ -21,6 +21,15 @@ import JoinPainter, { JoinPainterComplete } from "./pages/JoinPainter";
 import Dashboard from "./pages/Dashboard";
 import Disputes from "./pages/Disputes";
 import About from "./pages/About";
+import Support from "./pages/Support";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
+import Account from "./pages/Account";
+import Messages from "./pages/Messages";
+import Favorites from "./pages/Favorites";
+import Estimates from "./pages/Estimates";
+import Admin from "./pages/Admin";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

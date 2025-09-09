@@ -78,6 +78,13 @@ export default function Estimator() {
     navigate(`/post-job?${qp.toString()}`);
   }
 
+  function attachBrand(name: string, coverageVal: number, litresVal: number, priceVal: number, costVal: number) {
+    const qp = new URLSearchParams({
+      estimate: JSON.stringify({ length, width, height, coats, openings, openingArea, coverage: coverageVal, litres: litresVal, materialCost: costVal, brand: name, paintType, pricePerLitre: priceVal })
+    });
+    navigate(`/post-job?${qp.toString()}`);
+  }
+
   useEffect(() => {
     const payload = { length, width, height, coats, openings, openingArea, coverage, pricePerLitre };
     localStorage.setItem('paintbook:lastEstimate', JSON.stringify(payload));

@@ -106,19 +106,19 @@ export default function Estimator() {
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div>
               <Label>Room length (m)</Label>
-              <Input type="number" step="0.1" value={length} onChange={e=>setLength(num(e.target.value))}/>
+              <Input type="number" min={0.5} step="0.1" value={length} onChange={e=>setLength(Math.max(0.5, num(e.target.value)))}/>
             </div>
             <div>
               <Label>Room width (m)</Label>
-              <Input type="number" step="0.1" value={width} onChange={e=>setWidth(num(e.target.value))}/>
+              <Input type="number" min={0.5} step="0.1" value={width} onChange={e=>setWidth(Math.max(0.5, num(e.target.value)))}/>
             </div>
             <div>
               <Label>Wall height (m)</Label>
-              <Input type="number" step="0.1" value={height} onChange={e=>setHeight(num(e.target.value))}/>
+              <Input type="number" min={1.5} step="0.1" value={height} onChange={e=>setHeight(Math.max(1.5, num(e.target.value)))}/>
             </div>
             <div>
               <Label>Number of coats</Label>
-              <Input type="number" step="1" value={coats} onChange={e=>setCoats(num(e.target.value))}/>
+              <Input type="number" min={1} step="1" value={coats} onChange={e=>setCoats(Math.max(1, num(e.target.value)))}/>
             </div>
             <div className="sm:col-span-2">
               <Label>Paint type</Label>

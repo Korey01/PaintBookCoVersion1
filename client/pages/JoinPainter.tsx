@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { z } from "zod";
 
 export default function JoinPainter() {
   type Step = 1 | 2 | 3 | 4;
@@ -42,7 +43,40 @@ export default function JoinPainter() {
     });
   }
 
-  function next() { setStep((s)=> Math.min(4, (s+1) as Step)); }
+  const [errors, setErrors] = useState<Record<string,string>>({});
+  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
+
+  const schema1 = z.object({
+    name: z.string().min(2, "Enter your full name"),
+    email: z.string().email("Enter a valid email"),
+    postcode: z.string().regex(ukPostcode, "Use UK format e.g. M1 1AE"),
+  });
+  const schema2 = z.object({
+    skills: z.array(z.string()).min(1, "Choose at least one skill"),
+    rateMin: z.number().min(5),
+    rateMax: z.number().min(5),
+    availability: z.array(z.string()).min(1, "Select availability"),
+  }).refine(v => v.rateMax >= v.rateMin, { message: "Max must be ≥ min", path: ["rateMax"] });
+  const schema3 = z.object({ tier: z.string().min(1) });
+
+  function next() {
+    if (step === 1) {
+      const r = schema1.safeParse({ name, email, postcode });
+      if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
+      setErrors({});
+    }
+    if (step === 2) {
+      const r = schema2.safeParse({ skills, rateMin: rateMin[0], rateMax: rateMax[0], availability });
+      if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
+      setErrors({});
+    }
+    if (step === 3) {
+      const r = schema3.safeParse({ tier });
+      if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
+      setErrors({});
+    }
+    setStep((s)=> Math.min(4, (s+1) as Step));
+  }
   function back() { setStep((s)=> Math.max(1, (s-1) as Step)); }
 
   function submit() {
@@ -69,11 +103,13 @@ export default function JoinPainter() {
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div>
               <Label>Full name</Label>
-              <Input value={name} onChange={(e)=>setName(e.target.value)} />
+              <Input aria-invalid={!!errors.name} className={errors.name? 'border-destructive':''} value={name} onChange={(e)=>setName(e.target.value)} />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
             <div>
               <Label>Email</Label>
-              <Input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
+              <Input type="email" aria-invalid={!!errors.email} className={errors.email? 'border-destructive':''} value={email} onChange={(e)=>setEmail(e.target.value)} />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </div>
             <div className="sm:col-span-2">
               <Label>Business name (optional)</Label>
@@ -85,7 +121,8 @@ export default function JoinPainter() {
             </div>
             <div>
               <Label>Base postcode</Label>
-              <Input value={postcode} onChange={(e)=>setPostcode(e.target.value)} placeholder="e.g. M1 1AE"/>
+              <Input aria-invalid={!!errors.postcode} className={errors.postcode? 'border-destructive':''} value={postcode} onChange={(e)=>setPostcode(e.target.value)} placeholder="e.g. M1 1AE"/>
+              {errors.postcode && <p className="text-xs text-red-500 mt-1">{errors.postcode}</p>}
             </div>
             <div>
               <Label>Coverage radius (miles)</Label>
@@ -111,6 +148,7 @@ export default function JoinPainter() {
                   </label>
                 ))}
               </div>
+              {errors.skills && <p className="text-xs text-red-500 mt-1">{errors.skills}</p>}
             </div>
             <div>
               <Label>Min hourly rate (£)</Label>
@@ -129,6 +167,7 @@ export default function JoinPainter() {
                   <button key={d} type="button" onClick={()=>toggleAvail(d)} className={`rounded-full border px-3 py-1 ${availability.includes(d)?'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>{d}</button>
                 ))}
               </div>
+              {errors.availability && <p className="text-xs text-red-500 mt-1">{errors.availability}</p>}
             </div>
             <div className="sm:col-span-2 flex justify-between">
               <Button variant="secondary" onClick={back}>Back</Button>
@@ -154,7 +193,7 @@ export default function JoinPainter() {
             <div>
               <Label>Choose your tier</Label>
               <Select value={tier} onValueChange={setTier}>
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!errors.tier}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -163,6 +202,7 @@ export default function JoinPainter() {
                   <SelectItem value="Premium">Premium — highest visibility</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.tier && <p className="text-xs text-red-500 mt-1">{errors.tier}</p>}
               <div className="text-xs text-muted-foreground mt-1">14‑day free trial. Cancel anytime.</div>
             </div>
             <div className="sm:col-span-2 flex justify-between">

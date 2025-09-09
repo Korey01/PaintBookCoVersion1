@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="border-t bg-card/50">
       <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-4">
         <div className="col-span-2">
-          <h3 className="text-lg font-semibold">PaintBook</h3>
+          <h3 className="text-lg font-semibold">PaintBookco</h3>
           <p className="mt-2 text-sm text-muted-foreground max-w-prose">Find trusted, verified painters and decorators. Book with confidence with deposit protection via secure escrow.</p>
           <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</span>
@@ -32,7 +32,7 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t py-4 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} PaintBook. All rights reserved.</div>
+      <div className="border-t py-4 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} The PaintBook Book Company Ltd. All rights reserved.</div>
     </footer>
   );
 }

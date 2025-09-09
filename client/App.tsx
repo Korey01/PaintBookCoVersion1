@@ -20,6 +20,7 @@ import PainterProfile from "./pages/PainterProfile";
 import JoinPainter, { JoinPainterComplete } from "./pages/JoinPainter";
 import Dashboard from "./pages/Dashboard";
 import Disputes from "./pages/Disputes";
+import About from "./pages/About";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

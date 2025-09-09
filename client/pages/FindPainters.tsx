@@ -31,6 +31,10 @@ export default function FindPainters() {
     });
   }, [params, price, minRating, tier]);
 
+  const [page, setPage] = useState(1);
+  const perPage = 6;
+  const paged = useMemo(()=> filtered.slice((page-1)*perPage, page*perPage), [filtered, page]);
+
   return (
     <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-[280px_1fr]">
       <aside className="space-y-6 rounded-xl border bg-card p-4">

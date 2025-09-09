@@ -4,14 +4,8 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PainterCard, { Painter } from "@/components/site/PainterCard";
-
-const PAINTERS: Painter[] = [
-  { id: "1", name: "Amina Ade - ColourCraft", photo: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1887&auto=format&fit=crop", location: "London", priceRange: "£20–£35/hr", rating: 4.9, reviews: 142, skills: ["Interior","Feature walls","Plaster repair"], tier: "Premium" },
-  { id: "2", name: "Lucas Khan - PrimeCoat", photo: "https://images.unsplash.com/photo-1523419409543-8fc58a320246?q=80&w=1887&auto=format&fit=crop", location: "Manchester", priceRange: "£18–£30/hr", rating: 4.7, reviews: 98, skills: ["Exterior","Fences","Decking"], tier: "Pro" },
-  { id: "3", name: "Maya Cole - StudioHue", photo: "https://images.unsplash.com/photo-1503951458645-643d53bfd28f?q=80&w=1974&auto=format&fit=crop", location: "Birmingham", priceRange: "£22–£38/hr", rating: 5.0, reviews: 63, skills: ["Kitchens","Cabinets","Wallpaper"], tier: "Premium" },
-  { id: "4", name: "Ethan Lee - FreshCoat", photo: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1964&auto=format&fit=crop", location: "Leeds", priceRange: "£16–£28/hr", rating: 4.5, reviews: 54, skills: ["Interior","Exterior","Sanding"], tier: "Starter" }
-];
+import PainterCard from "@/components/site/PainterCard";
+import { painters } from "@/data/painters";
 
 export default function FindPainters() {
   const { search } = useLocation();

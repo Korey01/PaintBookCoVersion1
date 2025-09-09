@@ -77,7 +77,7 @@ export default function Index() {
               </div>
               <div className="flex items-center gap-2 rounded-lg bg-background p-2">
                 <PaintBucket className="h-4 w-4 text-muted-foreground"/>
-                <Select name="type">
+                <Select value={jobType} onValueChange={setJobType}>
                   <SelectTrigger className="border-0 focus:ring-0 focus:ring-offset-0">
                     <SelectValue placeholder="Job type" />
                   </SelectTrigger>

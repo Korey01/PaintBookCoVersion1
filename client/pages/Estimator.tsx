@@ -162,6 +162,29 @@ export default function Estimator() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="md:col-span-2">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold">Brand estimates</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Based on typical coverage and average retail price per litre. Actual results vary by surface and application.</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {brandEstimates.map(b => (
+                <Card key={b.name} className="border-muted/60">
+                  <CardContent className="p-4 text-sm">
+                    <div className="text-base font-semibold">{b.name}</div>
+                    <div className="mt-2 grid gap-1">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Coverage</span><span>{b.coverage} m²/L</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Price/L</span><span>£{b.pricePerLitre}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Litres</span><span>{b.litres.toFixed(1)} L</span></div>
+                      <div className="flex justify-between font-medium"><span>Material cost</span><span>£{b.cost}</span></div>
+                    </div>
+                    <Button className="mt-3 w-full" onClick={()=>attachBrand(b.name, b.coverage, b.litres, b.pricePerLitre, b.cost)}>Attach this estimate</Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

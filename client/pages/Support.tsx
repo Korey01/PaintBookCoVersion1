@@ -4,13 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { z } from "zod";
 
 export default function Support(){
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<Record<string,string>>({});
+
+  const schema = z.object({ email: z.string().email("Enter a valid email"), subject: z.string().min(3, "Add a subject"), message: z.string().min(10, "Tell us a bit more")});
 
   function submit(){
+    const r = schema.safeParse({ email, subject, message });
+    if(!r.success){ const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
+    setErrors({});
     const ticket = { id: `s${Date.now()}`, email, subject, message, createdAt: new Date().toISOString(), status: 'open' };
     const list = JSON.parse(localStorage.getItem('paintbook:support')||'[]');
     list.unshift(ticket);

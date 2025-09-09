@@ -25,10 +25,6 @@ export default function Index() {
   return (
     <div className="space-y-24">
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Feedf4463914f4f429c364db4882898f1?format=webp&width=1600" alt="Painters team" className="h-[540px] w-full object-cover opacity-60 -scale-x-100 object-center"/>
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent"/>
-        </div>
         <div className="container mx-auto px-4 pt-16 pb-12">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">

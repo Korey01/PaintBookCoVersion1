@@ -91,7 +91,11 @@ export default function Dashboard(){
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4"/> Welcome back</div>
             <div className="mt-2 flex items-center justify-between">
-              <div className="text-2xl font-bold">Painter Dashboard</div>
+              <div className="text-2xl font-bold flex items-center gap-2">Painter Dashboard
+                <button aria-label="Edit profile" className="rounded-full border p-2 hover:bg-secondary" onClick={()=>setEditOpen(true)}>
+                  <Pencil className="h-4 w-4"/>
+                </button>
+              </div>
               <a href="/disputes" className="text-sm text-primary underline">Dispute log</a>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-3 text-sm">

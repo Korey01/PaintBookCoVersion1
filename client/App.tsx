@@ -21,6 +21,7 @@ import JoinPainter, { JoinPainterComplete } from "./pages/JoinPainter";
 import Checkout from "./pages/Checkout";
 import CheckoutConfirmation from "./pages/CheckoutConfirmation";
 import Dashboard from "./pages/Dashboard";
+import TrustSafety from "./pages/TrustSafety";
 import Auth from "./pages/Auth";
 import VerifyEmail from "./pages/VerifyEmail";
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/estimates/saved" element={<Estimates />} />
             <Route path="/about" element={<About />} />
+            <Route path="/trust-safety" element={<TrustSafety />} />
             <Route path="/painter/:id" element={<PainterProfile />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

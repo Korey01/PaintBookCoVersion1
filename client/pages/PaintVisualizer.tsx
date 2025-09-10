@@ -125,13 +125,32 @@ export default function PaintVisualizer(){
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border bg-muted/30">
               {image ? (
                 <>
-                  <img src={image} alt="Uploaded room" className="h-full w-full object-cover"/>
+                  <img src={image} alt="Uploaded room" className="h-full w-full object-cover" style={{ filter: `saturate(${saturation[0]}%) contrast(${contrast[0]}%)` }} />
+                  {/* Primary colour tint */}
                   <div
                     className="absolute inset-0"
                     style={{
                       backgroundColor: color,
-                      mixBlendMode: 'multiply' as any,
+                      mixBlendMode: mode as any,
                       opacity: intensity[0]/100,
+                    }}
+                  />
+                  {/* Shadow depth layer */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundColor: "#000",
+                      mixBlendMode: 'soft-light' as any,
+                      opacity: shadow[0]/100,
+                    }}
+                  />
+                  {/* Highlight boost */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundColor: "#fff",
+                      mixBlendMode: 'soft-light' as any,
+                      opacity: highlight[0]/100,
                     }}
                   />
                 </>

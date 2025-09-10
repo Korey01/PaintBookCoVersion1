@@ -54,7 +54,11 @@ const App = () => (
             <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
             <Route path="/join-painter" element={<JoinPainter />} />
             <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/dashboard" element={<DashboardRouter />} />
+            <Route path="/dashboard/customer" element={<CustomerDashboard />} />
+            <Route path="/dashboard/painter" element={<Dashboard />} />
             <Route path="/disputes" element={<Disputes />} />
             <Route path="/help" element={<Support />} />
             <Route path="/privacy" element={<Privacy />} />

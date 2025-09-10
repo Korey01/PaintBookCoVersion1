@@ -44,10 +44,11 @@ export default function FindPainters() {
   const [page, setPage] = useState(1);
   const perPage = 6;
   const sorted = useMemo(()=> {
+    const firstNum = (s:string)=> Number((s.match(/\d+/)||["0"])[0]);
     const arr = [...filtered];
     if(sortBy === 'rating_desc') arr.sort((a,b)=> b.rating - a.rating);
-    else if(sortBy === 'price_asc') arr.sort((a,b)=> parseInt(a.priceRange) - parseInt(b.priceRange));
-    else if(sortBy === 'price_desc') arr.sort((a,b)=> parseInt(b.priceRange) - parseInt(a.priceRange));
+    else if(sortBy === 'price_asc') arr.sort((a,b)=> firstNum(a.priceRange) - firstNum(b.priceRange));
+    else if(sortBy === 'price_desc') arr.sort((a,b)=> firstNum(b.priceRange) - firstNum(a.priceRange));
     else if(sortBy === 'reviews_desc') arr.sort((a,b)=> b.reviews - a.reviews);
     return arr;
   }, [filtered, sortBy]);

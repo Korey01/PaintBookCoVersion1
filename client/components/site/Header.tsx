@@ -1,6 +1,7 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Paintbrush, Search, LogIn, LogOut } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Paintbrush, Search, LogIn, LogOut, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   CommandDialog,
@@ -16,6 +17,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const loc = useLocation();
   const { search } = loc;
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
@@ -68,6 +70,9 @@ export default function Header() {
           <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
         </nav>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" className="md:hidden" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
+            <Menu className="h-5 w-5"/>
+          </Button>
           <Button variant="ghost" className="hidden sm:inline-flex" onClick={() => setOpen(true)}>
             <Search className="mr-2 h-4 w-4"/> Search
           </Button>
@@ -106,6 +111,25 @@ export default function Header() {
           </CommandGroup>
         </CommandList>
       </CommandDialog>
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="w-[300px] p-4">
+          <nav className="grid gap-3 text-sm">
+            <Link to="/find-painter" onClick={()=>setMobileOpen(false)}>Find a Painter</Link>
+            <Link to="/post-job" onClick={()=>setMobileOpen(false)}>Post a Job</Link>
+            <Link to="/estimator" onClick={()=>setMobileOpen(false)}>Paint Estimator</Link>
+            <Link to="/visualizer" onClick={()=>setMobileOpen(false)}>Visualizer</Link>
+            <Link to="/trust-safety" onClick={()=>setMobileOpen(false)}>Trust & Safety</Link>
+            <Link to={`/dashboard${search||""}`} onClick={()=>setMobileOpen(false)}>Dashboard</Link>
+            {loggedIn ? (
+              <Button variant="outline" onClick={()=>{ setMobileOpen(false); handleLogout(); }} className="mt-2">
+                <LogOut className="mr-2 h-4 w-4"/> Log out
+              </Button>
+            ) : (
+              <Button asChild className="mt-2"><Link to="/join-painter" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Join as Painter</Link></Button>
+            )}
+          </nav>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }

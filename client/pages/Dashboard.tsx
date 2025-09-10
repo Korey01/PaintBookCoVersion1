@@ -144,7 +144,7 @@ export default function Dashboard(){
               <a href="/disputes" className="text-sm text-primary underline">Dispute log</a>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Jobs this week</div><div className="text-xl font-bold">{NEARBY_JOBS.length}</div></div>
+              <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Jobs this week</div><div className="text-xl font-bold">{filteredJobs.length}</div></div>
               <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Messages</div><div className="text-xl font-bold">3</div></div>
               <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Profile</div><div className="text-xl font-bold">{profileProgress}%</div></div>
             </div>

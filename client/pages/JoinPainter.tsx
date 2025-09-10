@@ -95,7 +95,8 @@ export default function JoinPainter() {
   function submit() {
     const payload = { name, email, business, bio, postcode, radius: radius[0], skills, rateMin: rateMin[0], rateMax: rateMax[0], availability, images, idDocs, idType, idNumber, idExpiry, tier, idStatus: idDocs.length>0 ? 'pending' : 'not_uploaded' };
     localStorage.setItem('paintbook:joinPainter', JSON.stringify(payload));
-    navigate('/join-painter/completed');
+    const plan = tier.toLowerCase() === 'premium' ? 'Premium' : (tier.toLowerCase()==='pro' || tier.toLowerCase()==='professional') ? 'Professional' : 'Starter';
+    navigate(`/checkout?mode=subscription&plan=${encodeURIComponent(plan)}`);
   }
 
   return (

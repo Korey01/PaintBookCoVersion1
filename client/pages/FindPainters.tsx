@@ -46,7 +46,7 @@ export default function FindPainters() {
       <aside className="space-y-6 rounded-xl border bg-card p-4">
         <h2 className="text-lg font-semibold">Filters</h2>
         <div className="space-y-3">
-          <Label className="text-sm">Price per hour (£{price[0]}–£{price[1]})</Label>
+          <Label className="text-sm">Price per hour (£{price[0]}��£{price[1]})</Label>
           <Slider min={10} max={60} step={1} value={price} onValueChange={setPrice} />
         </div>
         <div className="space-y-2">
@@ -87,10 +87,38 @@ export default function FindPainters() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Painters {params.get("location") ? `in ${params.get("location")}` : "near you"}</h1>
-            <p className="text-sm text-muted-foreground">Filter by price, ratings, availability and tier.</p>
+            <p className="text-sm text-muted-foreground">Search by postcode/city and refine with filters.</p>
           </div>
           <button onClick={() => navigate("/post-job")} className="text-sm text-primary underline">Post a job</button>
         </div>
+
+        <form
+          className="mt-4 grid gap-3 rounded-xl border bg-card/80 p-3 backdrop-blur md:grid-cols-[1fr_1fr_auto]"
+          onSubmit={(e)=>{ e.preventDefault(); const q = new URLSearchParams(search); if(queryLocation){ q.set('location', queryLocation); } else { q.delete('location'); } if(queryType){ q.set('type', queryType); } else { q.delete('type'); } navigate(`/find-painter?${q.toString()}`); setPage(1); }}>
+          <div className="flex items-center gap-2 rounded-lg bg-background p-2">
+            <MapPin className="h-4 w-4 text-muted-foreground"/>
+            <Input name="location" placeholder="Postcode or city" value={queryLocation} onChange={(e)=>setQueryLocation(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2 rounded-lg bg-background p-2">
+            <PaintBucket className="h-4 w-4 text-muted-foreground"/>
+            <Select value={queryType} onValueChange={setQueryType}>
+              <SelectTrigger className="border-0 focus:ring-0 focus:ring-offset-0">
+                <SelectValue placeholder="Job type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Any</SelectItem>
+                <SelectItem value="interior">Interior</SelectItem>
+                <SelectItem value="exterior">Exterior</SelectItem>
+                <SelectItem value="kitchen">Kitchen cabinets</SelectItem>
+                <SelectItem value="wallpaper">Wallpaper</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <button className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-md hover:opacity-90">
+            <SearchIcon className="mr-2 h-4 w-4"/> Search
+          </button>
+        </form>
+
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {paged.map(p => <PainterCard key={p.id} painter={p} />)}
           {filtered.length === 0 && (

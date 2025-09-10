@@ -46,7 +46,10 @@ export default function FindPainters() {
   return (
     <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-[280px_1fr]">
       <aside className="space-y-6 rounded-xl border bg-card p-4">
-        <h2 className="text-lg font-semibold">Filters</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Filters</h2>
+          <button className="text-xs underline" onClick={()=>{ setPrice([15,40]); setMinRating(4); setTier("any"); setAvailable(true); setPage(1); }}>Clear all</button>
+        </div>
         <div className="space-y-3">
           <Label className="text-sm">Price per hour (£{price[0]}��£{price[1]})</Label>
           <Slider min={10} max={60} step={1} value={price} onValueChange={setPrice} />

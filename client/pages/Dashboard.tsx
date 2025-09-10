@@ -47,6 +47,16 @@ export default function Dashboard(){
   const [bio, setBio] = useState<string>(stored.bio || "");
   const [postcode, setPostcode] = useState<string>(stored.postcode || "");
   const [radius, setRadius] = useState<number[]>([stored.radius || 15]);
+  const [idType, setIdType] = useState<string>(stored.idType || "");
+  const [idNumber, setIdNumber] = useState<string>(stored.idNumber || "");
+  const [idExpiry, setIdExpiry] = useState<string>(stored.idExpiry || "");
+  const [idDocs, setIdDocs] = useState<string[]>(stored.idDocs || []);
+  const [insuranceInsurer, setInsuranceInsurer] = useState<string>(stored.insuranceInsurer || "");
+  const [insurancePolicy, setInsurancePolicy] = useState<string>(stored.insurancePolicy || "");
+  const [insuranceExpiry, setInsuranceExpiry] = useState<string>(stored.insuranceExpiry || "");
+  const [insuranceDocs, setInsuranceDocs] = useState<string[]>(stored.insuranceDocs || []);
+  const idStatus = stored.idStatus || (idDocs.length>0 ? 'pending' : 'not_uploaded');
+  const insuranceStatus = stored.insuranceStatus || (insuranceDocs.length>0 ? 'on_file' : 'not_provided');
 
   const profileProgress = 80;
   const tier = (JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}')?.tier) || 'Starter';
@@ -55,9 +65,27 @@ export default function Dashboard(){
     if (location.hash === '#edit-profile') setEditOpen(true);
   },[]);
 
+  function onIdFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []).slice(0, 3);
+    files.forEach((f)=>{
+      const reader = new FileReader();
+      reader.onload = () => setIdDocs(prev => [...prev, String(reader.result)]);
+      reader.readAsDataURL(f);
+    });
+  }
+
+  function onInsuranceFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []).slice(0, 3);
+    files.forEach((f)=>{
+      const reader = new FileReader();
+      reader.onload = () => setInsuranceDocs(prev => [...prev, String(reader.result)]);
+      reader.readAsDataURL(f);
+    });
+  }
+
   function saveProfile(){
     const current = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}');
-    const next = { ...current, name, business, bio, postcode, radius: radius[0] };
+    const next = { ...current, name, business, bio, postcode, radius: radius[0], idType, idNumber, idExpiry, idDocs, idStatus: idDocs.length>0 ? (current.idStatus||'pending') : (current.idStatus||'not_uploaded'), insuranceInsurer, insurancePolicy, insuranceExpiry, insuranceDocs, insuranceStatus: insuranceDocs.length>0 ? 'on_file' : 'not_provided' };
     localStorage.setItem('paintbook:joinPainter', JSON.stringify(next));
     setEditOpen(false);
   }
@@ -111,9 +139,12 @@ export default function Dashboard(){
             <div className="mt-2 space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <BadgeCheck className="h-4 w-4 text-primary"/>
-                <span>{(stored.idStatus||'not_uploaded') === 'pending' ? 'ID verification pending' : (stored.idStatus==='verified' ? 'ID verified' : 'ID not uploaded')}</span>
+                <span>{(idStatus) === 'pending' ? 'ID verification pending' : (idStatus==='verified' ? 'ID verified' : 'ID not uploaded')}</span>
               </div>
-              <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Insured</div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-primary"/>
+                <span>{insuranceStatus==='on_file' ? 'Insurance on file' : 'Insurance not provided'}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -245,7 +276,61 @@ export default function Dashboard(){
                 <div className="text-xs text-muted-foreground mt-1">{radius[0]} miles</div>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+
+            <div className="pt-2">
+              <div className="text-sm font-medium">ID verification</div>
+              <div className="mt-2 grid gap-3 md:grid-cols-3">
+                <div>
+                  <Label>ID type</Label>
+                  <Select value={idType} onValueChange={setIdType}>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="passport">Passport</SelectItem>
+                      <SelectItem value="driving_licence">Driving licence</SelectItem>
+                      <SelectItem value="national_id">National ID</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>ID number</Label>
+                  <Input value={idNumber} onChange={(e)=>setIdNumber(e.target.value)} placeholder="e.g. 123456789" />
+                </div>
+                <div>
+                  <Label>Expiry date</Label>
+                  <Input type="date" value={idExpiry} onChange={(e)=>setIdExpiry(e.target.value)} />
+                </div>
+              </div>
+              <div className="mt-2">
+                <Input type="file" accept="image/*,application/pdf" multiple onChange={onIdFiles} />
+                <div className="text-xs text-muted-foreground mt-1">Accepted formats: PDF, JPG, PNG</div>
+                <div className="text-xs text-muted-foreground">{idDocs.length} file{ idDocs.length===1? '' : 's' } uploaded</div>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <div className="text-sm font-medium">Insurance</div>
+              <div className="mt-2 grid gap-3 md:grid-cols-3">
+                <div>
+                  <Label>Insurer</Label>
+                  <Input value={insuranceInsurer} onChange={(e)=>setInsuranceInsurer(e.target.value)} placeholder="e.g. Aviva" />
+                </div>
+                <div>
+                  <Label>Policy number</Label>
+                  <Input value={insurancePolicy} onChange={(e)=>setInsurancePolicy(e.target.value)} placeholder="e.g. POL123456" />
+                </div>
+                <div>
+                  <Label>Policy expiry</Label>
+                  <Input type="date" value={insuranceExpiry} onChange={(e)=>setInsuranceExpiry(e.target.value)} />
+                </div>
+              </div>
+              <div className="mt-2">
+                <Input type="file" accept="image/*,application/pdf" multiple onChange={onInsuranceFiles} />
+                <div className="text-xs text-muted-foreground mt-1">Accepted formats: PDF, JPG, PNG</div>
+                <div className="text-xs text-muted-foreground">{insuranceDocs.length} file{ insuranceDocs.length===1? '' : 's' } uploaded</div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
               <Button variant="secondary" onClick={()=>setEditOpen(false)}>Cancel</Button>
               <Button onClick={saveProfile}>Save changes</Button>
             </div>

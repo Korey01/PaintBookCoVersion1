@@ -6,7 +6,7 @@ export default function EscrowCustomerDemo(){
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold">Escrow & Payment Security (Customer Demo)</h1>
-      <p className="mt-1 text-sm text-muted-foreground">100% of your payment is held in escrow until you approve the job. Protected by our Stripe FCA‑regulated partner.</p>
+      <p className="mt-1 text-sm text-muted-foreground">100% of your payment is held in escrow until you approve the job — via Stripe (FCA-regulated payment partner).</p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <Card className="border-muted/60">
           <CardContent className="p-6">

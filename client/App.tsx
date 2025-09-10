@@ -18,6 +18,8 @@ import Estimator from "./pages/Estimator";
 import PostJob, { PostJobConfirmation } from "./pages/PostJob";
 import PainterProfile from "./pages/PainterProfile";
 import JoinPainter, { JoinPainterComplete } from "./pages/JoinPainter";
+import Checkout from "./pages/Checkout";
+import CheckoutConfirmation from "./pages/CheckoutConfirmation";
 import Dashboard from "./pages/Dashboard";
 import Disputes from "./pages/Disputes";
 import About from "./pages/About";

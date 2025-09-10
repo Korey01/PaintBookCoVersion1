@@ -18,6 +18,7 @@ export default function Checkout(){
 
   const amount = useMemo(()=>{
     if (mode === "subscription") {
+      if (plan === 'Customer Plus') return 5;
       return plan.toLowerCase() === "premium" ? 35 : plan.toLowerCase() === "professional" ? 20 : 10;
     }
     return amountParam && amountParam > 0 ? amountParam : 150; // mock default deposit

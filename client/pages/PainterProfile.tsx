@@ -3,12 +3,16 @@ import { painters } from "@/data/painters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star, ShieldCheck, BadgeCheck, ArrowRight } from "lucide-react";
+import { Star, ShieldCheck, BadgeCheck, ArrowRight, MapPin, PoundSterling, CalendarClock, Pencil } from "lucide-react";
 
 export default function PainterProfile(){
   const { id } = useParams();
   const navigate = useNavigate();
   const painter = painters.find(p=>p.id === id);
+  const postedJobs: any[] = JSON.parse(localStorage.getItem('paintbook:jobs')||'[]');
+  const join = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}');
+  const outward = (join.postcode || '').split(' ')[0];
+  const nearby = postedJobs.filter(j => (j.postcode||'').split(' ')[0] === outward);
 
   if(!painter){
     return <div className="container mx-auto px-4 py-16"><p className="text-sm text-muted-foreground">Painter not found.</p></div>;
@@ -62,6 +66,39 @@ export default function PainterProfile(){
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          </div>
+          <div className="mt-10">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Jobs nearby your base area</h2>
+              <a className="text-sm text-primary underline" href="/dashboard#edit-profile"><Pencil className="inline mr-1 h-4 w-4"/> Edit my profile</a>
+            </div>
+            <p className="text-sm text-muted-foreground">Based on your postcode {join.postcode || '—'} and coverage radius.</p>
+            <div className="mt-3 grid gap-3">
+              {(nearby.length > 0 ? nearby : postedJobs).slice(0,5).map((j:any, i:number)=> (
+                <Card key={j.id || i} className="border-muted/60">
+                  <CardContent className="p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-medium">{j.jobType || j.title || 'Job'}</div>
+                        <div className="mt-1 text-xs text-muted-foreground flex flex-wrap items-center gap-3">
+                          {j.date && <span className="inline-flex items-center gap-1"><CalendarClock className="h-4 w-4"/> {new Date(j.date).toLocaleDateString()}</span>}
+                          {j.postcode && <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4"/> {j.postcode}</span>}
+                          {(j.budgetMin||j.budgetMax||j.budget) && <span className="inline-flex items-center gap-1"><PoundSterling className="h-4 w-4"/> £{j.budget || `${j.budgetMin}–${j.budgetMax}`}</span>}
+                        </div>
+                        <p className="mt-2 text-xs">{j.desc || j.description || 'Customer posted a new job near your coverage area.'}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={()=>navigate(`/messages?job=${j.id||''}&painter=${painter.id}`)}>Message</Button>
+                        <Button size="sm" variant="secondary" onClick={()=>navigate(`/post-job?painter=${painter.id}`)}>Quote</Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {postedJobs.length===0 && (
+                <p className="text-xs text-muted-foreground">No live jobs yet. Ask customers to post jobs from the Post a Job page.</p>
+              )}
             </div>
           </div>
         </div>

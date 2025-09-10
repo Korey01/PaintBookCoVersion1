@@ -109,7 +109,10 @@ export default function Dashboard(){
           <CardContent className="p-4">
             <div className="text-sm font-medium">Trust & Badges</div>
             <div className="mt-2 space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</div>
+              <div className="flex items-center gap-2">
+                <BadgeCheck className="h-4 w-4 text-primary"/>
+                <span>{(stored.idStatus||'not_uploaded') === 'pending' ? 'ID verification pending' : (stored.idStatus==='verified' ? 'ID verified' : 'ID not uploaded')}</span>
+              </div>
               <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Insured</div>
             </div>
           </CardContent>

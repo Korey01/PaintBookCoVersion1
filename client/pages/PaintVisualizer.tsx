@@ -9,7 +9,7 @@ export default function PaintVisualizer() {
       </div>
       <Card className="border-muted/60">
         <CardContent className="p-0">
-          <div className="relative h-[420px] md:h-[520px] w-full overflow-hidden rounded-md">
+          <div className="relative h-[720px] md:h-[900px] w-full overflow-hidden rounded-md">
             <iframe
               src="https://appdemo.floori.io/"
               title="Floori Studio Visualizer"

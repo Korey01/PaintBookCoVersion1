@@ -24,7 +24,8 @@ export default function FindPainters() {
 
   const filtered = useMemo(() => {
     const loc = params.get("location")?.toLowerCase() || "";
-    const type = params.get("type")?.toLowerCase() || "";
+    const rawType = params.get("type")?.toLowerCase() || "";
+    const type = rawType === "any" ? "" : rawType;
     return painters.filter(p => {
       const inLoc = !loc || p.location.toLowerCase().includes(loc);
       const inType = !type || p.skills.some(s => s.toLowerCase().includes(type));
@@ -94,7 +95,7 @@ export default function FindPainters() {
 
         <form
           className="mt-4 grid gap-3 rounded-xl border bg-card/80 p-3 backdrop-blur md:grid-cols-[1fr_1fr_auto]"
-          onSubmit={(e)=>{ e.preventDefault(); const q = new URLSearchParams(search); if(queryLocation){ q.set('location', queryLocation); } else { q.delete('location'); } if(queryType){ q.set('type', queryType); } else { q.delete('type'); } navigate(`/find-painter?${q.toString()}`); setPage(1); }}>
+          onSubmit={(e)=>{ e.preventDefault(); const q = new URLSearchParams(search); if(queryLocation){ q.set('location', queryLocation); } else { q.delete('location'); } if(queryType && queryType !== 'any'){ q.set('type', queryType); } else { q.delete('type'); } navigate(`/find-painter?${q.toString()}`); setPage(1); }}>
           <div className="flex items-center gap-2 rounded-lg bg-background p-2">
             <MapPin className="h-4 w-4 text-muted-foreground"/>
             <Input name="location" placeholder="Postcode or city" value={queryLocation} onChange={(e)=>setQueryLocation(e.target.value)} />
@@ -106,7 +107,7 @@ export default function FindPainters() {
                 <SelectValue placeholder="Job type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
+                <SelectItem value="any">Any</SelectItem>
                 <SelectItem value="interior">Interior</SelectItem>
                 <SelectItem value="exterior">Exterior</SelectItem>
                 <SelectItem value="kitchen">Kitchen cabinets</SelectItem>

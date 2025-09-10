@@ -71,6 +71,20 @@ export default function FindPainters() {
           </Select>
         </div>
         <div className="space-y-2">
+          <Label className="text-sm">Sort by</Label>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="rating_desc">Rating (high → low)</SelectItem>
+              <SelectItem value="price_asc">Price (low → high)</SelectItem>
+              <SelectItem value="price_desc">Price (high → low)</SelectItem>
+              <SelectItem value="reviews_desc">Reviews (many → few)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
           <Label className="text-sm">Experience Tier</Label>
           <Select value={tier} onValueChange={setTier}>
             <SelectTrigger>

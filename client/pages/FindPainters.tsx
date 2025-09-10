@@ -43,7 +43,15 @@ export default function FindPainters() {
 
   const [page, setPage] = useState(1);
   const perPage = 6;
-  const paged = useMemo(()=> filtered.slice((page-1)*perPage, page*perPage), [filtered, page]);
+  const sorted = useMemo(()=> {
+    const arr = [...filtered];
+    if(sortBy === 'rating_desc') arr.sort((a,b)=> b.rating - a.rating);
+    else if(sortBy === 'price_asc') arr.sort((a,b)=> parseInt(a.priceRange) - parseInt(b.priceRange));
+    else if(sortBy === 'price_desc') arr.sort((a,b)=> parseInt(b.priceRange) - parseInt(a.priceRange));
+    else if(sortBy === 'reviews_desc') arr.sort((a,b)=> b.reviews - a.reviews);
+    return arr;
+  }, [filtered, sortBy]);
+  const paged = useMemo(()=> sorted.slice((page-1)*perPage, page*perPage), [sorted, page]);
 
   return (
     <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-[280px_1fr]">

@@ -168,6 +168,28 @@ export default function PostJob() {
         </Card>
       )}
 
+      {step === 3 && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-blue-100 p-2 text-blue-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <div>
+                <div className="text-lg font-semibold">Payment Security — 100% Escrow Protection</div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                  <li>Your full payment is securely held until you approve the job.</li>
+                  <li>Protected by our Stripe FCA‑regulated partner.</li>
+                  <li>Fair for everyone: release when satisfied or open a dispute if needed.</li>
+                </ul>
+                <div className="mt-3 text-xs text-muted-foreground">Learn more on our <a className="underline" href="/trust-safety" target="_self">Trust & Safety</a> page.</div>
+                <div className="mt-4 flex justify-end">
+                  <Button onClick={next}>Continue</Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {step === 4 && (
         <Card>
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">

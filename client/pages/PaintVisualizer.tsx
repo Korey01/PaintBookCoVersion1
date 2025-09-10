@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function PaintVisualizer() {
+export default function PaintVisualizer() { useEffect(()=>{ document.title = "Paint Visualizer | PaintBook"; },[]);
   return (
     <div className="container mx-auto grid gap-4 px-4 py-8">
       <div>

@@ -21,7 +21,12 @@ export default function PaintVisualizer(){
   const navigate = useNavigate();
   const [image, setImage] = useState<string | null>(null);
   const [color, setColor] = useState<string>(SWATCHES[1].value);
-  const [intensity, setIntensity] = useState<number[]>([60]);
+  const [intensity, setIntensity] = useState<number[]>([65]);
+  const [mode, setMode] = useState<"multiply"|"color"|"overlay"|"soft-light">("color");
+  const [shadow, setShadow] = useState<number[]>([20]);
+  const [highlight, setHighlight] = useState<number[]>([8]);
+  const [saturation, setSaturation] = useState<number[]>([95]);
+  const [contrast, setContrast] = useState<number[]>([105]);
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>){
     const f = e.target.files?.[0];

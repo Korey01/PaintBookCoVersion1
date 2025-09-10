@@ -183,6 +183,8 @@ export default function PaintVisualizer(){
           </CardContent>
         </Card>
       </div>
+
+      <MockAiVisualizer />
     </div>
   );
 }

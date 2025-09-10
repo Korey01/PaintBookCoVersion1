@@ -115,6 +115,8 @@ export default function PainterProfile(){
                 <Button onClick={()=>navigate(`/post-job?painter=${painter.id}`)}>Request Quote</Button>
                 <Button variant="secondary" onClick={()=>navigate(`/post-job?painter=${painter.id}`)}>Contact</Button>
                 <Button variant="outline" onClick={()=>navigate('/estimator')}>Attach Estimation <ArrowRight className="ml-2 h-4 w-4"/></Button>
+                <Button className="mt-2" onClick={()=>navigate(`/checkout?mode=booking&painter=${encodeURIComponent(painter.name)}&amount=150`)}>Book now (escrow)</Button>
+                <p className="text-xs text-muted-foreground mt-1">Deposits are escrow‑protected and released on completion.</p>
               </div>
             </CardContent>
           </Card>

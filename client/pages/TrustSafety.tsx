@@ -45,6 +45,29 @@ export default function TrustSafety(){
           </CardContent>
         </Card>
 
+        {/* Funds Flow Infographic */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-lg font-semibold">How funds flow</div>
+            <div className="mt-4 grid items-center gap-4 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <div className="text-sm font-medium">Customer</div>
+                <div className="mt-1 text-xs text-muted-foreground">Pays securely</div>
+              </div>
+              <div className="text-center">→</div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <div className="text-sm font-medium">Escrow</div>
+                <div className="mt-1 text-xs text-muted-foreground">Stripe FCA‑regulated partner</div>
+              </div>
+              <div className="text-center">→</div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <div className="text-sm font-medium">Painter</div>
+                <div className="mt-1 text-xs text-muted-foreground">Released on approval</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Verified Painters & Portfolios */}
         <Card>
           <CardContent className="p-6">

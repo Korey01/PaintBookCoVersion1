@@ -14,6 +14,9 @@ export default function FindPainters() {
   const navigate = useNavigate();
   const params = new URLSearchParams(search);
 
+  const [queryLocation, setQueryLocation] = useState<string>(params.get("location") || "");
+  const [queryType, setQueryType] = useState<string>(params.get("type") || "");
+
   const [price, setPrice] = useState<number[]>([15, 40]);
   const [minRating, setMinRating] = useState(4);
   const [available, setAvailable] = useState(true);

@@ -13,7 +13,7 @@ export default function PostJob() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
-  type Step = 1 | 2 | 3;
+  type Step = 1 | 2 | 3 | 4;
   const [step, setStep] = useState<Step>(1);
 
   const [jobType, setJobType] = useState("");

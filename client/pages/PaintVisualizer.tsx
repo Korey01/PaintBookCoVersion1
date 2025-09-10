@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { ImageIcon, Palette, PaintBucket, Lock } from "lucide-react";
+import MockAiVisualizer from "@/components/site/MockAiVisualizer";
 
 const SWATCHES = [
   { name: "Soft White", value: "#F5F6F7" },

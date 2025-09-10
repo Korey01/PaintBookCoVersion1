@@ -340,6 +340,42 @@ export default function Dashboard(){
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={subOpen} onOpenChange={setSubOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage subscription</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 text-sm">
+            <div>
+              <Label>Plan</Label>
+              <Select value={subPlan} onValueChange={setSubPlan}>
+                <SelectTrigger><SelectValue placeholder="Select plan"/></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Starter">Starter · £10/mo</SelectItem>
+                  <SelectItem value="Professional">Professional · £20/mo</SelectItem>
+                  <SelectItem value="Premium">Premium · £35/mo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={()=>{ setSubOpen(false); location.href = `/checkout?mode=subscription&plan=${encodeURIComponent(subPlan)}`; }}>Update plan</Button>
+              <Button variant="secondary" onClick={()=>{ const cur = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}'); localStorage.setItem('paintbook:joinPainter', JSON.stringify({ ...cur, subscription: { ...(cur.subscription||{}), status: 'canceled' } })); setSubOpen(false); }}>Cancel subscription</Button>
+            </div>
+            <div className="pt-2">
+              <div className="font-medium">Billing history</div>
+              <div className="mt-2 grid gap-1">
+                {JSON.parse(localStorage.getItem('paintbook:payments')||'[]').filter((p:any)=>p.mode==='subscription').slice(0,5).map((p:any)=> (
+                  <div key={p.ref} className="flex items-center justify-between text-xs"><span>{new Date(p.createdAt).toLocaleDateString()} · {p.plan}</span><span>£{p.amount}</span></div>
+                ))}
+                {JSON.parse(localStorage.getItem('paintbook:payments')||'[]').filter((p:any)=>p.mode==='subscription').length===0 && (
+                  <div className="text-xs text-muted-foreground">No payments yet.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { painters } from "@/data/painters";
 import { MapPin, PaintBucket, Search as SearchIcon } from "lucide-react";
 
 export default function FindPainters() {
+  useEffect(()=>{ document.title = "Find a Painter | PaintBook"; },[]);
   const { search } = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(search);

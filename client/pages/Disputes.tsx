@@ -110,6 +110,7 @@ export default function Disputes(){
               <Input type="file" accept="image/*" multiple onChange={onFiles}/>
               <Button variant="secondary"><Upload className="mr-2 h-4 w-4"/> Add</Button>
             </div>
+            <div className="mt-1 text-xs text-muted-foreground">Accepted formats: JPG, PNG</div>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {photos.map((src, i)=>(<img key={i} src={src} className="h-24 w-full rounded object-cover"/>))}
             </div>

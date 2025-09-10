@@ -93,14 +93,28 @@ export default function Dashboard(){
     setEditOpen(false);
   }
 
+  const combinedJobs: Job[] = useMemo(()=>{
+    const local = (JSON.parse(localStorage.getItem('paintbook:jobs')||'[]') as any[]).map((j:any, i:number)=> ({
+      id: `lj_${i}`,
+      title: j.jobType ? `${j.jobType} job` : 'Customer job',
+      budget: Number(j.budgetMax || j.budgetMin || 500),
+      date: j.createdAt || new Date().toISOString(),
+      distance: Math.max(1, Math.min(20, Math.round(Math.random()*15)+1)),
+      location: (j.postcode||'').split(' ')[0] || 'N/A',
+      type: (j.jobType||'General').toString(),
+      description: j.desc || 'New job posted by a customer.',
+    }));
+    return [...local, ...NEARBY_JOBS];
+  },[]);
+
   const filteredJobs = useMemo(()=>{
-    return NEARBY_JOBS.filter(j => {
+    return combinedJobs.filter(j => {
       const inBudget = j.budget >= budget[0] && j.budget <= budget[1];
       const inDistance = j.distance <= maxDistance[0];
       const inWhen = when === 'any' || (when === 'this_week' ? daysFromNow(j.date) <= 7 : daysFromNow(j.date) <= 30);
       return inBudget && inDistance && inWhen;
     });
-  },[budget, maxDistance, when]);
+  },[combinedJobs, budget, maxDistance, when]);
 
   function daysFromNow(iso: string){
     const diff = new Date(iso).getTime() - Date.now();

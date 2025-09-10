@@ -32,10 +32,14 @@ export default function TrustSafety(){
               <div>
                 <div className="text-lg font-semibold">Your Money Held Securely Until the Job is Complete.</div>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                  <li>When you book a painter, 30–40% of the agreed job cost is securely held in escrow.</li>
-                  <li>Funds are only released to the painter once the customer confirms the job is satisfactorily completed.</li>
-                  <li>If disputes arise, PaintBook’s dispute resolution process ensures fair mediation.</li>
+                  <li>When you book a painter, 100% of your payment is securely held in escrow.</li>
+                  <li>Funds are only released to the painter once you confirm the job is satisfactorily completed.</li>
+                  <li>Protected by our Stripe FCA‑regulated partner for maximum peace of mind.</li>
                 </ul>
+                <div className="mt-3 grid gap-2 text-xs text-muted-foreground md:grid-cols-2">
+                  <div className="rounded-md bg-blue-50 p-3"><strong>Customer benefit:</strong> pay once, approve when happy — your money stays protected until completion.</div>
+                  <div className="rounded-md bg-green-50 p-3"><strong>Painter benefit:</strong> guaranteed funds in escrow eliminates late or missed payments.</div>
+                </div>
               </div>
             </div>
           </CardContent>

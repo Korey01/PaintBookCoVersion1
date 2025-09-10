@@ -34,7 +34,7 @@ export default function TrustSafety(){
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   <li>When you book a painter, 100% of your payment is securely held in escrow.</li>
                   <li>Funds are only released to the painter once you confirm the job is satisfactorily completed.</li>
-                  <li>Protected by our Stripe FCA‑regulated partner for maximum peace of mind.</li>
+                  <li>Protected via Stripe (FCA-regulated payment partner) for maximum peace of mind.</li>
                 </ul>
                 <div className="mt-3 grid gap-2 text-xs text-muted-foreground md:grid-cols-2">
                   <div className="rounded-md bg-blue-50 p-3"><strong>Customer benefit:</strong> pay once, approve when happy — your money stays protected until completion.</div>
@@ -57,7 +57,7 @@ export default function TrustSafety(){
               <div className="text-center">→</div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <div className="text-sm font-medium">Escrow</div>
-                <div className="mt-1 text-xs text-muted-foreground">Stripe FCA‑regulated partner</div>
+                <div className="mt-1 text-xs text-muted-foreground">Escrow via Stripe (FCA-regulated payment partner)</div>
               </div>
               <div className="text-center">→</div>
               <div className="rounded-lg border bg-card p-4 text-center">

@@ -31,7 +31,7 @@ export default function Index() {
               <Sparkles className="h-3.5 w-3.5"/> Trusted painters. Escrow-protected bookings.
             </div>
             <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Hire verified painters you can trust</h1>
-            <p className="mt-3 text-lg text-muted-foreground">Compare painters by ratings, skills and price. Enjoy 100% escrow protection — your full payment is held securely until you approve the job (via our Stripe FCA‑regulated partner).</p>
+            <p className="mt-3 text-lg text-muted-foreground">Compare painters by ratings, skills and price. Enjoy 100% escrow protection — your full payment is held securely until you approve the job (via Stripe (FCA-regulated payment partner)).</p>
             <form onSubmit={handleSearch} className="mt-6 grid gap-3 rounded-xl border bg-card/80 p-3 backdrop-blur md:grid-cols-[1fr_1fr_auto]">
               <div className="flex items-center gap-2 rounded-lg bg-background p-2">
                 <MapPin className="h-4 w-4 text-muted-foreground"/>
@@ -56,7 +56,7 @@ export default function Index() {
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Insured</span>
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> 100% escrow protection (Stripe FCA partner)</span>
+              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> 100% escrow protection — via Stripe (FCA-regulated payment partner)</span>
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button onClick={() => navigate("/post-job")} variant="secondary">Start your job</Button>

@@ -82,7 +82,7 @@ export default function Disputes(){
           <h1 className="text-2xl font-bold">Dispute log</h1>
           <p className="text-sm text-muted-foreground">Raise a dispute for escrow-held deposits. Our team will review and mediate fairly.</p>
         </div>
-        <div className="inline-flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4"/> FCA-regulated escrow partner</div>
+        <div className="inline-flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4"/> Escrow via Stripe (FCA-regulated payment partner)</div>
       </div>
 
       <Card>

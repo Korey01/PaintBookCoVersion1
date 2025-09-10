@@ -6,7 +6,7 @@ export default function EscrowPainterDemo(){
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold">Escrow & Payment Security (Painter Demo)</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Funds are guaranteed in escrow (Stripe FCA‑regulated partner). Get paid when customers approve the job.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Funds are guaranteed in escrow — via Stripe (FCA-regulated payment partner). Get paid when customers approve the job.</p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <Card className="border-muted/60">
           <CardContent className="p-6">

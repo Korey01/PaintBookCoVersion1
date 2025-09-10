@@ -83,7 +83,7 @@ export default function CustomerDashboard(){
           <CardContent className="p-4">
             <div className="text-sm font-medium">Payments & Escrow</div>
             <div className="mt-2 grid gap-1 text-xs">
-              <div className="mb-2 rounded-lg bg-secondary p-2 text-xs">100% escrow protection — your full payment is held until you approve the job (Stripe FCA‑regulated partner). <a className="underline" href="/escrow-demo/customer">View demo</a></div>
+              <div className="mb-2 rounded-lg bg-secondary p-2 text-xs">100% escrow protection — your full payment is held until you approve the job (via Stripe (FCA-regulated payment partner)). <a className="underline" href="/escrow-demo/customer">View demo</a></div>
               {JSON.parse(localStorage.getItem('paintbook:payments')||'[]').filter((p:any)=>p.mode==='booking').slice(0,5).map((p:any)=> (
                 <div key={p.ref} className="flex items-center justify-between"><span>{new Date(p.createdAt).toLocaleDateString()} · {p.painter}</span><span>£{p.amount}</span></div>
               ))}

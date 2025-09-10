@@ -177,7 +177,7 @@ export default function PostJob() {
                 <div className="text-lg font-semibold">Payment Security — 100% Escrow Protection</div>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   <li>Your full payment is securely held until you approve the job.</li>
-                  <li>Protected by our Stripe FCA‑regulated partner.</li>
+                  <li>Protected via Stripe (FCA-regulated payment partner).</li>
                   <li>Fair for everyone: release when satisfied or open a dispute if needed.</li>
                 </ul>
                 <div className="mt-3 text-xs text-muted-foreground">Learn more on our <a className="underline" href="/trust-safety" target="_self">Trust & Safety</a> page.</div>
@@ -204,7 +204,7 @@ export default function PostJob() {
               {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
             <div className="sm:col-span-2 rounded-lg bg-secondary p-4 text-sm">
-              We'll notify nearby verified painters. Your contact is shared only after you accept a quote. 100% of your payment is held in escrow until you approve the job (protected by our Stripe FCA‑regulated partner).
+              We'll notify nearby verified painters. Your contact is shared only after you accept a quote. 100% of your payment is held in escrow until you approve the job (via Stripe (FCA-regulated payment partner)).
             </div>
             <div className="sm:col-span-2 flex justify-between">
               <Button variant="secondary" onClick={back}>Back</Button>

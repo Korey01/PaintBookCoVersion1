@@ -51,14 +51,14 @@ export default function PaintVisualizer(){
         <CardContent className="p-0">
           <div className="aspect-[16/9] w-full overflow-hidden rounded-md">
             <iframe
-              src="https://studio.floori.io/"
+              src="https://appdemo.floori.io/"
               title="Floori Studio Visualizer"
               className="h-full w-full"
               loading="lazy"
               allow="clipboard-read; clipboard-write; fullscreen"
             />
           </div>
-          <div className="px-4 py-3 text-xs text-muted-foreground">If the embedded preview is blocked by your browser, <a href="https://studio.floori.io/" target="_blank" className="underline">open the demo in a new tab</a>.</div>
+          <div className="px-4 py-3 text-xs text-muted-foreground">If the embedded preview is blocked by your browser, <a href="https://appdemo.floori.io/" target="_blank" className="underline">open the demo in a new tab</a>.</div>
         </CardContent>
       </Card>
 

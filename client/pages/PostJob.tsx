@@ -204,7 +204,7 @@ export default function PostJob() {
               {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
             <div className="sm:col-span-2 rounded-lg bg-secondary p-4 text-sm">
-              We'll notify nearby verified painters. Your contact is shared only after you accept a quote. Deposits are held in escrow for protection.
+              We'll notify nearby verified painters. Your contact is shared only after you accept a quote. 100% of your payment is held in escrow until you approve the job (protected by our Stripe FCA‑regulated partner).
             </div>
             <div className="sm:col-span-2 flex justify-between">
               <Button variant="secondary" onClick={back}>Back</Button>

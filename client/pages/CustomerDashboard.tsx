@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function CustomerDashboard(){
+  useEffect(()=>{ document.title = "Customer Dashboard | PaintBook"; },[]);
   const navigate = useNavigate();
   const favIds: string[] = JSON.parse(localStorage.getItem('paintbook:favs')||'[]');
   const favs = painters.filter(p => favIds.includes(p.id));

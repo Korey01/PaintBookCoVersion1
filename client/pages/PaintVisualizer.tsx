@@ -74,13 +74,47 @@ export default function PaintVisualizer(){
                 </div>
               </div>
 
+              <div className="grid gap-2">
+                <Label>Blend mode</Label>
+                <Select value={mode} onValueChange={(v)=>setMode(v as any)}>
+                  <SelectTrigger><SelectValue placeholder="Blend mode"/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="color">Color (most realistic)</SelectItem>
+                    <SelectItem value="multiply">Multiply</SelectItem>
+                    <SelectItem value="overlay">Overlay</SelectItem>
+                    <SelectItem value="soft-light">Soft light</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <Label>Overlay intensity ({intensity[0]}%)</Label>
                 <Slider min={0} max={100} step={1} value={intensity} onValueChange={setIntensity} />
               </div>
 
+              <div>
+                <Label>Shadow depth ({shadow[0]}%)</Label>
+                <Slider min={0} max={80} step={1} value={shadow} onValueChange={setShadow} />
+              </div>
+
+              <div>
+                <Label>Highlight boost ({highlight[0]}%)</Label>
+                <Slider min={0} max={40} step={1} value={highlight} onValueChange={setHighlight} />
+              </div>
+
+              <div className="grid gap-2 md:grid-cols-2">
+                <div>
+                  <Label>Saturation ({saturation[0]}%)</Label>
+                  <Slider min={50} max={120} step={1} value={saturation} onValueChange={setSaturation} />
+                </div>
+                <div>
+                  <Label>Contrast ({contrast[0]}%)</Label>
+                  <Slider min={90} max={120} step={1} value={contrast} onValueChange={setContrast} />
+                </div>
+              </div>
+
               <div className="rounded-lg bg-secondary p-3 text-xs inline-flex items-center gap-2">
-                <PaintBucket className="h-4 w-4"/> Placeholder effect uses a colour overlay with blend mode for concept preview.
+                <PaintBucket className="h-4 w-4"/> Uses layered colour + soft‑light shading and basic image filters for a more vivid preview.
               </div>
             </div>
           </CardContent>

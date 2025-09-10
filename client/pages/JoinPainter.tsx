@@ -33,6 +33,9 @@ export default function JoinPainter() {
 
   const [images, setImages] = useState<string[]>([]);
   const [idDocs, setIdDocs] = useState<string[]>([]);
+  const [idType, setIdType] = useState<string>("");
+  const [idNumber, setIdNumber] = useState<string>("");
+  const [idExpiry, setIdExpiry] = useState<string>("");
   const [tier, setTier] = useState("Starter");
 
   function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -90,7 +93,7 @@ export default function JoinPainter() {
   function back() { setStep((s)=> Math.max(1, (s-1) as Step)); }
 
   function submit() {
-    const payload = { name, email, business, bio, postcode, radius: radius[0], skills, rateMin: rateMin[0], rateMax: rateMax[0], availability, images, idDocs, tier, idStatus: idDocs.length>0 ? 'pending' : 'not_uploaded' };
+    const payload = { name, email, business, bio, postcode, radius: radius[0], skills, rateMin: rateMin[0], rateMax: rateMax[0], availability, images, idDocs, idType, idNumber, idExpiry, tier, idStatus: idDocs.length>0 ? 'pending' : 'not_uploaded' };
     localStorage.setItem('paintbook:joinPainter', JSON.stringify(payload));
     navigate('/join-painter/completed');
   }
@@ -196,6 +199,7 @@ export default function JoinPainter() {
                 <Input type="file" accept="image/*" multiple onChange={onFiles}/>
                 <Button variant="secondary" type="button"><Upload className="mr-2 h-4 w-4"/> Add</Button>
               </div>
+              <div className="mt-1 text-xs text-muted-foreground">Accepted formats: JPG, PNG</div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {images.map((src, i)=>(<img key={i} src={src} className="h-24 w-full rounded object-cover"/>))}
               </div>
@@ -205,6 +209,28 @@ export default function JoinPainter() {
               <div className="flex items-center gap-3">
                 <Input type="file" accept="image/*,application/pdf" multiple onChange={onIdFiles}/>
                 <Button variant="secondary" type="button"><IdCard className="mr-2 h-4 w-4"/> Upload ID</Button>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">Accepted formats: PDF, JPG, PNG</div>
+              <div className="mt-2 grid gap-3 md:grid-cols-3">
+                <div>
+                  <Label>ID type</Label>
+                  <Select value={idType} onValueChange={setIdType}>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="passport">Passport</SelectItem>
+                      <SelectItem value="driving_licence">Driving licence</SelectItem>
+                      <SelectItem value="national_id">National ID</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>ID number</Label>
+                  <Input value={idNumber} onChange={(e)=>setIdNumber(e.target.value)} placeholder="e.g. 123456789" />
+                </div>
+                <div>
+                  <Label>Expiry date</Label>
+                  <Input type="date" value={idExpiry} onChange={(e)=>setIdExpiry(e.target.value)} />
+                </div>
               </div>
               <div className="mt-2 text-xs text-muted-foreground">
                 {idDocs.length === 0 ? 'No ID uploaded yet.' : `${idDocs.length} file${idDocs.length>1?'s':''} uploaded · Verification pending`}

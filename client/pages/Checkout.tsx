@@ -21,7 +21,12 @@ export default function Checkout(){
       if (plan === 'Customer Plus') return 5;
       return plan.toLowerCase() === "premium" ? 35 : plan.toLowerCase() === "professional" ? 20 : 10;
     }
-    return amountParam && amountParam > 0 ? amountParam : 150; // mock default deposit
+    if (amountParam && amountParam > 0) return amountParam;
+    const jobs = JSON.parse(localStorage.getItem('paintbook:jobs')||'[]');
+    const last = jobs[jobs.length-1] || {};
+    const base = Number(last.budgetMax || last.budgetMin || 500);
+    const pct = 0.3 + Math.random()*0.1; // 30–40%
+    return Math.round(base * pct);
   }, [mode, plan, amountParam]);
 
   const [name, setName] = useState("");

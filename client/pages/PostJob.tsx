@@ -69,7 +69,7 @@ export default function PostJob() {
       if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
       setErrors({});
     }
-    setStep((s)=> Math.min(3, (s+1) as Step));
+    setStep((s)=> Math.min(4, (s+1) as Step));
   }
   function back() { setStep((s)=> Math.max(1, (s-1) as Step)); }
 

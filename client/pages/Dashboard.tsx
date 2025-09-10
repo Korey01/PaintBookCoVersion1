@@ -213,6 +213,42 @@ export default function Dashboard(){
           </div>
         </section>
       </div>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit my profile</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <Label>Full name</Label>
+              <Input value={name} onChange={(e)=>setName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Business name</Label>
+              <Input value={business} onChange={(e)=>setBusiness(e.target.value)} />
+            </div>
+            <div>
+              <Label>Short bio</Label>
+              <Input value={bio} onChange={(e)=>setBio(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Base postcode</Label>
+                <Input value={postcode} onChange={(e)=>setPostcode(e.target.value)} />
+              </div>
+              <div>
+                <Label>Coverage radius (miles)</Label>
+                <Slider min={5} max={50} step={1} value={radius} onValueChange={setRadius} />
+                <div className="text-xs text-muted-foreground mt-1">{radius[0]} miles</div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={()=>setEditOpen(false)}>Cancel</Button>
+              <Button onClick={saveProfile}>Save changes</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

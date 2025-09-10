@@ -59,7 +59,10 @@ export default function Dashboard(){
   const insuranceStatus = stored.insuranceStatus || (insuranceDocs.length>0 ? 'on_file' : 'not_provided');
 
   const profileProgress = 80;
-  const tier = (JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}')?.tier) || 'Starter';
+  const painterStore = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}');
+  const tier = (painterStore?.subscription?.plan) || painterStore?.tier || 'Starter';
+  const [subOpen, setSubOpen] = useState(false);
+  const [subPlan, setSubPlan] = useState<string>(painterStore?.subscription?.plan || tier);
 
   useEffect(()=>{
     if (location.hash === '#edit-profile') setEditOpen(true);

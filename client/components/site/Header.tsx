@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Paintbrush, Search, LogIn } from "lucide-react";
+import { Paintbrush, Search, LogIn, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   CommandDialog,
@@ -16,7 +16,9 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const { search } = useLocation();
+  const loc = useLocation();
+  const { search } = loc;
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +28,11 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const u = JSON.parse(localStorage.getItem("paintbook:user") || "null");
+    setLoggedIn(!!u);
+  }, [loc.pathname, loc.search, loc.hash]);
+
   function goToFind(params: Record<string, string | undefined>) {
     const q = new URLSearchParams();
     if (params.location) q.set("location", params.location);
@@ -33,6 +40,11 @@ export default function Header() {
     setOpen(false);
     setQuery("");
     navigate(`/find-painter?${q.toString()}`);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("paintbook:user");
+    navigate("/auth");
   }
 
   return (
@@ -57,9 +69,15 @@ export default function Header() {
           <Button variant="ghost" className="hidden sm:inline-flex" onClick={() => setOpen(true)}>
             <Search className="mr-2 h-4 w-4"/> Search
           </Button>
-          <Button asChild className="shadow-md">
-            <Link to="/join-painter"><LogIn className="mr-2 h-4 w-4"/> Join as Painter</Link>
-          </Button>
+          {loggedIn ? (
+            <Button className="shadow-md" variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4"/> Log out
+            </Button>
+          ) : (
+            <Button asChild className="shadow-md">
+              <Link to="/join-painter"><LogIn className="mr-2 h-4 w-4"/> Join as Painter</Link>
+            </Button>
+          )}
         </div>
       </div>
 

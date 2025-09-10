@@ -40,11 +40,26 @@ export default function PaintVisualizer(){
     <div className="container mx-auto grid gap-8 px-4 py-10">
       <div>
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          <Palette className="h-3.5 w-3.5"/> Paint Visualizer (Concept)
+          <Palette className="h-3.5 w-3.5"/> Paint Visualizer: Try Your Wall in Real Time
         </div>
-        <h1 className="mt-3 text-2xl font-bold">Try colours on your room photo</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Upload a wall/room image, pick a colour swatch, and preview a simple overlay. This is a static demo preview.</p>
+        <h1 className="mt-3 text-2xl font-bold">Interactive paint preview</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Upload a photo and select a paint color to see the result instantly.</p>
       </div>
+
+      <Card className="border-muted/60">
+        <CardContent className="p-0">
+          <div className="aspect-[16/9] w-full overflow-hidden rounded-md">
+            <iframe
+              src="https://studio.floori.io/"
+              title="Floori Studio Visualizer"
+              className="h-full w-full"
+              loading="lazy"
+              allow="clipboard-read; clipboard-write; fullscreen"
+            />
+          </div>
+          <div className="px-4 py-3 text-xs text-muted-foreground">If the embedded preview is blocked by your browser, <a href="https://studio.floori.io/" target="_blank" className="underline">open the demo in a new tab</a>.</div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="border-muted/60">

@@ -40,8 +40,27 @@ export default function Dashboard(){
   const [when, setWhen] = useState<string>("this_week");
   const [applied, setApplied] = useState<string[]>(() => JSON.parse(localStorage.getItem('paintbook:applied')||'[]'));
 
+  const [editOpen, setEditOpen] = useState(false);
+  const stored = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}');
+  const [name, setName] = useState<string>(stored.name || "");
+  const [business, setBusiness] = useState<string>(stored.business || "");
+  const [bio, setBio] = useState<string>(stored.bio || "");
+  const [postcode, setPostcode] = useState<string>(stored.postcode || "");
+  const [radius, setRadius] = useState<number[]>([stored.radius || 15]);
+
   const profileProgress = 80;
   const tier = (JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}')?.tier) || 'Starter';
+
+  useEffect(()=>{
+    if (location.hash === '#edit-profile') setEditOpen(true);
+  },[]);
+
+  function saveProfile(){
+    const current = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}');
+    const next = { ...current, name, business, bio, postcode, radius: radius[0] };
+    localStorage.setItem('paintbook:joinPainter', JSON.stringify(next));
+    setEditOpen(false);
+  }
 
   const filteredJobs = useMemo(()=>{
     return NEARBY_JOBS.filter(j => {

@@ -9,19 +9,20 @@ export default function PaintVisualizer() { useEffect(()=>{ document.title = "Pa
       </div>
       <Card className="border-muted/60">
         <CardContent className="p-0">
-          <div className="relative h-[720px] md:h-[900px] w-full overflow-hidden rounded-md">
+          <div className="relative h-[75vh] w-full overflow-hidden rounded-md" aria-label="Interactive paint visualizer">
             <iframe
               src="https://appdemo.floori.io/"
               title="Floori Studio Visualizer"
               className="absolute left-0 top-0 h-[1200px] w-full"
               loading="lazy"
               scrolling="no"
-              style={{ border: 0, transform: "scale(0.9) translateY(-30px)", transformOrigin: "top center" }}
+              style={{ border: 0 }}
               allow="clipboard-read; clipboard-write; fullscreen"
             />
           </div>
         </CardContent>
       </Card>
+      <div className="text-xs text-muted-foreground">Having trouble? <a className="underline" href="https://appdemo.floori.io/" target="_blank" rel="noreferrer">Open full‑screen</a>.</div>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { ShieldCheck, BadgeCheck, ArrowRight, Quote, Sparkles, Calculator, MapPi
 import PainterCard from "@/components/site/PainterCard";
 import { painters } from "@/data/painters";
 
-export default function Index() {
+export default function Index() { useEffect(()=>{ document.title = "PaintBook | Hire Verified Painters"; },[]);
   const navigate = useNavigate();
   const [jobType, setJobType] = useState<string>("");
 

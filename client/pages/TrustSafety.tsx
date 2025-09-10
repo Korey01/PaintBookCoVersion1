@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { ShieldCheck, Lock, BadgeCheck, Star, Shield, HardHat, PaintRoller } from "lucide-react";
 
 export default function TrustSafety(){
+  useEffect(()=>{ document.title = "Trust & Safety | PaintBook"; },[]);
   return (
     <div className="w-full">
       {/* Hero */}

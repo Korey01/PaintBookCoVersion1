@@ -4,8 +4,10 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import PainterCard from "@/components/site/PainterCard";
 import { painters } from "@/data/painters";
+import { MapPin, PaintBucket, Search as SearchIcon } from "lucide-react";
 
 export default function FindPainters() {
   const { search } = useLocation();

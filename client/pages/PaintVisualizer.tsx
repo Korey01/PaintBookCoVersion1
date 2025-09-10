@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { useEffect } from "react";
 
 export default function PaintVisualizer() { useEffect(()=>{ document.title = "Paint Visualizer | PaintBook"; },[]);

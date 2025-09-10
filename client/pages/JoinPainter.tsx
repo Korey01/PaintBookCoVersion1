@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Upload, ArrowRight, CheckCircle2, IdCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
@@ -32,6 +32,7 @@ export default function JoinPainter() {
   const toggleAvail = (s: string) => setAvailability((prev) => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s]);
 
   const [images, setImages] = useState<string[]>([]);
+  const [idDocs, setIdDocs] = useState<string[]>([]);
   const [tier, setTier] = useState("Starter");
 
   function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -39,6 +40,15 @@ export default function JoinPainter() {
     files.forEach((f)=>{
       const reader = new FileReader();
       reader.onload = () => setImages(prev => [...prev, String(reader.result)]);
+      reader.readAsDataURL(f);
+    });
+  }
+
+  function onIdFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []).slice(0, 2);
+    files.forEach((f)=>{
+      const reader = new FileReader();
+      reader.onload = () => setIdDocs(prev => [...prev, String(reader.result)]);
       reader.readAsDataURL(f);
     });
   }
@@ -80,7 +90,7 @@ export default function JoinPainter() {
   function back() { setStep((s)=> Math.max(1, (s-1) as Step)); }
 
   function submit() {
-    const payload = { name, email, business, bio, postcode, radius: radius[0], skills, rateMin: rateMin[0], rateMax: rateMax[0], availability, images, tier };
+    const payload = { name, email, business, bio, postcode, radius: radius[0], skills, rateMin: rateMin[0], rateMax: rateMax[0], availability, images, idDocs, tier, idStatus: idDocs.length>0 ? 'pending' : 'not_uploaded' };
     localStorage.setItem('paintbook:joinPainter', JSON.stringify(payload));
     navigate('/join-painter/completed');
   }
@@ -184,10 +194,20 @@ export default function JoinPainter() {
               <Label className="mb-2 block">Upload 3–6 photos of past work</Label>
               <div className="flex items-center gap-3">
                 <Input type="file" accept="image/*" multiple onChange={onFiles}/>
-                <Button variant="secondary"><Upload className="mr-2 h-4 w-4"/> Add</Button>
+                <Button variant="secondary" type="button"><Upload className="mr-2 h-4 w-4"/> Add</Button>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {images.map((src, i)=>(<img key={i} src={src} className="h-24 w-full rounded object-cover"/>))}
+              </div>
+            </div>
+            <div className="sm:col-span-2">
+              <Label className="mb-2 block">Upload government ID for verification</Label>
+              <div className="flex items-center gap-3">
+                <Input type="file" accept="image/*,application/pdf" multiple onChange={onIdFiles}/>
+                <Button variant="secondary" type="button"><IdCard className="mr-2 h-4 w-4"/> Upload ID</Button>
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                {idDocs.length === 0 ? 'No ID uploaded yet.' : `${idDocs.length} file${idDocs.length>1?'s':''} uploaded · Verification pending`}
               </div>
             </div>
             <div>
@@ -222,6 +242,7 @@ export default function JoinPainter() {
               <Button variant="secondary" onClick={back}>Back</Button>
               <Button onClick={submit}>Create Profile</Button>
             </div>
+            <div className="text-xs text-muted-foreground">ID status: {idDocs.length>0 ? 'Pending verification' : 'Not uploaded'}</div>
           </CardContent>
         </Card>
       )}

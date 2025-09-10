@@ -23,6 +23,8 @@ export default function FindPainters() {
   const [available, setAvailable] = useState(true);
   const [tier, setTier] = useState<string>("any");
 
+  const [sortBy, setSortBy] = useState<string>("rating_desc");
+
   const filtered = useMemo(() => {
     const loc = params.get("location")?.toLowerCase() || "";
     const rawType = params.get("type")?.toLowerCase() || "";

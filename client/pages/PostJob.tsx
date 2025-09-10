@@ -168,7 +168,7 @@ export default function PostJob() {
         </Card>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <Card>
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div>

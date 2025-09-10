@@ -22,6 +22,8 @@ import Checkout from "./pages/Checkout";
 import CheckoutConfirmation from "./pages/CheckoutConfirmation";
 import Dashboard from "./pages/Dashboard";
 import TrustSafety from "./pages/TrustSafety";
+import EscrowCustomerDemo from "./pages/EscrowCustomerDemo";
+import EscrowPainterDemo from "./pages/EscrowPainterDemo";
 import Auth from "./pages/Auth";
 import VerifyEmail from "./pages/VerifyEmail";
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -71,6 +73,8 @@ const App = () => (
             <Route path="/estimates/saved" element={<Estimates />} />
             <Route path="/about" element={<About />} />
             <Route path="/trust-safety" element={<TrustSafety />} />
+            <Route path="/escrow-demo/customer" element={<EscrowCustomerDemo />} />
+            <Route path="/escrow-demo/painter" element={<EscrowPainterDemo />} />
             <Route path="/painter/:id" element={<PainterProfile />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

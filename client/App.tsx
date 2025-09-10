@@ -46,6 +46,8 @@ const App = () => (
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/post-job/confirmation" element={<PostJobConfirmation />} />
             <Route path="/estimator" element={<Estimator />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
             <Route path="/join-painter" element={<JoinPainter />} />
             <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
             <Route path="/dashboard" element={<Dashboard />} />

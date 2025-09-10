@@ -16,7 +16,7 @@ export default function PaintVisualizer() {
               className="absolute left-0 top-0 h-[1200px] w-full"
               loading="lazy"
               scrolling="no"
-              style={{ border: 0, transform: "scale(1.1)", transformOrigin: "top center" }}
+              style={{ border: 0, transform: "scale(0.9) translateY(-30px)", transformOrigin: "top center" }}
               allow="clipboard-read; clipboard-write; fullscreen"
             />
           </div>

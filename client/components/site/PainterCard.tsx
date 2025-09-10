@@ -20,7 +20,7 @@ export default function PainterCard({ painter }: { painter: Painter }) {
   return (
     <Card className="group overflow-hidden border-muted/60 shadow-sm transition hover:shadow-lg">
       <CardHeader className="p-0">
-        <img src={painter.photo} alt={painter.name} className="h-48 w-full object-cover transition duration-300 group-hover:scale-[1.02]" />
+        <img src={painter.photo} alt={`${painter.name} portfolio`} loading="lazy" className="h-48 w-full object-cover transition duration-300 group-hover:scale-[1.02]" />
       </CardHeader>
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">

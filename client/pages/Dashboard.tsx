@@ -155,7 +155,7 @@ export default function Dashboard(){
           <CardContent className="p-4">
             <div className="text-sm font-medium">Subscription</div>
             <div className="mt-2 text-sm">Current tier: <Badge variant="outline">{tier}</Badge></div>
-            <Button className="mt-3 w-full" variant="secondary">Manage</Button>
+            <Button className="mt-3 w-full" variant="secondary" onClick={()=>setSubOpen(true)}>Manage</Button>
           </CardContent>
         </Card>
       </div>

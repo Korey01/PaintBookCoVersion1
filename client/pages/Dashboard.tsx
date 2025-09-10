@@ -35,6 +35,7 @@ const DISCOUNTS = [
 ];
 
 export default function Dashboard(){
+  useEffect(()=>{ document.title = "Painter Dashboard | PaintBook"; },[]);
   const [budget, setBudget] = useState<number[]>([300, 2000]);
   const [maxDistance, setMaxDistance] = useState<number[]>([15]);
   const [when, setWhen] = useState<string>("this_week");

@@ -27,7 +27,8 @@ export default function FindPainters() {
       const inPrice = rateLow >= price[0] && rateLow <= price[1];
       const inRating = p.rating >= minRating;
       const inTier = tier === "any" || p.tier === tier;
-      return inLoc && inType && inPrice && inRating && inTier;
+      const inAvail = !available || (p.availability?.includes("This week") ?? false);
+      return inLoc && inType && inPrice && inRating && inTier && inAvail;
     });
   }, [params, price, minRating, tier]);
 

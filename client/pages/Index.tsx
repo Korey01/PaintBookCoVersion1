@@ -62,6 +62,7 @@ export default function Index() {
               <Button onClick={() => navigate("/post-job")} variant="secondary">Start your job</Button>
               <Button onClick={() => navigate("/estimator")} variant="outline"><Calculator className="mr-2 h-4 w-4"/> Paint Estimator</Button>
               <Button onClick={() => navigate("/join-painter")} variant="ghost">Join as a Painter</Button>
+              <Button onClick={() => navigate("/visualizer")}><PaintBucket className="mr-2 h-4 w-4"/> Paint Visualizer</Button>
             </div>
           </div>
         </div>

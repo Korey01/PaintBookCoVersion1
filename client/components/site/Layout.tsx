@@ -2,6 +2,8 @@ import { PropsWithChildren } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import { useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import PageTurn from "./PageTurn";
 
 export default function Layout({ children }: PropsWithChildren) {
   const { pathname } = useLocation();
@@ -38,7 +40,14 @@ export default function Layout({ children }: PropsWithChildren) {
         <div aria-hidden className="fixed inset-0 -z-10 bg-gradient-to-b from-[hsl(var(--background))] to-[hsl(var(--muted))]" />
       )}
       <Header />
-      <main className="flex-1">{children}</main>
+      {/* Perspective container for book-like page turns */}
+      <div style={{ perspective: "1200px" }}>
+        <AnimatePresence mode="wait">
+          <PageTurn routeKey={pathname}>
+            <main className="flex-1">{children}</main>
+          </PageTurn>
+        </AnimatePresence>
+      </div>
       <Footer />
     </div>
   );

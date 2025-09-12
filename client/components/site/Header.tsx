@@ -63,9 +63,8 @@ export default function Header() {
         <nav className="hidden items-center gap-6 md:flex">
           <NavLink to="/find-painter" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Find a Painter</NavLink>
           <NavLink to="/post-job" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Post a Job</NavLink>
-          <NavLink to="/estimator" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Paint Estimator</NavLink>
-          <NavLink to="/visualizer" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Visualizer</NavLink>
-          <NavLink to="/about" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>About</NavLink>
+          <NavLink to="/vestimator" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Vestimator</NavLink>
+                    <NavLink to="/about" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>About</NavLink>
           <NavLink to="/trust-safety" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Trust & Safety</NavLink>
           <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
         </nav>
@@ -116,9 +115,8 @@ export default function Header() {
           <nav className="grid gap-3 text-sm">
             <Link to="/find-painter" onClick={()=>setMobileOpen(false)}>Find a Painter</Link>
             <Link to="/post-job" onClick={()=>setMobileOpen(false)}>Post a Job</Link>
-            <Link to="/estimator" onClick={()=>setMobileOpen(false)}>Paint Estimator</Link>
-            <Link to="/visualizer" onClick={()=>setMobileOpen(false)}>Visualizer</Link>
-            <Link to="/trust-safety" onClick={()=>setMobileOpen(false)}>Trust & Safety</Link>
+            <Link to="/vestimator" onClick={()=>setMobileOpen(false)}>Vestimator</Link>
+                        <Link to="/trust-safety" onClick={()=>setMobileOpen(false)}>Trust & Safety</Link>
             <Link to={`/dashboard${search||""}`} onClick={()=>setMobileOpen(false)}>Dashboard</Link>
             {loggedIn ? (
               <Button variant="outline" onClick={()=>{ setMobileOpen(false); handleLogout(); }} className="mt-2">

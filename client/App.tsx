@@ -25,6 +25,7 @@ import TrustSafety from "./pages/TrustSafety";
 import EscrowCustomerDemo from "./pages/EscrowCustomerDemo";
 import EscrowPainterDemo from "./pages/EscrowPainterDemo";
 import PaintVisualizer from "./pages/PaintVisualizer";
+import Vestimator from "./pages/Vestimator";
 import Auth from "./pages/Auth";
 import VerifyEmail from "./pages/VerifyEmail";
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/find-painter" element={<FindPainters />} />
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/post-job/confirmation" element={<PostJobConfirmation />} />
+            <Route path="/vestimator" element={<Vestimator />} />
             <Route path="/estimator" element={<Estimator />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />

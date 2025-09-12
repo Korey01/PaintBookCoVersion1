@@ -60,9 +60,8 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button onClick={() => navigate("/post-job")} variant="secondary">Start your job</Button>
-              <Button onClick={() => navigate("/estimator")} variant="outline"><Calculator className="mr-2 h-4 w-4"/> Paint Estimator</Button>
+              <Button onClick={() => navigate("/vestimator")} variant="outline"><Calculator className="mr-2 h-4 w-4"/> Vestimator</Button>
               <Button onClick={() => navigate("/join-painter")} variant="ghost">Join as a Painter</Button>
-              <Button onClick={() => navigate("/visualizer")}><PaintBucket className="mr-2 h-4 w-4"/> Paint Visualizer</Button>
             </div>
           </div>
         </div>
@@ -142,7 +141,7 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
             <h3 className="text-2xl font-bold">Estimate your paint in minutes</h3>
             <p className="mt-2 text-muted-foreground">Enter room dimensions, number of coats and openings. Get litres required and a baseline material cost. Attach to your job post with one click.</p>
             <div className="mt-4 flex gap-3">
-              <Button onClick={() => navigate("/estimator")}>Open Estimator</Button>
+              <Button onClick={() => navigate("/vestimator")}>Open Vestimator</Button>
               <Button onClick={() => navigate("/find-painter")} variant="outline">Find a Painter</Button>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import PainterCard from "@/components/site/PainterCard";
 import { painters } from "@/data/painters";
-import { MapPin, PaintBucket, Search as SearchIcon } from "lucide-react";
+import { MapPin, PaintBucket, Search as SearchIcon, Info } from "lucide-react";
 
 export default function FindPainters() {
   useEffect(()=>{ document.title = "Find a Painter | PaintBook"; },[]);
@@ -52,7 +52,45 @@ export default function FindPainters() {
     else if(sortBy === 'reviews_desc') arr.sort((a,b)=> b.reviews - a.reviews);
     return arr;
   }, [filtered, sortBy]);
-  const paged = useMemo(()=> sorted.slice((page-1)*perPage, page*perPage), [sorted, page]);
+  // Distance fallback when no exact location match
+  const { nearestSorted, distancesMap, usingFallback, nearestLabel } = useMemo(() => {
+    const locRaw = params.get('location') || '';
+    const loc = locRaw.trim();
+    if (!loc) return { nearestSorted: sorted, distancesMap: new Map<string, number>(), usingFallback: false, nearestLabel: '' };
+
+    if (sorted.length > 0) return { nearestSorted: sorted, distancesMap: new Map<string, number>(), usingFallback: false, nearestLabel: '' };
+
+    const rawType = params.get("type")?.toLowerCase() || "";
+    const type = rawType === "any" ? "" : rawType;
+    const candidates = painters.filter(p => {
+      const rateLow = parseInt(p.priceRange.replace(/[^0-9]/g, "").slice(0,2));
+      const inPrice = rateLow >= price[0] && rateLow <= price[1];
+      const inRating = p.rating >= minRating;
+      const inTier = tier === "any" || p.tier === tier;
+      const inAvail = !available || (p.availability?.includes("This week") ?? false);
+      const inType = !type || p.skills.some(s => s.toLowerCase().includes(type));
+      return inType && inPrice && inRating && inTier && inAvail;
+    });
+
+    const { getCityCoord, haversineKm } = require("@/lib/geo");
+    const src = getCityCoord(loc);
+    const map = new Map<string, number>();
+    if (src) {
+      candidates.forEach(p => {
+        const dst = getCityCoord(p.location);
+        if (dst) {
+          const d = haversineKm(src, dst);
+          map.set(p.id, d);
+        }
+      });
+    }
+
+    const withDist = [...candidates].sort((a,b)=> (map.get(a.id) ?? Number.POSITIVE_INFINITY) - (map.get(b.id) ?? Number.POSITIVE_INFINITY));
+
+    return { nearestSorted: withDist, distancesMap: map, usingFallback: true, nearestLabel: loc };
+  }, [params, sorted, price, minRating, tier, available]);
+
+  const paged = useMemo(()=> nearestSorted.slice((page-1)*perPage, page*perPage), [nearestSorted, page]);
 
   return (
     <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-[280px_1fr]">
@@ -118,6 +156,12 @@ export default function FindPainters() {
           <div>
             <h1 className="text-2xl font-bold">Painters {params.get("location") ? `in ${params.get("location")}` : "near you"}</h1>
             <p className="text-sm text-muted-foreground">Search by postcode/city and refine with filters.</p>
+            {usingFallback && (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-md border bg-secondary px-3 py-1 text-xs text-foreground">
+                <Info className="h-3.5 w-3.5"/>
+                No painters found in {nearestLabel}. Showing the closest matches by distance.
+              </div>
+            )}
           </div>
           <button onClick={() => navigate("/post-job")} className="text-sm text-primary underline">Post a job</button>
         </div>
@@ -150,12 +194,12 @@ export default function FindPainters() {
         </form>
 
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {paged.map(p => <PainterCard key={p.id} painter={p} />)}
-          {filtered.length === 0 && (
+          {paged.map(p => <PainterCard key={p.id} painter={p} distanceKm={distancesMap.get(p.id)} />)}
+          {nearestSorted.length === 0 && (
             <p className="col-span-full text-sm text-muted-foreground">No painters match your filters. Try adjusting them.</p>
           )}
         </div>
-        {filtered.length > perPage && (
+        {nearestSorted.length > perPage && (
           <div className="mt-6 flex items-center justify-center gap-3">
             <button className="rounded-full border px-3 py-1 text-sm" onClick={()=>setPage(Math.max(1, page-1))}>Prev</button>
             <span className="text-xs text-muted-foreground">Page {page} / {Math.ceil(filtered.length/perPage)}</span>

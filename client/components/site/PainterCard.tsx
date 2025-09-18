@@ -54,7 +54,7 @@ export default function PainterCard({ painter, distanceKm }: { painter: Painter;
           <button
             aria-label="Save to favourites"
             onClick={(e)=>{ e.preventDefault(); const key='paintbook:favs'; const cur: string[] = JSON.parse(localStorage.getItem(key)||'[]'); const next = cur.includes(painter.id) ? cur.filter(id=>id!==painter.id) : [...cur, painter.id]; localStorage.setItem(key, JSON.stringify(next)); }}
-            className="ml-auto rounded-full border px-3 py-2 text-sm hover:bg-secondary"
+            className="ml-auto rounded-md border px-3 py-2 text-sm hover:bg-secondary"
           >♡</button>
         </div>
       </CardContent>

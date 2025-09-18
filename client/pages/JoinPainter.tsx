@@ -232,7 +232,7 @@ export default function JoinPainter() {
               <Label className="mb-2 block">Availability</Label>
               <div className="flex flex-wrap gap-3 text-sm">
                 {['Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-                  <button key={d} type="button" onClick={()=>toggleAvail(d)} className={`rounded-full border px-3 py-1 ${availability.includes(d)?'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>{d}</button>
+                  <button key={d} type="button" onClick={()=>toggleAvail(d)} className={`rounded-md border px-3 py-1 ${availability.includes(d)?'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>{d}</button>
                 ))}
               </div>
               {errors.availability && <p className="text-xs text-red-500 mt-1">{errors.availability}</p>}
@@ -295,8 +295,8 @@ export default function JoinPainter() {
             <div className="sm:col-span-2 mt-4">
               <Label className="mb-2 block">Do you have public liability insurance?</Label>
               <div className="flex items-center gap-3 text-sm">
-                <button type="button" onClick={()=>setHasInsurance(true)} className={`rounded-full border px-3 py-1 ${hasInsurance ? 'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>Yes</button>
-                <button type="button" onClick={()=>setHasInsurance(false)} className={`rounded-full border px-3 py-1 ${!hasInsurance ? 'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>No</button>
+                <button type="button" onClick={()=>setHasInsurance(true)} className={`rounded-md border px-3 py-1 ${hasInsurance ? 'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>Yes</button>
+                <button type="button" onClick={()=>setHasInsurance(false)} className={`rounded-md border px-3 py-1 ${!hasInsurance ? 'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>No</button>
               </div>
               {!hasInsurance ? (
                 <div className="mt-2 rounded-md border bg-secondary p-3 text-xs text-foreground">We advise getting insurance and uploading it to access more jobs and earn trust badges.</div>

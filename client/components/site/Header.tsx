@@ -55,9 +55,11 @@ export default function Header() {
           <Button variant="ghost" className="md:hidden" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
             <Menu className="h-5 w-5"/>
           </Button>
-          <Button asChild variant="ghost" className="hidden sm:inline-flex">
-            <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link>
-          </Button>
+          {!loggedIn && (
+            <Button asChild variant="ghost" className="hidden sm:inline-flex">
+              <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link>
+            </Button>
+          )}
           {loggedIn ? (
             <Button className="shadow-md" variant="outline" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4"/> Log out

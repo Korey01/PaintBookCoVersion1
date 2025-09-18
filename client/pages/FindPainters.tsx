@@ -201,9 +201,9 @@ export default function FindPainters() {
         </div>
         {nearestSorted.length > perPage && (
           <div className="mt-6 flex items-center justify-center gap-3">
-            <button className="rounded-full border px-3 py-1 text-sm" onClick={()=>setPage(Math.max(1, page-1))}>Prev</button>
+            <button className="rounded-md border px-3 py-1 text-sm" onClick={()=>setPage(Math.max(1, page-1))}>Prev</button>
             <span className="text-xs text-muted-foreground">Page {page} / {Math.ceil(filtered.length/perPage)}</span>
-            <button className="rounded-full border px-3 py-1 text-sm" onClick={()=>setPage(Math.min(Math.ceil(filtered.length/perPage), page+1))}>Next</button>
+            <button className="rounded-md border px-3 py-1 text-sm" onClick={()=>setPage(Math.min(Math.ceil(filtered.length/perPage), page+1))}>Next</button>
           </div>
         )}
       </section>

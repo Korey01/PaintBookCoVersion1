@@ -10,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, ArrowRight, CheckCircle2, IdCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import SubscriptionBanner, { Plan } from "@/components/site/SubscriptionBanner";
 
 export default function JoinPainter() {
   type Step = 1 | 2 | 3 | 4;
   const [step, setStep] = useState<Step>(1);
+  const [showWelcome, setShowWelcome] = useState(true);
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -37,6 +39,12 @@ export default function JoinPainter() {
   const [idNumber, setIdNumber] = useState<string>("");
   const [idExpiry, setIdExpiry] = useState<string>("");
   const [tier, setTier] = useState("Starter");
+  function choosePlan(p: Plan){
+    const mapped = p === 'Professional' ? 'Pro' : p;
+    setTier(mapped);
+    setShowWelcome(false);
+    setStep(1);
+  }
 
   function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
@@ -106,13 +114,23 @@ export default function JoinPainter() {
         <p className="text-sm text-muted-foreground">Create your profile in minutes. Start a 14‑day free trial on any tier.</p>
       </div>
 
-      <div className="mb-6 flex gap-2 text-sm">
+      {showWelcome ? (
+        <div className="space-y-6">
+          <div className="rounded-xl border bg-card p-6 text-center">
+            <h2 className="text-xl font-semibold">Welcome to PaintBookco — Grow your painting business</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Pick a subscription to get verified, showcase your work, and access nearby jobs. You can change plan anytime.</p>
+          </div>
+          <SubscriptionBanner onSelect={choosePlan} />
+        </div>
+      ) : null}
+
+      <div className={`mb-6 mt-6 flex gap-2 text-sm ${showWelcome ? 'opacity-50 pointer-events-none' : ''}`}>
         {[1,2,3,4].map(n => (
           <div key={n} className={`flex-1 rounded-full border px-3 py-1 text-center ${step >= n ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground'}`}>Step {n}</div>
         ))}
       </div>
 
-      {step === 1 && (
+      {!showWelcome && step === 1 && (
         <Card>
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div>
@@ -150,7 +168,7 @@ export default function JoinPainter() {
         </Card>
       )}
 
-      {step === 2 && (
+      {!showWelcome && step === 2 && (
         <Card>
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -191,7 +209,7 @@ export default function JoinPainter() {
         </Card>
       )}
 
-      {step === 3 && (
+      {!showWelcome && step === 3 && (
         <Card>
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -260,7 +278,7 @@ export default function JoinPainter() {
         </Card>
       )}
 
-      {step === 4 && (
+      {!showWelcome && step === 4 && (
         <Card>
           <CardContent className="grid gap-4 p-6">
             <div className="flex items-center gap-2 text-green-600"><CheckCircle2 className="h-5 w-5"/> Review & submit</div>

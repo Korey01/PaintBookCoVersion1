@@ -38,6 +38,11 @@ export default function JoinPainter() {
   const [idType, setIdType] = useState<string>("");
   const [idNumber, setIdNumber] = useState<string>("");
   const [idExpiry, setIdExpiry] = useState<string>("");
+  const [hasInsurance, setHasInsurance] = useState<boolean>(false);
+  const [insuranceInsurer, setInsuranceInsurer] = useState<string>("");
+  const [insurancePolicy, setInsurancePolicy] = useState<string>("");
+  const [insuranceExpiry, setInsuranceExpiry] = useState<string>("");
+  const [insuranceDocs, setInsuranceDocs] = useState<string[]>([]);
   const [tier, setTier] = useState("Starter");
   function choosePlan(p: Plan){
     const mapped = p === 'Professional' ? 'Pro' : p;
@@ -60,6 +65,14 @@ export default function JoinPainter() {
     files.forEach((f)=>{
       const reader = new FileReader();
       reader.onload = () => setIdDocs(prev => [...prev, String(reader.result)]);
+      reader.readAsDataURL(f);
+    });
+  }
+  function onInsuranceFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []).slice(0, 2);
+    files.forEach((f)=>{
+      const reader = new FileReader();
+      reader.onload = () => setInsuranceDocs(prev => [...prev, String(reader.result)]);
       reader.readAsDataURL(f);
     });
   }
@@ -101,7 +114,7 @@ export default function JoinPainter() {
   function back() { setStep((s)=> Math.max(1, (s-1) as Step)); }
 
   function submit() {
-    const payload = { name, email, business, bio, postcode, radius: radius[0], skills, rateMin: rateMin[0], rateMax: rateMax[0], availability, images, idDocs, idType, idNumber, idExpiry, tier, idStatus: idDocs.length>0 ? 'pending' : 'not_uploaded' };
+    const payload = { name, email, business, bio, postcode, radius: radius[0], skills, rateMin: rateMin[0], rateMax: rateMax[0], availability, images, idDocs, idType, idNumber, idExpiry, tier, idStatus: idDocs.length>0 ? 'pending' : 'not_uploaded', hasInsurance, insuranceInsurer, insurancePolicy, insuranceExpiry, insuranceDocs, insuranceStatus: hasInsurance && insuranceDocs.length>0 ? 'on_file' : 'not_provided' };
     localStorage.setItem('paintbook:joinPainter', JSON.stringify(payload));
     const plan = tier.toLowerCase() === 'premium' ? 'Premium' : (tier.toLowerCase()==='pro' || tier.toLowerCase()==='professional') ? 'Professional' : 'Starter';
     navigate(`/checkout?mode=subscription&plan=${encodeURIComponent(plan)}`);
@@ -254,6 +267,39 @@ export default function JoinPainter() {
               <div className="mt-2 text-xs text-muted-foreground">
                 {idDocs.length === 0 ? 'No ID uploaded yet.' : `${idDocs.length} file${idDocs.length>1?'s':''} uploaded · Verification pending`}
               </div>
+            </div>
+
+            <div className="sm:col-span-2 mt-4">
+              <Label className="mb-2 block">Do you have public liability insurance?</Label>
+              <div className="flex items-center gap-3 text-sm">
+                <button type="button" onClick={()=>setHasInsurance(true)} className={`rounded-full border px-3 py-1 ${hasInsurance ? 'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>Yes</button>
+                <button type="button" onClick={()=>setHasInsurance(false)} className={`rounded-full border px-3 py-1 ${!hasInsurance ? 'bg-primary text-primary-foreground border-primary':'bg-secondary'}`}>No</button>
+              </div>
+              {!hasInsurance ? (
+                <div className="mt-2 rounded-md border bg-secondary p-3 text-xs text-foreground">We advise getting insurance and uploading it to access more jobs and earn trust badges.</div>
+              ) : (
+                <div className="mt-3 grid gap-3">
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <Label>Insurer</Label>
+                      <Input value={insuranceInsurer} onChange={(e)=>setInsuranceInsurer(e.target.value)} placeholder="e.g. Aviva" />
+                    </div>
+                    <div>
+                      <Label>Policy number</Label>
+                      <Input value={insurancePolicy} onChange={(e)=>setInsurancePolicy(e.target.value)} placeholder="e.g. POL123456" />
+                    </div>
+                    <div>
+                      <Label>Policy expiry</Label>
+                      <Input type="date" value={insuranceExpiry} onChange={(e)=>setInsuranceExpiry(e.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <Input type="file" accept="image/*,application/pdf" multiple onChange={onInsuranceFiles} />
+                    <div className="text-xs text-muted-foreground mt-1">Accepted formats: PDF, JPG, PNG</div>
+                    <div className="text-xs text-muted-foreground">{insuranceDocs.length} file{ insuranceDocs.length===1? '' : 's' } uploaded</div>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <Label>Choose your tier</Label>

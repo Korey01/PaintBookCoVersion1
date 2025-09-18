@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import PainterCard from "@/components/site/PainterCard";
 import { painters } from "@/data/painters";
 import { MapPin, PaintBucket, Search as SearchIcon, Info } from "lucide-react";
+import { getCityCoord, haversineKm } from "@/lib/geo";
 
 export default function FindPainters() {
   useEffect(()=>{ document.title = "Find a Painter | PaintBook"; },[]);
@@ -72,7 +73,6 @@ export default function FindPainters() {
       return inType && inPrice && inRating && inTier && inAvail;
     });
 
-    const { getCityCoord, haversineKm } = require("@/lib/geo");
     const src = getCityCoord(loc);
     const map = new Map<string, number>();
     if (src) {

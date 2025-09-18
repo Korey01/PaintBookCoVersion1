@@ -1,22 +1,11 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Paintbrush, Search, LogIn, LogOut, Menu } from "lucide-react";
+import { LogIn, LogOut, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const loc = useLocation();
   const { search } = loc;
@@ -35,14 +24,6 @@ export default function Header() {
     setLoggedIn(!!u);
   }, [loc.pathname, loc.search, loc.hash]);
 
-  function goToFind(params: Record<string, string | undefined>) {
-    const q = new URLSearchParams();
-    if (params.location) q.set("location", params.location);
-    if (params.type) q.set("type", params.type);
-    setOpen(false);
-    setQuery("");
-    navigate(`/find-painter?${q.toString()}`);
-  }
 
   function handleLogout() {
     localStorage.removeItem("paintbook:user");
@@ -66,14 +47,16 @@ export default function Header() {
           <NavLink to="/vestimator" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Vestimator</NavLink>
                     <NavLink to="/about" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>About</NavLink>
           <NavLink to="/trust-safety" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Trust & Safety</NavLink>
-          <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
+          {loggedIn && (
+            <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
+          )}
         </nav>
         <div className="flex items-center gap-2">
           <Button variant="ghost" className="md:hidden" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
             <Menu className="h-5 w-5"/>
           </Button>
-          <Button variant="ghost" className="hidden sm:inline-flex" onClick={() => setOpen(true)}>
-            <Search className="mr-2 h-4 w-4"/> Search
+          <Button asChild variant="ghost" className="hidden sm:inline-flex">
+            <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link>
           </Button>
           {loggedIn ? (
             <Button className="shadow-md" variant="outline" onClick={handleLogout}>
@@ -81,35 +64,12 @@ export default function Header() {
             </Button>
           ) : (
             <Button asChild className="shadow-md">
-              <Link to="/join-painter"><LogIn className="mr-2 h-4 w-4"/> Join as Painter</Link>
+              <Link to="/join-painter"><span className="sr-only">Join as Painter</span><span>Join as Painter</span></Link>
             </Button>
           )}
         </div>
       </div>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput
-          placeholder="Search by postcode/city or job type..."
-          onValueChange={(v) => setQuery(v)}
-        />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          {query && (
-            <CommandGroup heading="Search">
-              <CommandItem onSelect={() => goToFind({ location: query })}>
-                Find painters in "{query}"
-              </CommandItem>
-            </CommandGroup>
-          )}
-          <CommandSeparator />
-          <CommandGroup heading="Popular job types">
-            <CommandItem onSelect={() => goToFind({ type: "interior" })}>Interior painting</CommandItem>
-            <CommandItem onSelect={() => goToFind({ type: "exterior" })}>Exterior painting</CommandItem>
-            <CommandItem onSelect={() => goToFind({ type: "kitchen" })}>Kitchen cabinets</CommandItem>
-            <CommandItem onSelect={() => goToFind({ type: "wallpaper" })}>Wallpaper</CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[300px] p-4">
           <nav className="grid gap-3 text-sm">
@@ -117,13 +77,16 @@ export default function Header() {
             <Link to="/post-job" onClick={()=>setMobileOpen(false)}>Post a Job</Link>
             <Link to="/vestimator" onClick={()=>setMobileOpen(false)}>Vestimator</Link>
                         <Link to="/trust-safety" onClick={()=>setMobileOpen(false)}>Trust & Safety</Link>
-            <Link to={`/dashboard${search||""}`} onClick={()=>setMobileOpen(false)}>Dashboard</Link>
+            {loggedIn && <Link to={`/dashboard${search||""}`} onClick={()=>setMobileOpen(false)}>Dashboard</Link>}
             {loggedIn ? (
               <Button variant="outline" onClick={()=>{ setMobileOpen(false); handleLogout(); }} className="mt-2">
                 <LogOut className="mr-2 h-4 w-4"/> Log out
               </Button>
             ) : (
-              <Button asChild className="mt-2"><Link to="/join-painter" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Join as Painter</Link></Button>
+              <>
+                <Button asChild className="mt-2" variant="ghost"><Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link></Button>
+                <Button asChild className="mt-2"><Link to="/join-painter" onClick={()=>setMobileOpen(false)}>Join as Painter</Link></Button>
+              </>
             )}
           </nav>
         </SheetContent>

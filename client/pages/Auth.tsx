@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Lock, Mail, User2, Sparkles } from "lucide-react";
 
 interface User {
@@ -100,7 +99,7 @@ export default function Auth(){
             <div className="text-sm font-medium">Choose your role</div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <Button variant={role==='customer'?'default':'outline'} onClick={()=>setRole('customer')}><User2 className="mr-2 h-4 w-4"/> Customer</Button>
-              <Button variant={role==='painter'?'default':'outline'} onClick={()=>setRole('painter')}><Badge className="mr-2">Pro</Badge> Painter</Button>
+              <Button variant={role==='painter'?'default':'outline'} onClick={()=>setRole('painter')}>Painter</Button>
             </div>
           </div>
 

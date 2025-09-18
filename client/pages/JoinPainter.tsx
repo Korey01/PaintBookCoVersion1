@@ -24,6 +24,8 @@ export default function JoinPainter() {
   const [bio, setBio] = useState("");
   const [postcode, setPostcode] = useState("");
   const [radius, setRadius] = useState<number[]>([15]);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [skills, setSkills] = useState<string[]>([]);
   const toggleSkill = (s: string) => setSkills((prev) => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s]);
@@ -87,8 +89,10 @@ export default function JoinPainter() {
   const schema1 = z.object({
     name: z.string().min(2, "Enter your full name"),
     email: z.string().email("Enter a valid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Confirm your password"),
     postcode: z.string().regex(ukPostcode, "Use UK format e.g. M1 1AE"),
-  });
+  }).refine(v => v.password === v.confirmPassword, { message: "Passwords must match", path: ["confirmPassword"] });
   const schema2 = z.object({
     skills: z.array(z.string()).min(1, "Choose at least one skill"),
     rateMin: z.number().min(5),
@@ -99,8 +103,13 @@ export default function JoinPainter() {
 
   function next() {
     if (step === 1) {
-      const r = schema1.safeParse({ name, email, postcode });
+      const r = schema1.safeParse({ name, email, password, confirmPassword, postcode });
       if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
+      // persist credentials to keep user signed in
+      const existing = JSON.parse(localStorage.getItem('paintbook:user')||'null');
+      const u = existing && existing.email === email ? existing : { email, roles: ['painter'], verifiedEmail: true, mfaEnabled: false };
+      u.email = email; u.password = password; u.verifiedEmail = true; u.activeRole = 'painter';
+      localStorage.setItem('paintbook:user', JSON.stringify(u));
       setErrors({});
     }
     if (step === 2) {
@@ -163,6 +172,16 @@ export default function JoinPainter() {
             <div className="sm:col-span-2">
               <Label>Business name (optional)</Label>
               <Input value={business} onChange={(e)=>setBusiness(e.target.value)} />
+            </div>
+            <div>
+              <Label>Password</Label>
+              <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} aria-invalid={!!errors.password} placeholder="Choose a password" />
+              {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+            </div>
+            <div>
+              <Label>Confirm password</Label>
+              <Input type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} aria-invalid={!!errors.confirmPassword} placeholder="Repeat password" />
+              {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
             </div>
             <div className="sm:col-span-2">
               <Label>Short bio</Label>

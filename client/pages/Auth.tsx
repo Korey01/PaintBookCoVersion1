@@ -44,9 +44,9 @@ export default function Auth(){
   function onSignup(e: React.FormEvent){
     e.preventDefault();
     if(!email || !password || !agree) return;
-    const u: User = { email, password, roles: [role], verifiedEmail: false, mfaEnabled: role==='painter', activeRole: role };
+    const u: User = { email, password, roles: [role], verifiedEmail: true, mfaEnabled: false, activeRole: role };
     saveUser(u);
-    navigate(`/verify-email?email=${encodeURIComponent(email)}&next=${role==='painter'?'/join-painter':'/customer-dashboard'}`);
+    navigate('/dashboard');
   }
 
   function onLogin(e: React.FormEvent){

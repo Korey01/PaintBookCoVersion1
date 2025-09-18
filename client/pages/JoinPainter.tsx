@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,10 @@ export default function JoinPainter() {
     setShowWelcome(false);
     setStep(1);
   }
+
+  const workFileRef = useRef<HTMLInputElement|null>(null);
+  const idFileRef = useRef<HTMLInputElement|null>(null);
+  const insuranceFileRef = useRef<HTMLInputElement|null>(null);
 
   function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
@@ -227,9 +231,9 @@ export default function JoinPainter() {
           <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label className="mb-2 block">Upload 3–6 photos of past work</Label>
-              <div className="flex items-center gap-3">
-                <Input type="file" accept="image/*" multiple onChange={onFiles}/>
-                <Button variant="secondary" type="button"><Upload className="mr-2 h-4 w-4"/> Add</Button>
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <Input ref={workFileRef} type="file" accept="image/*" multiple onChange={onFiles}/>
+                <Button variant="secondary" type="button" onClick={()=>workFileRef.current?.click()} className="sm:w-auto w-full"><Upload className="mr-2 h-4 w-4"/> Add</Button>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">Accepted formats: JPG, PNG</div>
               <div className="mt-3 grid grid-cols-3 gap-2">
@@ -238,9 +242,9 @@ export default function JoinPainter() {
             </div>
             <div className="sm:col-span-2">
               <Label className="mb-2 block">Upload government ID for verification</Label>
-              <div className="flex items-center gap-3">
-                <Input type="file" accept="image/*,application/pdf" multiple onChange={onIdFiles}/>
-                <Button variant="secondary" type="button"><IdCard className="mr-2 h-4 w-4"/> Upload ID</Button>
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <Input ref={idFileRef} type="file" accept="image/*,application/pdf" multiple onChange={onIdFiles}/>
+                <Button variant="secondary" type="button" onClick={()=>idFileRef.current?.click()} className="sm:w-auto w-full"><IdCard className="mr-2 h-4 w-4"/> Upload ID</Button>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">Accepted formats: PDF, JPG, PNG</div>
               <div className="mt-2 grid gap-3 md:grid-cols-3">
@@ -294,7 +298,10 @@ export default function JoinPainter() {
                     </div>
                   </div>
                   <div>
-                    <Input type="file" accept="image/*,application/pdf" multiple onChange={onInsuranceFiles} />
+                    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                      <Input ref={insuranceFileRef} type="file" accept="image/*,application/pdf" multiple onChange={onInsuranceFiles} />
+                      <Button variant="secondary" type="button" onClick={()=>insuranceFileRef.current?.click()} className="sm:w-auto w-full"><Upload className="mr-2 h-4 w-4"/> Upload Insurance</Button>
+                    </div>
                     <div className="text-xs text-muted-foreground mt-1">Accepted formats: PDF, JPG, PNG</div>
                     <div className="text-xs text-muted-foreground">{insuranceDocs.length} file{ insuranceDocs.length===1? '' : 's' } uploaded</div>
                   </div>

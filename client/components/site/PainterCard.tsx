@@ -16,7 +16,7 @@ export type Painter = {
   tier: "Starter" | "Pro" | "Premium";
 };
 
-export default function PainterCard({ painter }: { painter: Painter }) {
+export default function PainterCard({ painter, distanceKm }: { painter: Painter; distanceKm?: number }) {
   return (
     <Card className="group overflow-hidden border-muted/60 shadow-sm transition hover:shadow-lg">
       <CardHeader className="p-0">
@@ -26,7 +26,7 @@ export default function PainterCard({ painter }: { painter: Painter }) {
         <div className="flex items-start justify-between gap-2">
           <div>
             <CardTitle className="text-lg">{painter.name}</CardTitle>
-            <p className="text-xs text-muted-foreground">{painter.location} · {painter.priceRange}</p>
+            <p className="text-xs text-muted-foreground">{painter.location} · {painter.priceRange}{typeof distanceKm === 'number' ? ` · ${Math.round(distanceKm)} km (${Math.round(distanceKm*0.621371)} miles) away` : ''}</p>
           </div>
           <div className="flex items-center gap-1 text-amber-500">
             <Star className="h-4 w-4 fill-amber-400" />

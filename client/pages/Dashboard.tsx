@@ -139,7 +139,7 @@ export default function Dashboard(){
             <div className="mt-2 flex items-center justify-between">
               <div className="text-2xl font-bold flex items-center gap-2">Painter Dashboard
                 <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs"><svg xmlns='http://www.w3.org/2000/svg' className='h-3.5 w-3.5' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'><rect x='3' y='11' width='18' height='10' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg> Funds Secured</span>
-                <button aria-label="Edit profile" className="rounded-full border p-2 hover:bg-secondary" onClick={()=>setEditOpen(true)}>
+                <button aria-label="Edit profile" className="rounded-md border p-2 hover:bg-secondary" onClick={()=>setEditOpen(true)}>
                   <Pencil className="h-4 w-4"/>
                 </button>
               </div>
@@ -274,7 +274,7 @@ export default function Dashboard(){
                       ) : (
                         <Button onClick={()=>expressInterest(j.id)}>Express interest</Button>
                       )}
-                      <a href={`/messages?job=${j.id}`} className="inline-flex items-center gap-2 rounded-full border border-primary px-4 py-2 text-primary hover:bg-primary/10"><Mail className="h-4 w-4"/> Message</a>
+                      <a href={`/messages?job=${j.id}`} className="inline-flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-primary hover:bg-primary/10"><Mail className="h-4 w-4"/> Message</a>
                     </div>
                   </div>
                 </CardContent>

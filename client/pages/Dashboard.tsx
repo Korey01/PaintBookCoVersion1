@@ -282,6 +282,55 @@ export default function Dashboard(){
             ))}
           </div>
         </section>
+
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">My jobs</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-medium">Applied</div>
+                <div className="mt-2 grid gap-2 text-sm">
+                  {applied.length === 0 ? (
+                    <div className="text-muted-foreground">No applications yet.</div>
+                  ) : (
+                    applied.map(id => {
+                      const j = combinedJobs.find(j=>j.id===id);
+                      return j ? (
+                        <div key={id} className="flex items-center justify-between rounded border p-2">
+                          <div>
+                            <div className="font-medium">{j.title}</div>
+                            <div className="text-xs text-muted-foreground">{j.location} · £{j.budget}</div>
+                          </div>
+                          <Badge variant="secondary">Pending</Badge>
+                        </div>
+                      ) : null;
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-medium">Booked</div>
+                <div className="mt-2 grid gap-2 text-sm">
+                  { (JSON.parse(localStorage.getItem('paintbook:bookedJobs')||'[]') as any[]).length === 0 ? (
+                    <div className="text-muted-foreground">No bookings yet.</div>
+                  ) : (
+                    (JSON.parse(localStorage.getItem('paintbook:bookedJobs')||'[]') as any[]).map((b:any, i:number)=> (
+                      <div key={i} className="flex items-center justify-between rounded border p-2">
+                        <div>
+                          <div className="font-medium">{b.title||'Booked job'}</div>
+                          <div className="text-xs text-muted-foreground">{b.location||'—'} · £{b.budget||'—'}</div>
+                        </div>
+                        <Badge>Booked</Badge>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
       </div>
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>

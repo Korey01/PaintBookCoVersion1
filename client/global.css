@@ -12,84 +12,84 @@
    * A different format will require also updating the theme in tailwind.config.ts.
   */
   :root {
-    /* Light theme based on attached palette: cream, teal, blue‑teal, coral, mustard */
-    --background: 48 100% 95%; /* cream */
-    --foreground: 220 15% 15%;
+    /* Light theme based on attached palette: sage → mint → near‑white */
+    --background: 160 30% 97%; /* pale mint */
+    --foreground: 200 15% 15%; /* slate */
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+    --card-foreground: 200 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover-foreground: 200 15% 15%;
 
-    --primary: 349 83% 61%; /* coral */
+    --primary: 160 22% 36%; /* sage */
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 186 70% 38%; /* blue‑teal */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 160 22% 90%; /* light sage */
+    --secondary-foreground: 160 20% 20%;
 
-    --muted: 210 16% 92%;
-    --muted-foreground: 220 10% 35%;
+    --muted: 170 20% 92%; /* very light mint */
+    --muted-foreground: 160 10% 35%;
 
-    --accent: 43 100% 70%; /* mustard */
-    --accent-foreground: 220 20% 20%;
+    --accent: 170 25% 85%; /* pale mint */
+    --accent-foreground: 160 20% 25%;
 
     --destructive: 0 85% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 20% 85%;
-    --input: 210 20% 85%;
-    --ring: 349 83% 61%;
+    --border: 160 18% 86%;
+    --input: 160 18% 86%;
+    --ring: 160 22% 36%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 48 100% 95%;
-    --sidebar-foreground: 220 15% 15%;
-    --sidebar-primary: 349 83% 61%;
+    --sidebar-background: 160 30% 97%;
+    --sidebar-foreground: 200 15% 15%;
+    --sidebar-primary: 160 22% 36%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 186 70% 38%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 210 20% 85%;
-    --sidebar-ring: 349 83% 61%;
+    --sidebar-accent: 160 22% 90%;
+    --sidebar-accent-foreground: 160 20% 20%;
+    --sidebar-border: 160 18% 86%;
+    --sidebar-ring: 160 22% 36%;
   }
 
   .dark {
-    /* Dark variant harmonized with the same palette */
-    --background: 186 40% 12%; /* deep blue‑teal */
-    --foreground: 48 100% 96%;
+    /* Dark variant: deeper sage with mint accents */
+    --background: 160 15% 14%;
+    --foreground: 160 25% 92%;
 
-    --card: 186 40% 14%;
-    --card-foreground: 48 100% 96%;
+    --card: 160 15% 16%;
+    --card-foreground: 160 25% 92%;
 
-    --popover: 186 40% 14%;
-    --popover-foreground: 48 100% 96%;
+    --popover: 160 15% 16%;
+    --popover-foreground: 160 25% 92%;
 
-    --primary: 349 83% 61%;
+    --primary: 160 25% 45%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 162 95% 43%; /* teal */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 160 15% 22%;
+    --secondary-foreground: 160 25% 92%;
 
-    --muted: 186 25% 22%;
-    --muted-foreground: 48 40% 85%;
+    --muted: 170 12% 24%;
+    --muted-foreground: 160 20% 80%;
 
-    --accent: 43 100% 64%;
-    --accent-foreground: 186 50% 15%;
+    --accent: 170 20% 30%;
+    --accent-foreground: 160 50% 95%;
 
-    --destructive: 0 75% 50%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 186 25% 26%;
-    --input: 186 25% 26%;
-    --ring: 349 83% 61%;
-    --sidebar-background: 186 40% 12%;
-    --sidebar-foreground: 48 100% 96%;
-    --sidebar-primary: 349 83% 61%;
+    --border: 160 12% 26%;
+    --input: 160 12% 26%;
+    --ring: 160 25% 45%;
+    --sidebar-background: 160 15% 14%;
+    --sidebar-foreground: 160 25% 92%;
+    --sidebar-primary: 160 25% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 162 95% 43%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 186 25% 24%;
-    --sidebar-ring: 349 83% 61%;
+    --sidebar-accent: 160 15% 22%;
+    --sidebar-accent-foreground: 160 25% 92%;
+    --sidebar-border: 160 12% 24%;
+    --sidebar-ring: 160 25% 45%;
   }
 }
 

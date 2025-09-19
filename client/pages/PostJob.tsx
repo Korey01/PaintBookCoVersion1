@@ -107,7 +107,8 @@ export default function PostJob() {
       }
     }
 
-    navigate('/post-job/confirmation');
+    const qs = prePainter ? `?mode=quote&painter=${encodeURIComponent(prePainter)}` : "";
+    navigate(`/post-job/confirmation${qs}`);
   }
 
   return (
@@ -246,11 +247,18 @@ export default function PostJob() {
 
 export function PostJobConfirmation() {
   const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const mode = params.get('mode');
+  const isQuote = mode === 'quote';
   return (
     <div className="container mx-auto px-4 py-16 text-center">
       <CheckCircle2 className="mx-auto h-12 w-12 text-primary"/>
-      <h1 className="mt-4 text-2xl font-bold">Your job is live</h1>
-      <p className="mt-2 text-muted-foreground">We sent it to nearby painters. You'll receive messages and quotes shortly.</p>
+      <h1 className="mt-4 text-2xl font-bold">{isQuote ? 'Request sent' : 'Your job is live'}</h1>
+      <p className="mt-2 text-muted-foreground">
+        {isQuote
+          ? "We've sent your job details to the painter you selected. We'll notify you as soon as they respond."
+          : "We sent it to nearby painters. You'll receive messages and quotes shortly."}
+      </p>
       <div className="mt-6 flex justify-center gap-3">
         <Button onClick={()=>navigate('/find-painter')}>Find a Painter</Button>
         <Button variant="outline" onClick={()=>navigate('/estimator')}>Open Estimator</Button>

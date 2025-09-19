@@ -38,7 +38,7 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
                 <Button onClick={() => navigate('/join-painter')} size="sm" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg md:h-14 md:px-10 md:text-base">Join as a Painter</Button>
               </motion.div>
             </motion.div>
-            <div className="pointer-events-none absolute bottom-6 left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-black" style={{ filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.25)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.6))" }}>
+            <div className="pointer-events-none absolute bottom-[168px] left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-black" style={{ filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.25)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.6))" }}>
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-black"/> ID verified</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-black"/> Insured</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-black"/> 100% escrow protection — via Stripe (FCA-regulated payment partner)</span>

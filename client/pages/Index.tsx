@@ -30,8 +30,8 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
           <div className="relative flex flex-col items-center text-center w-full">
             <LogoStroke />
             <div className="pointer-events-auto absolute bottom-24 left-1/2 z-20 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3 px-4">
-              <Button onClick={() => navigate('/find-painter')} size="xl" className="bg-[hsl(var(--primary))] text-black hover:brightness-95 border border-black/10 shadow-inner shadow-black/10 rounded-lg">Find a Painter</Button>
-              <Button onClick={() => navigate('/join-painter')} size="xl" className="bg-[hsl(var(--primary))] text-black hover:brightness-95 border border-black/10 shadow-inner shadow-black/10 rounded-lg">Join as a Painter</Button>
+              <Button onClick={() => navigate('/find-painter')} size="xl" className="bg-black text-white hover:bg-black/90 rounded-lg">Find a Painter</Button>
+              <Button onClick={() => navigate('/join-painter')} size="xl" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg">Join as a Painter</Button>
             </div>
             <div className="pointer-events-none absolute bottom-10 left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-muted-foreground" style={{ filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.25)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.6))" }}>
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</span>

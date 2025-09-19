@@ -37,7 +37,7 @@ export default function Header() {
           <img
             src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
             alt="PaintBookco logo"
-            className="h-12 w-auto sm:h-14 drop-shadow-md contrast-110 saturate-110"
+            className="h-[2.1rem] w-auto sm:h-[2.45rem] drop-shadow-md contrast-110 saturate-110"
           />
           <span className="sr-only">PaintBookco</span>
         </Link>

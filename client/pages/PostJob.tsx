@@ -25,6 +25,7 @@ export default function PostJob() {
   const [phone, setPhone] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [attachedEstimate, setAttachedEstimate] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const prePainter = params.get("painter") || undefined;
 
   useEffect(()=>{
@@ -122,8 +123,8 @@ export default function PostJob() {
             <div className="sm:col-span-2">
               <Label className="mb-2 block">Upload area photos</Label>
               <div className="flex items-center gap-3">
-                <Input type="file" accept="image/*" multiple onChange={onFiles}/>
-                <Button variant="secondary"><Upload className="mr-2 h-4 w-4"/> Add</Button>
+                <Input ref={fileInputRef} type="file" accept="image/*" multiple onChange={onFiles}/>
+                <Button variant="secondary" type="button" onClick={()=>fileInputRef.current?.click()}><Upload className="mr-2 h-4 w-4"/> Add</Button>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">Accepted formats: JPG, PNG</div>
               <div className="mt-3 grid grid-cols-3 gap-2">

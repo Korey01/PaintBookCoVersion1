@@ -77,10 +77,36 @@ export default function PostJob() {
   function submit() {
     const r = schemaStep3.safeParse({ email, phone });
     if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
-    const job = { jobType, desc, budgetMin, budgetMax, postcode, email, phone, images, attachedEstimate, painter: prePainter, createdAt: new Date().toISOString() };
-    const list = JSON.parse(localStorage.getItem('paintbook:jobs') || '[]');
+
+    // Store lightweight job (avoid huge base64 images in localStorage)
+    const lightImagesCount = images.length;
+    const job = { jobType, desc, budgetMin, budgetMax, postcode, email, phone, images: [], imagesCount: lightImagesCount, attachedEstimate, painter: prePainter, createdAt: new Date().toISOString() };
+
+    let list: any[] = [];
+    try { list = JSON.parse(localStorage.getItem('paintbook:jobs') || '[]'); } catch {}
+
+    // Keep only the most recent 50 to stay under quota
+    if (list.length > 49) list = list.slice(-49);
+
+    // Strip any existing heavy images from previous entries
+    list = list.map((j:any)=> ({ ...j, images: [], imagesCount: j.imagesCount ?? (Array.isArray(j.images) ? j.images.length : 0) }));
+
     list.push(job);
-    localStorage.setItem('paintbook:jobs', JSON.stringify(list));
+
+    const json = JSON.stringify(list);
+    const trySet = () => { try { localStorage.setItem('paintbook:jobs', json); return true; } catch { return false; } };
+
+    if (!trySet()) {
+      // As a fallback, store only the latest job
+      const minimal = JSON.stringify([job]);
+      try {
+        localStorage.setItem('paintbook:jobs', minimal);
+      } catch {
+        // Last resort: sessionStorage (won't persist across tabs)
+        try { sessionStorage.setItem('paintbook:jobs', minimal); } catch {}
+      }
+    }
+
     navigate('/post-job/confirmation');
   }
 

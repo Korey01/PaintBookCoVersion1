@@ -11,11 +11,12 @@ function num(v: string | number) { const n = typeof v === 'number' ? v : parseFl
 
 type PaintType = "interior_matt" | "satinwood" | "exterior_masonry";
 
+// Coverage values from user-provided product pages
 const BRAND_INFO: Record<string, Record<PaintType, { coverage: number; pricePerLitre: number }>> = {
-  "Dulux": { interior_matt: { coverage: 13, pricePerLitre: 20 }, satinwood: { coverage: 12, pricePerLitre: 22 }, exterior_masonry: { coverage: 11, pricePerLitre: 21 } },
-  "JOHNSTONE'S": { interior_matt: { coverage: 12, pricePerLitre: 18 }, satinwood: { coverage: 11, pricePerLitre: 19 }, exterior_masonry: { coverage: 10, pricePerLitre: 19 } },
-  "wilko": { interior_matt: { coverage: 10, pricePerLitre: 12 }, satinwood: { coverage: 9, pricePerLitre: 13 }, exterior_masonry: { coverage: 8, pricePerLitre: 12 } },
-  "Leyland": { interior_matt: { coverage: 12, pricePerLitre: 16 }, satinwood: { coverage: 11, pricePerLitre: 17 }, exterior_masonry: { coverage: 10, pricePerLitre: 17 } },
+  "Dulux Trade Vinyl Matt": { interior_matt: { coverage: 17, pricePerLitre: 25 }, satinwood: { coverage: 17, pricePerLitre: 25 }, exterior_masonry: { coverage: 17, pricePerLitre: 25 } },
+  "Farrow & Ball Estate Emulsion": { interior_matt: { coverage: 14, pricePerLitre: 34 }, satinwood: { coverage: 14, pricePerLitre: 34 }, exterior_masonry: { coverage: 14, pricePerLitre: 34 } },
+  "Johnstone's Trade Acrylic Durable Matt": { interior_matt: { coverage: 16, pricePerLitre: 20 }, satinwood: { coverage: 16, pricePerLitre: 20 }, exterior_masonry: { coverage: 16, pricePerLitre: 20 } },
+  "Crown Trade Matt Vinyl Emulsion": { interior_matt: { coverage: 17, pricePerLitre: 19 }, satinwood: { coverage: 17, pricePerLitre: 19 }, exterior_masonry: { coverage: 17, pricePerLitre: 19 } },
 };
 
 export default function Vestimator() {
@@ -39,10 +40,11 @@ export default function Vestimator() {
   const [height, setHeight] = useState(2.6);
   const [coats, setCoats] = useState(2);
   const [paintType, setPaintType] = useState<PaintType>('interior_matt');
+  const [selectedBrand, setSelectedBrand] = useState<keyof typeof BRAND_INFO>('Dulux Trade Vinyl Matt');
   const [openings, setOpenings] = useState(2);
   const [openingArea, setOpeningArea] = useState(1.9);
-  const [coverage, setCoverage] = useState(10); // m2/L
-  const [pricePerLitre, setPricePerLitre] = useState(18);
+  const [coverage, setCoverage] = useState(BRAND_INFO['Dulux Trade Vinyl Matt'].interior_matt.coverage); // m2/L
+  const [pricePerLitre, setPricePerLitre] = useState(BRAND_INFO['Dulux Trade Vinyl Matt'].interior_matt.pricePerLitre);
 
   const wallArea = useMemo(() => {
     const perimeter = 2 * (length + width);
@@ -57,6 +59,13 @@ export default function Vestimator() {
   }, [wallArea, coverage, coats]);
 
   const materialCost = useMemo(() => Math.round(litres * pricePerLitre), [litres, pricePerLitre]);
+
+  // Sync coverage and price from selected brand
+  useEffect(() => {
+    const info = BRAND_INFO[selectedBrand][paintType] || BRAND_INFO[selectedBrand].interior_matt;
+    setCoverage(info.coverage);
+    setPricePerLitre(info.pricePerLitre);
+  }, [selectedBrand, paintType]);
 
   function attachToPost() {
     const qp = new URLSearchParams({
@@ -106,6 +115,14 @@ export default function Vestimator() {
 
               <TabsContent value="estimate" className="m-0">
                 <div className="grid gap-4 p-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Label>Brand</Label>
+                    <select value={selectedBrand as string} onChange={e=>setSelectedBrand(e.target.value as keyof typeof BRAND_INFO)} className="mt-1 w-full rounded-md border bg-background p-2">
+                      {Object.keys(BRAND_INFO).map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <Label>Room length (m)</Label>
                     <Input type="number" min={0.5} step="0.1" value={length} onChange={e=>setLength(Math.max(0.5, num(e.target.value)))} />

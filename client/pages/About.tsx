@@ -2,12 +2,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Palette, ShieldCheck, Sparkles, Users, ChartBar, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function About() {
   return (
     <div className="container mx-auto px-4 py-12 space-y-12">
+      <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F885f930f542b4689bad15cecd53df8b6?format=webp&width=1600" alt="About PaintBookco" className="mb-8 h-56 w-full rounded-xl object-cover shadow md:h-72"/>
       <header className="max-w-3xl">
         <Badge variant="secondary" className="bg-secondary/60">About PaintBookco</Badge>
         <h1 className="mt-3 text-4xl font-extrabold tracking-tight">Simplifying Your Paint Job. Empowering Painters.</h1>

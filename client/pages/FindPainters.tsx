@@ -162,6 +162,11 @@ export default function FindPainters() {
                 No painters found in {nearestLabel}. Showing the closest matches by distance.
               </div>
             )}
+            <div className="mt-3 rounded-xl border bg-card/70 p-4 text-sm backdrop-blur">
+              <p className="font-semibold">Trusted painters. Escrow-protected bookings.</p>
+              <p className="mt-1">Hire verified painters you can trust</p>
+              <p className="mt-1 text-muted-foreground">Compare painters by ratings, skills and price. Enjoy 100% escrow protection — your full payment is held securely until you approve the job (via Stripe (FCA-regulated payment partner)).</p>
+            </div>
           </div>
           <button onClick={() => navigate("/post-job")} className="text-sm text-primary underline">Post a job</button>
         </div>

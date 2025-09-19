@@ -5,8 +5,8 @@ export default function LogoStroke() {
 
   return (
     <div className="relative mx-auto flex h-screen w-full items-center justify-center">
-      <div className="absolute inset-0 bg-[hsl(var(--primary))]" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-black/10 to-white/20 mix-blend-overlay" />
+      <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[56vh] bg-[hsl(var(--primary))] opacity-80 backdrop-blur-sm border-y border-black/10" />
+      <div className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[56vh] bg-gradient-to-br from-black/10 to-white/20 mix-blend-overlay" />
       <motion.img
         src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F9f266fe2a29b4a5faea828004912cec3?format=webp&width=2200"
         alt="PaintBookco logo"

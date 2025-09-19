@@ -2,8 +2,6 @@ import { motion, useReducedMotion } from "framer-motion";
 
 export default function LogoStroke() {
   const prefersReduced = useReducedMotion();
-  const duration = prefersReduced ? 0 : 0.9;
-  const delay = prefersReduced ? 0 : 0.05;
 
   return (
     <div className="relative mx-auto flex h-screen w-full items-center justify-center">
@@ -14,44 +12,34 @@ export default function LogoStroke() {
         className="max-h-full w-auto drop-shadow"
         initial={{ clipPath: prefersReduced ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)", opacity: 1 }}
         animate={{ clipPath: "inset(0% 0% 0% 0%)", opacity: 1 }}
-        transition={{ duration: prefersReduced ? 0 : 1.8, ease: [0.25, 0.1, 0.25, 1], delay: prefersReduced ? 0 : 0.05 }}
+        transition={{ duration: prefersReduced ? 0 : 1.6, ease: [0.25, 0.1, 0.25, 1], delay: prefersReduced ? 0 : 0.05 }}
         style={{ WebkitClipPath: prefersReduced ? undefined : "inset(0% 0% 0% 0%)" }}
       />
 
-      {/* Paint pour overlay - fluid wave */}
-      {!prefersReduced && (
-        <FluidPour />
-      )}
+      {/* Paint pour overlay - 3 vertical lines with staggered speeds */}
+      {!prefersReduced && <LinesPour />}
     </div>
   );
 }
 
-function FluidPour() {
-  const d = (y: number, a: number) => `M0 0 H100 V${y} C 80 ${y - a} 60 ${y + a} 40 ${y - a} 20 ${y + a} 0 ${y} Z`;
-  const d1 = d(-20, 8);
-  const d2 = d(20, 6);
-  const d3 = d(60, 10);
-  const d4 = d(120, 8);
+function LinesPour() {
+  const lines = [
+    { left: '35%', width: 72, duration: 1.35, delay: 0.05, radius: 56 },
+    { left: '50%', width: 120, duration: 1.75, delay: 0.0, radius: 72 },
+    { left: '65%', width: 92, duration: 1.55, delay: 0.1, radius: 60 },
+  ] as const;
   return (
-    <motion.svg aria-hidden className="pointer-events-none absolute inset-0 z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <motion.path
-        fill="hsl(var(--primary))"
-        d={d1}
-        initial={{ opacity: 0.96 }}
-        animate={{ d: [d1, d2, d3, d4], opacity: [0.96, 0.9, 0.85, 0] }}
-        transition={{ duration: 2.2, ease: [0.4, 0, 0.2, 1], times: [0, 0.45, 0.85, 1] }}
-        style={{ filter: "blur(0.6px)" }}
-      />
-      <motion.path
-        fill="hsl(var(--primary))"
-        opacity={0.6}
-        d={d(-10, 5)}
-        animate={{ d: [d(-10, 5), d(18, 4), d(55, 7), d(118, 5)], opacity: [0.6, 0.55, 0.5, 0] }}
-        transition={{ duration: 2.3, ease: [0.4, 0, 0.2, 1] }}
-        style={{ filter: "blur(1px)" }}
-      />
-      <motion.circle cx={30} cy={-5} r={2.8} fill="hsl(var(--primary))" initial={{ y: -10, opacity: 0.95 }} animate={{ y: 120, opacity: [0.95, 0.9, 0] }} transition={{ duration: 1.9, delay: 0.15, ease: [0.4, 0, 0.2, 1] }} />
-      <motion.circle cx={70} cy={-8} r={2.2} fill="hsl(var(--primary))" initial={{ y: -12, opacity: 0.9 }} animate={{ y: 120, opacity: [0.9, 0.85, 0] }} transition={{ duration: 2.0, delay: 0.1, ease: [0.4, 0, 0.2, 1] }} />
-    </motion.svg>
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-10">
+      {lines.map((l, i) => (
+        <motion.div
+          key={i}
+          className="absolute top-[-35%] h-[170%] -translate-x-1/2 bg-[hsl(var(--primary))] saturate-150 contrast-125 shadow-xl"
+          style={{ left: l.left as any, width: l.width, borderBottomLeftRadius: l.radius, borderBottomRightRadius: l.radius, filter: 'blur(0.4px)' }}
+          initial={{ y: "-35%", opacity: 0.98, rotate: 0 }}
+          animate={{ y: "115%", opacity: 0, x: [0, -3, 2, -1, 0], scaleX: [1, 0.99, 1.01, 0.99, 1], rotate: [0, -0.6, 0.5, -0.3, 0] }}
+          transition={{ duration: l.duration, delay: l.delay, ease: [0.4, 0, 0.2, 1], times: [0, 0.2, 0.5, 0.8, 1] }}
+        />
+      ))}
+    </div>
   );
 }

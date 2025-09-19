@@ -72,6 +72,9 @@ export default function Vestimator() {
       <div className="container mx-auto grid gap-6 px-4 py-8">
       <div className="flex items-center gap-3"><PaintBucket className="h-6 w-6 text-primary"/><h1 className="text-2xl font-bold">Paint Vestimator</h1></div>
       <p className="text-sm text-muted-foreground">Upload your room photos, preview colors in the Floori visualizer, and get instant paint quantity and cost estimates.</p>
+      <div className="mt-3">
+        <Button onClick={attachToPost}>Attach to Post Job <ArrowRight className="ml-2 h-4 w-4"/></Button>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <Card>
@@ -84,29 +87,18 @@ export default function Vestimator() {
               <TabsContent value="visualize" className="m-0">
                 <div className="grid gap-4 p-4">
                   <div>
-                    <Label>Upload room photos (optional)</Label>
-                    <div className="mt-2 flex items-center gap-3">
-                      <Input type="file" accept="image/*" multiple onChange={onFiles} />
-                      <Button variant="secondary"><Upload className="mr-2 h-4 w-4"/>Add photos</Button>
-                    </div>
-                    {images.length>0 && (
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        {images.map((src, i)=> (
-                          <img key={i} src={src} alt="Uploaded room" className="h-24 w-full rounded object-cover"/>
-                        ))}
-                      </div>
-                    )}
-                    <p className="mt-2 text-xs text-muted-foreground">Tip: In the Floori Studio below, use its upload and masking tools to paint walls virtually.</p>
+                    <p className="text-xs text-muted-foreground">Tip: Use the Floori Studio below to upload photos and paint walls virtually.</p>
                   </div>
-                  <div className="relative h-[70vh] w-full overflow-hidden rounded-md border" aria-label="Interactive paint visualizer">
+                  <div className="relative h-[85vh] w-full overflow-visible rounded-md border" aria-label="Interactive paint visualizer">
                     <iframe
                       src="https://appdemo.floori.io/"
                       title="Floori Studio Visualizer"
-                      className="absolute left-0 top-0 h-[1200px] w-full"
+                      className="absolute left-0 top-0 h-full w-full"
                       loading="lazy"
-                      scrolling="no"
+                      scrolling="auto"
                       style={{ border: 0 }}
-                      allow="clipboard-read; clipboard-write; fullscreen"
+                      allow="clipboard-read; clipboard-write; fullscreen; camera; microphone; display-capture"
+                      allowFullScreen
                     />
                   </div>
                 </div>
@@ -154,7 +146,6 @@ export default function Vestimator() {
                   <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Material cost</div><div className="text-xl font-bold">£{materialCost}</div></div>
                 </div>
                 <div className="flex flex-wrap gap-3 p-4">
-                  <Button onClick={attachToPost}>Attach to Post Job <ArrowRight className="ml-2 h-4 w-4"/></Button>
                   <Button variant="outline" onClick={()=>navigate('/find-painter')}>Find a Painter</Button>
                 </div>
                 <div className="p-4">
@@ -194,7 +185,6 @@ export default function Vestimator() {
               <div className="flex items-center justify-between"><span>Litres</span><span>{litres.toFixed(1)} L</span></div>
               <div className="flex items-center justify-between"><span>Material cost</span><span>£{materialCost}</span></div>
             </div>
-            <Button className="mt-4 w-full" onClick={attachToPost}>Attach to Post Job</Button>
             <Button className="mt-2 w-full" variant="secondary" onClick={()=>window.open('https://appdemo.floori.io/','_blank')}>Open Floori Studio</Button>
           </CardContent>
         </Card>

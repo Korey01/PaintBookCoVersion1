@@ -5,7 +5,6 @@ export default function LogoStroke() {
 
   return (
     <div className="relative mx-auto flex h-[60vh] w-full items-center justify-center">
-      <div className="absolute left-0 right-0 top-0 h-[60vh] bg-[hsl(var(--primary))] opacity-80 backdrop-blur-sm border-b border-black/10" />
       <div className="pointer-events-none absolute left-0 right-0 top-0 h-[60vh] bg-gradient-to-br from-black/10 to-white/20 mix-blend-overlay" />
       <motion.img
         src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"

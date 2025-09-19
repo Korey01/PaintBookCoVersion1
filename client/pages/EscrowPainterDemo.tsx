@@ -1,8 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Lock, BadgeCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BadgeCheck } from "lucide-react";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export default function EscrowPainterDemo(){
+  const [requested, setRequested] = useState(false);
+  const requestRelease = () => {
+    setRequested(true);
+    toast({ title: "Request sent", description: "Your request for release has been sent to the customer." });
+  };
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold">Escrow & Payment Security (Painter Demo)</h1>
@@ -16,9 +24,12 @@ export default function EscrowPainterDemo(){
               <div className="flex items-center justify-between"><span>Awaiting release</span><span className="font-medium">£420.00</span></div>
             </div>
             <div className="mt-3 flex gap-2">
-              <Button size="sm">Request release</Button>
+              <Button size="sm" onClick={requestRelease} disabled={requested}>{requested ? "Requested" : "Request release"}</Button>
               <Button size="sm" variant="secondary" asChild><a href="/disputes">Open dispute</a></Button>
             </div>
+            {requested && (
+              <div className="mt-2 rounded-md border bg-secondary/70 p-2 text-xs">Request for release has been sent to the customer.</div>
+            )}
           </CardContent>
         </Card>
         <Card className="border-muted/60">

@@ -10,7 +10,7 @@ export default function LogoStroke() {
       <motion.img
         src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F9f266fe2a29b4a5faea828004912cec3?format=webp&width=2200"
         alt="PaintBookco logo"
-        className="relative z-10 max-h-[70vh] w-auto"
+        className="relative z-10 max-h-[70vh] w-auto -translate-y-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}

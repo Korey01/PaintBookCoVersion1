@@ -64,11 +64,7 @@ export default function Header() {
             <Button className="shadow-md" variant="outline" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4"/> Log out
             </Button>
-          ) : (
-            <Button asChild className="shadow-md">
-              <Link to="/join-painter"><span className="sr-only">Join as Painter</span><span>Join as Painter</span></Link>
-            </Button>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -87,7 +83,6 @@ export default function Header() {
             ) : (
               <>
                 <Button asChild className="mt-2" variant="ghost"><Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link></Button>
-                <Button asChild className="mt-2"><Link to="/join-painter" onClick={()=>setMobileOpen(false)}>Join as Painter</Link></Button>
               </>
             )}
           </nav>

@@ -19,6 +19,13 @@ const BRAND_INFO: Record<string, Record<PaintType, { coverage: number; pricePerL
   "Crown Trade Matt Vinyl Emulsion": { interior_matt: { coverage: 17, pricePerLitre: 19 }, satinwood: { coverage: 17, pricePerLitre: 19 }, exterior_masonry: { coverage: 17, pricePerLitre: 19 } },
 };
 
+const BRAND_LINKS: Record<string, string> = {
+  "Dulux Trade Vinyl Matt": "https://www.duluxtradepaintexpert.co.uk/en/products/dulux-trade-vinyl-matt?size=1L",
+  "Farrow & Ball Estate Emulsion": "https://www.farrow-ball.com/paint-finishes/estate-emulsion",
+  "Johnstone's Trade Acrylic Durable Matt": "https://www.johnstonestrade.com/product/acrylic-durable-matt.html",
+  "Crown Trade Matt Vinyl Emulsion": "https://www.crownpaintsprofessional.com/product/crown-trade-matt-vinyl-emulsion/",
+};
+
 export default function Vestimator() {
   useEffect(()=>{ document.title = "Paint Vestimator | Visualize + Estimate"; },[]);
   const navigate = useNavigate();
@@ -182,6 +189,11 @@ export default function Vestimator() {
                               <div className="flex justify-between"><span className="text-muted-foreground">Price/L</span><span>£{ppl}</span></div>
                               <div className="flex justify-between"><span className="text-muted-foreground">Litres</span><span>{litresCalc.toFixed(1)} L</span></div>
                               <div className="flex justify-between font-medium"><span>Material cost</span><span>£{cost}</span></div>
+                            </div>
+                            <div className="mt-3">
+                              <Button asChild size="sm" className="w-full">
+                                <a href={BRAND_LINKS[name] || '#'} target="_blank" rel="noopener noreferrer">Buy through us</a>
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>

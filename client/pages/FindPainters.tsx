@@ -169,11 +169,10 @@ export default function FindPainters() {
               </div>
             )}
           </div>
-          <button onClick={() => navigate("/post-job")} className="text-sm text-primary underline">Post a job</button>
         </div>
 
         <form
-          className="mt-4 grid gap-3 rounded-xl border bg-card/80 p-3 backdrop-blur md:grid-cols-[1fr_1fr_auto]"
+          className="mt-4 grid gap-3 rounded-xl border bg-card/80 p-3 backdrop-blur md:grid-cols-[1fr_1fr_auto_auto]"
           onSubmit={(e)=>{ e.preventDefault(); const q = new URLSearchParams(search); if(queryLocation){ q.set('location', queryLocation); } else { q.delete('location'); } if(queryType && queryType !== 'any'){ q.set('type', queryType); } else { q.delete('type'); } navigate(`/find-painter?${q.toString()}`); setPage(1); }}>
           <div className="flex items-center gap-2 rounded-lg bg-background p-2">
             <MapPin className="h-4 w-4 text-muted-foreground"/>
@@ -196,6 +195,9 @@ export default function FindPainters() {
           </div>
           <button className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-md hover:opacity-90">
             <SearchIcon className="mr-2 h-4 w-4"/> Search
+          </button>
+          <button type="button" onClick={() => navigate('/post-job')} className="inline-flex items-center justify-center rounded-md border px-5 py-2 text-sm font-medium shadow-md hover:bg-accent/30">
+            Post a job
           </button>
         </form>
 

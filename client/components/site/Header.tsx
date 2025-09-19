@@ -35,7 +35,7 @@ export default function Header() {
       <div className="container mx-auto flex items-center justify-between px-4 py-4 md:py-6">
         <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight" aria-label="PaintBookco home">
           <img
-            src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F9f266fe2a29b4a5faea828004912cec3?format=webp&width=800"
+            src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
             alt="PaintBookco logo"
             className="h-[7.5rem] w-auto sm:h-[8.75rem] drop-shadow-md contrast-110 saturate-110"
           />

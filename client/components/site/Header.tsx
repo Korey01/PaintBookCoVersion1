@@ -56,7 +56,7 @@ export default function Header() {
             <Menu className="h-5 w-5"/>
           </Button>
           {!loggedIn && (
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
+            <Button asChild className="hidden sm:inline-flex bg-black text-white hover:bg-black/90">
               <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link>
             </Button>
           )}
@@ -82,7 +82,7 @@ export default function Header() {
               </Button>
             ) : (
               <>
-                <Button asChild className="mt-2" variant="ghost"><Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link></Button>
+                <Button asChild className="mt-2 bg-black text-white hover:bg-black/90"><Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link></Button>
               </>
             )}
           </nav>

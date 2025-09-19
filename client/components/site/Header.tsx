@@ -35,7 +35,7 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight" aria-label="PaintBookco home">
           <img
-            src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F23ef8c15575b454ba7eb57dbb05e2918?format=webp&width=800"
+            src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F03ce221d7cdc4cdba2d14b6eceffd308?format=webp&width=800"
             alt="PaintBookco logo"
             className="h-12 w-auto sm:h-14 drop-shadow-md contrast-110 saturate-110"
           />

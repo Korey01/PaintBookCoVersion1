@@ -112,7 +112,10 @@ export default function PostJob() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-10">
+    <div className="relative">
+      <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F34c4db7fb3704fbfb3c455e1f62cecd4?format=webp&width=1600" alt="" aria-hidden className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"/>
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-background/65 backdrop-blur-[2px]" />
+      <div className="container mx-auto px-4 py-10">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Post a Job</h1>
         <p className="text-sm text-muted-foreground">Start your job in a few steps. We'll notify nearby verified painters.</p>
@@ -241,6 +244,7 @@ export default function PostJob() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

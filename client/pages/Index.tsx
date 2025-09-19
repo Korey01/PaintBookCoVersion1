@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,13 +27,17 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
   return (
     <div className="space-y-24">
       <section className="relative overflow-hidden">
-        <div className="container mx-auto px-4 pt-10 pb-8 md:pt-14">
-          <div className="relative flex flex-col items-center text-center w-full">
+        <div className="container mx-auto px-4 pt-0 pb-0 md:pt-0">
+          <div className="relative flex flex-col items-center text-center w-full h-[60vh]">
             <LogoStroke />
-            <div className="pointer-events-auto absolute bottom-24 left-1/2 z-20 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3 px-4">
-              <Button onClick={() => navigate('/find-painter')} size="xl" className="bg-black text-white hover:bg-black/90 rounded-lg">Find a Painter</Button>
-              <Button onClick={() => navigate('/join-painter')} size="xl" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg">Join as a Painter</Button>
-            </div>
+            <motion.div className="pointer-events-auto absolute bottom-10 left-1/2 z-20 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3 px-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
+                <Button onClick={() => navigate('/find-painter')} size="xl" className="bg-black text-white hover:bg-black/90 rounded-lg">Find a Painter</Button>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
+                <Button onClick={() => navigate('/join-painter')} size="xl" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg">Join as a Painter</Button>
+              </motion.div>
+            </motion.div>
             <div className="pointer-events-none absolute bottom-10 left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-muted-foreground" style={{ filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.25)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.6))" }}>
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Insured</span>

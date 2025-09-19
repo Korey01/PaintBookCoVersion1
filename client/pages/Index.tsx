@@ -30,7 +30,7 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
         <div className="container mx-auto px-4 pt-0 pb-0 md:pt-0">
           <div className="relative flex flex-col items-center text-center w-full h-[60vh]">
             <LogoStroke />
-            <motion.div className="pointer-events-auto absolute left-1/2 top-[58%] z-20 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3 px-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
+            <motion.div className="pointer-events-auto absolute inset-x-0 top-[56%] z-20 flex flex-wrap items-center justify-center gap-3 px-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
                 <Button onClick={() => navigate('/find-painter')} size="xl" className="bg-black text-white hover:bg-black/90 rounded-lg">Find a Painter</Button>
               </motion.div>

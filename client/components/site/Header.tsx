@@ -32,12 +32,12 @@ export default function Header() {
 
   return (
     <header className={`sticky top-0 z-40 w-full transition-all ${scrolled ? "backdrop-blur bg-background/70 border-b" : "bg-transparent"}`}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex items-center justify-between px-4 py-4 md:py-6">
         <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight" aria-label="PaintBookco home">
           <img
             src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F03ce221d7cdc4cdba2d14b6eceffd308?format=webp&width=800"
             alt="PaintBookco logo"
-            className="h-12 w-auto sm:h-14 drop-shadow-md contrast-110 saturate-110"
+            className="h-[7.5rem] w-auto sm:h-[8.75rem] drop-shadow-md contrast-110 saturate-110"
           />
           <span className="sr-only">PaintBookco</span>
         </Link>

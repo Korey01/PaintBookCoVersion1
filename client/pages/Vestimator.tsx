@@ -66,7 +66,10 @@ export default function Vestimator() {
   }
 
   return (
-    <div className="container mx-auto grid gap-6 px-4 py-8">
+    <div className="relative">
+      <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fafed5108652c40a68e45dd3a3d173e3e?format=webp&width=1600" alt="" aria-hidden className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"/>
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-background/60 backdrop-blur-[2px]" />
+      <div className="container mx-auto grid gap-6 px-4 py-8">
       <div className="flex items-center gap-3"><PaintBucket className="h-6 w-6 text-primary"/><h1 className="text-2xl font-bold">Paint Vestimator</h1></div>
       <p className="text-sm text-muted-foreground">Upload your room photos, preview colors in the Floori visualizer, and get instant paint quantity and cost estimates.</p>
 
@@ -195,6 +198,7 @@ export default function Vestimator() {
             <Button className="mt-2 w-full" variant="secondary" onClick={()=>window.open('https://appdemo.floori.io/','_blank')}>Open Floori Studio</Button>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, BadgeCheck, ArrowRight, Quote, Sparkles, Calculator, MapPin, PaintBucket } from "lucide-react";
+import LogoStroke from "@/components/site/LogoStroke";
 import PainterCard from "@/components/site/PainterCard";
 import { painters } from "@/data/painters";
 
@@ -25,41 +26,17 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
   return (
     <div className="space-y-24">
       <section className="relative overflow-hidden">
-        <div className="container mx-auto px-4 pt-16 pb-12">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              <Sparkles className="h-3.5 w-3.5"/> Trusted painters. Escrow-protected bookings.
+        <div className="container mx-auto px-4 pt-10 pb-8 md:pt-14">
+          <div className="flex flex-col items-center text-center">
+            <LogoStroke />
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Button onClick={() => navigate('/find-painter')} size="xl">Find a Painter</Button>
+              <Button onClick={() => navigate('/join-painter')} variant="outline" size="xl">Join as a Painter</Button>
             </div>
-            <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Hire verified painters you can trust</h1>
-            <p className="mt-3 text-lg text-muted-foreground">Compare painters by ratings, skills and price. Enjoy 100% escrow protection — your full payment is held securely until you approve the job (via Stripe (FCA-regulated payment partner)).</p>
-            <form onSubmit={handleSearch} className="mt-6 grid gap-3 rounded-xl border bg-card/80 p-3 backdrop-blur md:grid-cols-[1fr_1fr_auto]">
-              <div className="flex items-center gap-2 rounded-lg bg-background p-2">
-                <MapPin className="h-4 w-4 text-muted-foreground"/>
-                <Input name="location" placeholder="Postcode or city" className="border-0 focus-visible:ring-0"/>
-              </div>
-              <div className="flex items-center gap-2 rounded-lg bg-background p-2">
-                <PaintBucket className="h-4 w-4 text-muted-foreground"/>
-                <Select value={jobType} onValueChange={setJobType}>
-                  <SelectTrigger className="border-0 focus:ring-0 focus:ring-offset-0">
-                    <SelectValue placeholder="Job type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="interior">Interior</SelectItem>
-                    <SelectItem value="exterior">Exterior</SelectItem>
-                    <SelectItem value="kitchen">Kitchen cabinets</SelectItem>
-                    <SelectItem value="wallpaper">Wallpaper</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="h-12 md:h-auto">Find a Painter <ArrowRight className="ml-2 h-4 w-4"/></Button>
-            </form>
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Insured</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> 100% escrow protection — via Stripe (FCA-regulated payment partner)</span>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Button onClick={() => navigate("/vestimator")} variant="outline"><Calculator className="mr-2 h-4 w-4"/> Vestimator</Button>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="border-t bg-card/50">
       <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-4">
         <div className="col-span-2">
-          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F03ce221d7cdc4cdba2d14b6eceffd308?format=webp&width=480" alt="PaintBookco logo" className="h-[7.5rem] w-auto drop-shadow-md contrast-110 saturate-110"/>
+          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F9f266fe2a29b4a5faea828004912cec3?format=webp&width=480" alt="PaintBookco logo" className="h-[7.5rem] w-auto drop-shadow-md contrast-110 saturate-110"/>
           <p className="mt-2 text-sm text-muted-foreground max-w-prose">Find trusted, verified painters and decorators. Book with confidence with deposit protection via secure escrow.</p>
           <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</span>

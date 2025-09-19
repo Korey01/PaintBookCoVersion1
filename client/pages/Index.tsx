@@ -27,13 +27,13 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
     <div className="space-y-24">
       <section className="relative overflow-hidden">
         <div className="container mx-auto px-4 pt-10 pb-8 md:pt-14">
-          <div className="flex flex-col items-center text-center">
+          <div className="relative flex flex-col items-center text-center w-full">
             <LogoStroke />
-            <div className="-mt-12 md:-mt-20 flex flex-wrap items-center justify-center gap-3">
+            <div className="pointer-events-auto absolute bottom-24 left-1/2 z-20 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3 px-4">
               <Button onClick={() => navigate('/find-painter')} size="xl">Find a Painter</Button>
               <Button onClick={() => navigate('/join-painter')} variant="outline" size="xl">Join as a Painter</Button>
             </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+            <div className="pointer-events-none absolute bottom-10 left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Insured</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> 100% escrow protection — via Stripe (FCA-regulated payment partner)</span>

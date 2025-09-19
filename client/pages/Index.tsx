@@ -30,12 +30,12 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
         <div className="container mx-auto px-4 pt-0 pb-0 md:pt-0">
           <div className="relative flex flex-col items-center text-center w-full h-[60vh]">
             <LogoStroke />
-            <motion.div className="pointer-events-auto absolute inset-x-0 top-[56%] md:top-[calc(56%+144px)] z-20 flex flex-wrap items-center justify-center gap-3 px-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
+            <motion.div className="pointer-events-auto absolute inset-x-0 top-[calc(56%+24px)] md:top-[calc(56%+144px)] z-20 flex flex-wrap items-center justify-center gap-3 px-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
-                <Button onClick={() => navigate('/find-painter')} size="lg" className="bg-black text-white hover:bg-black/90 rounded-lg md:h-14 md:px-10 md:text-base">Find a Painter</Button>
+                <Button onClick={() => navigate('/find-painter')} size="sm" className="bg-black text-white hover:bg-black/90 rounded-lg md:h-14 md:px-10 md:text-base">Find a Painter</Button>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
-                <Button onClick={() => navigate('/join-painter')} size="lg" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg md:h-14 md:px-10 md:text-base">Join as a Painter</Button>
+                <Button onClick={() => navigate('/join-painter')} size="sm" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg md:h-14 md:px-10 md:text-base">Join as a Painter</Button>
               </motion.div>
             </motion.div>
             <div className="pointer-events-none absolute bottom-6 left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-black" style={{ filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.25)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.6))" }}>

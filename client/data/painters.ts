@@ -95,4 +95,32 @@ export const painters: PainterFull[] = [
     ],
     availability: ["This week"],
   },
+  {
+    id: "4",
+    name: "James Hughes - Liverpool Decor",
+    photo: "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F88acb2d4ddbe40fb93650caf86f2448f?format=webp&width=800",
+    location: "Liverpool",
+    priceRange: "£20–£34/hr",
+    rating: 4.8,
+    reviews: 51,
+    skills: ["Interior", "Wallpaper", "Feature walls"],
+    tier: "Pro",
+    bio: "Liverpool-based decorator specialising in wallpaper and clean interior finishes.",
+    coverage: "Merseyside & 20mi radius",
+    certifications: ["DBS checked"],
+    services: [
+      { name: "Interior walls & ceilings", priceRange: "£140–£320/room" },
+      { name: "Wallpaper install", priceRange: "£160–£380/room" },
+      { name: "Feature wall", priceRange: "£120–£220" }
+    ],
+    portfolio: [
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F98584c0ee0054848a1982f645043335b?format=webp&width=800",
+      "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F6647aac5c8c545939128d4b21826cec0?format=webp&width=800"
+    ],
+    reviewList: [
+      { id: "r5", author: "Hannah C.", rating: 5, comment: "Brilliant wallpapering, super tidy and friendly.", date: "2024-06-21" },
+      { id: "r6", author: "Peter L.", rating: 4.5, comment: "Great finish and fair price.", date: "2024-04-03" }
+    ],
+    availability: ["This week", "Next week"]
+  },
 ];

@@ -51,7 +51,7 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
         <h2 className="text-2xl font-bold">Top rated near you</h2>
         <p className="mt-1 text-muted-foreground">Compare profiles at a glance and contact instantly.</p>
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {painters.slice(0,3).map((p) => (
+          {[...painters].sort((a,b)=> b.rating - a.rating).slice(0,3).map((p) => (
             <PainterCard key={p.id} painter={p} />
           ))}
         </div>

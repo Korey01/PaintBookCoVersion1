@@ -67,9 +67,11 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold">Top rated near you</h2>
         <p className="mt-1 text-muted-foreground">Compare profiles at a glance and contact instantly.</p>
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
           {[...painters].sort((a,b)=> b.rating - a.rating).slice(0,3).map((p) => (
-            <PainterCard key={p.id} painter={p} />
+            <div key={p.id} className="min-w-[80%] snap-center sm:min-w-0">
+              <PainterCard painter={p} />
+            </div>
           ))}
         </div>
       </section>

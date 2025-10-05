@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, ArrowRight, CheckCircle2, Calculator } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { PAINT_TYPES, DEFAULT_ESTIMATOR_INPUT, useEstimate } from "@/lib/paint-estimator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PAINT_TYPES, DEFAULT_ESTIMATOR_INPUT, useEstimate, BRAND_INFO } from "@/lib/paint-estimator";
 import { z } from "zod";
 
 export default function PostJob() {

@@ -28,12 +28,29 @@ export default function PostJob() {
   const [images, setImages] = useState<string[]>([]);
   const [useEscrow, setUseEscrow] = useState(true);
   const [attachedEstimate, setAttachedEstimate] = useState<any>(null);
+  const [estimatorInput, setEstimatorInput] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("paintbook:lastEstimate") || "null");
+      if (stored && typeof stored === "object") {
+        return { ...DEFAULT_ESTIMATOR_INPUT, ...stored };
+      }
+    } catch {}
+    return DEFAULT_ESTIMATOR_INPUT;
+  });
+  const [showEstimator, setShowEstimator] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prePainter = params.get("painter") || undefined;
 
   useEffect(()=>{
     const est = params.get('estimate');
-    if (est) try { setAttachedEstimate(JSON.parse(est)); } catch {}
+    if (est) {
+      try {
+        const parsed = JSON.parse(est);
+        setAttachedEstimate(parsed);
+        setEstimatorInput(prev => ({ ...prev, ...parsed }));
+        setShowEstimator(true);
+      } catch {}
+    }
   },[params]);
 
   function onFiles(e: React.ChangeEvent<HTMLInputElement>) {

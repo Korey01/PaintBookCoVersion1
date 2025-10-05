@@ -25,6 +25,7 @@ export default function PostJob() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [useEscrow, setUseEscrow] = useState(true);
   const [attachedEstimate, setAttachedEstimate] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prePainter = params.get("painter") || undefined;

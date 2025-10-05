@@ -419,7 +419,14 @@ export default function Dashboard(){
                 <CardContent className="p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div className="text-base font-semibold">{j.title}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-base font-semibold">{j.title}</div>
+                        {j.source === 'local' && (
+                          <Badge variant="outline" className={`text-xs ${jobStatusBadgeClass(j.status)}`}>
+                            {formatJobStatus(j.status)}
+                          </Badge>
+                        )}
+                      </div>
                       <div className="mt-1 text-xs text-muted-foreground flex flex-wrap items-center gap-3">
                         <span className="inline-flex items-center gap-1"><CalendarClock className="h-4 w-4"/> in {daysFromNow(j.date)} days</span>
                         <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4"/> {j.location} · {j.distance}mi</span>
@@ -429,12 +436,18 @@ export default function Dashboard(){
                       <p className="mt-2 text-sm">{j.description}</p>
                     </div>
                     <div className="flex gap-2">
-                      {applied.includes(j.id) ? (
+                      {j.source === 'local' ? (
+                        j.status === 'awaiting_payment' || j.status === 'accepted_no_escrow' ? (
+                          <Button variant="secondary" disabled className="cursor-default"><CheckCircle2 className="mr-2 h-4 w-4"/>{j.status === 'awaiting_payment' ? 'Payment requested' : 'Accepted'}</Button>
+                        ) : (
+                          <Button onClick={()=>acceptJob(j.jobStorageId || j.id)}>Accept job</Button>
+                        )
+                      ) : applied.includes(j.id) ? (
                         <Button variant="secondary" disabled className="cursor-default"><CheckCircle2 className="mr-2 h-4 w-4"/> Applied</Button>
                       ) : (
                         <Button onClick={()=>expressInterest(j.id)}>Express interest</Button>
                       )}
-                      <a href={`/messages?job=${j.id}`} className="inline-flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-primary hover:bg-primary/10"><Mail className="h-4 w-4"/> Message</a>
+                      <a href={`/messages?job=${j.jobStorageId || j.id}`} className="inline-flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-primary hover:bg-primary/10"><Mail className="h-4 w-4"/> Message</a>
                     </div>
                   </div>
                 </CardContent>

@@ -42,6 +42,49 @@ const DISCOUNTS = [
   { name: "wilko", detail: "Budget rollers bundle", requires: "Starter", link: "#" },
 ];
 
+const JOBS_EVENT = "paintbook:jobs:updated";
+const NOTIFICATIONS_EVENT = "paintbook:notifications:updated";
+
+function readJobsFromStorage(): any[] {
+  if (typeof window === "undefined") return [];
+  let stored: any[] = [];
+  try { stored = JSON.parse(localStorage.getItem("paintbook:jobs") || "[]"); } catch {}
+  const now = Date.now();
+  let mutated = false;
+  const withIds = stored.map((job: any, index: number) => {
+    if (!job || typeof job !== "object") return job;
+    if (!job.id) {
+      mutated = true;
+      return { ...job, id: `job_${now}_${index}` };
+    }
+    return job;
+  });
+  if (mutated) {
+    try { localStorage.setItem("paintbook:jobs", JSON.stringify(withIds)); } catch {}
+  }
+  return withIds;
+}
+
+function writeJobsToStorage(jobs: any[]) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("paintbook:jobs", JSON.stringify(jobs)); } catch {}
+}
+
+function readNotificationsFromStorage(): any[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem("paintbook:notifications") || "[]"); } catch { return []; }
+}
+
+function writeNotificationsToStorage(notifications: any[]) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("paintbook:notifications", JSON.stringify(notifications)); } catch {}
+}
+
+function toNumber(value: unknown): number {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
 export default function Dashboard(){
   useEffect(()=>{ document.title = "Painter Dashboard | PaintBook"; },[]);
   const [budget, setBudget] = useState<number[]>([300, 2000]);

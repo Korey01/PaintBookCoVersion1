@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldCheck, Lock, Mail, User2, Sparkles } from "lucide-react";
+import { ShieldCheck, Lock, Mail, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface User {
   email: string;
@@ -98,8 +99,30 @@ export default function Auth(){
           <div className="grid gap-3">
             <div className="text-sm font-medium">Choose your role</div>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <Button variant={role==='customer'?'default':'outline'} onClick={()=>setRole('customer')}><User2 className="mr-2 h-4 w-4"/> Customer</Button>
-              <Button variant={role==='painter'?'default':'outline'} onClick={()=>setRole('painter')}>Painter/decorator</Button>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "h-auto px-0 py-1 text-base font-semibold normal-case hover:bg-transparent md:h-11 md:px-6 md:rounded-md",
+                  role === 'customer'
+                    ? "text-primary underline decoration-2 underline-offset-4 md:no-underline md:bg-primary md:text-primary-foreground md:hover:bg-primary/90"
+                    : "text-muted-foreground md:text-primary"
+                )}
+                onClick={()=>setRole('customer')}
+              >
+                Customer
+              </Button>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "h-auto px-0 py-1 text-base font-semibold normal-case hover:bg-transparent md:h-11 md:px-6 md:rounded-md",
+                  role === 'painter'
+                    ? "text-primary underline decoration-2 underline-offset-4 md:no-underline md:bg-primary md:text-primary-foreground md:hover:bg-primary/90"
+                    : "text-muted-foreground md:text-primary"
+                )}
+                onClick={()=>setRole('painter')}
+              >
+                Painter/decorator
+              </Button>
             </div>
           </div>
 

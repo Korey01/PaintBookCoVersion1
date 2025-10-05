@@ -93,7 +93,27 @@ export default function PostJob() {
 
     // Store lightweight job (avoid huge base64 images in localStorage)
     const lightImagesCount = images.length;
-    const job = { jobType, desc, budgetMin, budgetMax, postcode, email, phone, images: [], imagesCount: lightImagesCount, attachedEstimate, painter: prePainter, createdAt: new Date().toISOString() };
+    const jobId = `job_${Date.now()}`;
+    const job = {
+      id: jobId,
+      jobType,
+      desc,
+      budgetMin,
+      budgetMax,
+      postcode,
+      email,
+      phone,
+      images: [],
+      imagesCount: lightImagesCount,
+      attachedEstimate,
+      painter: prePainter,
+      createdAt: new Date().toISOString(),
+      escrowOptIn: useEscrow,
+      escrowFeeEstimate,
+      status: "pending_painter",
+      acceptedAmount: null,
+      acceptedAt: null,
+    };
 
     let list: any[] = [];
     try { list = JSON.parse(localStorage.getItem('paintbook:jobs') || '[]'); } catch {}

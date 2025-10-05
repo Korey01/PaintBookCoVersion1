@@ -73,7 +73,15 @@ export default function PostJob() {
       try {
         const parsed = JSON.parse(est);
         setAttachedEstimate(parsed);
-        setEstimatorInput(prev => ({ ...prev, ...parsed }));
+        if (parsed && typeof parsed === "object") {
+          if (typeof parsed.selectedBrand === "string" && parsed.selectedBrand in BRAND_INFO) {
+            setSelectedBrand(parsed.selectedBrand as keyof typeof BRAND_INFO);
+          } else if (typeof parsed.brand === "string" && parsed.brand in BRAND_INFO) {
+            setSelectedBrand(parsed.brand as keyof typeof BRAND_INFO);
+          }
+          const { selectedBrand: parsedBrand, brand, ...rest } = parsed;
+          setEstimatorInput(prev => ({ ...prev, ...rest }));
+        }
       } catch {}
     }
   },[params]);

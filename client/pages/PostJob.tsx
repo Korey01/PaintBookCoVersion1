@@ -161,7 +161,7 @@ export default function PostJob() {
     // Store lightweight job (avoid huge base64 images in localStorage)
     const lightImagesCount = images.length;
     const jobId = `job_${Date.now()}`;
-    const estimatePayload = attachedEstimate || { ...estimatorInput, ...estimate };
+    const estimatePayload = attachedEstimate ? { ...attachedEstimate, brand: attachedEstimate.brand ?? selectedBrand } : { ...estimatorInput, ...estimate, brand: selectedBrand };
     const job = {
       id: jobId,
       jobType,

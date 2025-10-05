@@ -51,11 +51,15 @@ export default function Checkout(){
       if (total > 0) return Math.round(total);
     }
     if (amountParam && amountParam > 0) return amountParam;
-    const jobs = JSON.parse(localStorage.getItem('paintbook:jobs')||'[]');
-    const last = jobs[jobs.length-1] || {};
-    const base = Number(last.budgetMax || last.budgetMin || 500);
-    const pct = 0.3 + Math.random()*0.1; // 30–40%
-    return Math.round(base * pct);
+    try {
+      const jobs = JSON.parse(localStorage.getItem('paintbook:jobs')||'[]');
+      const last = jobs[jobs.length-1] || {};
+      const base = Number(last.budgetMax || last.budgetMin || 500);
+      const pct = 0.3 + Math.random()*0.1; // 30–40%
+      return Math.round(base * pct);
+    } catch {
+      return 200;
+    }
   }, [mode, plan, amountParam, baseAmountParam, estimatedJobAmount, computedEscrowFee]);
 
   const [name, setName] = useState("");

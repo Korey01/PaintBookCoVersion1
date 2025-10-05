@@ -121,6 +121,17 @@ export default function Dashboard(){
     if (location.hash === '#edit-profile') setEditOpen(true);
   },[]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => setLocalJobs(readJobsFromStorage());
+    window.addEventListener(JOBS_EVENT, handler);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener(JOBS_EVENT, handler);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
+
   function onIdFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []).slice(0, 3);
     files.forEach((f)=>{
@@ -314,7 +325,7 @@ export default function Dashboard(){
                       <div className="text-base font-semibold">{j.title}</div>
                       <div className="mt-1 text-xs text-muted-foreground flex flex-wrap items-center gap-3">
                         <span className="inline-flex items-center gap-1"><CalendarClock className="h-4 w-4"/> in {daysFromNow(j.date)} days</span>
-                        <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4"/> {j.location} · {j.distance}mi</span>
+                        <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4"/> {j.location} �� {j.distance}mi</span>
                         <span className="inline-flex items-center gap-1"><PoundSterling className="h-4 w-4"/> Budget £{j.budget}</span>
                         <Badge variant="secondary" className="bg-secondary/60">{j.type}</Badge>
                       </div>

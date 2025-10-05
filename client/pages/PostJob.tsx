@@ -46,6 +46,17 @@ export default function PostJob() {
 
   const [errors, setErrors] = useState<Record<string,string>>({});
 
+  const estimatedBudget = useMemo(() => {
+    if (typeof budgetMax === "number" && budgetMax > 0) return budgetMax;
+    if (typeof budgetMin === "number" && budgetMin > 0) return budgetMin;
+    return 500;
+  }, [budgetMin, budgetMax]);
+
+  const escrowFeeEstimate = useMemo(() => {
+    if (!useEscrow) return 0;
+    return Math.max(10, Math.round(estimatedBudget * 0.025));
+  }, [useEscrow, estimatedBudget]);
+
   const schemaStep1 = z.object({
     jobType: z.string().min(1, "Select a job type"),
     desc: z.string().min(10, "Add at least 10 characters"),

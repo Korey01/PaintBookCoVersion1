@@ -108,7 +108,7 @@ export default function About() {
       </section>
 
       <footer className="text-center">
-        <p className="text-sm font-medium">👉 PaintBookco: The Paint Job, Simplified.</p>
+        <p className="text-sm font-medium">👉 PaintBookco: Your Paint & Decorating Job Simplified.</p>
       </footer>
     </div>
   );

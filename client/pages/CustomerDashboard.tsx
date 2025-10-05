@@ -73,6 +73,22 @@ export default function CustomerDashboard(){
     navigate('/');
   }
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncJobs = () => setJobs(readJobsFromStorage());
+    const syncNotifications = () => setNotifications(readNotificationsFromStorage());
+    window.addEventListener(JOBS_EVENT, syncJobs);
+    window.addEventListener(NOTIFICATIONS_EVENT, syncNotifications);
+    window.addEventListener("storage", syncJobs);
+    window.addEventListener("storage", syncNotifications);
+    return () => {
+      window.removeEventListener(JOBS_EVENT, syncJobs);
+      window.removeEventListener(NOTIFICATIONS_EVENT, syncNotifications);
+      window.removeEventListener("storage", syncJobs);
+      window.removeEventListener("storage", syncNotifications);
+    };
+  }, []);
+
   return (
     <div className="container mx-auto grid gap-8 px-4 py-10">
       <Card>

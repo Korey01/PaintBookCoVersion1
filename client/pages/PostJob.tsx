@@ -265,7 +265,11 @@ export default function PostJob() {
               {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
             <div className="sm:col-span-2 rounded-lg bg-secondary p-4 text-sm">
-              We'll notify nearby verified painters. Your contact is shared only after you accept a quote. 100% of your payment is held in escrow until you approve the job (via Stripe (FCA-regulated payment partner)).
+              {useEscrow ? (
+                <>We'll notify nearby verified painters. Once a painter accepts, you'll be prompted to pay the agreed total (approx. £{Math.round(estimatedBudget).toLocaleString("en-GB")}) plus the escrow fee of £{escrowFeeEstimate.toLocaleString("en-GB")}. Stripe will hold the funds securely until you release them.</>
+              ) : (
+                <>We'll notify nearby verified painters. Coordinate payment directly with your chosen painter. You can enable escrow later from your dashboard if you change your mind.</>
+              )}
             </div>
             <div className="sm:col-span-2 flex justify-between">
               <Button variant="secondary" onClick={back}>Back</Button>

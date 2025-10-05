@@ -369,9 +369,9 @@ export default function PostJob() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" onClick={()=>{
-                      const payload = { ...estimatorInput, ...estimate };
+                      const payload = { ...estimatorInput, ...estimate, brand: selectedBrand };
                       setAttachedEstimate(payload);
-                      localStorage.setItem('paintbook:lastEstimate', JSON.stringify(estimatorInput));
+                      localStorage.setItem('paintbook:lastEstimate', JSON.stringify({ ...estimatorInput, selectedBrand }));
                     }}>Attach estimate to job</Button>
                     <Button size="sm" variant="outline" onClick={()=>{
                       const base = Math.max(estimate.materialCost * 2.2, estimate.materialCost + 200);

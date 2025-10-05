@@ -16,10 +16,10 @@ export default function Footer() {
         <div>
           <h4 className="text-sm font-semibold">Product</h4>
           <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/find-painter" className="hover:text-primary">Find a Painter</Link></li>
+            <li><Link to="/find-painter" className="hover:text-primary">Find A Painter/Decorator</Link></li>
             <li><Link to="/post-job" className="hover:text-primary">Post a Job</Link></li>
             <li><Link to="/estimator" className="hover:text-primary">Paint Estimator</Link></li>
-            <li><Link to="/join-painter" className="hover:text-primary">Join as a Painter</Link></li>
+            <li><Link to="/join-painter" className="hover:text-primary">Join as A Painter/Decorator</Link></li>
           </ul>
         </div>
         <div>

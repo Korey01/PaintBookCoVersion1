@@ -127,6 +127,9 @@ export default function Checkout(){
                 <span>Total charged today</span>
                 <span>£{amount.toLocaleString('en-GB')}</span>
               </div>
+              {jobParam && (
+                <div className="mt-2 text-[11px] text-muted-foreground">Job reference: {jobParam}</div>
+              )}
             </div>
           )}
 

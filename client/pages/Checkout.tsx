@@ -105,13 +105,29 @@ export default function Checkout(){
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">Amount</div>
-            <div className="text-xl font-extrabold">£{amount}</div>
+            <div className="text-xl font-extrabold">£{amount.toLocaleString('en-GB')}</div>
           </div>
           {mode === 'subscription' && (
             <div className="mt-1 text-xs text-muted-foreground">Plan: {plan} · Billed monthly · Cancel anytime</div>
           )}
           {mode === 'booking' && painter && (
             <div className="mt-1 text-xs text-muted-foreground">Booking painter: <Badge variant="secondary">{painter}</Badge></div>
+          )}
+          {mode === 'booking' && (
+            <div className="mt-4 rounded-lg bg-secondary/70 p-3 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between text-sm text-foreground">
+                <span>Job total</span>
+                <span>£{breakdownJobAmount.toLocaleString('en-GB')}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between">
+                <span>Escrow fee (customer pays)</span>
+                <span>£{breakdownEscrowFee.toLocaleString('en-GB')}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-sm font-semibold text-foreground">
+                <span>Total charged today</span>
+                <span>£{amount.toLocaleString('en-GB')}</span>
+              </div>
+            </div>
           )}
 
           <form className="mt-6 grid gap-3" onSubmit={submit}>

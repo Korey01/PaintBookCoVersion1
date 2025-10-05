@@ -19,6 +19,14 @@ interface Job {
   location: string;
   type: string;
   description: string;
+  source?: "local" | "platform";
+  jobStorageId?: string;
+  status?: string;
+  escrowOptIn?: boolean;
+  escrowFeeEstimate?: number;
+  acceptedAmount?: number | null;
+  acceptedAt?: string | null;
+  painterName?: string;
 }
 
 const NEARBY_JOBS: Job[] = [

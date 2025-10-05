@@ -18,6 +18,11 @@ function readJobsFromStorage(): any[] {
   try { return JSON.parse(localStorage.getItem("paintbook:jobs") || "[]"); } catch { return []; }
 }
 
+function writeJobsToStorage(jobs: any[]) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("paintbook:jobs", JSON.stringify(jobs)); } catch {}
+}
+
 function readNotificationsFromStorage(): any[] {
   if (typeof window === "undefined") return [];
   try { return JSON.parse(localStorage.getItem("paintbook:notifications") || "[]"); } catch { return []; }

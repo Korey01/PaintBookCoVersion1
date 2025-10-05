@@ -56,6 +56,17 @@ export default function PostJob() {
     localStorage.setItem('paintbook:lastEstimate', JSON.stringify({ ...estimatorInput, selectedBrand }));
   }, [estimatorInput, selectedBrand]);
 
+  useEffect(() => {
+    const info = BRAND_INFO[selectedBrand]?.[estimatorInput.paintType];
+    if (!info) return;
+    setEstimatorInput(prev => {
+      if (prev.coverage === info.coverage && prev.pricePerLitre === info.pricePerLitre) {
+        return prev;
+      }
+      return { ...prev, coverage: info.coverage, pricePerLitre: info.pricePerLitre };
+    });
+  }, [selectedBrand, estimatorInput.paintType]);
+
   useEffect(()=>{
     const est = params.get('estimate');
     if (est) {

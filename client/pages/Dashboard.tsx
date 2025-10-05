@@ -157,19 +157,37 @@ export default function Dashboard(){
     setEditOpen(false);
   }
 
-  const combinedJobs: Job[] = useMemo(()=>{
-    const local = (JSON.parse(localStorage.getItem('paintbook:jobs')||'[]') as any[]).map((j:any, i:number)=> ({
-      id: `lj_${i}`,
-      title: j.jobType ? `${j.jobType} job` : 'Customer job',
-      budget: Number(j.budgetMax || j.budgetMin || 500),
-      date: j.createdAt || new Date().toISOString(),
-      distance: Math.max(1, Math.min(20, Math.round(Math.random()*15)+1)),
-      location: (j.postcode||'').split(' ')[0] || 'N/A',
-      type: (j.jobType||'General').toString(),
-      description: j.desc || 'New job posted by a customer.',
-    }));
-    return [...local, ...NEARBY_JOBS];
-  },[]);
+  const combinedJobs: Job[] = useMemo(() => {
+    const local = localJobs.map((j: any, index: number) => {
+      const jobId = j.id || `job_local_${index}`;
+      const maxBudget = toNumber(j.budgetMax);
+      const minBudget = toNumber(j.budgetMin);
+      const budgetValue = maxBudget || minBudget || 500;
+      const distanceValue = typeof j.distance === "number" && j.distance > 0
+        ? j.distance
+        : Math.max(1, Math.min(20, Math.round(Math.random() * 15) + 1));
+      return {
+        id: jobId,
+        title: j.jobType ? `${j.jobType} job` : "Customer job",
+        budget: budgetValue,
+        date: j.createdAt || new Date().toISOString(),
+        distance: distanceValue,
+        location: (j.postcode || "").split(" ")[0] || "N/A",
+        type: (j.jobType || "General").toString(),
+        description: j.desc || "New job posted by a customer.",
+        source: "local",
+        jobStorageId: jobId,
+        status: j.status || "pending_painter",
+        escrowOptIn: !!j.escrowOptIn,
+        escrowFeeEstimate: toNumber(j.escrowFee ?? j.escrowFeeEstimate ?? 0),
+        acceptedAmount: j.acceptedAmount != null ? toNumber(j.acceptedAmount) : null,
+        acceptedAt: j.acceptedAt || null,
+        painterName: j.acceptedBy || j.painterName || undefined,
+      } as Job;
+    });
+    const platform = NEARBY_JOBS.map(job => ({ ...job, source: "platform" as const }));
+    return [...local, ...platform];
+  }, [localJobs]);
 
   const filteredJobs = useMemo(()=>{
     return combinedJobs.filter(j => {
@@ -325,7 +343,7 @@ export default function Dashboard(){
                       <div className="text-base font-semibold">{j.title}</div>
                       <div className="mt-1 text-xs text-muted-foreground flex flex-wrap items-center gap-3">
                         <span className="inline-flex items-center gap-1"><CalendarClock className="h-4 w-4"/> in {daysFromNow(j.date)} days</span>
-                        <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4"/> {j.location} �� {j.distance}mi</span>
+                        <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4"/> {j.location} · {j.distance}mi</span>
                         <span className="inline-flex items-center gap-1"><PoundSterling className="h-4 w-4"/> Budget £{j.budget}</span>
                         <Badge variant="secondary" className="bg-secondary/60">{j.type}</Badge>
                       </div>

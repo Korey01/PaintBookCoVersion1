@@ -266,6 +266,30 @@ export default function Dashboard(){
     });
   }
 
+  function formatJobStatus(status?: string) {
+    switch (status) {
+      case "awaiting_payment":
+        return "Awaiting customer payment";
+      case "accepted_no_escrow":
+        return "Accepted (no escrow)";
+      case "pending_painter":
+        return "Awaiting acceptance";
+      default:
+        return "Job posted";
+    }
+  }
+
+  function jobStatusBadgeClass(status?: string) {
+    switch (status) {
+      case "awaiting_payment":
+        return "bg-primary/10 text-primary border-primary/40";
+      case "accepted_no_escrow":
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      default:
+        return "bg-secondary/70 text-foreground border-transparent";
+    }
+  }
+
   return (
     <div className="container mx-auto grid gap-8 px-4 py-10">
       <div className="grid gap-4 md:grid-cols-4">

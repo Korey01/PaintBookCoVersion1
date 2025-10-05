@@ -35,6 +35,7 @@ export default function TrustSafety(){
                 <div className="text-lg font-semibold">Your Money Held Securely Until the Job is Complete.</div>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   <li>When you book a painter, 100% of your payment is securely held in escrow.</li>
+                  <li>Escrow is optional — you can opt in per job and you cover any escrow service fees.</li>
                   <li>Funds are only released to the painter once you confirm the job is satisfactorily completed.</li>
                   <li>Protected via Stripe (FCA-regulated payment partner) for maximum peace of mind.</li>
                 </ul>

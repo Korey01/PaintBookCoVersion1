@@ -160,7 +160,7 @@ export default function FindPainters() {
       <section>
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Painters {params.get("location") ? `in ${params.get("location")}` : "near you"}</h1>
+            <h1 className="text-2xl font-bold">Painters or decorators {params.get("location") ? `in ${params.get("location")}` : "near you"}</h1>
             <p className="text-sm text-muted-foreground">Search by postcode/city and refine with filters.</p>
             {usingFallback && (
               <div className="mt-2 inline-flex items-center gap-2 rounded-md border bg-secondary px-3 py-1 text-xs text-foreground">

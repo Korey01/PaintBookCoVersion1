@@ -62,6 +62,9 @@ export default function Checkout(){
     }
   }, [mode, plan, amountParam, baseAmountParam, estimatedJobAmount, computedEscrowFee]);
 
+  const breakdownJobAmount = mode === "booking" ? Math.max(0, Math.round(baseAmountParam > 0 ? baseAmountParam : estimatedJobAmount)) : 0;
+  const breakdownEscrowFee = mode === "booking" ? Math.max(0, Math.round(computedEscrowFee)) : 0;
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [card, setCard] = useState("");

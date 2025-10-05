@@ -97,6 +97,45 @@ export default function CustomerDashboard(){
     navigate(`/checkout?mode=subscription&plan=${encodeURIComponent(plan || 'Customer Plus')}`);
   }
 
+  function handlePay(alert: (typeof paymentAlerts)[number]){
+    const baseAmount = Math.round(alert.jobAmount);
+    const escrowFee = Math.round(alert.escrowFee);
+    const totalDue = Math.round(alert.totalDue);
+    const painterName = alert.painterName;
+
+    if (alert.notification && !alert.notification.read) {
+      const updatedNotifications = readNotificationsFromStorage().map((n: any) => n.id === alert.notification?.id ? { ...n, read: true, readAt: new Date().toISOString() } : n);
+      writeNotificationsToStorage(updatedNotifications);
+      setNotifications(updatedNotifications);
+      window.dispatchEvent(new Event(NOTIFICATIONS_EVENT));
+    }
+
+    const storedJobs = readJobsFromStorage();
+    let jobChanged = false;
+    const nextJobs = storedJobs.map((j: any) => {
+      if (j && j.id === alert.job.id) {
+        jobChanged = true;
+        return { ...j, status: 'payment_in_progress' };
+      }
+      return j;
+    });
+    if (jobChanged) {
+      writeJobsToStorage(nextJobs);
+      setJobs(nextJobs);
+      window.dispatchEvent(new Event(JOBS_EVENT));
+    }
+
+    const params = new URLSearchParams({
+      mode: 'booking',
+      painter: painterName,
+      amount: totalDue.toString(),
+      baseAmount: baseAmount.toString(),
+      escrowFee: escrowFee.toString(),
+      job: (alert.job.id || '').toString(),
+    });
+    navigate(`/checkout?${params.toString()}`);
+  }
+
   function deleteAccount(){
     localStorage.removeItem('paintbook:user');
     localStorage.removeItem('paintbook:customerProfile');

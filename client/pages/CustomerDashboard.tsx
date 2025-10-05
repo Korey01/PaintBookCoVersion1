@@ -10,6 +10,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const JOBS_EVENT = "paintbook:jobs:updated";
+const NOTIFICATIONS_EVENT = "paintbook:notifications:updated";
+
+function readJobsFromStorage(): any[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem("paintbook:jobs") || "[]"); } catch { return []; }
+}
+
+function readNotificationsFromStorage(): any[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem("paintbook:notifications") || "[]"); } catch { return []; }
+}
+
+function writeNotificationsToStorage(notifications: any[]) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem("paintbook:notifications", JSON.stringify(notifications)); } catch {}
+}
+
+function toNumber(value: unknown): number {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
 export default function CustomerDashboard(){
   useEffect(()=>{ document.title = "Customer Dashboard | PaintBook"; },[]);
   const navigate = useNavigate();

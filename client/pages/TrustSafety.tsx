@@ -12,15 +12,24 @@ export default function TrustSafety(){
       {/* Hero */}
       <section className="bg-gradient-to-b from-blue-50 via-white to-green-50">
         <div className="container mx-auto px-4 py-14 md:py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              <ShieldCheck className="h-3.5 w-3.5"/> Trust & Safety
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            <div className="mx-auto max-w-3xl text-center md:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <ShieldCheck className="h-3.5 w-3.5"/> Trust & Safety
+              </div>
+              <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">Your Paint Job, Protected.</h1>
+              <p className="mt-3 text-muted-foreground">At PaintBook, trust and safety are built into every job — for both painters and customers.</p>
+              <Button asChild size="lg" className="mt-6">
+                <Link to="#learn">Learn How PaintBook Keeps You Safe</Link>
+              </Button>
             </div>
-            <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">Your Paint Job, Protected.</h1>
-            <p className="mt-3 text-muted-foreground">At PaintBook, trust and safety are built into every job — for both painters and customers.</p>
-            <Button asChild size="lg" className="mt-6">
-              <Link to="#learn">Learn How PaintBook Keeps You Safe</Link>
-            </Button>
+            <div className="mx-auto w-full max-w-xl">
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fe373f3566e7b48a3aa37582912b385f7?format=webp&width=800"
+                alt="Professional painter smoothing a wall while wearing safety gear"
+                className="h-full w-full rounded-2xl object-cover shadow-lg"
+              />
+            </div>
           </div>
         </div>
       </section>

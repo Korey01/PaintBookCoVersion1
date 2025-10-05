@@ -41,6 +41,10 @@ export default function PostJob() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prePainter = params.get("painter") || undefined;
 
+  useEffect(() => {
+    localStorage.setItem('paintbook:lastEstimate', JSON.stringify(estimatorInput));
+  }, [estimatorInput]);
+
   useEffect(()=>{
     const est = params.get('estimate');
     if (est) {

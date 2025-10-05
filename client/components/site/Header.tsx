@@ -42,7 +42,7 @@ export default function Header() {
           <span className="sr-only">PaintBookco</span>
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
-          <NavLink to="/find-painter" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Find a Painter</NavLink>
+          <NavLink to="/find-painter" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Find A Painter/Decorator</NavLink>
           <NavLink to="/post-job" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Post a Job</NavLink>
           <NavLink to="/vestimator" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Vestimator</NavLink>
                     <NavLink to="/about" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>About</NavLink>
@@ -71,7 +71,7 @@ export default function Header() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[300px] p-4">
           <nav className="grid gap-3 text-sm">
-            <Link to="/find-painter" onClick={()=>setMobileOpen(false)}>Find a Painter</Link>
+            <Link to="/find-painter" onClick={()=>setMobileOpen(false)}>Find A Painter/Decorator</Link>
             <Link to="/post-job" onClick={()=>setMobileOpen(false)}>Post a Job</Link>
             <Link to="/vestimator" onClick={()=>setMobileOpen(false)}>Vestimator</Link>
                         <Link to="/trust-safety" onClick={()=>setMobileOpen(false)}>Trust & Safety</Link>

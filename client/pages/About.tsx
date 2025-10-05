@@ -47,7 +47,7 @@ export default function About() {
               <li className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 text-primary"/> Book with peace of mind, knowing your deposit is protected until the job is done.</li>
             </ul>
             <div className="mt-4 flex gap-3">
-              <Button asChild><Link to="/find-painter">Find a Painter</Link></Button>
+              <Button asChild><Link to="/find-painter">Find A Painter/Decorator</Link></Button>
               <Button asChild variant="outline"><Link to="/estimator">Use Estimator</Link></Button>
             </div>
           </CardContent>
@@ -61,7 +61,7 @@ export default function About() {
               <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-primary"/> Choose the jobs that match your skills, budget, and availability.</li>
             </ul>
             <div className="mt-4 flex gap-3">
-              <Button asChild><Link to="/join-painter">Join as a Painter</Link></Button>
+              <Button asChild><Link to="/join-painter">Join as A Painter/Decorator</Link></Button>
               <Button asChild variant="outline"><Link to="/dashboard">Open Dashboard</Link></Button>
             </div>
           </CardContent>
@@ -99,7 +99,7 @@ export default function About() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground">Together, we’re building a platform that brings vibrance, trust, and efficiency to the painting industry.</p>
               <div className="flex gap-3">
-                <Button asChild><Link to="/find-painter">Find a Painter</Link></Button>
+                <Button asChild><Link to="/find-painter">Find A Painter/Decorator</Link></Button>
                 <Button asChild variant="secondary"><Link to="/post-job">Post a Job</Link></Button>
               </div>
             </div>

@@ -214,21 +214,38 @@ export default function PostJob() {
 
       {step === 3 && (
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-blue-100 p-2 text-blue-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-              <div>
-                <div className="text-lg font-semibold">Payment Security — 100% Escrow Protection</div>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                  <li>Your full payment is securely held until you approve the job.</li>
-                  <li>Protected via Stripe (FCA-regulated payment partner).</li>
-                  <li>Fair for everyone: release when satisfied or open a dispute if needed.</li>
-                </ul>
-                <div className="mt-3 text-xs text-muted-foreground">Learn more on our <a className="underline" href="/trust-safety" target="_self">Trust & Safety</a> page.</div>
-                <div className="mt-4 flex justify-end">
-                  <Button onClick={next}>Continue</Button>
+          <CardContent className="grid gap-5 p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-primary/15 p-2 text-primary"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div>
+                  <div className="text-lg font-semibold">Payment security — escrow protection</div>
+                  <p className="mt-1 text-sm text-muted-foreground">Hold the agreed funds with Stripe until you sign off the work. Toggle escrow on if you want PaintBook to safeguard this job.</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2 self-end sm:self-start">
+                <span className="text-xs font-medium text-muted-foreground">Use escrow</span>
+                <Switch checked={useEscrow} onCheckedChange={setUseEscrow} aria-label="Toggle escrow protection" />
+              </div>
+            </div>
+
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+              <li>Your full payment is held safely until you approve release.</li>
+              <li>Stripe (FCA-regulated partner) acts as the neutral escrow provider.</li>
+              <li>Support available if you need to raise a dispute.</li>
+            </ul>
+
+            <div className="rounded-lg bg-secondary p-3 text-sm text-muted-foreground">
+              <div className="font-medium text-foreground">Cost covered by you</div>
+              <p className="mt-1">Estimated escrow fee <span className="font-semibold text-foreground">£{escrowFeeEstimate.toLocaleString("en-GB")}</span> (approx. 2.5% with £10 minimum) payable alongside your job total.</p>
+              {!useEscrow && (
+                <p className="mt-2 text-xs">If you opt out, payment is arranged directly with the painter outside of Stripe escrow.</p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Learn more on our <a className="underline" href="/trust-safety" target="_self">Trust &amp; Safety</a> page.</span>
+              <Button onClick={next}>Continue</Button>
             </div>
           </CardContent>
         </Card>

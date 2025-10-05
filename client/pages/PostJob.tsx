@@ -140,6 +140,8 @@ export default function PostJob() {
       }
     }
 
+    window.dispatchEvent(new Event('paintbook:jobs:updated'));
+
     const qs = prePainter ? `?mode=quote&painter=${encodeURIComponent(prePainter)}` : "";
     navigate(`/post-job/confirmation${qs}`);
   }

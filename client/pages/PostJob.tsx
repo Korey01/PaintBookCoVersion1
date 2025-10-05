@@ -29,11 +29,22 @@ export default function PostJob() {
   const [images, setImages] = useState<string[]>([]);
   const [useEscrow, setUseEscrow] = useState(true);
   const [attachedEstimate, setAttachedEstimate] = useState<any>(null);
+  const brandNames = Object.keys(BRAND_INFO) as Array<keyof typeof BRAND_INFO>;
+  const [selectedBrand, setSelectedBrand] = useState<keyof typeof BRAND_INFO>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("paintbook:lastEstimate") || "null");
+      if (stored && typeof stored.selectedBrand === "string" && stored.selectedBrand in BRAND_INFO) {
+        return stored.selectedBrand as keyof typeof BRAND_INFO;
+      }
+    } catch {}
+    return brandNames[0];
+  });
   const [estimatorInput, setEstimatorInput] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("paintbook:lastEstimate") || "null");
       if (stored && typeof stored === "object") {
-        return { ...DEFAULT_ESTIMATOR_INPUT, ...stored };
+        const { selectedBrand: _selectedBrand, ...rest } = stored;
+        return { ...DEFAULT_ESTIMATOR_INPUT, ...rest };
       }
     } catch {}
     return DEFAULT_ESTIMATOR_INPUT;
@@ -42,8 +53,8 @@ export default function PostJob() {
   const prePainter = params.get("painter") || undefined;
 
   useEffect(() => {
-    localStorage.setItem('paintbook:lastEstimate', JSON.stringify(estimatorInput));
-  }, [estimatorInput]);
+    localStorage.setItem('paintbook:lastEstimate', JSON.stringify({ ...estimatorInput, selectedBrand }));
+  }, [estimatorInput, selectedBrand]);
 
   useEffect(()=>{
     const est = params.get('estimate');

@@ -170,7 +170,7 @@ export default function Vestimator() {
                   <div className="rounded-lg bg-secondary p-3"><div className="text-muted-foreground">Material cost</div><div className="text-xl font-bold">£{materialCost}</div></div>
                 </div>
                 <div className="flex flex-wrap gap-3 p-4">
-                  <Button variant="outline" onClick={()=>navigate('/find-painter')}>Find a Painter</Button>
+                  <Button variant="outline" onClick={()=>navigate('/find-painter')}>Find A Painter/Decorator</Button>
                 </div>
                 <div className="p-4">
                   <h2 className="text-lg font-semibold">Brand estimates</h2>

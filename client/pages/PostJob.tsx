@@ -545,7 +545,7 @@ export function PostJobConfirmation() {
           : "We sent it to nearby painters. You'll receive messages and quotes shortly."}
       </p>
       <div className="mt-6 flex justify-center gap-3">
-        <Button onClick={()=>navigate('/find-painter')}>Find a Painter</Button>
+        <Button onClick={()=>navigate('/find-painter')}>Find A Painter/Decorator</Button>
         <Button variant="outline" onClick={()=>navigate('/estimator')}>Open Estimator</Button>
       </div>
     </div>

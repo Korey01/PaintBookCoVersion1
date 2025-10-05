@@ -88,7 +88,7 @@ export default function Auth(){
   return (
     <div className="container mx-auto px-4 py-10 grid gap-6 md:max-w-xl">
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"><Sparkles className="h-3.5 w-3.5"/> Unified accounts for Painters & Customers</div>
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"><Sparkles className="h-3.5 w-3.5"/> Unified accounts for Painter/Decorator & Customers</div>
         <h1 className="mt-3 text-2xl font-bold">Sign up or Log in</h1>
         <p className="mt-1 text-sm text-muted-foreground">Security-first with email verification and optional 2FA.</p>
       </div>
@@ -99,7 +99,7 @@ export default function Auth(){
             <div className="text-sm font-medium">Choose your role</div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <Button variant={role==='customer'?'default':'outline'} onClick={()=>setRole('customer')}><User2 className="mr-2 h-4 w-4"/> Customer</Button>
-              <Button variant={role==='painter'?'default':'outline'} onClick={()=>setRole('painter')}>Painter</Button>
+              <Button variant={role==='painter'?'default':'outline'} onClick={()=>setRole('painter')}>Painter/decorator</Button>
             </div>
           </div>
 

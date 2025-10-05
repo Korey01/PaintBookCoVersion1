@@ -173,6 +173,33 @@ export default function CustomerDashboard(){
         </CardContent>
       </Card>
 
+      {paymentAlerts.length > 0 && (
+        <div className="grid gap-3">
+          {paymentAlerts.map(alert => (
+            <Card key={alert.job.id || alert.jobTitle} className="border-primary/30 bg-primary/5">
+              <CardContent className="flex flex-col gap-3 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-primary">Job accepted — secure payment</div>
+                    <div className="text-sm text-muted-foreground">{alert.jobTitle} · {alert.painterName}</div>
+                    <div className="text-xs text-muted-foreground">Estimated total £{alert.jobAmount.toLocaleString('en-GB')} + escrow fee £{alert.escrowFee.toLocaleString('en-GB')}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold">£{alert.totalDue.toLocaleString('en-GB')}</div>
+                    {alert.createdAt && <div className="text-xs text-muted-foreground">{new Date(alert.createdAt).toLocaleDateString()}</div>}
+                  </div>
+                </div>
+                {alert.message && <p className="text-sm text-muted-foreground">{alert.message}</p>}
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>Stripe holds your funds until you approve the job.</span>
+                  <Button size="sm" onClick={()=>handlePay(alert)} className="bg-primary text-primary-foreground">Pay securely</Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-4">

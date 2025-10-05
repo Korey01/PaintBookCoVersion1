@@ -91,6 +91,7 @@ export default function Dashboard(){
   const [maxDistance, setMaxDistance] = useState<number[]>([15]);
   const [when, setWhen] = useState<string>("this_week");
   const [applied, setApplied] = useState<string[]>(() => JSON.parse(localStorage.getItem('paintbook:applied')||'[]'));
+  const [localJobs, setLocalJobs] = useState<any[]>(() => readJobsFromStorage());
 
   const [editOpen, setEditOpen] = useState(false);
   const stored = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}');

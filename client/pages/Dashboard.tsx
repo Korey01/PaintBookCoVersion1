@@ -113,6 +113,7 @@ export default function Dashboard(){
 
   const profileProgress = 80;
   const painterStore = JSON.parse(localStorage.getItem('paintbook:joinPainter')||'{}');
+  const painterDisplayName = painterStore?.business || painterStore?.name || "Your painter";
   const tier = (painterStore?.subscription?.plan) || painterStore?.tier || 'Starter';
   const [subOpen, setSubOpen] = useState(false);
   const [subPlan, setSubPlan] = useState<string>(painterStore?.subscription?.plan || tier);

@@ -190,6 +190,12 @@ export default function Dashboard(){
         acceptedAmount: j.acceptedAmount != null ? toNumber(j.acceptedAmount) : null,
         acceptedAt: j.acceptedAt || null,
         painterName: j.acceptedBy || j.painterName || undefined,
+        attachedEstimate: j.attachedEstimate ? {
+          litres: toNumber(j.attachedEstimate.litres),
+          materialCost: toNumber(j.attachedEstimate.materialCost),
+          wallArea: toNumber(j.attachedEstimate.wallArea),
+          brand: j.attachedEstimate.brand,
+        } : null,
       } as Job;
     });
     const platform = NEARBY_JOBS.map(job => ({ ...job, source: "platform" as const }));

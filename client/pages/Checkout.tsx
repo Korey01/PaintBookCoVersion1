@@ -15,6 +15,9 @@ export default function Checkout(){
   const plan = params.get("plan") || "Starter";
   const painter = params.get("painter") || "";
   const amountParam = Number(params.get("amount") || "");
+  const baseAmountParam = Number(params.get("baseAmount") || "");
+  const escrowFeeParam = Number(params.get("escrowFee") || "");
+  const jobParam = params.get("job") || "";
 
   const amount = useMemo(()=>{
     if (mode === "subscription") {

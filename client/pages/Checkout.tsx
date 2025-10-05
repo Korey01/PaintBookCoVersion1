@@ -19,10 +19,36 @@ export default function Checkout(){
   const escrowFeeParam = Number(params.get("escrowFee") || "");
   const jobParam = params.get("job") || "";
 
+  const estimatedJobAmount = useMemo(() => {
+    if (mode !== "booking") return 0;
+    if (baseAmountParam > 0) return baseAmountParam;
+    if (amountParam > 0 && escrowFeeParam <= 0) return amountParam;
+    try {
+      const jobs = JSON.parse(localStorage.getItem('paintbook:jobs')||'[]');
+      const last = jobs[jobs.length-1] || {};
+      const fallback = Number(last.acceptedAmount ?? last.budgetMax ?? last.budgetMin ?? 500);
+      return fallback > 0 ? fallback : 500;
+    } catch {
+      return 500;
+    }
+  }, [mode, baseAmountParam, amountParam, escrowFeeParam]);
+
+  const computedEscrowFee = useMemo(() => {
+    if (mode !== "booking") return 0;
+    if (escrowFeeParam > 0) return escrowFeeParam;
+    const base = estimatedJobAmount > 0 ? estimatedJobAmount : 0;
+    return base > 0 ? Math.max(10, Math.round(base * 0.025)) : 0;
+  }, [mode, escrowFeeParam, estimatedJobAmount]);
+
   const amount = useMemo(()=>{
     if (mode === "subscription") {
       if (plan === 'Customer Plus') return 5;
       return plan.toLowerCase() === "premium" ? 35 : plan.toLowerCase() === "professional" ? 20 : 10;
+    }
+    if (mode === "booking") {
+      const base = baseAmountParam > 0 ? baseAmountParam : estimatedJobAmount;
+      const total = base + computedEscrowFee;
+      if (total > 0) return Math.round(total);
     }
     if (amountParam && amountParam > 0) return amountParam;
     const jobs = JSON.parse(localStorage.getItem('paintbook:jobs')||'[]');
@@ -30,7 +56,7 @@ export default function Checkout(){
     const base = Number(last.budgetMax || last.budgetMin || 500);
     const pct = 0.3 + Math.random()*0.1; // 30–40%
     return Math.round(base * pct);
-  }, [mode, plan, amountParam]);
+  }, [mode, plan, amountParam, baseAmountParam, estimatedJobAmount, computedEscrowFee]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

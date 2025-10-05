@@ -11,7 +11,7 @@ import { MapPin, PaintBucket, Search as SearchIcon, Info } from "lucide-react";
 import { getCityCoord, haversineKm } from "@/lib/geo";
 
 export default function FindPainters() {
-  useEffect(()=>{ document.title = "Find a Painter | PaintBook"; },[]);
+  useEffect(()=>{ document.title = "Find A Painter/Decorator | PaintBook"; },[]);
   const { search } = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(search);

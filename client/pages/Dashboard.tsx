@@ -27,6 +27,12 @@ interface Job {
   acceptedAmount?: number | null;
   acceptedAt?: string | null;
   painterName?: string;
+  attachedEstimate?: {
+    litres?: number;
+    materialCost?: number;
+    wallArea?: number;
+    brand?: string;
+  } | null;
 }
 
 const NEARBY_JOBS: Job[] = [

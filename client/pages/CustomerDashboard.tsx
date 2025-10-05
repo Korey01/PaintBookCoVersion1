@@ -40,6 +40,8 @@ export default function CustomerDashboard(){
   const favs = painters.filter(p => favIds.includes(p.id));
   const profile = JSON.parse(localStorage.getItem('paintbook:customerProfile')||'{}');
   const membership = JSON.parse(localStorage.getItem('paintbook:customerMembership')||'{}');
+  const [jobs, setJobs] = useState<any[]>(() => readJobsFromStorage());
+  const [notifications, setNotifications] = useState<any[]>(() => readNotificationsFromStorage());
   const [editOpen, setEditOpen] = useState(false);
   const [memberOpen, setMemberOpen] = useState(false);
   const [name, setName] = useState<string>(profile.name || "");

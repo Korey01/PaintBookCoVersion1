@@ -448,7 +448,7 @@ export default function Dashboard(){
                       <p className="mt-2 text-sm">{j.description}</p>
                       {j.attachedEstimate && (
                         <div className="mt-2 grid gap-1 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
-                          <span className="font-medium text-primary-foreground/80">Estimate included</span>
+                          <span className="font-medium text-primary">Estimate included</span>
                           <span>Litres: {j.attachedEstimate.litres?.toFixed?.(1) ?? j.attachedEstimate.litres}</span>
                           <span>Materials: £{j.attachedEstimate.materialCost?.toLocaleString?.('en-GB') ?? j.attachedEstimate.materialCost}</span>
                           {j.attachedEstimate.wallArea ? <span>Area: {j.attachedEstimate.wallArea.toFixed?.(1) ?? j.attachedEstimate.wallArea} m²</span> : null}

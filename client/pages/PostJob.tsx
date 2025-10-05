@@ -128,6 +128,7 @@ export default function PostJob() {
     // Store lightweight job (avoid huge base64 images in localStorage)
     const lightImagesCount = images.length;
     const jobId = `job_${Date.now()}`;
+    const estimatePayload = attachedEstimate || { ...estimatorInput, ...estimate };
     const job = {
       id: jobId,
       jobType,
@@ -139,7 +140,7 @@ export default function PostJob() {
       phone,
       images: [],
       imagesCount: lightImagesCount,
-      attachedEstimate,
+      attachedEstimate: estimatePayload,
       painter: prePainter,
       createdAt: new Date().toISOString(),
       escrowOptIn: useEscrow,

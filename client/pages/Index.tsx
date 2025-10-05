@@ -36,8 +36,8 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
             />
             <p className="max-w-xs text-sm text-muted-foreground">Find ID-verified painters near you and pay safely through escrow.</p>
             <div className="flex w-full max-w-xs flex-col gap-3">
-              <Button onClick={() => navigate("/find-painter")} className="h-11 rounded-lg bg-black text-white hover:bg-black/90">Find a Painter</Button>
-              <Button onClick={() => navigate("/join-painter")} variant="outline" className="h-11 rounded-lg border-black text-black hover:bg-black/5">Join as a Painter</Button>
+              <Button onClick={() => navigate("/find-painter")} className="h-11 rounded-lg bg-black text-white hover:bg-black/90">Find A Painter/Decorator</Button>
+              <Button onClick={() => navigate("/join-painter")} variant="outline" className="h-11 rounded-lg border-black text-black hover:bg-black/5">Join as A Painter/Decorator</Button>
             </div>
             <div className="flex w-full max-w-xs flex-col gap-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified professionals</span>
@@ -49,10 +49,10 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
             <LogoStroke />
             <motion.div className="pointer-events-auto absolute inset-x-0 top-[calc(56%-101px)] md:top-[calc(56%-48px)] z-20 flex flex-wrap items-center justify-center gap-3 px-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
-                <Button onClick={() => navigate('/find-painter')} size="sm" className="bg-black text-white hover:bg-black/90 rounded-lg md:h-14 md:px-10 md:text-base">Find a Painter</Button>
+                <Button onClick={() => navigate('/find-painter')} size="sm" className="bg-black text-white hover:bg-black/90 rounded-lg md:h-14 md:px-10 md:text-base">Find A Painter/Decorator</Button>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
-                <Button onClick={() => navigate('/join-painter')} size="sm" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg md:h-14 md:px-10 md:text-base">Join as a Painter</Button>
+                <Button onClick={() => navigate('/join-painter')} size="sm" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg md:h-14 md:px-10 md:text-base">Join as A Painter/Decorator</Button>
               </motion.div>
             </motion.div>
             <div className="pointer-events-none absolute bottom-[168px] left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-black" style={{ filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.25)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.6))" }}>
@@ -85,7 +85,7 @@ export default function Index() { useEffect(()=>{ document.title = "PaintBook | 
             <p className="mt-2 text-muted-foreground">Enter room dimensions, number of coats and openings. Get litres required and a baseline material cost. Attach to your job post with one click.</p>
             <div className="mt-4 flex gap-3">
               <Button onClick={() => navigate("/vestimator")}>Open Vestimator</Button>
-              <Button onClick={() => navigate("/find-painter")} variant="outline">Find a Painter</Button>
+              <Button onClick={() => navigate("/find-painter")} variant="outline">Find A Painter/Decorator</Button>
             </div>
           </div>
         </div>

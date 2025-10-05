@@ -6,81 +6,74 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calculator, ArrowRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  BRAND_INFO,
+  DEFAULT_ESTIMATOR_INPUT,
+  PAINT_TYPES,
+  computeEstimate,
+} from "@/lib/paint-estimator";
 
-function num(v: string | number) { const n = typeof v === 'number' ? v : parseFloat(v || '0'); return isNaN(n) ? 0 : n; }
+function num(v: string | number) {
+  const n = typeof v === "number" ? v : parseFloat(v || "0");
+  return Number.isFinite(n) ? n : 0;
+}
 
-type PaintType = "interior_matt" | "satinwood" | "exterior_masonry";
-
-const BRAND_INFO: Record<string, Record<PaintType, { coverage: number; pricePerLitre: number }>> = {
-  "Dulux": {
-    interior_matt: { coverage: 13, pricePerLitre: 20 },
-    satinwood: { coverage: 12, pricePerLitre: 22 },
-    exterior_masonry: { coverage: 11, pricePerLitre: 21 },
-  },
-  "JOHNSTONE'S": {
-    interior_matt: { coverage: 12, pricePerLitre: 18 },
-    satinwood: { coverage: 11, pricePerLitre: 19 },
-    exterior_masonry: { coverage: 10, pricePerLitre: 19 },
-  },
-  "wilko": {
-    interior_matt: { coverage: 10, pricePerLitre: 12 },
-    satinwood: { coverage: 9, pricePerLitre: 13 },
-    exterior_masonry: { coverage: 8, pricePerLitre: 12 },
-  },
-  "Leyland": {
-    interior_matt: { coverage: 12, pricePerLitre: 16 },
-    satinwood: { coverage: 11, pricePerLitre: 17 },
-    exterior_masonry: { coverage: 10, pricePerLitre: 17 },
-  },
-};
+type PaintType = (typeof PAINT_TYPES)[number]["value"];
 
 export default function Estimator() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [length, setLength] = useState(Number(params.get('length') || 4));
-  const [width, setWidth] = useState(Number(params.get('width') || 3));
-  const [height, setHeight] = useState(Number(params.get('height') || 2.6));
-  const [coats, setCoats] = useState(Number(params.get('coats') || 2));
-  const [paintType, setPaintType] = useState<PaintType>('interior_matt');
-  const [openings, setOpenings] = useState(Number(params.get('openings') || 2));
-  const [openingArea, setOpeningArea] = useState(Number(params.get('openingArea') || 1.9));
-  const [coverage, setCoverage] = useState(Number(params.get('coverage') || 10)); // m2 per litre
-  const [pricePerLitre, setPricePerLitre] = useState(Number(params.get('price') || 18));
+  const [length, setLength] = useState(Number(params.get('length') || DEFAULT_ESTIMATOR_INPUT.length));
+  const [width, setWidth] = useState(Number(params.get('width') || DEFAULT_ESTIMATOR_INPUT.width));
+  const [height, setHeight] = useState(Number(params.get('height') || DEFAULT_ESTIMATOR_INPUT.height));
+  const [coats, setCoats] = useState(Number(params.get('coats') || DEFAULT_ESTIMATOR_INPUT.coats));
+  const [paintType, setPaintType] = useState<PaintType>(DEFAULT_ESTIMATOR_INPUT.paintType);
+  const [openings, setOpenings] = useState(Number(params.get('openings') || DEFAULT_ESTIMATOR_INPUT.openings));
+  const [openingArea, setOpeningArea] = useState(Number(params.get('openingArea') || DEFAULT_ESTIMATOR_INPUT.openingArea));
+  const [coverage, setCoverage] = useState(Number(params.get('coverage') || DEFAULT_ESTIMATOR_INPUT.coverage));
+  const [pricePerLitre, setPricePerLitre] = useState(Number(params.get('price') || DEFAULT_ESTIMATOR_INPUT.pricePerLitre));
 
-  const wallArea = useMemo(() => {
-    const perimeter = 2 * (length + width);
-    const gross = perimeter * height;
-    const subtract = openings * openingArea;
-    return Math.max(0, gross - subtract);
-  }, [length, width, height, openings, openingArea]);
-
-  const litres = useMemo(() => {
-    const perCoat = wallArea / coverage;
-    return Math.ceil((perCoat * coats) * 10) / 10; // round 0.1L
-  }, [wallArea, coverage, coats]);
-
-  const materialCost = useMemo(() => Math.round(litres * pricePerLitre), [litres, pricePerLitre]);
-
-  const brandEstimates = useMemo(() => {
-    return Object.entries(BRAND_INFO).map(([name, info]) => {
-      const { coverage, pricePerLitre } = info[paintType];
-      const perCoat = wallArea / coverage;
-      const litres = Math.ceil((perCoat * coats) * 10) / 10;
-      const cost = Math.round(litres * pricePerLitre);
-      return { name, coverage, pricePerLitre, litres, cost };
-    });
-  }, [paintType, wallArea, coats]);
+  const { wallArea, litres, materialCost, brandEstimates } = useMemo(() => {
+    return computeEstimate({ length, width, height, coats, openings, openingArea, coverage, pricePerLitre, paintType });
+  }, [length, width, height, coats, openings, openingArea, coverage, pricePerLitre, paintType]);
 
   function attachToPost() {
     const qp = new URLSearchParams({
-      estimate: JSON.stringify({ length, width, height, coats, openings, openingArea, coverage, litres, materialCost })
+      estimate: JSON.stringify({
+        length,
+        width,
+        height,
+        coats,
+        openings,
+        openingArea,
+        coverage,
+        pricePerLitre,
+        paintType,
+        litres,
+        materialCost,
+        wallArea,
+      }),
     });
     navigate(`/post-job?${qp.toString()}`);
   }
 
   function attachBrand(name: string, coverageVal: number, litresVal: number, priceVal: number, costVal: number) {
     const qp = new URLSearchParams({
-      estimate: JSON.stringify({ length, width, height, coats, openings, openingArea, coverage: coverageVal, litres: litresVal, materialCost: costVal, brand: name, paintType, pricePerLitre: priceVal })
+      estimate: JSON.stringify({
+        length,
+        width,
+        height,
+        coats,
+        openings,
+        openingArea,
+        coverage: coverageVal,
+        pricePerLitre: priceVal,
+        paintType,
+        litres: litresVal,
+        materialCost: costVal,
+        wallArea,
+        brand: name,
+      }),
     });
     navigate(`/post-job?${qp.toString()}`);
   }
@@ -127,9 +120,9 @@ export default function Estimator() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="interior_matt">Interior Matt (Emulsion)</SelectItem>
-                  <SelectItem value="satinwood">Satinwood (Trim/Woodwork)</SelectItem>
-                  <SelectItem value="exterior_masonry">Exterior Masonry</SelectItem>
+                  {PAINT_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -174,7 +167,7 @@ export default function Estimator() {
             <h2 className="text-lg font-semibold">Brand estimates</h2>
             <p className="mt-1 text-sm text-muted-foreground">Based on typical coverage and average retail price per litre. Actual results vary by surface and application.</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {brandEstimates.map(b => (
+              {brandEstimates.map((b) => (
                 <Card key={b.name} className="border-muted/60">
                   <CardContent className="p-4 text-sm">
                     <div className="text-base font-semibold">{b.name}</div>

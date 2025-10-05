@@ -212,6 +212,60 @@ export default function Dashboard(){
     });
   }
 
+  function acceptJob(jobId: string){
+    setLocalJobs(prev => {
+      let changed = false;
+      let updatedJob: any;
+      const now = new Date().toISOString();
+      const next = prev.map(job => {
+        const currentId = job.id || jobId;
+        if (currentId === jobId) {
+          if (job.status === "awaiting_payment" || job.status === "accepted_no_escrow") return job;
+          const jobAmount = toNumber(job.budgetMax) || toNumber(job.budgetMin) || toNumber(job.acceptedAmount) || 500;
+          const escrowFee = job.escrowOptIn ? (toNumber(job.escrowFee) || toNumber(job.escrowFeeEstimate) || Math.max(10, Math.round(jobAmount * 0.025))) : 0;
+          const updated = {
+            ...job,
+            id: currentId,
+            status: job.escrowOptIn ? "awaiting_payment" : "accepted_no_escrow",
+            acceptedAt: now,
+            acceptedAmount: jobAmount,
+            escrowFee: job.escrowOptIn ? escrowFee : 0,
+            acceptedBy: painterDisplayName,
+            painterName: painterDisplayName,
+          };
+          updatedJob = updated;
+          changed = true;
+          return updated;
+        }
+        return job;
+      });
+      if (!changed) return prev;
+      writeJobsToStorage(next);
+      window.dispatchEvent(new Event(JOBS_EVENT));
+      if (updatedJob && updatedJob.escrowOptIn) {
+        const notifications = readNotificationsFromStorage();
+        const jobAmount = toNumber(updatedJob.acceptedAmount);
+        const escrowFee = toNumber(updatedJob.escrowFee ?? updatedJob.escrowFeeEstimate ?? 0);
+        notifications.unshift({
+          id: `ntf_${Date.now()}`,
+          type: "escrow_payment_due",
+          jobId,
+          jobType: updatedJob.jobType || updatedJob.title || "Paint job",
+          createdAt: now,
+          message: `Painter ${painterDisplayName} accepted your job. Pay £${(jobAmount + escrowFee).toLocaleString("en-GB")} (includes escrow fee).`,
+          amountDue: jobAmount,
+          escrowFee,
+          totalDue: jobAmount + escrowFee,
+          painterName: painterDisplayName,
+          read: false,
+        });
+        writeNotificationsToStorage(notifications);
+        window.dispatchEvent(new Event(NOTIFICATIONS_EVENT));
+      }
+      return next;
+    });
+  }
+
   return (
     <div className="container mx-auto grid gap-8 px-4 py-10">
       <div className="grid gap-4 md:grid-cols-4">

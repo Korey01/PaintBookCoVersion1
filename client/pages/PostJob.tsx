@@ -114,15 +114,15 @@ export default function PostJob() {
   }, [useEscrow, estimatedBudget]);
 
   const estimatorSummary = useMemo(() => {
-    const data = attachedEstimate || estimate;
-    if (!data) return null;
-    return {
-      litres: data.litres,
-      cost: data.materialCost,
-      wallArea: data.wallArea,
-      brand: data.brand,
-    };
-  }, [attachedEstimate, estimate]);
+    if (attachedEstimate) {
+      const litres = typeof attachedEstimate.litres === "number" ? attachedEstimate.litres : estimate.litres;
+      const cost = typeof attachedEstimate.materialCost === "number" ? attachedEstimate.materialCost : estimate.materialCost;
+      const wallArea = typeof attachedEstimate.wallArea === "number" ? attachedEstimate.wallArea : estimate.wallArea;
+      const brand = typeof attachedEstimate.brand === "string" ? attachedEstimate.brand : selectedBrand;
+      return { litres, cost, wallArea, brand };
+    }
+    return { litres: estimate.litres, cost: estimate.materialCost, wallArea: estimate.wallArea, brand: selectedBrand };
+  }, [attachedEstimate, estimate, selectedBrand]);
 
   const schemaStep1 = z.object({
     jobType: z.string().min(1, "Select a job type"),

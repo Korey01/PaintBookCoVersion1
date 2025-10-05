@@ -233,7 +233,12 @@ export default function PostJob() {
             {attachedEstimate && (
               <div className="sm:col-span-2 rounded-lg bg-secondary p-4 text-sm">
                 <div className="font-medium">Attached Estimation</div>
-                <div className="mt-1 text-muted-foreground">{attachedEstimate.litres} L · £{attachedEstimate.materialCost} materials</div>
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-muted-foreground">
+                  <span>{(attachedEstimate.litres ?? estimate.litres).toFixed?.(1) ?? estimate.litres.toFixed(1)} L</span>
+                  <span>£{(attachedEstimate.materialCost ?? estimate.materialCost).toLocaleString('en-GB')} materials</span>
+                  <span>{(attachedEstimate.wallArea ?? estimate.wallArea).toFixed?.(1) ?? estimate.wallArea.toFixed(1)} m² surface</span>
+                  {attachedEstimate.brand && <span>Brand: {attachedEstimate.brand}</span>}
+                </div>
               </div>
             )}
             <div className="sm:col-span-2 flex justify-end">

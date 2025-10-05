@@ -54,6 +54,31 @@ export default function CustomerDashboard(){
   const [phone, setPhone] = useState<string>(profile.phone || "");
   const [plan, setPlan] = useState<string>(membership.plan || (membership.status ? membership.plan : 'Free'));
 
+  const pendingPayments = useMemo(() => jobs.filter((job: any) => job && job.status === 'awaiting_payment' && job.escrowOptIn), [jobs]);
+  const escrowNotifications = useMemo(() => notifications.filter((n: any) => n && n.type === 'escrow_payment_due'), [notifications]);
+  const paymentAlerts = useMemo(() => pendingPayments.map((job: any) => {
+    const notification = escrowNotifications.find((n: any) => n.jobId === job.id);
+    const jobAmount = toNumber(job.acceptedAmount) || toNumber(job.budgetMax) || toNumber(job.budgetMin) || 500;
+    const escrowFee = toNumber(job.escrowFee ?? job.escrowFeeEstimate ?? 0);
+    const totalDue = jobAmount + escrowFee;
+    const painterName = job.painterName
+      || (typeof job.painter === 'string' ? painters.find(p => p.id === job.painter)?.name : undefined)
+      || notification?.painterName
+      || 'Confirmed painter';
+    const jobTitle = job.jobType ? `${job.jobType} job` : 'Paint job';
+    return {
+      job,
+      notification,
+      jobAmount,
+      escrowFee,
+      totalDue,
+      painterName,
+      jobTitle,
+      createdAt: notification?.createdAt || job.acceptedAt || job.createdAt,
+      message: notification?.message,
+    };
+  }), [pendingPayments, escrowNotifications]);
+
   function saveProfile(){
     const next = { ...profile, name, location, phone };
     localStorage.setItem('paintbook:customerProfile', JSON.stringify(next));

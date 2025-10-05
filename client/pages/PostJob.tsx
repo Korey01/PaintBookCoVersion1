@@ -304,94 +304,156 @@ export default function PostJob() {
               <Button onClick={next}>Next <ArrowRight className="ml-2 h-4 w-4"/></Button>
             </div>
             <div className="sm:col-span-2 rounded-lg border border-dashed border-muted-foreground/30 p-4">
-              <div className="flex items-start gap-2">
-                <div className="rounded-md bg-primary/10 p-2 text-primary"><Calculator className="h-4 w-4"/></div>
-                <div>
-                  <div className="text-sm font-semibold">Paint estimator</div>
-                  <p className="text-xs text-muted-foreground">Complete this estimator to calculate the materials for your job. These details are shared with painters so they can quote accurately.</p>
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label>Room length (m)</Label>
-                    <Input type="number" min={0.5} step="0.1" value={estimatorInput.length} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, length: Math.max(0.5, Number(e.target.value) || 0) }))}/>
-                  </div>
-                  <div>
-                    <Label>Room width (m)</Label>
-                    <Input type="number" min={0.5} step="0.1" value={estimatorInput.width} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, width: Math.max(0.5, Number(e.target.value) || 0) }))}/>
-                  </div>
-                  <div>
-                    <Label>Wall height (m)</Label>
-                    <Input type="number" min={1.5} step="0.1" value={estimatorInput.height} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, height: Math.max(1.5, Number(e.target.value) || 0) }))}/>
-                  </div>
-                  <div>
-                    <Label>Number of coats</Label>
-                    <Input type="number" min={1} step="1" value={estimatorInput.coats} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, coats: Math.max(1, Number(e.target.value) || 1) }))}/>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label>Paint type</Label>
-                    <Select value={estimatorInput.paintType} onValueChange={(v)=>setEstimatorInput(prev=>({ ...prev, paintType: v as typeof estimatorInput.paintType }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAINT_TYPES.map(type => (
-                          <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Openings (doors/windows)</Label>
-                    <Input type="number" min={0} step="1" value={estimatorInput.openings} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, openings: Math.max(0, Number(e.target.value) || 0) }))}/>
-                  </div>
-                  <div>
-                    <Label>Avg opening area (m²)</Label>
-                    <Input type="number" min={0} step="0.1" value={estimatorInput.openingArea} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, openingArea: Math.max(0, Number(e.target.value) || 0) }))}/>
-                  </div>
-                  <div>
-                    <Label>Coverage (m² per litre)</Label>
-                    <Input type="number" min={1} step="0.1" value={estimatorInput.coverage} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, coverage: Math.max(1, Number(e.target.value) || 0) }))}/>
-                  </div>
-                  <div>
-                    <Label>Price per litre (£)</Label>
-                    <Input type="number" min={0} step="0.1" value={estimatorInput.pricePerLitre} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, pricePerLitre: Math.max(0, Number(e.target.value) || 0) }))}/>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 rounded-lg bg-secondary/60 p-4 text-sm">
-                  <div className="flex flex-wrap gap-2">
-                    <div className="rounded bg-background px-3 py-2"><span className="text-muted-foreground">Wall area</span> <span className="font-semibold">{estimate.wallArea.toFixed(1)} m��</span></div>
-                    <div className="rounded bg-background px-3 py-2"><span className="text-muted-foreground">Litres</span> <span className="font-semibold">{estimate.litres.toFixed(1)} L</span></div>
-                    <div className="rounded bg-background px-3 py-2"><span className="text-muted-foreground">Material cost</span> <span className="font-semibold">£{estimate.materialCost.toLocaleString('en-GB')}</span></div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" onClick={()=>{
-                      const payload = { ...estimatorInput, ...estimate, brand: selectedBrand };
-                      setAttachedEstimate(payload);
-                      localStorage.setItem('paintbook:lastEstimate', JSON.stringify({ ...estimatorInput, selectedBrand }));
-                    }}>Attach estimate to job</Button>
-                    <Button size="sm" variant="outline" onClick={()=>{
-                      const base = Math.max(estimate.materialCost * 2.2, estimate.materialCost + 200);
-                      const min = Math.round(base * 0.85);
-                      const max = Math.round(base * 1.15);
-                      setBudgetMin(min);
-                      setBudgetMax(max);
-                    }}>Use to set budget</Button>
-                  </div>
-                  {attachedEstimate && (
-                    <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
-                      {(() => {
-                        const litres = typeof estimatorSummary?.litres === "number" ? estimatorSummary.litres.toFixed(1) : estimate.litres.toFixed(1);
-                        const cost = typeof estimatorSummary?.cost === "number" ? estimatorSummary.cost.toLocaleString('en-GB') : estimate.materialCost.toLocaleString('en-GB');
-                        return `Estimate attached: ${litres} L · £${cost} materials`;
-                      })()}
+              <Tabs defaultValue="estimate" className="w-full">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-start gap-2">
+                    <div className="rounded-md bg-primary/10 p-2 text-primary"><Calculator className="h-4 w-4"/></div>
+                    <div>
+                      <div className="text-sm font-semibold">Paint Vestimator & Visualizer</div>
+                      <p className="text-xs text-muted-foreground">Use our full estimator and Floori visualizer to plan materials, compare brands, and share accurate details with painters.</p>
                     </div>
-                  )}
+                  </div>
+                  <TabsList>
+                    <TabsTrigger value="estimate">Estimate</TabsTrigger>
+                    <TabsTrigger value="visualize">Visualize</TabsTrigger>
+                  </TabsList>
                 </div>
-              </div>
+
+                <TabsContent value="visualize" className="mt-4">
+                  <div className="grid gap-4">
+                    <p className="text-xs text-muted-foreground">Preview colours and finishes with the Floori Studio. Upload your room, mask the walls, and explore options before you post.</p>
+                    <div className="relative h-[60vh] w-full overflow-hidden rounded-lg border" aria-label="Interactive paint visualizer">
+                      <iframe
+                        src="https://appdemo.floori.io/"
+                        title="Floori Studio Visualizer"
+                        className="absolute inset-0 h-full w-full"
+                        loading="lazy"
+                        scrolling="auto"
+                        style={{ border: 0 }}
+                        allow="clipboard-read; clipboard-write; fullscreen; camera; microphone; display-capture"
+                        allowFullScreen
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="secondary" onClick={()=>window.open('https://appdemo.floori.io/','_blank')}>Open Floori Studio in new tab</Button>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="estimate" className="mt-4">
+                  <div className="grid gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <Label>Brand</Label>
+                        <Select value={selectedBrand} onValueChange={(value)=>setSelectedBrand(value as keyof typeof BRAND_INFO)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select brand" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {brandNames.map(name => (
+                              <SelectItem key={name} value={name}>{name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Room length (m)</Label>
+                        <Input type="number" min={0.5} step="0.1" value={estimatorInput.length} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, length: Math.max(0.5, Number(e.target.value) || 0) }))}/>
+                      </div>
+                      <div>
+                        <Label>Room width (m)</Label>
+                        <Input type="number" min={0.5} step="0.1" value={estimatorInput.width} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, width: Math.max(0.5, Number(e.target.value) || 0) }))}/>
+                      </div>
+                      <div>
+                        <Label>Wall height (m)</Label>
+                        <Input type="number" min={1.5} step="0.1" value={estimatorInput.height} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, height: Math.max(1.5, Number(e.target.value) || 0) }))}/>
+                      </div>
+                      <div>
+                        <Label>Number of coats</Label>
+                        <Input type="number" min={1} step="1" value={estimatorInput.coats} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, coats: Math.max(1, Number(e.target.value) || 1) }))}/>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Label>Paint type</Label>
+                        <Select value={estimatorInput.paintType} onValueChange={(v)=>setEstimatorInput(prev=>({ ...prev, paintType: v as typeof estimatorInput.paintType }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PAINT_TYPES.map(type => (
+                              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Openings (doors/windows)</Label>
+                        <Input type="number" min={0} step="1" value={estimatorInput.openings} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, openings: Math.max(0, Number(e.target.value) || 0) }))}/>
+                      </div>
+                      <div>
+                        <Label>Avg opening area (m²)</Label>
+                        <Input type="number" min={0} step="0.1" value={estimatorInput.openingArea} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, openingArea: Math.max(0, Number(e.target.value) || 0) }))}/>
+                      </div>
+                      <div>
+                        <Label>Coverage (m² per litre)</Label>
+                        <Input type="number" min={1} step="0.1" value={estimatorInput.coverage} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, coverage: Math.max(1, Number(e.target.value) || 0) }))}/>
+                      </div>
+                      <div>
+                        <Label>Price per litre (£)</Label>
+                        <Input type="number" min={0} step="0.1" value={estimatorInput.pricePerLitre} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, pricePerLitre: Math.max(0, Number(e.target.value) || 0) }))}/>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 rounded-lg bg-secondary/60 p-4 text-sm">
+                      <div className="flex flex-wrap gap-2">
+                        <div className="rounded bg-background px-3 py-2"><span className="text-muted-foreground">Wall area</span> <span className="font-semibold">{estimate.wallArea.toFixed(1)} m²</span></div>
+                        <div className="rounded bg-background px-3 py-2"><span className="text-muted-foreground">Litres</span> <span className="font-semibold">{estimate.litres.toFixed(1)} L</span></div>
+                        <div className="rounded bg-background px-3 py-2"><span className="text-muted-foreground">Material cost</span> <span className="font-semibold">£{estimate.materialCost.toLocaleString('en-GB')}</span></div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={()=>{
+                          const payload = { ...estimatorInput, ...estimate, brand: selectedBrand };
+                          setAttachedEstimate(payload);
+                          localStorage.setItem('paintbook:lastEstimate', JSON.stringify({ ...estimatorInput, selectedBrand }));
+                        }}>Attach estimate to job</Button>
+                        <Button size="sm" variant="outline" onClick={()=>{
+                          const base = Math.max(estimate.materialCost * 2.2, estimate.materialCost + 200);
+                          const min = Math.round(base * 0.85);
+                          const max = Math.round(base * 1.15);
+                          setBudgetMin(min);
+                          setBudgetMax(max);
+                        }}>Use to set budget</Button>
+                      </div>
+                      {attachedEstimate && (
+                        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
+                          {(() => {
+                            const litres = typeof estimatorSummary?.litres === "number" ? estimatorSummary.litres.toFixed(1) : estimate.litres.toFixed(1);
+                            const cost = typeof estimatorSummary?.cost === "number" ? estimatorSummary.cost.toLocaleString('en-GB') : estimate.materialCost.toLocaleString('en-GB');
+                            const brand = estimatorSummary?.brand || selectedBrand;
+                            return `Estimate attached: ${brand} · ${litres} L · £${cost} materials`;
+                          })()}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid gap-3 rounded-lg border border-muted-foreground/30 p-4">
+                      <div className="text-sm font-semibold">Brand comparisons</div>
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        {estimate.brandEstimates.map(info => (
+                          <div key={info.name} className="rounded-lg bg-secondary/60 p-3 text-xs">
+                            <div className="text-sm font-semibold">{info.name}</div>
+                            <div className="mt-2 space-y-1">
+                              <div className="flex justify-between"><span className="text-muted-foreground">Coverage</span><span>{info.coverage} m²/L</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Price/L</span><span>£{info.pricePerLitre}</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Litres</span><span>{info.litres.toFixed(1)} L</span></div>
+                              <div className="flex justify-between font-semibold"><span>Total cost</span><span>£{info.cost.toLocaleString('en-GB')}</span></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </CardContent>
         </Card>

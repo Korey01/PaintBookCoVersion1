@@ -136,7 +136,7 @@ export default function JoinPainter() {
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Join as a Painter</h1>
+        <h1 className="text-2xl font-bold">Join as A Painter/Decorator</h1>
         <p className="text-sm text-muted-foreground">Create your profile in minutes. Start a 14‑day free trial on any tier.</p>
       </div>
 

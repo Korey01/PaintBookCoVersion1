@@ -354,7 +354,11 @@ export default function PostJob() {
                     </div>
                     {attachedEstimate && (
                       <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
-                        Estimate attached: {estimatorSummary?.litres?.toFixed?.(1) ?? estimate.litres.toFixed(1)} L · £{estimatorSummary?.cost?.toLocaleString('en-GB') ?? estimate.materialCost.toLocaleString('en-GB')} materials
+                        {(() => {
+                          const litres = typeof estimatorSummary?.litres === "number" ? estimatorSummary.litres.toFixed(1) : estimate.litres.toFixed(1);
+                          const cost = typeof estimatorSummary?.cost === "number" ? estimatorSummary.cost.toLocaleString('en-GB') : estimate.materialCost.toLocaleString('en-GB');
+                          return `Estimate attached: ${litres} L · £${cost} materials`;
+                        })()}
                       </div>
                     )}
                   </div>

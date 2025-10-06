@@ -213,8 +213,10 @@ export default function CustomerDashboard(){
         <Card>
           <CardContent className="p-4">
             <div className="text-sm font-medium">Membership</div>
-            <div className="mt-2 text-sm">Current: <Badge variant="outline">{membership.plan || 'Free'}</Badge></div>
-            <Button className="mt-3 w-full" variant="secondary" onClick={()=>setMemberOpen(true)}><CreditCard className="mr-2 h-4 w-4"/> Manage</Button>
+            <div className="mt-2 text-sm">Current: <Badge variant="outline">Free</Badge></div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Customer access is included at no cost. Manage your jobs, payments, and favourites from this dashboard anytime.
+            </p>
           </CardContent>
         </Card>
         <Card>

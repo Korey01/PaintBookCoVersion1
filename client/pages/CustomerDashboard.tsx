@@ -44,7 +44,6 @@ export default function CustomerDashboard(){
   const favIds: string[] = JSON.parse(localStorage.getItem('paintbook:favs')||'[]');
   const favs = painters.filter(p => favIds.includes(p.id));
   const profile = JSON.parse(localStorage.getItem('paintbook:customerProfile')||'{}');
-  const membership = JSON.parse(localStorage.getItem('paintbook:customerMembership')||'{}');
   const [jobs, setJobs] = useState<any[]>(() => readJobsFromStorage());
   const [notifications, setNotifications] = useState<any[]>(() => readNotificationsFromStorage());
   const [editOpen, setEditOpen] = useState(false);

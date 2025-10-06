@@ -10,6 +10,7 @@ import { Upload, ArrowRight, CheckCircle2, Calculator } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PAINT_TYPES, DEFAULT_ESTIMATOR_INPUT, useEstimate, BRAND_INFO } from "@/lib/paint-estimator";
+import { findAccount } from "@/lib/auth";
 import { z } from "zod";
 
 export default function PostJob() {

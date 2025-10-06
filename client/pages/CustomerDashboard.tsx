@@ -8,7 +8,7 @@ import { painters } from "@/data/painters";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { removeAccount } from "@/lib/auth";
 
 const JOBS_EVENT = "paintbook:jobs:updated";
 const NOTIFICATIONS_EVENT = "paintbook:notifications:updated";

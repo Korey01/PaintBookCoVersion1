@@ -549,23 +549,210 @@ export default function PostJob() {
 }
 
 export function PostJobConfirmation() {
+  type PendingSignup = {
+    jobId: string;
+    email: string;
+    phone?: string;
+    postcode?: string;
+    jobType?: string;
+    painter?: string | null;
+    createdAt?: string;
+    status?: "pending" | "completed" | "dismissed";
+  };
+
   const navigate = useNavigate();
+  const { toast } = useToast();
   const params = new URLSearchParams(location.search);
   const mode = params.get('mode');
   const isQuote = mode === 'quote';
+
+  const [pending, setPending] = useState<PendingSignup | null>(() => {
+    try {
+      const raw = localStorage.getItem('paintbook:pendingCustomerSignup');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.email === 'string') {
+        return parsed as PendingSignup;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [signupCompleted, setSignupCompleted] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerLocation, setCustomerLocation] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pending) {
+      setCustomerPhone(pending.phone || '');
+      setCustomerLocation(pending.postcode || '');
+    }
+  }, [pending]);
+
+  useEffect(() => {
+    if (!pending?.email) {
+      setShowSignupPrompt(false);
+      return;
+    }
+    const account = findAccount(pending.email);
+    if (account && account.roles.includes('customer')) {
+      try { localStorage.removeItem('paintbook:pendingCustomerSignup'); } catch {}
+      setPending(null);
+      setShowSignupPrompt(false);
+      setSignupCompleted(true);
+      return;
+    }
+    if (pending.status === 'completed') {
+      setSignupCompleted(true);
+      setShowSignupPrompt(false);
+    } else if (pending.status !== 'dismissed') {
+      setShowSignupPrompt(true);
+    }
+  }, [pending?.email, pending?.status]);
+
+  const jobSummary = pending ? `${pending.jobType || 'paint'} job${pending.postcode ? ` near ${pending.postcode}` : ''}` : '';
+
+  function handleDismissSignup() {
+    if (!pending) return;
+    const next = { ...pending, status: 'dismissed', dismissedAt: new Date().toISOString() } as PendingSignup;
+    try { localStorage.setItem('paintbook:pendingCustomerSignup', JSON.stringify(next)); } catch {}
+    setPending(next);
+    setShowSignupPrompt(false);
+  }
+
+  function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pending?.email) return;
+    setFormError(null);
+    if (!fullName.trim()) {
+      setFormError('Enter your full name.');
+      return;
+    }
+    if (password.length < 6) {
+      setFormError('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setFormError('Passwords must match.');
+      return;
+    }
+
+    const account = upsertAccount({
+      email: pending.email,
+      password,
+      roles: ['customer'],
+      verifiedEmail: true,
+    });
+    setActiveUser(account, 'customer');
+
+    const profile = {
+      name: fullName.trim(),
+      phone: customerPhone.trim() || pending.phone || '',
+      location: customerLocation.trim() || pending.postcode || '',
+    };
+    try { localStorage.setItem('paintbook:customerProfile', JSON.stringify(profile)); } catch {}
+    try {
+      localStorage.setItem(
+        'paintbook:customerMembership',
+        JSON.stringify({ plan: 'Free', status: 'active', updatedAt: new Date().toISOString() })
+      );
+    } catch {}
+
+    const completed = { ...pending, status: 'completed', completedAt: new Date().toISOString() } as PendingSignup;
+    try { localStorage.setItem('paintbook:pendingCustomerSignup', JSON.stringify(completed)); } catch {}
+    sessionStorage.setItem('paintbook:lastSignUpNotice', 'customer');
+
+    setPending(completed);
+    setSignupCompleted(true);
+    setShowSignupPrompt(false);
+    setDialogOpen(false);
+
+    toast({
+      title: 'Customer sign-up complete',
+      description: 'Your free dashboard is ready. Manage jobs, quotes, and payments in one place.',
+    });
+    navigate('/dashboard/customer');
+  }
+
   return (
     <div className="container mx-auto px-4 py-16 text-center">
-      <CheckCircle2 className="mx-auto h-12 w-12 text-primary"/>
+      <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
       <h1 className="mt-4 text-2xl font-bold">{isQuote ? 'Request sent' : 'Your job is live'}</h1>
       <p className="mt-2 text-muted-foreground">
         {isQuote
           ? "We've sent your job details to the painter you selected. We'll notify you as soon as they respond."
           : "We sent it to nearby painters. You'll receive messages and quotes shortly."}
       </p>
+
+      {signupCompleted && (
+        <div className="mx-auto mt-6 max-w-xl rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+          Your PaintBook customer account is ready. Head to your dashboard anytime to follow progress and manage payments.
+        </div>
+      )}
+
       <div className="mt-6 flex justify-center gap-3">
-        <Button onClick={()=>navigate('/find-painter')}>Find A Painter/Decorator</Button>
-        <Button variant="outline" onClick={()=>navigate('/estimator')}>Open Estimator</Button>
+        <Button onClick={() => navigate('/find-painter')}>Find A Painter/Decorator</Button>
+        <Button variant="outline" onClick={() => navigate('/estimator')}>Open Estimator</Button>
       </div>
+
+      {showSignupPrompt && pending && (
+        <div className="mx-auto mt-10 max-w-2xl rounded-lg border border-muted/50 bg-card p-6 text-left shadow-sm">
+          <h2 className="text-lg font-semibold">Create your free customer account</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            We saved your {jobSummary || 'job'}. Set a password to manage quotes, messages, and escrow in one dashboard.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button onClick={() => setDialogOpen(true)}>Create my free account</Button>
+            <Button variant="ghost" onClick={handleDismissSignup}>Not now</Button>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Finish sign-up</DialogTitle>
+            <DialogDescription>
+              Add any missing details so we can create your PaintBook customer account and dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="grid gap-4" onSubmit={handleCreateAccount}>
+            <div>
+              <Label>Full name</Label>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Optional" />
+            </div>
+            <div>
+              <Label>Location / postcode</Label>
+              <Input value={customerLocation} onChange={(e) => setCustomerLocation(e.target.value)} placeholder="e.g. SW1A 1AA" />
+            </div>
+            <div>
+              <Label>Create password</Label>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            </div>
+            <div>
+              <Label>Confirm password</Label>
+              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat password" />
+            </div>
+            {formError && <p className="text-sm text-destructive">{formError}</p>}
+            <DialogFooter className="mt-2 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="secondary" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit">Create account</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

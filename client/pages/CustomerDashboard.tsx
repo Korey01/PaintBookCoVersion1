@@ -124,10 +124,22 @@ export default function CustomerDashboard(){
   }
 
   function deleteAccount(){
+    const current = JSON.parse(localStorage.getItem('paintbook:user') || 'null');
+    if (current?.email) {
+      removeAccount(current.email);
+    }
     localStorage.removeItem('paintbook:user');
     localStorage.removeItem('paintbook:customerProfile');
     navigate('/');
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem('paintbook:lastSignUpNotice') === 'customer') {
+      setSignupNotice(true);
+      sessionStorage.removeItem('paintbook:lastSignUpNotice');
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

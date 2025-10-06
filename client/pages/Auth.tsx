@@ -1,180 +1,158 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldCheck, Lock, Mail, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ShieldCheck, Sparkles } from "lucide-react";
+import { authenticate, setActiveUser, type AccountRole } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
-interface User {
-  email: string;
-  password: string;
-  roles: ("painter"|"customer")[];
-  verifiedEmail: boolean;
-  mfaEnabled: boolean;
-  activeRole?: "painter"|"customer";
-}
-
-export default function Auth(){
+export default function Auth() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { search } = useLocation();
   const params = new URLSearchParams(search);
-  const intent = params.get('intent'); // e.g., painter|customer
+  const intent = (params.get("intent") as AccountRole | null) || null;
 
-  const [role, setRole] = useState<"painter"|"customer">((intent as any)||"customer");
+  const [role, setRole] = useState<AccountRole>("customer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [agree, setAgree] = useState(false);
-  const [code, setCode] = useState("");
-  const [requireMfa, setRequireMfa] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(()=>{
-    // if already logged in, go to dashboard
-    const u = JSON.parse(localStorage.getItem('paintbook:user')||'null');
-    if(u && u.verifiedEmail){ navigate('/dashboard'); }
-  },[]);
+  useEffect(() => {
+    const storedRole = (localStorage.getItem("paintbook:lastLoginRole") as AccountRole | null) || intent;
+    if (storedRole === "customer" || storedRole === "painter") {
+      setRole(storedRole);
+    }
+  }, [intent]);
 
-  function saveUser(u: User){
-    localStorage.setItem('paintbook:user', JSON.stringify(u));
-  }
+  useEffect(() => {
+    const active = localStorage.getItem("paintbook:user");
+    if (!active) return;
+    try {
+      const parsed = JSON.parse(active);
+      if (parsed?.verifiedEmail) {
+        navigate(parsed.activeRole === "painter" ? "/dashboard" : "/dashboard/customer", { replace: true });
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [navigate]);
 
-  function onSignup(e: React.FormEvent){
+  const roleLabel = useMemo(
+    () => (role === "customer" ? "customer" : "painter/decorator"),
+    [role],
+  );
+
+  function onLogin(e: React.FormEvent) {
     e.preventDefault();
-    if(!email || !password || !agree) return;
-    const u: User = { email, password, roles: [role], verifiedEmail: true, mfaEnabled: false, activeRole: role };
-    saveUser(u);
-    navigate('/dashboard');
-  }
-
-  function onLogin(e: React.FormEvent){
-    e.preventDefault();
-    const u: User = JSON.parse(localStorage.getItem('paintbook:user')||'null');
-    if(!u || u.email !== email || u.password !== password){
-      alert('Invalid credentials (mock)');
+    setError(null);
+    if (!email.trim() || !password.trim()) {
+      setError("Enter your email and password.");
       return;
     }
-    if(!u.verifiedEmail){
-      navigate(`/verify-email?email=${encodeURIComponent(email)}&next=/dashboard`);
+
+    const result = authenticate(email, password);
+    if (result.status === "not_found") {
+      setError("No account found for this email. Complete a job or painter workflow to create one.");
       return;
     }
-    if(u.mfaEnabled){
-      setRequireMfa(true);
+    if (result.status === "invalid_password") {
+      setError("Incorrect password. Try again.");
       return;
     }
-    u.activeRole = u.activeRole || (u.roles.includes('painter') ? 'painter' : 'customer');
-    saveUser(u);
-    navigate('/dashboard');
-  }
 
-  function onVerifyMfa(e: React.FormEvent){
-    e.preventDefault();
-    if(code.length < 6) return;
-    const u: User = JSON.parse(localStorage.getItem('paintbook:user')||'null');
-    if(!u) return;
-    u.activeRole = u.activeRole || (u.roles.includes('painter') ? 'painter' : 'customer');
-    saveUser(u);
-    navigate('/dashboard');
-  }
+    const account = result.account;
+    if (!account.roles.includes(role)) {
+      setError(`This account is not registered as a ${roleLabel}.`);
+      return;
+    }
 
-  function social(provider: string){
-    const fakeEmail = `${provider}@example.com`;
-    const u: User = { email: fakeEmail, password: 'oauth', roles: [role], verifiedEmail: true, mfaEnabled: role==='painter', activeRole: role };
-    saveUser(u);
-    navigate(role==='painter'?'/join-painter':'/customer-dashboard');
+    setActiveUser(account, role);
+    toast({
+      title: "Welcome back",
+      description:
+        role === "customer"
+          ? "Your customer dashboard is ready with your latest jobs and messages."
+          : "Head to your painter dashboard to keep growing your business.",
+    });
+    navigate(role === "customer" ? "/dashboard/customer" : "/dashboard", { replace: true });
   }
 
   return (
-    <div className="container mx-auto px-4 py-10 grid gap-6 md:max-w-xl">
+    <div className="container mx-auto grid gap-6 px-4 py-10 md:max-w-xl">
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"><Sparkles className="h-3.5 w-3.5"/> Unified accounts for Painter/Decorator & Customers</div>
-        <h1 className="mt-3 text-2xl font-bold">Sign up or Log in</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Security-first with email verification and optional 2FA.</p>
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <Sparkles className="h-3.5 w-3.5" /> Secure login for all roles
+        </div>
+        <h1 className="mt-3 text-2xl font-bold">Log in to PaintBook</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Customers create accounts automatically after posting a job or contacting a painter. Painters & decorators join via the dedicated onboarding workflow.
+        </p>
       </div>
 
       <Card className="border-muted/60">
         <CardContent className="p-6">
-          <div className="grid gap-3">
-            <div className="text-sm font-medium">Choose your role</div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "h-auto px-0 py-1 text-base font-semibold normal-case hover:bg-transparent md:h-11 md:px-6 md:rounded-md",
-                  role === 'customer'
-                    ? "text-primary underline decoration-2 underline-offset-4 md:no-underline md:bg-primary md:text-primary-foreground md:hover:bg-primary/90"
-                    : "text-muted-foreground md:text-primary"
-                )}
-                onClick={()=>setRole('customer')}
-              >
-                Customer
-              </Button>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "h-auto px-0 py-1 text-base font-semibold normal-case hover:bg-transparent md:h-11 md:px-6 md:rounded-md",
-                  role === 'painter'
-                    ? "text-primary underline decoration-2 underline-offset-4 md:no-underline md:bg-primary md:text-primary-foreground md:hover:bg-primary/90"
-                    : "text-muted-foreground md:text-primary"
-                )}
-                onClick={()=>setRole('painter')}
-              >
-                Painter/decorator
-              </Button>
+          <div className="text-sm font-medium">I am logging in as</div>
+          <ToggleGroup
+            type="single"
+            value={role}
+            onValueChange={(value) => {
+              if (value === "customer" || value === "painter") {
+                setRole(value);
+                localStorage.setItem("paintbook:lastLoginRole", value);
+              }
+            }}
+            variant="outline"
+            size="sm"
+            className="mt-2"
+          >
+            <ToggleGroupItem value="customer" className="px-4 py-1 text-sm">
+              Customer
+            </ToggleGroupItem>
+            <ToggleGroupItem value="painter" className="px-4 py-1 text-sm">
+              Painter / decorator
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <form className="mt-6 grid gap-4" onSubmit={onLogin}>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
+            <div>
+              <Label>Password</Label>
+              <Input
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" className="h-11">Log in</Button>
+          </form>
+
+          <div className="mt-6 grid gap-2 rounded-lg bg-secondary/70 p-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 font-medium text-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" /> How sign-up works now
+            </div>
+            <p>
+              • Customers finish a quick sign-up after posting a job or requesting a quote. We’ll prompt for any missing details to create your free dashboard.
+            </p>
+            <p>
+              • Painters & decorators should use the <a className="underline" href="/join-painter">join workflow</a> to create their professional profile.
+            </p>
           </div>
-
-          <Tabs defaultValue="signup" className="mt-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              <TabsTrigger value="login">Login</TabsTrigger>
-            </TabsList>
-            <TabsContent value="signup" className="mt-4">
-              <form className="grid gap-3" onSubmit={onSignup}>
-                <div>
-                  <Label>Email</Label>
-                  <Input type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
-                </div>
-                <div>
-                  <Label>Password</Label>
-                  <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
-                </div>
-                <div className="flex items-center gap-2 text-xs"><Checkbox id="agree" checked={agree} onCheckedChange={(v)=>setAgree(!!v)} /><Label htmlFor="agree">I agree to the <a className="underline" href="/terms">Terms</a> and <a className="underline" href="/privacy">Privacy Policy</a>.</Label></div>
-                <Button type="submit">Create account</Button>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button type="button" variant="outline" onClick={()=>social('google')}>Google</Button>
-                  <Button type="button" variant="outline" onClick={()=>social('apple')}>Apple</Button>
-                  <Button type="button" variant="outline" onClick={()=>social('facebook')}>Facebook</Button>
-                </div>
-              </form>
-            </TabsContent>
-            <TabsContent value="login" className="mt-4">
-              {!requireMfa ? (
-                <form className="grid gap-3" onSubmit={onLogin}>
-                  <div>
-                    <Label>Email</Label>
-                    <Input type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label>Password</Label>
-                    <Input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} />
-                  </div>
-                  <div className="text-xs text-muted-foreground"><a href="#" onClick={(e)=>{e.preventDefault(); alert('Password reset email sent (mock).');}}>Forgot password?</a></div>
-                  <Button type="submit">Log in</Button>
-                </form>
-              ) : (
-                <form className="grid gap-3" onSubmit={onVerifyMfa}>
-                  <div className="flex items-center gap-2 text-sm"><Lock className="h-4 w-4"/> Enter 6‑digit code from your authenticator app</div>
-                  <Input placeholder="123 456" value={code} onChange={(e)=>setCode(e.target.value)} />
-                  <Button type="submit">Verify & continue</Button>
-                </form>
-              )}
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-6 text-xs text-muted-foreground inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> GDPR‑friendly mock. No real data is sent.</div>
         </CardContent>
       </Card>
     </div>

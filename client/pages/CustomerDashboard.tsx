@@ -84,18 +84,6 @@ export default function CustomerDashboard(){
     setEditOpen(false);
   }
 
-  function saveMembership(){
-    const status = plan === 'Free' ? 'inactive' : 'active';
-    localStorage.setItem('paintbook:customerMembership', JSON.stringify({ plan, status, updatedAt: new Date().toISOString() }));
-    setMemberOpen(false);
-  }
-
-  function startSubscription(){
-    setMemberOpen(false);
-    location && void 0; // no-op to keep linter happy
-    navigate(`/checkout?mode=subscription&plan=${encodeURIComponent(plan || 'Customer Plus')}`);
-  }
-
   function handlePay(alert: (typeof paymentAlerts)[number]){
     const baseAmount = Math.round(alert.jobAmount);
     const escrowFee = Math.round(alert.escrowFee);

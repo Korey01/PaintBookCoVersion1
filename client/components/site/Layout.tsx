@@ -1,4 +1,6 @@
 import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
+
 import Header from "./Header";
 import Footer from "./Footer";
 import { useLocation } from "react-router-dom";
@@ -10,7 +12,7 @@ export default function Layout({ children }: PropsWithChildren) {
   const isHome = pathname === "/";
   const isFind = pathname.startsWith("/find-painter");
   return (
-    <div className="min-h-screen relative text-foreground">
+    <div className="relative flex min-h-screen flex-col text-foreground">
       {isHome && (
         <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
           <video

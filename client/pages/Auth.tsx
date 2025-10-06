@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ShieldCheck, Sparkles } from "lucide-react";
-import { authenticate, setActiveUser, type AccountRole } from "@/lib/auth";
+import { authenticate, findAccount, setActiveUser, upsertAccount, type AccountRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Auth() {

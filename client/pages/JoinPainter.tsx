@@ -107,11 +107,9 @@ export default function JoinPainter() {
     if (step === 1) {
       const r = schema1.safeParse({ name, email, password, confirmPassword, postcode });
       if (!r.success) { const e: Record<string,string> = {}; r.error.issues.forEach(i=> e[i.path[0] as string] = i.message); setErrors(e); return; }
-      // persist credentials to keep user signed in
-      const existing = JSON.parse(localStorage.getItem('paintbook:user')||'null');
-      const u = existing && existing.email === email ? existing : { email, roles: ['painter'], verifiedEmail: true, mfaEnabled: false };
-      u.email = email; u.password = password; u.verifiedEmail = true; u.activeRole = 'painter';
-      localStorage.setItem('paintbook:user', JSON.stringify(u));
+      const account = upsertAccount({ email, password, roles: ['painter'], verifiedEmail: true });
+      setActiveUser(account, 'painter');
+      toast({ title: "Account created", description: "You're logged in as a painter/decorator. Continue onboarding to finish verification." });
       setErrors({});
     }
     if (step === 2) {

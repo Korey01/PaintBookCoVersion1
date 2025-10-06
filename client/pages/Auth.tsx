@@ -29,6 +29,27 @@ export default function Auth() {
   }, [intent]);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem("paintbook:user");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed?.email && parsed?.password) {
+        const existing = findAccount(parsed.email);
+        if (!existing) {
+          upsertAccount({
+            email: parsed.email,
+            password: parsed.password,
+            roles: Array.isArray(parsed.roles) && parsed.roles.length ? parsed.roles : ["customer"],
+            verifiedEmail: parsed.verifiedEmail ?? true,
+          });
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
     const active = localStorage.getItem("paintbook:user");
     if (!active) return;
     try {

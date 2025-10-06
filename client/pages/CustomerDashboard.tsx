@@ -172,6 +172,18 @@ export default function CustomerDashboard(){
         </CardContent>
       </Card>
 
+      {signupNotice && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex items-start gap-3 p-4 text-sm text-primary">
+            <ShieldCheck className="mt-0.5 h-4 w-4" />
+            <div>
+              <div className="font-medium">Sign-up complete</div>
+              <p>Your free customer account is ready. We saved your recent job so you can track quotes, painters, and payments here.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {paymentAlerts.length > 0 && (
         <div className="grid gap-3">
           {paymentAlerts.map(alert => (

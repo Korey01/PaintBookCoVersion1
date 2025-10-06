@@ -11,6 +11,8 @@ import { Upload, ArrowRight, CheckCircle2, IdCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import SubscriptionBanner, { Plan } from "@/components/site/SubscriptionBanner";
+import { upsertAccount, setActiveUser } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function JoinPainter() {
   type Step = 1 | 2 | 3 | 4;

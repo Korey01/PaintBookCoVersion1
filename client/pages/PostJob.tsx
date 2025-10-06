@@ -209,6 +209,23 @@ export default function PostJob() {
       }
     }
 
+    const existingAccount = findAccount(email);
+    if (!existingAccount || !existingAccount.roles.includes('customer')) {
+      const pending = {
+        jobId,
+        email,
+        phone,
+        postcode,
+        jobType,
+        painter: prePainter || null,
+        createdAt: job.createdAt,
+        status: 'pending',
+      };
+      try { localStorage.setItem('paintbook:pendingCustomerSignup', JSON.stringify(pending)); } catch {}
+    } else {
+      try { localStorage.removeItem('paintbook:pendingCustomerSignup'); } catch {}
+    }
+
     window.dispatchEvent(new Event('paintbook:jobs:updated'));
 
     const qs = prePainter ? `?mode=quote&painter=${encodeURIComponent(prePainter)}` : "";

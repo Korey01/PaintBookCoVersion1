@@ -296,27 +296,6 @@ export default function CustomerDashboard(){
         </DialogContent>
       </Dialog>
 
-      <Dialog open={memberOpen} onOpenChange={setMemberOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Manage membership</DialogTitle></DialogHeader>
-          <div className="grid gap-3">
-            <div>
-              <Label>Plan</Label>
-              <Select value={plan} onValueChange={setPlan}>
-                <SelectTrigger><SelectValue placeholder="Select"/></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Free">Free</SelectItem>
-                  <SelectItem value="Customer Plus">Customer Plus · £5/mo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={plan==='Free' ? saveMembership : startSubscription}>{plan==='Free' ? 'Save' : 'Upgrade'}</Button>
-              <Button variant="secondary" onClick={()=>{ setPlan('Free'); saveMembership(); }}>Cancel membership</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

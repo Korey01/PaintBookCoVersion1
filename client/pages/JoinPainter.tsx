@@ -19,6 +19,7 @@ export default function JoinPainter() {
   const [step, setStep] = useState<Step>(1);
   const [showWelcome, setShowWelcome] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

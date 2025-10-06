@@ -43,10 +43,12 @@ export default function Layout({ children }: PropsWithChildren) {
       )}
       <Header />
       {/* Perspective container for book-like page turns */}
-      <div style={{ perspective: "1200px" }}>
+      <div style={{ perspective: "1200px" }} className="flex-1">
         <AnimatePresence mode="wait">
           <PageTurn routeKey={pathname}>
-            <main className="flex-1">{children}</main>
+            <main className="flex min-h-full flex-col">
+              {children}
+            </main>
           </PageTurn>
         </AnimatePresence>
       </div>

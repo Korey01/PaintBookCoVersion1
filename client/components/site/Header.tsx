@@ -57,7 +57,7 @@ export default function Header() {
           </Button>
           {!loggedIn && (
             <Button asChild className="hidden sm:inline-flex bg-black text-white hover:bg-black/90">
-              <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link>
+              <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in</Link>
             </Button>
           )}
           {loggedIn ? (
@@ -82,7 +82,7 @@ export default function Header() {
               </Button>
             ) : (
               <>
-                <Button asChild className="mt-2 bg-black text-white hover:bg-black/90"><Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in / Sign up</Link></Button>
+                <Button asChild className="mt-2 bg-black text-white hover:bg-black/90"><Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in</Link></Button>
               </>
             )}
           </nav>

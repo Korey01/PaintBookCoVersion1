@@ -609,14 +609,17 @@ export function PostJobConfirmation() {
       try { localStorage.removeItem('paintbook:pendingCustomerSignup'); } catch {}
       setPending(null);
       setShowSignupPrompt(false);
-      setSignupCompleted(true);
+      setSignupCompleted(false);
       return;
     }
     if (pending.status === 'completed') {
       setSignupCompleted(true);
       setShowSignupPrompt(false);
     } else if (pending.status !== 'dismissed') {
+      setSignupCompleted(false);
       setShowSignupPrompt(true);
+    } else {
+      setSignupCompleted(false);
     }
   }, [pending?.email, pending?.status]);
 

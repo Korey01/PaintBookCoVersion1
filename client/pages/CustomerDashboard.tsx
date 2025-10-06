@@ -130,6 +130,7 @@ export default function CustomerDashboard(){
     }
     localStorage.removeItem('paintbook:user');
     localStorage.removeItem('paintbook:customerProfile');
+    localStorage.removeItem('paintbook:customerMembership');
     navigate('/');
   }
 

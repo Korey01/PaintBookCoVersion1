@@ -51,6 +51,7 @@ export default function CustomerDashboard(){
   const [name, setName] = useState<string>(profile.name || "");
   const [location, setLocation] = useState<string>(profile.location || "");
   const [phone, setPhone] = useState<string>(profile.phone || "");
+  const [signupNotice, setSignupNotice] = useState(false);
 
   const pendingPayments = useMemo(() => jobs.filter((job: any) => job && job.status === 'awaiting_payment' && job.escrowOptIn), [jobs]);
   const escrowNotifications = useMemo(() => notifications.filter((n: any) => n && n.type === 'escrow_payment_due'), [notifications]);

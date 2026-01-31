@@ -50,6 +50,21 @@ export default function PostJob() {
         return { ...DEFAULT_ESTIMATOR_INPUT, ...rest };
       }
     } catch {}
+
+    // Try to use first saved room dimensions if available
+    try {
+      const savedRooms = JSON.parse(localStorage.getItem("paintbook:rooms") || "[]");
+      if (Array.isArray(savedRooms) && savedRooms.length > 0) {
+        const firstRoom = savedRooms[0];
+        return {
+          ...DEFAULT_ESTIMATOR_INPUT,
+          length: firstRoom.length || DEFAULT_ESTIMATOR_INPUT.length,
+          width: firstRoom.width || DEFAULT_ESTIMATOR_INPUT.width,
+          height: firstRoom.height || DEFAULT_ESTIMATOR_INPUT.height,
+        };
+      }
+    } catch {}
+
     return DEFAULT_ESTIMATOR_INPUT;
   });
   const fileInputRef = useRef<HTMLInputElement>(null);

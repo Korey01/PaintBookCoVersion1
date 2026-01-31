@@ -11,6 +11,7 @@ export interface Room {
   length: number;
   width: number;
   height: number;
+  coats: number;
 }
 
 interface RoomDimensionsProps {

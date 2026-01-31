@@ -37,7 +37,18 @@ export default function PostJob() {
   const [rooms, setRooms] = useState<Room[]>(() => {
     try {
       const saved = localStorage.getItem('paintbook:rooms');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Normalize rooms to ensure all properties exist with defaults
+        return Array.isArray(parsed) ? parsed.map((room: any) => ({
+          id: room.id || `room_${Date.now()}`,
+          name: room.name || 'Room',
+          length: typeof room.length === 'number' ? room.length : 4,
+          width: typeof room.width === 'number' ? room.width : 3.5,
+          height: typeof room.height === 'number' ? room.height : 2.4,
+          coats: typeof room.coats === 'number' ? room.coats : 1,
+        })) : [];
+      }
     } catch {}
     return [];
   });

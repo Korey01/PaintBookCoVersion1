@@ -33,6 +33,21 @@ export default function PostJob() {
   const [images, setImages] = useState<string[]>([]);
   const [useEscrow, setUseEscrow] = useState(true);
   const [attachedEstimate, setAttachedEstimate] = useState<any>(null);
+
+  const [rooms, setRooms] = useState<Room[]>(() => {
+    try {
+      const saved = localStorage.getItem('paintbook:rooms');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('paintbook:rooms', JSON.stringify(rooms));
+    } catch {}
+  }, [rooms]);
+
   const brandNames = Object.keys(BRAND_INFO) as Array<keyof typeof BRAND_INFO>;
   const [selectedBrand, setSelectedBrand] = useState<keyof typeof BRAND_INFO>(() => {
     try {

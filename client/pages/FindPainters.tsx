@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import PainterCard from "@/components/site/PainterCard";
-import { RoomDimensions, type Room } from "@/components/site/RoomDimensions";
 import { painters } from "@/data/painters";
 import { MapPin, PaintBucket, Search as SearchIcon, Info } from "lucide-react";
 import { getCityCoord, haversineKm } from "@/lib/geo";

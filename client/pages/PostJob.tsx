@@ -393,6 +393,10 @@ export default function PostJob() {
 
                 <TabsContent value="estimate" className="mt-4">
                   <div className="grid gap-4">
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <RoomDimensions rooms={rooms} onRoomsChange={setRooms} />
+                    </div>
+
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="sm:col-span-2">
                         <Label>Brand</Label>

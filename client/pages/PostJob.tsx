@@ -69,27 +69,6 @@ export default function PostJob() {
     return DEFAULT_ESTIMATOR_INPUT;
   });
 
-  // Compute estimator input from rooms
-  const computedEstimatorInput = useMemo(() => {
-    if (rooms.length === 0) return estimatorInput;
-
-    // Sum up wall areas and coats from all rooms
-    const totalWallArea = rooms.reduce((sum, room) => {
-      const perimeter = 2 * (room.length + room.width);
-      const wallArea = perimeter * room.height;
-      return sum + wallArea;
-    }, 0);
-
-    const totalCoats = rooms.reduce((sum, room) => sum + room.coats, 0);
-
-    return {
-      ...estimatorInput,
-      length: totalWallArea,
-      width: 1, // Dummy value - not used in calculation
-      height: 1, // Dummy value - not used in calculation
-      coats: totalCoats,
-    };
-  }, [rooms, estimatorInput]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prePainter = params.get("painter") || undefined;
 

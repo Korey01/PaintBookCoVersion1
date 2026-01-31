@@ -27,6 +27,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
       length: 4,
       width: 3.5,
       height: 2.4,
+      coats: 1,
     };
     onRoomsChange([...rooms, newRoom]);
   };

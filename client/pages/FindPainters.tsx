@@ -19,20 +19,6 @@ export default function FindPainters() {
   const [queryLocation, setQueryLocation] = useState<string>(params.get("location") || "");
   const [queryType, setQueryType] = useState<string>(params.get("type") || "");
 
-  const [rooms, setRooms] = useState<Room[]>(() => {
-    try {
-      const saved = localStorage.getItem('paintbook:rooms');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [];
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('paintbook:rooms', JSON.stringify(rooms));
-    } catch {}
-  }, [rooms]);
-
   const [price, setPrice] = useState<number[]>([15, 40]);
   const [minRating, setMinRating] = useState(4);
   const [available, setAvailable] = useState(true);

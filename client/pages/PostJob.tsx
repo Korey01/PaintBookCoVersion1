@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { PAINT_TYPES, DEFAULT_ESTIMATOR_INPUT, useEstimate, BRAND_INFO } from "@/lib/paint-estimator";
 import { findAccount, upsertAccount, setActiveUser } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { RoomDimensions, type Room } from "@/components/site/RoomDimensions";
 import { z } from "zod";
 
 export default function PostJob() {

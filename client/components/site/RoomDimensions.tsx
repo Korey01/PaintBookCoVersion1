@@ -169,7 +169,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
               <div className="mt-2 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Wall area:</span>
                 <span className="font-semibold">
-                  {(2 * room.height * (room.length + room.width)).toFixed(1)} m²
+                  {(2 * (room.height ?? 2.4) * ((room.length ?? 4) + (room.width ?? 3.5))).toFixed(1)} m²
                 </span>
               </div>
             </Card>

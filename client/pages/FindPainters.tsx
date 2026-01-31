@@ -155,10 +155,6 @@ export default function FindPainters() {
           <Checkbox id="avail" checked={available} onCheckedChange={() => setAvailable(!available)} />
           <Label htmlFor="avail" className="text-sm">Available this week</Label>
         </div>
-
-        <div className="border-t pt-6">
-          <RoomDimensions rooms={rooms} onRoomsChange={setRooms} />
-        </div>
       </aside>
 
       <section>

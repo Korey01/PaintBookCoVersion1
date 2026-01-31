@@ -411,22 +411,6 @@ export default function PostJob() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <Label>Room length (m)</Label>
-                        <Input type="number" min={0.5} step="0.1" value={estimatorInput.length} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, length: Math.max(0.5, Number(e.target.value) || 0) }))}/>
-                      </div>
-                      <div>
-                        <Label>Room width (m)</Label>
-                        <Input type="number" min={0.5} step="0.1" value={estimatorInput.width} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, width: Math.max(0.5, Number(e.target.value) || 0) }))}/>
-                      </div>
-                      <div>
-                        <Label>Wall height (m)</Label>
-                        <Input type="number" min={1.5} step="0.1" value={estimatorInput.height} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, height: Math.max(1.5, Number(e.target.value) || 0) }))}/>
-                      </div>
-                      <div>
-                        <Label>Number of coats</Label>
-                        <Input type="number" min={1} step="1" value={estimatorInput.coats} onChange={(e)=>setEstimatorInput(prev=>({ ...prev, coats: Math.max(1, Number(e.target.value) || 1) }))}/>
-                      </div>
                       <div className="sm:col-span-2">
                         <Label>Paint type</Label>
                         <Select value={estimatorInput.paintType} onValueChange={(v)=>setEstimatorInput(prev=>({ ...prev, paintType: v as typeof estimatorInput.paintType }))}>

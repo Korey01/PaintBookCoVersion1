@@ -78,7 +78,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
         <div className="space-y-3">
           {rooms.map((room) => (
             <Card key={room.id} className="border p-3">
-              <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-5 md:items-end">
+              <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-6 md:items-end">
                 <div className="md:col-span-1">
                   <Label className="text-xs">Room name</Label>
                   <Input
@@ -134,6 +134,22 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
                     onChange={(e) =>
                       updateRoom(room.id, {
                         height: Math.max(1.5, Number(e.target.value) || 0),
+                      })
+                    }
+                    className="h-8 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs">Coats</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={room.coats}
+                    onChange={(e) =>
+                      updateRoom(room.id, {
+                        coats: Math.max(1, Number(e.target.value) || 1),
                       })
                     }
                     className="h-8 text-sm"

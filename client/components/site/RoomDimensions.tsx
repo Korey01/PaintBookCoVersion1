@@ -83,7 +83,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
                   <Label className="text-xs">Room name</Label>
                   <Input
                     size="sm"
-                    value={room.name}
+                    value={room.name || ''}
                     onChange={(e) =>
                       updateRoom(room.id, { name: e.target.value })
                     }
@@ -98,7 +98,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
                     type="number"
                     min="0.5"
                     step="0.1"
-                    value={room.length}
+                    value={room.length ?? 4}
                     onChange={(e) =>
                       updateRoom(room.id, {
                         length: Math.max(0.5, Number(e.target.value) || 0),
@@ -114,7 +114,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
                     type="number"
                     min="0.5"
                     step="0.1"
-                    value={room.width}
+                    value={room.width ?? 3.5}
                     onChange={(e) =>
                       updateRoom(room.id, {
                         width: Math.max(0.5, Number(e.target.value) || 0),
@@ -130,7 +130,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
                     type="number"
                     min="1.5"
                     step="0.1"
-                    value={room.height}
+                    value={room.height ?? 2.4}
                     onChange={(e) =>
                       updateRoom(room.id, {
                         height: Math.max(1.5, Number(e.target.value) || 0),
@@ -146,7 +146,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
                     type="number"
                     min="1"
                     step="1"
-                    value={room.coats}
+                    value={room.coats ?? 1}
                     onChange={(e) =>
                       updateRoom(room.id, {
                         coats: Math.max(1, Number(e.target.value) || 1),

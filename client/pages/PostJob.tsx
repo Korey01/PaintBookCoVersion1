@@ -139,12 +139,15 @@ export default function PostJob() {
 
     // Calculate from rooms
     const totalWallArea = rooms.reduce((sum, room) => {
-      const perimeter = 2 * (room.length + room.width);
-      const wallArea = perimeter * room.height;
+      const l = room.length ?? 4;
+      const w = room.width ?? 3.5;
+      const h = room.height ?? 2.4;
+      const perimeter = 2 * (l + w);
+      const wallArea = perimeter * h;
       return sum + wallArea;
     }, 0);
 
-    const totalCoats = rooms.reduce((sum, room) => sum + room.coats, 0);
+    const totalCoats = rooms.reduce((sum, room) => sum + (room.coats ?? 1), 0);
     const openings = estimatorInput.openings;
     const openingArea = estimatorInput.openingArea;
     const subtract = openings * openingArea;

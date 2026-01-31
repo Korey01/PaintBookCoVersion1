@@ -37,11 +37,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
   };
 
   const updateRoom = (id: string, updates: Partial<Room>) => {
-    onRoomsChange(
-      rooms.map((r) =>
-        r.id === id ? { ...r, ...updates } : r
-      )
-    );
+    onRoomsChange(rooms.map((r) => (r.id === id ? { ...r, ...updates } : r)));
   };
 
   const totalArea = rooms.reduce((sum, room) => {
@@ -61,12 +57,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
             Add multiple rooms to calculate total paint needed
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={addRoom}
-          className="gap-2"
-        >
+        <Button size="sm" variant="outline" onClick={addRoom} className="gap-2">
           <Plus className="h-3.5 w-3.5" /> Add room
         </Button>
       </div>
@@ -86,7 +77,7 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
                   <Label className="text-xs">Room name</Label>
                   <Input
                     size="sm"
-                    value={room.name || ''}
+                    value={room.name || ""}
                     onChange={(e) =>
                       updateRoom(room.id, { name: e.target.value })
                     }
@@ -172,7 +163,12 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
               <div className="mt-2 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Wall area:</span>
                 <span className="font-semibold">
-                  {(2 * (room.height ?? 2.4) * ((room.length ?? 4) + (room.width ?? 3.5))).toFixed(1)} m²
+                  {(
+                    2 *
+                    (room.height ?? 2.4) *
+                    ((room.length ?? 4) + (room.width ?? 3.5))
+                  ).toFixed(1)}{" "}
+                  m²
                 </span>
               </div>
             </Card>

@@ -138,7 +138,43 @@ export default function PostJob() {
 
   const [errors, setErrors] = useState<Record<string,string>>({});
 
-  const estimate = useEstimate(estimatorInput);
+  // Calculate estimate based on rooms if available, otherwise use estimatorInput
+  const estimate = useMemo(() => {
+    if (rooms.length === 0) {
+      return useEstimate(estimatorInput);
+    }
+
+    // Calculate from rooms
+    const totalWallArea = rooms.reduce((sum, room) => {
+      const perimeter = 2 * (room.length + room.width);
+      const wallArea = perimeter * room.height;
+      return sum + wallArea;
+    }, 0);
+
+    const totalCoats = rooms.reduce((sum, room) => sum + room.coats, 0);
+    const openings = estimatorInput.openings;
+    const openingArea = estimatorInput.openingArea;
+    const subtract = openings * openingArea;
+    const netWallArea = Math.max(0, totalWallArea - subtract);
+
+    const coverage = estimatorInput.coverage;
+    const pricePerLitre = estimatorInput.pricePerLitre;
+    const paintType = estimatorInput.paintType;
+
+    const perCoat = netWallArea / Math.max(0.1, coverage);
+    const litres = Math.round((perCoat * totalCoats) * 10) / 10;
+    const materialCost = Math.round(litres * pricePerLitre);
+
+    const brandEstimates = Object.entries(BRAND_INFO).map(([name, info]) => {
+      const { coverage: brandCoverage, pricePerLitre: brandPrice } = info[paintType];
+      const perCoatBrand = netWallArea / brandCoverage;
+      const litresBrand = Math.round((perCoatBrand * totalCoats) * 10) / 10;
+      const costBrand = Math.round(litresBrand * brandPrice);
+      return { name, coverage: brandCoverage, pricePerLitre: brandPrice, litres: litresBrand, cost: costBrand };
+    });
+
+    return { wallArea: netWallArea, litres, materialCost, brandEstimates };
+  }, [rooms, estimatorInput, BRAND_INFO]);
 
   const estimatedBudget = useMemo(() => {
     if (typeof budgetMax === "number" && budgetMax > 0) return budgetMax;

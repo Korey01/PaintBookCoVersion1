@@ -66,23 +66,30 @@ export default function PostJob() {
         return { ...DEFAULT_ESTIMATOR_INPUT, ...rest };
       }
     } catch {}
-
-    // Try to use first saved room dimensions if available
-    try {
-      const savedRooms = JSON.parse(localStorage.getItem("paintbook:rooms") || "[]");
-      if (Array.isArray(savedRooms) && savedRooms.length > 0) {
-        const firstRoom = savedRooms[0];
-        return {
-          ...DEFAULT_ESTIMATOR_INPUT,
-          length: firstRoom.length || DEFAULT_ESTIMATOR_INPUT.length,
-          width: firstRoom.width || DEFAULT_ESTIMATOR_INPUT.width,
-          height: firstRoom.height || DEFAULT_ESTIMATOR_INPUT.height,
-        };
-      }
-    } catch {}
-
     return DEFAULT_ESTIMATOR_INPUT;
   });
+
+  // Compute estimator input from rooms
+  const computedEstimatorInput = useMemo(() => {
+    if (rooms.length === 0) return estimatorInput;
+
+    // Sum up wall areas and coats from all rooms
+    const totalWallArea = rooms.reduce((sum, room) => {
+      const perimeter = 2 * (room.length + room.width);
+      const wallArea = perimeter * room.height;
+      return sum + wallArea;
+    }, 0);
+
+    const totalCoats = rooms.reduce((sum, room) => sum + room.coats, 0);
+
+    return {
+      ...estimatorInput,
+      length: totalWallArea,
+      width: 1, // Dummy value - not used in calculation
+      height: 1, // Dummy value - not used in calculation
+      coats: totalCoats,
+    };
+  }, [rooms, estimatorInput]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prePainter = params.get("painter") || undefined;
 

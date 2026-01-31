@@ -117,10 +117,13 @@ export default function PostJob() {
 
   const [errors, setErrors] = useState<Record<string,string>>({});
 
+  // Fallback estimate from estimatorInput when no rooms
+  const estimatorEstimate = useEstimate(estimatorInput);
+
   // Calculate estimate based on rooms if available, otherwise use estimatorInput
   const estimate = useMemo(() => {
     if (rooms.length === 0) {
-      return useEstimate(estimatorInput);
+      return estimatorEstimate;
     }
 
     // Calculate from rooms
@@ -153,7 +156,7 @@ export default function PostJob() {
     });
 
     return { wallArea: netWallArea, litres, materialCost, brandEstimates };
-  }, [rooms, estimatorInput, BRAND_INFO]);
+  }, [rooms, estimatorInput, estimatorEstimate]);
 
   const estimatedBudget = useMemo(() => {
     if (typeof budgetMax === "number" && budgetMax > 0) return budgetMax;

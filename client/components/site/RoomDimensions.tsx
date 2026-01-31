@@ -45,7 +45,10 @@ export function RoomDimensions({ rooms, onRoomsChange }: RoomDimensionsProps) {
   };
 
   const totalArea = rooms.reduce((sum, room) => {
-    const wallArea = 2 * room.height * (room.length + room.width);
+    const h = room.height ?? 2.4;
+    const l = room.length ?? 4;
+    const w = room.width ?? 3.5;
+    const wallArea = 2 * h * (l + w);
     return sum + wallArea;
   }, 0);
 

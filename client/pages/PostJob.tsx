@@ -350,9 +350,6 @@ export default function PostJob() {
               <Input aria-invalid={!!errors.postcode} className={errors.postcode? 'border-destructive':''} value={postcode} onChange={(e)=>setPostcode(e.target.value)} placeholder="e.g. SW1A 1AA"/>
               {errors.postcode && <p className="text-xs text-red-500 mt-1">{errors.postcode}</p>}
             </div>
-            <div className="sm:col-span-2">
-              <RoomDimensions rooms={rooms} onRoomsChange={setRooms} />
-            </div>
             <div className="sm:col-span-2 flex justify-between">
               <Button variant="secondary" onClick={back}>Back</Button>
               <Button onClick={next}>Next <ArrowRight className="ml-2 h-4 w-4"/></Button>

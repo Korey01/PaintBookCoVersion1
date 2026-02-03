@@ -166,23 +166,25 @@ async function runTests() {
 
   // Test 7: List Customer Jobs
   await test("List Customer Jobs", async () => {
-    const res = await request("GET", "/jobs?limit=10", undefined, customerToken);
+    const res = await request("GET", "/jobs", undefined, customerToken);
     const data = await res.json();
     return (
       data.data &&
-      data.data.length > 0 &&
-      data.data.some((j: any) => j.id === jobId)
+      data.data.jobs &&
+      data.data.jobs.length > 0 &&
+      data.data.jobs.some((j: any) => j.id === jobId)
     );
   });
 
   // Test 8: List Open Jobs (Painter View)
   await test("List Available Jobs (Painter View)", async () => {
-    const res = await request("GET", "/jobs?limit=10", undefined, painterToken);
+    const res = await request("GET", "/jobs", undefined, painterToken);
     const data = await res.json();
     return (
       data.data &&
-      data.data.length > 0 &&
-      data.data.some((j: any) => j.id === jobId)
+      data.data.jobs &&
+      data.data.jobs.length > 0 &&
+      data.data.jobs.some((j: any) => j.id === jobId)
     );
   });
 

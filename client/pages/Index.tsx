@@ -31,9 +31,9 @@ export default function Index() {
   }
 
   return (
-    <div className="space-y-24">
+    <div className="space-y-20 sm:space-y-28 lg:space-y-32">
       <section className="relative overflow-hidden">
-        <div className="container mx-auto px-4 pt-0 pb-0 md:pt-0">
+        <div className="container mx-auto px-4 pt-0 pb-0 md:pt-0 animate-fade-in">
           <div className="flex flex-col items-center text-center gap-6 py-12 md:hidden">
             <img
               src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"

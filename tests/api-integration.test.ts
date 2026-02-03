@@ -214,7 +214,7 @@ async function runTests() {
   await test("Get Quote Details", async () => {
     const res = await request("GET", `/quotes/${quoteId}`, undefined, customerToken);
     const data = await res.json();
-    return data.data && data.data.totalPrice === 450;
+    return data.data && data.data.jobPrice === 450;
   });
 
   // Test 11: List Quotes for Job

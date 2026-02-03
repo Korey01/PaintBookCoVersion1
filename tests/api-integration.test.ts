@@ -103,6 +103,7 @@ async function runTests() {
       userType: "painter",
       fullName: "Jane Professional",
       phone: "07700000002",
+      postcode: "SW1A1AA", // Must match job's postcode for job discovery
     });
     const data = await res.json();
     if (data.token) {

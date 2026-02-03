@@ -275,9 +275,8 @@ async function runTests() {
       "/quotes",
       {
         jobId,
-        totalPrice: 400,
-        description: "Test",
-        timelineWeeks: 1,
+        jobPrice: 400,
+        consultationFee: 0,
       },
       customerToken
     );

@@ -247,7 +247,7 @@ async function runTests() {
     );
 
     const data = await res.json();
-    return data.transaction && data.transaction.status === "pending";
+    return data.data && data.data.status === "pending";
   });
 
   // Test 14: Authorization - Painter Cannot Accept Quote
@@ -271,7 +271,7 @@ async function runTests() {
       "/quotes",
       {
         jobId,
-        amount: 400,
+        totalPrice: 400,
         description: "Test",
         timelineWeeks: 1,
       },

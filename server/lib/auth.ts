@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const JWT_EXPIRES_IN = "7d";
 
 export interface TokenPayload {
@@ -25,7 +26,7 @@ export async function hashPassword(password: string): Promise<string> {
  */
 export async function comparePassword(
   password: string,
-  hash: string
+  hash: string,
 ): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
@@ -33,7 +34,9 @@ export async function comparePassword(
 /**
  * Generate JWT token
  */
-export function generateToken(payload: Omit<TokenPayload, "iat" | "exp">): string {
+export function generateToken(
+  payload: Omit<TokenPayload, "iat" | "exp">,
+): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 

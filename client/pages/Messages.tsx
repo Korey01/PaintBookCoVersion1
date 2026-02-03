@@ -146,7 +146,7 @@ export default function Messages() {
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to send message"
+        error instanceof Error ? error.message : "Failed to send message",
       );
     } finally {
       setSendingMessage(false);
@@ -183,9 +183,7 @@ export default function Messages() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold">
-                {job?.title || "Messages"}
-              </h1>
+              <h1 className="text-xl font-bold">{job?.title || "Messages"}</h1>
               <p className="text-sm text-muted-foreground">
                 Status: {job?.status}
               </p>

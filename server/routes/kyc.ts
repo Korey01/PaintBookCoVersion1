@@ -1,9 +1,6 @@
 import { Router, Request, Response } from "express";
 import { getPrismaClient } from "@server/lib/db";
-import {
-  authMiddleware,
-  requirePainter,
-} from "@server/middleware/auth";
+import { authMiddleware, requirePainter } from "@server/middleware/auth";
 import type { ApiResponse, KYCVerificationRequest } from "@shared/types";
 
 const router = Router();
@@ -42,7 +39,8 @@ router.post(
       if (!firstName || !lastName || !dateOfBirth || !address || !postcode) {
         res.status(400).json({
           success: false,
-          error: "firstName, lastName, dateOfBirth, address, and postcode are required",
+          error:
+            "firstName, lastName, dateOfBirth, address, and postcode are required",
         });
         return;
       }
@@ -112,7 +110,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -141,8 +139,12 @@ router.get(
         success: true,
         data: {
           verificationStatus: painterProfile.verificationStatus,
-          idDocuments: painterProfile.idDocuments ? painterProfile.idDocuments.length : 0,
-          insuranceDocs: painterProfile.insuranceDocs ? painterProfile.insuranceDocs.length : 0,
+          idDocuments: painterProfile.idDocuments
+            ? painterProfile.idDocuments.length
+            : 0,
+          insuranceDocs: painterProfile.insuranceDocs
+            ? painterProfile.insuranceDocs.length
+            : 0,
           hasInsurance: painterProfile.hasInsurance,
           kycCompletedAt: painterProfile.kycCompletedAt,
           kycRejectionReason: painterProfile.kycRejectionReason,
@@ -157,7 +159,7 @@ router.get(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -181,10 +183,13 @@ router.post(
         return;
       }
 
-      if (!["id_document", "insurance", "address_proof"].includes(documentType)) {
+      if (
+        !["id_document", "insurance", "address_proof"].includes(documentType)
+      ) {
         res.status(400).json({
           success: false,
-          error: "Invalid documentType. Must be 'id_document', 'insurance', or 'address_proof'",
+          error:
+            "Invalid documentType. Must be 'id_document', 'insurance', or 'address_proof'",
         });
         return;
       }
@@ -267,7 +272,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -309,7 +314,7 @@ router.get(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -395,7 +400,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 export default router;

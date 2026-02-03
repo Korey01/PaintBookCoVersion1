@@ -42,7 +42,9 @@ export function initializeWebSocket(httpServer: HTTPServer): SocketIOServer {
 
   // Connection handler
   io.on("connection", (socket: Socket) => {
-    console.log(`User connected: ${socket.data.userId} (${socket.data.userEmail})`);
+    console.log(
+      `User connected: ${socket.data.userId} (${socket.data.userEmail})`,
+    );
 
     // Join user to their personal room
     socket.join(`user:${socket.data.userId}`);
@@ -61,7 +63,10 @@ export function initializeWebSocket(httpServer: HTTPServer): SocketIOServer {
      * Painters can set their notification preferences
      */
     socket.on("set-notification-preference", (preferences: any) => {
-      console.log(`Notification preferences set for ${socket.data.userId}:`, preferences);
+      console.log(
+        `Notification preferences set for ${socket.data.userId}:`,
+        preferences,
+      );
       socket.emit("notification-preference-saved", { success: true });
     });
 
@@ -75,7 +80,9 @@ export function initializeWebSocket(httpServer: HTTPServer): SocketIOServer {
         socket.emit("notification-marked-read", { success: true });
       } catch (error) {
         console.error("Error marking notification as read:", error);
-        socket.emit("error", { message: "Failed to mark notification as read" });
+        socket.emit("error", {
+          message: "Failed to mark notification as read",
+        });
       }
     });
 
@@ -107,7 +114,7 @@ export async function notifyPainter(
     title: string;
     body: string;
     data?: any;
-  }
+  },
 ) {
   const io = (global as any).io;
   if (!io) return;
@@ -127,7 +134,7 @@ export async function notifyPaintersInLocation(
     body: string;
     jobId: string;
     data?: any;
-  }
+  },
 ) {
   const io = (global as any).io;
   if (!io) return;
@@ -160,7 +167,7 @@ export async function notifyJobUpdate(
     title: string;
     body: string;
     data?: any;
-  }
+  },
 ) {
   const io = (global as any).io;
   if (!io) return;

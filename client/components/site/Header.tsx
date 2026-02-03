@@ -24,16 +24,21 @@ export default function Header() {
     setLoggedIn(!!u);
   }, [loc.pathname, loc.search, loc.hash]);
 
-
   function handleLogout() {
     localStorage.removeItem("paintbook:user");
     navigate("/auth");
   }
 
   return (
-    <header className={`sticky top-0 z-40 w-full transition-all ${scrolled ? "backdrop-blur bg-background/70 border-b" : "bg-transparent"}`}>
+    <header
+      className={`sticky top-0 z-40 w-full transition-all ${scrolled ? "backdrop-blur bg-background/70 border-b" : "bg-transparent"}`}
+    >
       <div className="container mx-auto flex items-center justify-between px-4 py-4 md:py-6">
-        <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight" aria-label="PaintBookco home">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-extrabold tracking-tight"
+          aria-label="PaintBookco home"
+        >
           <img
             src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
             alt="PaintBookco logo"
@@ -42,26 +47,68 @@ export default function Header() {
           <span className="sr-only">PaintBookco</span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
-          <NavLink to="/vestimator" className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Estimate</NavLink>
-          <NavLink to="/about" className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>About</NavLink>
-          <NavLink to="/trust-safety" className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Trust & Safety</NavLink>
+          <NavLink
+            to="/vestimator"
+            className={({ isActive }) =>
+              `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`
+            }
+          >
+            Estimate
+          </NavLink>
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`
+            }
+          >
+            About
+          </NavLink>
+          <NavLink
+            to="/trust-safety"
+            className={({ isActive }) =>
+              `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`
+            }
+          >
+            Trust & Safety
+          </NavLink>
           {loggedIn && (
-            <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
+            <NavLink
+              to={`/dashboard${search || ""}`}
+              className={({ isActive }) =>
+                `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`
+              }
+            >
+              Dashboard
+            </NavLink>
           )}
         </nav>
         <div className="flex items-center gap-3 md:gap-4">
-          <Button variant="ghost" className="md:hidden" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
-            <Menu className="h-5 w-5"/>
+          <Button
+            variant="ghost"
+            className="md:hidden"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
           </Button>
           <Button asChild variant="outline" className="hidden lg:inline-flex">
             <Link to="/join-painter">Join as Painter</Link>
           </Button>
-          <Button asChild className="hidden sm:inline-flex bg-black text-white hover:bg-black/90 rounded-full">
-            <Link to="/post-job"><span>Post a Job</span></Link>
+          <Button
+            asChild
+            className="hidden sm:inline-flex bg-black text-white hover:bg-black/90 rounded-full"
+          >
+            <Link to="/post-job">
+              <span>Post a Job</span>
+            </Link>
           </Button>
           {loggedIn && (
-            <Button className="shadow-md" variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4"/> Log out
+            <Button
+              className="shadow-md"
+              variant="outline"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" /> Log out
             </Button>
           )}
         </div>
@@ -70,23 +117,63 @@ export default function Header() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[300px] p-4">
           <nav className="grid gap-3 text-sm">
-            <Link to="/vestimator" onClick={()=>setMobileOpen(false)} className="font-medium">Estimate</Link>
-            <Link to="/about" onClick={()=>setMobileOpen(false)} className="font-medium">About</Link>
-            <Link to="/trust-safety" onClick={()=>setMobileOpen(false)} className="font-medium">Trust & Safety</Link>
-            {loggedIn && <Link to={`/dashboard${search||""}`} onClick={()=>setMobileOpen(false)} className="font-medium">Dashboard</Link>}
+            <Link
+              to="/vestimator"
+              onClick={() => setMobileOpen(false)}
+              className="font-medium"
+            >
+              Estimate
+            </Link>
+            <Link
+              to="/about"
+              onClick={() => setMobileOpen(false)}
+              className="font-medium"
+            >
+              About
+            </Link>
+            <Link
+              to="/trust-safety"
+              onClick={() => setMobileOpen(false)}
+              className="font-medium"
+            >
+              Trust & Safety
+            </Link>
+            {loggedIn && (
+              <Link
+                to={`/dashboard${search || ""}`}
+                onClick={() => setMobileOpen(false)}
+                className="font-medium"
+              >
+                Dashboard
+              </Link>
+            )}
 
             <div className="border-t border-border my-4 pt-4 space-y-3">
-              <Button asChild className="w-full bg-black text-white hover:bg-black/90 rounded-full">
-                <Link to="/post-job" onClick={()=>setMobileOpen(false)}>Post a Job</Link>
+              <Button
+                asChild
+                className="w-full bg-black text-white hover:bg-black/90 rounded-full"
+              >
+                <Link to="/post-job" onClick={() => setMobileOpen(false)}>
+                  Post a Job
+                </Link>
               </Button>
               <Button asChild variant="outline" className="w-full">
-                <Link to="/join-painter" onClick={()=>setMobileOpen(false)}>Join as Painter</Link>
+                <Link to="/join-painter" onClick={() => setMobileOpen(false)}>
+                  Join as Painter
+                </Link>
               </Button>
             </div>
 
             {loggedIn && (
-              <Button variant="outline" onClick={()=>{ setMobileOpen(false); handleLogout(); }} className="w-full mt-2">
-                <LogOut className="mr-2 h-4 w-4"/> Log out
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setMobileOpen(false);
+                  handleLogout();
+                }}
+                className="w-full mt-2"
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Log out
               </Button>
             )}
           </nav>

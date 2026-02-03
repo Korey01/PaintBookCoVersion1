@@ -100,7 +100,9 @@ export function KYCStatus({
           {/* Rejection Reason */}
           {status === "denied" && rejectionReason && (
             <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded">
-              <p className="text-sm font-medium text-red-900">Rejection Reason:</p>
+              <p className="text-sm font-medium text-red-900">
+                Rejection Reason:
+              </p>
               <p className="text-sm text-red-800 mt-1">{rejectionReason}</p>
             </div>
           )}

@@ -43,7 +43,9 @@ export default function AdminDashboard() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<string>("");
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [selectedPainterId, setSelectedPainterId] = useState<string | null>(null);
+  const [selectedPainterId, setSelectedPainterId] = useState<string | null>(
+    null,
+  );
 
   // Fetch pending KYCs and stats
   useEffect(() => {
@@ -56,11 +58,14 @@ export default function AdminDashboard() {
         }
 
         // Fetch pending KYCs
-        const kycRes = await fetch("/api/admin/kyc/pending?status=under_review", {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const kycRes = await fetch(
+          "/api/admin/kyc/pending?status=under_review",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (!kycRes.ok) {
           if (kycRes.status === 403) {
@@ -129,7 +134,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to approve painter"
+        error instanceof Error ? error.message : "Failed to approve painter",
       );
     } finally {
       setProcessingId(null);
@@ -164,7 +169,7 @@ export default function AdminDashboard() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ reason: rejectReason }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -173,16 +178,14 @@ export default function AdminDashboard() {
 
       const data = await response.json();
       if (data.success) {
-        setPendingKYCs(
-          pendingKYCs.filter((k) => k.id !== selectedPainterId)
-        );
+        setPendingKYCs(pendingKYCs.filter((k) => k.id !== selectedPainterId));
         toast.success("Painter rejected with reason sent");
         setShowRejectModal(false);
         setRejectReason("");
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to reject painter"
+        error instanceof Error ? error.message : "Failed to reject painter",
       );
     } finally {
       setProcessingId(null);
@@ -212,14 +215,14 @@ export default function AdminDashboard() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600">KYC Verification & Platform Management</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600">
+              KYC Verification & Platform Management
+            </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="gap-2"
-          >
+          <Button variant="outline" onClick={handleLogout} className="gap-2">
             <LogOut className="w-4 h-4" />
             Logout
           </Button>
@@ -322,7 +325,8 @@ export default function AdminDashboard() {
           <Card className="w-full max-w-md p-6">
             <h3 className="text-lg font-semibold mb-4">Reject KYC</h3>
             <p className="text-gray-600 mb-4">
-              Please provide a reason for rejecting this painter's KYC verification.
+              Please provide a reason for rejecting this painter's KYC
+              verification.
             </p>
             <textarea
               value={rejectReason}

@@ -1,39 +1,54 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, Phone, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar, Clock, Phone, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function B2BConsultation() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const [businessName, setBusinessName] = useState('');
-  const [contactPerson, setContactPerson] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [preferredDate, setPreferredDate] = useState('');
-  const [preferredTime, setPreferredTime] = useState('');
-  const [callDuration, setCallDuration] = useState('30');
-  const [projectOverview, setProjectOverview] = useState('');
+  const [businessName, setBusinessName] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
+  const [callDuration, setCallDuration] = useState("30");
+  const [projectOverview, setProjectOverview] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!businessName.trim()) newErrors.businessName = 'Business name is required';
-    if (!contactPerson.trim()) newErrors.contactPerson = 'Contact name is required';
-    if (!phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!email.trim()) newErrors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Invalid email address';
-    if (!preferredDate) newErrors.preferredDate = 'Please select a date';
-    if (!preferredTime) newErrors.preferredTime = 'Please select a time';
+    if (!businessName.trim())
+      newErrors.businessName = "Business name is required";
+    if (!contactPerson.trim())
+      newErrors.contactPerson = "Contact name is required";
+    if (!phone.trim()) newErrors.phone = "Phone number is required";
+    if (!email.trim()) newErrors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      newErrors.email = "Invalid email address";
+    if (!preferredDate) newErrors.preferredDate = "Please select a date";
+    if (!preferredTime) newErrors.preferredTime = "Please select a time";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -43,7 +58,7 @@ export default function B2BConsultation() {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -61,19 +76,22 @@ export default function B2BConsultation() {
         bookedAt: new Date().toISOString(),
       };
 
-      console.log('Consultation booked:', bookingData);
+      console.log("Consultation booked:", bookingData);
 
       // Store in localStorage for demo
-      localStorage.setItem('paintbook:consultation', JSON.stringify(bookingData));
+      localStorage.setItem(
+        "paintbook:consultation",
+        JSON.stringify(bookingData),
+      );
 
-      toast.success('Consultation booked! We\'ll confirm via email and call.');
+      toast.success("Consultation booked! We'll confirm via email and call.");
 
       setTimeout(() => {
-        navigate('/b2b/consultation-confirmation', { state: bookingData });
+        navigate("/b2b/consultation-confirmation", { state: bookingData });
       }, 1500);
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to book consultation. Please try again.');
+      console.error("Error:", error);
+      toast.error("Failed to book consultation. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -93,7 +111,9 @@ export default function B2BConsultation() {
             Book a Consultation
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Talk directly with our team about your commercial painting project. We'll discuss your scope, timeline, and budget to find the perfect solution.
+            Talk directly with our team about your commercial painting project.
+            We'll discuss your scope, timeline, and budget to find the perfect
+            solution.
           </p>
         </motion.div>
 
@@ -109,7 +129,8 @@ export default function B2BConsultation() {
               <CardHeader>
                 <CardTitle>Schedule Your Consultation</CardTitle>
                 <CardDescription>
-                  Pick a time that works for you. Most consultations take 30-45 minutes.
+                  Pick a time that works for you. Most consultations take 30-45
+                  minutes.
                 </CardDescription>
               </CardHeader>
 
@@ -117,7 +138,9 @@ export default function B2BConsultation() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Company & Contact Info */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground">Your Details</h3>
+                    <h3 className="font-semibold text-foreground">
+                      Your Details
+                    </h3>
 
                     <div>
                       <Label htmlFor="business-name">Business Name *</Label>
@@ -126,10 +149,12 @@ export default function B2BConsultation() {
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
                         placeholder="Your company name"
-                        className={`mt-2 ${errors.businessName ? 'border-red-500' : ''}`}
+                        className={`mt-2 ${errors.businessName ? "border-red-500" : ""}`}
                       />
                       {errors.businessName && (
-                        <p className="text-sm text-red-500 mt-1">{errors.businessName}</p>
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.businessName}
+                        </p>
                       )}
                     </div>
 
@@ -140,10 +165,12 @@ export default function B2BConsultation() {
                         value={contactPerson}
                         onChange={(e) => setContactPerson(e.target.value)}
                         placeholder="Your name"
-                        className={`mt-2 ${errors.contactPerson ? 'border-red-500' : ''}`}
+                        className={`mt-2 ${errors.contactPerson ? "border-red-500" : ""}`}
                       />
                       {errors.contactPerson && (
-                        <p className="text-sm text-red-500 mt-1">{errors.contactPerson}</p>
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.contactPerson}
+                        </p>
                       )}
                     </div>
 
@@ -156,10 +183,12 @@ export default function B2BConsultation() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="+44 (0) 123 456 7890"
-                          className={`mt-2 ${errors.phone ? 'border-red-500' : ''}`}
+                          className={`mt-2 ${errors.phone ? "border-red-500" : ""}`}
                         />
                         {errors.phone && (
-                          <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+                          <p className="text-sm text-red-500 mt-1">
+                            {errors.phone}
+                          </p>
                         )}
                       </div>
 
@@ -171,10 +200,12 @@ export default function B2BConsultation() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="your@email.com"
-                          className={`mt-2 ${errors.email ? 'border-red-500' : ''}`}
+                          className={`mt-2 ${errors.email ? "border-red-500" : ""}`}
                         />
                         {errors.email && (
-                          <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                          <p className="text-sm text-red-500 mt-1">
+                            {errors.email}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -182,7 +213,9 @@ export default function B2BConsultation() {
 
                   {/* Preferred Time */}
                   <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="font-semibold text-foreground">Preferred Meeting Time</h3>
+                    <h3 className="font-semibold text-foreground">
+                      Preferred Meeting Time
+                    </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -194,11 +227,13 @@ export default function B2BConsultation() {
                             type="date"
                             value={preferredDate}
                             onChange={(e) => setPreferredDate(e.target.value)}
-                            className={`pl-10 ${errors.preferredDate ? 'border-red-500' : ''}`}
+                            className={`pl-10 ${errors.preferredDate ? "border-red-500" : ""}`}
                           />
                         </div>
                         {errors.preferredDate && (
-                          <p className="text-sm text-red-500 mt-1">{errors.preferredDate}</p>
+                          <p className="text-sm text-red-500 mt-1">
+                            {errors.preferredDate}
+                          </p>
                         )}
                       </div>
 
@@ -211,18 +246,23 @@ export default function B2BConsultation() {
                             type="time"
                             value={preferredTime}
                             onChange={(e) => setPreferredTime(e.target.value)}
-                            className={`pl-10 ${errors.preferredTime ? 'border-red-500' : ''}`}
+                            className={`pl-10 ${errors.preferredTime ? "border-red-500" : ""}`}
                           />
                         </div>
                         {errors.preferredTime && (
-                          <p className="text-sm text-red-500 mt-1">{errors.preferredTime}</p>
+                          <p className="text-sm text-red-500 mt-1">
+                            {errors.preferredTime}
+                          </p>
                         )}
                       </div>
                     </div>
 
                     <div>
                       <Label htmlFor="duration">Call Duration</Label>
-                      <Select value={callDuration} onValueChange={setCallDuration}>
+                      <Select
+                        value={callDuration}
+                        onValueChange={setCallDuration}
+                      >
                         <SelectTrigger id="duration" className="mt-2">
                           <SelectValue />
                         </SelectTrigger>
@@ -237,10 +277,14 @@ export default function B2BConsultation() {
 
                   {/* Project Overview */}
                   <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="font-semibold text-foreground">Project Overview</h3>
+                    <h3 className="font-semibold text-foreground">
+                      Project Overview
+                    </h3>
 
                     <div>
-                      <Label htmlFor="overview">Brief Project Description</Label>
+                      <Label htmlFor="overview">
+                        Brief Project Description
+                      </Label>
                       <Textarea
                         id="overview"
                         value={projectOverview}
@@ -260,7 +304,7 @@ export default function B2BConsultation() {
                       size="lg"
                       className="w-full rounded-full bg-secondary hover:bg-secondary/90"
                     >
-                      {loading ? 'Booking...' : 'Confirm Consultation'}
+                      {loading ? "Booking..." : "Confirm Consultation"}
                     </Button>
                   </div>
                 </form>
@@ -283,18 +327,24 @@ export default function B2BConsultation() {
               <CardContent className="space-y-4 text-sm">
                 <div>
                   <h4 className="font-semibold mb-2">Before the Call</h4>
-                  <p className="text-muted-foreground">We'll send a confirmation email with meeting details and a link to join the call.</p>
+                  <p className="text-muted-foreground">
+                    We'll send a confirmation email with meeting details and a
+                    link to join the call.
+                  </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">During the Call</h4>
                   <p className="text-muted-foreground">
-                    We'll discuss your project scope, timeline, budget, and specific requirements. We'll also explain our process and escrow protection.
+                    We'll discuss your project scope, timeline, budget, and
+                    specific requirements. We'll also explain our process and
+                    escrow protection.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">After the Call</h4>
                   <p className="text-muted-foreground">
-                    We'll send you a tailored quote and introduction to your dedicated project manager.
+                    We'll send you a tailored quote and introduction to your
+                    dedicated project manager.
                   </p>
                 </div>
               </CardContent>
@@ -306,7 +356,10 @@ export default function B2BConsultation() {
                 <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-900">
                   <p className="font-semibold mb-1">Business Hours</p>
-                  <p>We operate Monday-Friday, 9am-6pm GMT. We'll try to accommodate your timezone if you're outside the UK.</p>
+                  <p>
+                    We operate Monday-Friday, 9am-6pm GMT. We'll try to
+                    accommodate your timezone if you're outside the UK.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -319,19 +372,27 @@ export default function B2BConsultation() {
               <CardContent className="space-y-3 text-sm">
                 <div className="flex gap-2">
                   <div className="w-2 h-2 rounded-full bg-secondary flex-shrink-0 mt-1.5" />
-                  <p className="text-muted-foreground">Dedicated project manager for your entire duration</p>
+                  <p className="text-muted-foreground">
+                    Dedicated project manager for your entire duration
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <div className="w-2 h-2 rounded-full bg-secondary flex-shrink-0 mt-1.5" />
-                  <p className="text-muted-foreground">Milestone-based payment with escrow protection</p>
+                  <p className="text-muted-foreground">
+                    Milestone-based payment with escrow protection
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <div className="w-2 h-2 rounded-full bg-secondary flex-shrink-0 mt-1.5" />
-                  <p className="text-muted-foreground">Pre-vetted, experienced commercial painters</p>
+                  <p className="text-muted-foreground">
+                    Pre-vetted, experienced commercial painters
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <div className="w-2 h-2 rounded-full bg-secondary flex-shrink-0 mt-1.5" />
-                  <p className="text-muted-foreground">Multi-site coordination and reporting</p>
+                  <p className="text-muted-foreground">
+                    Multi-site coordination and reporting
+                  </p>
                 </div>
               </CardContent>
             </Card>

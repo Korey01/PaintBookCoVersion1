@@ -97,7 +97,7 @@ export function useNotifications(): UseNotificationsReturn {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     },
-    [socket, notifications]
+    [socket, notifications],
   );
 
   // Clear all notifications
@@ -154,7 +154,7 @@ export function useNotificationPreferences() {
         socket.emit("set-notification-preference", preferences);
       }
     },
-    [socket]
+    [socket],
   );
 
   return { setPreferences };

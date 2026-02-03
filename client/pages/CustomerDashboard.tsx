@@ -5,7 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, ShieldCheck, Pencil, Trash2 } from "lucide-react";
 import { painters } from "@/data/painters";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { removeAccount } from "@/lib/auth";
@@ -15,22 +20,37 @@ const NOTIFICATIONS_EVENT = "paintbook:notifications:updated";
 
 function readJobsFromStorage(): any[] {
   if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem("paintbook:jobs") || "[]"); } catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem("paintbook:jobs") || "[]");
+  } catch {
+    return [];
+  }
 }
 
 function writeJobsToStorage(jobs: any[]) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem("paintbook:jobs", JSON.stringify(jobs)); } catch {}
+  try {
+    localStorage.setItem("paintbook:jobs", JSON.stringify(jobs));
+  } catch {}
 }
 
 function readNotificationsFromStorage(): any[] {
   if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem("paintbook:notifications") || "[]"); } catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem("paintbook:notifications") || "[]");
+  } catch {
+    return [];
+  }
 }
 
 function writeNotificationsToStorage(notifications: any[]) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem("paintbook:notifications", JSON.stringify(notifications)); } catch {}
+  try {
+    localStorage.setItem(
+      "paintbook:notifications",
+      JSON.stringify(notifications),
+    );
+  } catch {}
 }
 
 function toNumber(value: unknown): number {
@@ -38,14 +58,22 @@ function toNumber(value: unknown): number {
   return Number.isFinite(num) ? num : 0;
 }
 
-export default function CustomerDashboard(){
-  useEffect(()=>{ document.title = "Customer Dashboard | PaintBook"; },[]);
+export default function CustomerDashboard() {
+  useEffect(() => {
+    document.title = "Customer Dashboard | PaintBook";
+  }, []);
   const navigate = useNavigate();
-  const favIds: string[] = JSON.parse(localStorage.getItem('paintbook:favs')||'[]');
-  const favs = painters.filter(p => favIds.includes(p.id));
-  const profile = JSON.parse(localStorage.getItem('paintbook:customerProfile')||'{}');
+  const favIds: string[] = JSON.parse(
+    localStorage.getItem("paintbook:favs") || "[]",
+  );
+  const favs = painters.filter((p) => favIds.includes(p.id));
+  const profile = JSON.parse(
+    localStorage.getItem("paintbook:customerProfile") || "{}",
+  );
   const [jobs, setJobs] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>(() => readNotificationsFromStorage());
+  const [notifications, setNotifications] = useState<any[]>(() =>
+    readNotificationsFromStorage(),
+  );
   const [editOpen, setEditOpen] = useState(false);
   const [name, setName] = useState<string>(profile.name || "");
   const [location, setLocation] = useState<string>(profile.location || "");
@@ -57,15 +85,15 @@ export default function CustomerDashboard(){
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const token = localStorage.getItem('paintbook:token');
+        const token = localStorage.getItem("paintbook:token");
         if (!token) {
           setLoading(false);
           return;
         }
 
-        const response = await fetch('/api/jobs', {
+        const response = await fetch("/api/jobs", {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -76,7 +104,7 @@ export default function CustomerDashboard(){
           }
         }
       } catch (error) {
-        console.error('Failed to fetch jobs:', error);
+        console.error("Failed to fetch jobs:", error);
         // Fallback to localStorage if API fails
         setJobs(readJobsFromStorage());
       } finally {
@@ -87,45 +115,74 @@ export default function CustomerDashboard(){
     fetchJobs();
   }, []);
 
-  const pendingPayments = useMemo(() => jobs.filter((job: any) => job && job.status === 'awaiting_payment' && job.escrowOptIn), [jobs]);
-  const escrowNotifications = useMemo(() => notifications.filter((n: any) => n && n.type === 'escrow_payment_due'), [notifications]);
-  const paymentAlerts = useMemo(() => pendingPayments.map((job: any) => {
-    const notification = escrowNotifications.find((n: any) => n.jobId === job.id);
-    const jobAmount = toNumber(job.acceptedAmount) || toNumber(job.budgetMax) || toNumber(job.budgetMin) || 500;
-    const escrowFee = toNumber(job.escrowFee ?? job.escrowFeeEstimate ?? 0);
-    const totalDue = jobAmount + escrowFee;
-    const painterName = job.painterName
-      || (typeof job.painter === 'string' ? painters.find(p => p.id === job.painter)?.name : undefined)
-      || notification?.painterName
-      || 'Confirmed painter';
-    const jobTitle = job.jobType ? `${job.jobType} job` : 'Paint job';
-    return {
-      job,
-      notification,
-      jobAmount,
-      escrowFee,
-      totalDue,
-      painterName,
-      jobTitle,
-      createdAt: notification?.createdAt || job.acceptedAt || job.createdAt,
-      message: notification?.message,
-    };
-  }), [pendingPayments, escrowNotifications]);
+  const pendingPayments = useMemo(
+    () =>
+      jobs.filter(
+        (job: any) =>
+          job && job.status === "awaiting_payment" && job.escrowOptIn,
+      ),
+    [jobs],
+  );
+  const escrowNotifications = useMemo(
+    () =>
+      notifications.filter((n: any) => n && n.type === "escrow_payment_due"),
+    [notifications],
+  );
+  const paymentAlerts = useMemo(
+    () =>
+      pendingPayments.map((job: any) => {
+        const notification = escrowNotifications.find(
+          (n: any) => n.jobId === job.id,
+        );
+        const jobAmount =
+          toNumber(job.acceptedAmount) ||
+          toNumber(job.budgetMax) ||
+          toNumber(job.budgetMin) ||
+          500;
+        const escrowFee = toNumber(job.escrowFee ?? job.escrowFeeEstimate ?? 0);
+        const totalDue = jobAmount + escrowFee;
+        const painterName =
+          job.painterName ||
+          (typeof job.painter === "string"
+            ? painters.find((p) => p.id === job.painter)?.name
+            : undefined) ||
+          notification?.painterName ||
+          "Confirmed painter";
+        const jobTitle = job.jobType ? `${job.jobType} job` : "Paint job";
+        return {
+          job,
+          notification,
+          jobAmount,
+          escrowFee,
+          totalDue,
+          painterName,
+          jobTitle,
+          createdAt: notification?.createdAt || job.acceptedAt || job.createdAt,
+          message: notification?.message,
+        };
+      }),
+    [pendingPayments, escrowNotifications],
+  );
 
-  function saveProfile(){
+  function saveProfile() {
     const next = { ...profile, name, location, phone };
-    localStorage.setItem('paintbook:customerProfile', JSON.stringify(next));
+    localStorage.setItem("paintbook:customerProfile", JSON.stringify(next));
     setEditOpen(false);
   }
 
-  function handlePay(alert: (typeof paymentAlerts)[number]){
+  function handlePay(alert: (typeof paymentAlerts)[number]) {
     const baseAmount = Math.round(alert.jobAmount);
     const escrowFee = Math.round(alert.escrowFee);
     const totalDue = Math.round(alert.totalDue);
     const painterName = alert.painterName;
 
     if (alert.notification && !alert.notification.read) {
-      const updatedNotifications = readNotificationsFromStorage().map((n: any) => n.id === alert.notification?.id ? { ...n, read: true, readAt: new Date().toISOString() } : n);
+      const updatedNotifications = readNotificationsFromStorage().map(
+        (n: any) =>
+          n.id === alert.notification?.id
+            ? { ...n, read: true, readAt: new Date().toISOString() }
+            : n,
+      );
       writeNotificationsToStorage(updatedNotifications);
       setNotifications(updatedNotifications);
       window.dispatchEvent(new Event(NOTIFICATIONS_EVENT));
@@ -136,7 +193,7 @@ export default function CustomerDashboard(){
     const nextJobs = storedJobs.map((j: any) => {
       if (j && j.id === alert.job.id) {
         jobChanged = true;
-        return { ...j, status: 'payment_in_progress' };
+        return { ...j, status: "payment_in_progress" };
       }
       return j;
     });
@@ -147,39 +204,42 @@ export default function CustomerDashboard(){
     }
 
     const params = new URLSearchParams({
-      mode: 'booking',
+      mode: "booking",
       painter: painterName,
       amount: totalDue.toString(),
       baseAmount: baseAmount.toString(),
       escrowFee: escrowFee.toString(),
-      job: (alert.job.id || '').toString(),
+      job: (alert.job.id || "").toString(),
     });
     navigate(`/checkout?${params.toString()}`);
   }
 
-  function deleteAccount(){
-    const current = JSON.parse(localStorage.getItem('paintbook:user') || 'null');
+  function deleteAccount() {
+    const current = JSON.parse(
+      localStorage.getItem("paintbook:user") || "null",
+    );
     if (current?.email) {
       removeAccount(current.email);
     }
-    localStorage.removeItem('paintbook:user');
-    localStorage.removeItem('paintbook:customerProfile');
-    localStorage.removeItem('paintbook:customerMembership');
-    navigate('/');
+    localStorage.removeItem("paintbook:user");
+    localStorage.removeItem("paintbook:customerProfile");
+    localStorage.removeItem("paintbook:customerMembership");
+    navigate("/");
   }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (sessionStorage.getItem('paintbook:lastSignUpNotice') === 'customer') {
+    if (sessionStorage.getItem("paintbook:lastSignUpNotice") === "customer") {
       setSignupNotice(true);
-      sessionStorage.removeItem('paintbook:lastSignUpNotice');
+      sessionStorage.removeItem("paintbook:lastSignUpNotice");
     }
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const syncJobs = () => setJobs(readJobsFromStorage());
-    const syncNotifications = () => setNotifications(readNotificationsFromStorage());
+    const syncNotifications = () =>
+      setNotifications(readNotificationsFromStorage());
     window.addEventListener(JOBS_EVENT, syncJobs);
     window.addEventListener(NOTIFICATIONS_EVENT, syncNotifications);
     window.addEventListener("storage", syncJobs);
@@ -197,13 +257,24 @@ export default function CustomerDashboard(){
       <div>
         <div className="space-y-3 mb-8">
           <h1>Customer Dashboard</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">Manage your painting projects, track quotes, and secure payments with escrow protection</p>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Manage your painting projects, track quotes, and secure payments
+            with escrow protection
+          </p>
         </div>
         <div className="flex flex-wrap gap-4">
-          <Button onClick={()=>navigate('/post-job')} size="lg">Post a Job</Button>
-          <Button variant="outline" onClick={()=>navigate('/find-painter')} size="lg">Browse Painters</Button>
+          <Button onClick={() => navigate("/post-job")} size="lg">
+            Post a Job
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/find-painter")}
+            size="lg"
+          >
+            Browse Painters
+          </Button>
           <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground p-2">
-            <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0"/>
+            <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
             <span>All payments protected by escrow</span>
           </div>
         </div>
@@ -215,7 +286,10 @@ export default function CustomerDashboard(){
             <ShieldCheck className="mt-0.5 h-4 w-4" />
             <div>
               <div className="font-medium">Sign-up complete</div>
-              <p>Your free customer account is ready. We saved your recent job so you can track quotes, painters, and payments here.</p>
+              <p>
+                Your free customer account is ready. We saved your recent job so
+                you can track quotes, painters, and payments here.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -223,24 +297,52 @@ export default function CustomerDashboard(){
 
       {paymentAlerts.length > 0 && (
         <div className="grid gap-3">
-          {paymentAlerts.map(alert => (
-            <Card key={alert.job.id || alert.jobTitle} className="border-primary/30 bg-primary/5">
+          {paymentAlerts.map((alert) => (
+            <Card
+              key={alert.job.id || alert.jobTitle}
+              className="border-primary/30 bg-primary/5"
+            >
               <CardContent className="flex flex-col gap-3 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="text-sm font-semibold text-primary">Job accepted — secure payment</div>
-                    <div className="text-sm text-muted-foreground">{alert.jobTitle} · {alert.painterName}</div>
-                    <div className="text-xs text-muted-foreground">Estimated total £{alert.jobAmount.toLocaleString('en-GB')} + escrow fee £{alert.escrowFee.toLocaleString('en-GB')}</div>
+                    <div className="text-sm font-semibold text-primary">
+                      Job accepted — secure payment
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {alert.jobTitle} · {alert.painterName}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Estimated total £{alert.jobAmount.toLocaleString("en-GB")}{" "}
+                      + escrow fee £{alert.escrowFee.toLocaleString("en-GB")}
+                    </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold">£{alert.totalDue.toLocaleString('en-GB')}</div>
-                    {alert.createdAt && <div className="text-xs text-muted-foreground">{new Date(alert.createdAt).toLocaleDateString()}</div>}
+                    <div className="text-lg font-bold">
+                      £{alert.totalDue.toLocaleString("en-GB")}
+                    </div>
+                    {alert.createdAt && (
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(alert.createdAt).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
                 </div>
-                {alert.message && <p className="text-sm text-muted-foreground">{alert.message}</p>}
+                {alert.message && (
+                  <p className="text-sm text-muted-foreground">
+                    {alert.message}
+                  </p>
+                )}
                 <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span>Stripe holds your funds until you approve the job.</span>
-                  <Button size="sm" onClick={()=>handlePay(alert)} className="bg-primary text-primary-foreground">Pay securely</Button>
+                  <span>
+                    Stripe holds your funds until you approve the job.
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => handlePay(alert)}
+                    className="bg-primary text-primary-foreground"
+                  >
+                    Pay securely
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -252,18 +354,27 @@ export default function CustomerDashboard(){
         <Card>
           <CardContent className="p-4">
             <div className="text-sm font-medium">Profile & Settings</div>
-            <div className="mt-2 text-sm">Name: {profile.name || '—'}</div>
-            <div className="text-sm">Location: {profile.location || '—'}</div>
-            <div className="text-sm">Phone: {profile.phone || '—'}</div>
-            <Button className="mt-3 w-full" variant="outline" onClick={()=>setEditOpen(true)}><Pencil className="mr-2 h-4 w-4"/> Edit Profile</Button>
+            <div className="mt-2 text-sm">Name: {profile.name || "—"}</div>
+            <div className="text-sm">Location: {profile.location || "—"}</div>
+            <div className="text-sm">Phone: {profile.phone || "—"}</div>
+            <Button
+              className="mt-3 w-full"
+              variant="outline"
+              onClick={() => setEditOpen(true)}
+            >
+              <Pencil className="mr-2 h-4 w-4" /> Edit Profile
+            </Button>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-sm font-medium">Membership</div>
-            <div className="mt-2 text-sm">Current: <Badge variant="outline">Free</Badge></div>
+            <div className="mt-2 text-sm">
+              Current: <Badge variant="outline">Free</Badge>
+            </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Customer access is included at no cost. Manage your jobs, payments, and favourites from this dashboard anytime.
+              Customer access is included at no cost. Manage your jobs,
+              payments, and favourites from this dashboard anytime.
             </p>
           </CardContent>
         </Card>
@@ -271,11 +382,30 @@ export default function CustomerDashboard(){
           <CardContent className="p-4">
             <div className="text-sm font-medium">Payments & Escrow</div>
             <div className="mt-2 grid gap-1 text-xs">
-              <div className="mb-2 rounded-lg bg-secondary p-2 text-xs">100% escrow protection — your full payment is held until you approve the job (via Stripe (FCA-regulated payment partner)). <a className="underline" href="/escrow-demo/customer">View demo</a></div>
-              {JSON.parse(localStorage.getItem('paintbook:payments')||'[]').filter((p:any)=>p.mode==='booking').slice(0,5).map((p:any)=> (
-                <div key={p.ref} className="flex items-center justify-between"><span>{new Date(p.createdAt).toLocaleDateString()} · {p.painter}</span><span>£{p.amount}</span></div>
-              ))}
-              {JSON.parse(localStorage.getItem('paintbook:payments')||'[]').filter((p:any)=>p.mode==='booking').length===0 && (
+              <div className="mb-2 rounded-lg bg-secondary p-2 text-xs">
+                100% escrow protection — your full payment is held until you
+                approve the job (via Stripe (FCA-regulated payment partner)).{" "}
+                <a className="underline" href="/escrow-demo/customer">
+                  View demo
+                </a>
+              </div>
+              {JSON.parse(localStorage.getItem("paintbook:payments") || "[]")
+                .filter((p: any) => p.mode === "booking")
+                .slice(0, 5)
+                .map((p: any) => (
+                  <div
+                    key={p.ref}
+                    className="flex items-center justify-between"
+                  >
+                    <span>
+                      {new Date(p.createdAt).toLocaleDateString()} · {p.painter}
+                    </span>
+                    <span>£{p.amount}</span>
+                  </div>
+                ))}
+              {JSON.parse(
+                localStorage.getItem("paintbook:payments") || "[]",
+              ).filter((p: any) => p.mode === "booking").length === 0 && (
                 <div className="text-muted-foreground">No deposits yet.</div>
               )}
             </div>
@@ -287,22 +417,44 @@ export default function CustomerDashboard(){
         <h2 className="text-lg font-semibold">Favourite painters</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {favs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No favourites yet. Browse painters and tap ♡ to save.</p>
+            <p className="text-sm text-muted-foreground">
+              No favourites yet. Browse painters and tap ♡ to save.
+            </p>
           ) : (
-            favs.map(p => (
+            favs.map((p) => (
               <Card key={p.id} className="border-muted/60">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="text-sm font-medium">{p.name}</div>
-                      <div className="text-xs text-muted-foreground inline-flex items-center gap-2"><MapPin className="h-4 w-4"/>{p.location}</div>
+                      <div className="text-xs text-muted-foreground inline-flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        {p.location}
+                      </div>
                     </div>
                     <Badge>£{p.priceRange}</Badge>
                   </div>
-                  <div className="mt-2 text-xs text-muted-foreground">{p.skills.slice(0,3).join(' • ')}</div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {p.skills.slice(0, 3).join(" • ")}
+                  </div>
                   <div className="mt-3 flex gap-2">
-                    <Button size="sm" onClick={()=>navigate(`/painter/${p.id}`)}>View Profile</Button>
-                    <Button size="sm" variant="secondary" onClick={()=>navigate(`/checkout?mode=booking&painter=${encodeURIComponent(p.name)}&amount=150`)}>Book (escrow)</Button>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`/painter/${p.id}`)}
+                    >
+                      View Profile
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        navigate(
+                          `/checkout?mode=booking&painter=${encodeURIComponent(p.name)}&amount=150`,
+                        )
+                      }
+                    >
+                      Book (escrow)
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -313,37 +465,49 @@ export default function CustomerDashboard(){
 
       <section>
         <h2 className="text-lg font-semibold">Help & Support</h2>
-        <div className="mt-2 text-sm text-muted-foreground">Report problems or open disputes from the Disputes page.</div>
+        <div className="mt-2 text-sm text-muted-foreground">
+          Report problems or open disputes from the Disputes page.
+        </div>
         <div className="mt-3 flex gap-3">
-          <Button variant="secondary" onClick={()=>navigate('/disputes')}>Open Dispute</Button>
-          <Button variant="outline" onClick={deleteAccount}><Trash2 className="mr-2 h-4 w-4"/> Delete account</Button>
+          <Button variant="secondary" onClick={() => navigate("/disputes")}>
+            Open Dispute
+          </Button>
+          <Button variant="outline" onClick={deleteAccount}>
+            <Trash2 className="mr-2 h-4 w-4" /> Delete account
+          </Button>
         </div>
       </section>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Edit profile</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Edit profile</DialogTitle>
+          </DialogHeader>
           <div className="grid gap-3">
             <div>
               <Label>Full name</Label>
-              <Input value={name} onChange={(e)=>setName(e.target.value)} />
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div>
               <Label>Location</Label>
-              <Input value={location} onChange={(e)=>setLocation(e.target.value)} />
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
             </div>
             <div>
               <Label>Phone</Label>
-              <Input value={phone} onChange={(e)=>setPhone(e.target.value)} />
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={()=>setEditOpen(false)}>Cancel</Button>
+              <Button variant="secondary" onClick={() => setEditOpen(false)}>
+                Cancel
+              </Button>
               <Button onClick={saveProfile}>Save changes</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

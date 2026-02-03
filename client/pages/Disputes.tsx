@@ -104,19 +104,22 @@ export default function Disputes() {
     setSubmittingEvidence(true);
 
     try {
-      const response = await fetch(`/api/disputes/${selectedDispute.id}/evidence`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          evidence: {
-            type: "text",
-            data: evidenceText,
+      const response = await fetch(
+        `/api/disputes/${selectedDispute.id}/evidence`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        }),
-      });
+          body: JSON.stringify({
+            evidence: {
+              type: "text",
+              data: evidenceText,
+            },
+          }),
+        },
+      );
 
       if (!response.ok) {
         throw new Error("Failed to submit evidence");
@@ -131,7 +134,7 @@ export default function Disputes() {
     } catch (error) {
       console.error("Error submitting evidence:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to submit evidence"
+        error instanceof Error ? error.message : "Failed to submit evidence",
       );
     } finally {
       setSubmittingEvidence(false);
@@ -241,7 +244,9 @@ export default function Disputes() {
                   <div className="flex items-center gap-3">
                     {getStatusIcon(dispute.status)}
                     <div>
-                      <h3 className="font-semibold text-lg">{dispute.reason}</h3>
+                      <h3 className="font-semibold text-lg">
+                        {dispute.reason}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
                         Job ID: {dispute.jobId}
                       </p>
@@ -249,7 +254,7 @@ export default function Disputes() {
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                      dispute.status
+                      dispute.status,
                     )}`}
                   >
                     {dispute.status.replace("_", " ").toUpperCase()}

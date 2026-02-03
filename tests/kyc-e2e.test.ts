@@ -21,7 +21,7 @@ async function request(
   method: string,
   path: string,
   body?: any,
-  token?: string
+  token?: string,
 ): Promise<Response> {
   const options: RequestInit = {
     method,
@@ -44,10 +44,7 @@ async function request(
   return fetch(`${API_URL}${path}`, options);
 }
 
-async function test(
-  name: string,
-  fn: () => Promise<boolean>
-): Promise<void> {
+async function test(name: string, fn: () => Promise<boolean>): Promise<void> {
   try {
     const passed = await fn();
     results.push({ name, passed });
@@ -116,10 +113,7 @@ async function runTests() {
   await test("Check Initial KYC Status (Pending)", async () => {
     const res = await request("GET", "/kyc/status", undefined, painterToken);
     const data = await res.json();
-    return (
-      data.success &&
-      data.data.verificationStatus === "pending"
-    );
+    return data.success && data.data.verificationStatus === "pending";
   });
 
   await test("Submit KYC Information", async () => {
@@ -142,7 +136,7 @@ async function runTests() {
         insurancePolicyNumber: "POL123456",
         insuranceExpiry: "2026-12-31",
       },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -151,16 +145,17 @@ async function runTests() {
       console.log("Response Status:", res.status);
     }
     // Just verify the API responds successfully
-    return data.success && data.data && typeof data.data.verificationStatus === "string";
+    return (
+      data.success &&
+      data.data &&
+      typeof data.data.verificationStatus === "string"
+    );
   });
 
   await test("Verify KYC Status Updated (Under Review)", async () => {
     const res = await request("GET", "/kyc/status", undefined, painterToken);
     const data = await res.json();
-    return (
-      data.success &&
-      data.data.verificationStatus === "under_review"
-    );
+    return data.success && data.data.verificationStatus === "under_review";
   });
 
   // ============================================
@@ -177,7 +172,7 @@ async function runTests() {
         documentUrl: "https://example.com/id.pdf",
         documentExpiry: "2030-12-31",
       },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -193,7 +188,7 @@ async function runTests() {
         documentUrl: "https://example.com/insurance.pdf",
         documentExpiry: "2026-12-31",
       },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -208,7 +203,7 @@ async function runTests() {
         documentType: "address_proof",
         documentUrl: "https://example.com/address.pdf",
       },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -216,12 +211,7 @@ async function runTests() {
   });
 
   await test("Retrieve Uploaded Documents", async () => {
-    const res = await request(
-      "GET",
-      "/kyc/documents",
-      undefined,
-      painterToken
-    );
+    const res = await request("GET", "/kyc/documents", undefined, painterToken);
 
     const data = await res.json();
     return (
@@ -269,7 +259,7 @@ async function runTests() {
       {
         code: "123456", // Mock code
       },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -278,7 +268,9 @@ async function runTests() {
       console.log("Response Status:", res.status);
     }
     // Just verify the API responds successfully
-    return data.success && data.data && typeof data.data.twoFAEnabled === "boolean";
+    return (
+      data.success && data.data && typeof data.data.twoFAEnabled === "boolean"
+    );
   });
 
   await test("Confirm 2FA Status (Enabled)", async () => {
@@ -333,7 +325,7 @@ async function runTests() {
           },
         ],
       },
-      customerToken
+      customerToken,
     );
 
     const data = await res.json();
@@ -352,7 +344,7 @@ async function runTests() {
       "GET",
       "/notifications?type=job_posted",
       undefined,
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -371,7 +363,7 @@ async function runTests() {
       "GET",
       "/notifications/unread",
       undefined,
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -393,7 +385,7 @@ async function runTests() {
         jobPrice: 500,
         consultationFee: 0,
       },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -409,7 +401,7 @@ async function runTests() {
       "PUT",
       `/quotes/${quoteId}`,
       { status: "accepted" },
-      customerToken
+      customerToken,
     );
 
     const data = await res.json();
@@ -421,7 +413,7 @@ async function runTests() {
       "GET",
       `/jobs/${jobId}`,
       undefined,
-      customerToken
+      customerToken,
     );
 
     const data = await res.json();
@@ -434,11 +426,13 @@ async function runTests() {
   console.log("\n" + "=".repeat(60));
   const passed = results.filter((r) => r.passed).length;
   const total = results.length;
-  console.log(`\n📊 Results: ${passed}/${total} tests passed (${Math.round((passed / total) * 100)}%)\n`);
+  console.log(
+    `\n📊 Results: ${passed}/${total} tests passed (${Math.round((passed / total) * 100)}%)\n`,
+  );
 
   if (passed === total) {
     console.log(
-      "✅ All KYC E2E tests passed! Painter onboarding workflow is working correctly.\n"
+      "✅ All KYC E2E tests passed! Painter onboarding workflow is working correctly.\n",
     );
   } else {
     console.log("❌ Some tests failed. Review the errors above.\n");

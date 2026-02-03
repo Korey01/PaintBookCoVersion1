@@ -23,7 +23,7 @@ declare global {
 export async function adminMiddleware(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   try {
     // For MVP, check if user email is in admin list
@@ -59,7 +59,7 @@ export async function adminMiddleware(
 export async function requireAdmin(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   if (!req.userId || !req.isAdmin) {
     res.status(403).json({

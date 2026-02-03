@@ -3,6 +3,7 @@
 ## Authentication Endpoints
 
 ### Register
+
 - **POST** `/api/auth/register`
 - Create a new user account
 - Body:
@@ -16,6 +17,7 @@
 - Response: `{ success: true, token: "jwt_token", user: UserResponse }`
 
 ### Login
+
 - **POST** `/api/auth/login`
 - Authenticate user and get JWT token
 - Body:
@@ -28,6 +30,7 @@
 - Response: `{ success: true, token: "jwt_token", user: UserResponse }`
 
 ### Get Current User
+
 - **GET** `/api/auth/me`
 - Requires: Authorization header with Bearer token
 - Response: `{ success: true, user: UserResponse }`
@@ -37,6 +40,7 @@
 ## Job Endpoints
 
 ### Create Job
+
 - **POST** `/api/jobs`
 - Requires: Customer auth
 - Body:
@@ -68,11 +72,13 @@
 - Response: `{ success: true, data: JobResponse }`
 
 ### Get Job
+
 - **GET** `/api/jobs/:jobId`
 - Requires: Auth (customer or assigned painter)
 - Response: `{ success: true, data: JobResponse }`
 
 ### List Jobs
+
 - **GET** `/api/jobs?status=open&page=1&pageSize=10`
 - Requires: Auth
 - For customers: shows their jobs
@@ -80,12 +86,14 @@
 - Response: `{ success: true, data: { jobs: JobResponse[], total: number, page: number, pageSize: number, totalPages: number } }`
 
 ### Update Job
+
 - **PUT** `/api/jobs/:jobId`
 - Requires: Customer auth, job in "open" status
 - Body: Partial JobResponse fields
 - Response: `{ success: true, data: JobResponse }`
 
 ### Cancel Job
+
 - **DELETE** `/api/jobs/:jobId`
 - Requires: Customer auth, no escrow funded
 - Response: `{ success: true, data: { id: string, status: "cancelled" } }`
@@ -95,6 +103,7 @@
 ## Quote Endpoints
 
 ### Create Quote
+
 - **POST** `/api/quotes`
 - Requires: Painter auth
 - Body:
@@ -108,16 +117,19 @@
 - Response: `{ success: true, data: QuoteResponse }`
 
 ### Get Quote
+
 - **GET** `/api/quotes/:quoteId`
 - Requires: Auth (customer or painter who submitted quote)
 - Response: `{ success: true, data: QuoteResponse }`
 
 ### List Quotes for Job
+
 - **GET** `/api/quotes/job/:jobId`
 - Requires: Auth (customer or assigned painter)
 - Response: `{ success: true, data: { quotes: QuoteResponse[], total: number } }`
 
 ### Accept/Reject Quote
+
 - **PUT** `/api/quotes/:quoteId`
 - Requires: Customer auth
 - Body:
@@ -134,6 +146,7 @@
 ## Payment & Escrow Endpoints
 
 ### Initiate Payment
+
 - **POST** `/api/payments/initiate`
 - Requires: Customer auth, accepted quote
 - Body:
@@ -162,16 +175,19 @@
   ```
 
 ### Get Escrow Transaction
+
 - **GET** `/api/payments/escrow/:transactionId`
 - Requires: Auth (customer or painter in job)
 - Response: `{ success: true, data: EscrowTransactionResponse }`
 
 ### Transpact Webhook
+
 - **POST** `/api/payments/webhook/transpact`
 - Called by Transpact when payment status changes
 - Updates job and notifies parties
 
 ### Release Payment
+
 - **POST** `/api/payments/release/:jobId`
 - Requires: Customer auth
 - Releases escrow funds to painter after job approval
@@ -182,28 +198,34 @@
 ## Database Schema Overview
 
 ### Users
+
 - `User` - Core user account (email, password, type)
 - `CustomerProfile` - Customer-specific info
 - `PainterProfile` - Painter-specific info with verification
 
 ### Jobs
+
 - `Job` - Main job posting
 - `Quote` - Painter's quote on a job
 - `JobCompletion` - Job completion and approval
 
 ### Payments
+
 - `EscrowTransaction` - Escrow payment record (Transpact integration)
 
 ### Messaging & Notifications
+
 - `Message` - Direct messages between customer and painter
 - `Notification` - System notifications
 
 ### Reputation & Disputes
+
 - `ReliabilityEvent` - Painter reliability tracking
 - `Dispute` - Dispute resolution
 - `EvidenceSubmission` - Evidence for disputes
 
 ### B2B
+
 - `B2BCustomer` - B2B customer records
 - `B2BMilestone` - Milestone tracking for B2B projects
 
@@ -212,6 +234,7 @@
 ## Error Responses
 
 All errors follow this format:
+
 ```json
 {
   "success": false,
@@ -220,6 +243,7 @@ All errors follow this format:
 ```
 
 Common status codes:
+
 - `200` - Success
 - `201` - Created
 - `400` - Bad request
@@ -234,6 +258,7 @@ Common status codes:
 ## Authentication
 
 All protected endpoints require:
+
 ```
 Authorization: Bearer <jwt_token>
 ```
@@ -241,6 +266,7 @@ Authorization: Bearer <jwt_token>
 The JWT token is obtained from `/api/auth/register` or `/api/auth/login`.
 
 Token contains:
+
 - `id` - User ID
 - `email` - User email
 - `userType` - "customer" or "painter"
@@ -258,10 +284,12 @@ Not yet implemented. Should be added for production.
 ## Pagination
 
 List endpoints support:
+
 - `page` (default: 1)
 - `pageSize` (default: 10, max: 100)
 
 Response includes:
+
 - `data` - Array of items
 - `total` - Total count
 - `page` - Current page

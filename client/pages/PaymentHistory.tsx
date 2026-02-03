@@ -51,7 +51,7 @@ export default function PaymentHistory() {
     "all" | "completed" | "pending" | "cancelled"
   >("all");
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(
-    null
+    null,
   );
 
   const token = localStorage.getItem("paintbook:token");
@@ -172,14 +172,14 @@ export default function PaymentHistory() {
 
           <div className="bg-card rounded-2xl p-6 border border-border/50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-muted-foreground">
-                Completed
-              </h3>
+              <h3 className="font-semibold text-muted-foreground">Completed</h3>
               <CheckCircle className="w-5 h-5 text-green-500" />
             </div>
             <p className="text-3xl font-bold">
-              {payments.filter((p) => p.transaction.status === "released")
-                .length}
+              {
+                payments.filter((p) => p.transaction.status === "released")
+                  .length
+              }
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Successful transactions
@@ -192,7 +192,10 @@ export default function PaymentHistory() {
               <Clock className="w-5 h-5 text-blue-500" />
             </div>
             <p className="text-3xl font-bold">
-              {payments.filter((p) => p.transaction.status === "pending").length}
+              {
+                payments.filter((p) => p.transaction.status === "pending")
+                  .length
+              }
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Awaiting processing
@@ -288,7 +291,7 @@ export default function PaymentHistory() {
                           {getStatusIcon(payment.transaction.status)}
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                              payment.transaction.status
+                              payment.transaction.status,
                             )}`}
                           >
                             {payment.transaction.status.toUpperCase()}
@@ -298,7 +301,7 @@ export default function PaymentHistory() {
                       <td className="px-6 py-4 text-sm">
                         {payment.transaction.fundedAt
                           ? new Date(
-                              payment.transaction.fundedAt
+                              payment.transaction.fundedAt,
                             ).toLocaleDateString()
                           : "-"}
                       </td>
@@ -348,24 +351,20 @@ export default function PaymentHistory() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total Amount:</span>
                   <span className="font-semibold">
-                    {formatCurrency(
-                      selectedPayment.transaction.totalAmount
-                    )}
+                    {formatCurrency(selectedPayment.transaction.totalAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Painter Amount:</span>
                   <span className="font-semibold">
-                    {formatCurrency(
-                      selectedPayment.transaction.painterAmount
-                    )}
+                    {formatCurrency(selectedPayment.transaction.painterAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Commission:</span>
                   <span className="font-semibold">
                     {formatCurrency(
-                      selectedPayment.transaction.painterbookcoCommission
+                      selectedPayment.transaction.painterbookcoCommission,
                     )}{" "}
                     ({selectedPayment.transaction.commissionRate}%)
                   </span>
@@ -373,9 +372,7 @@ export default function PaymentHistory() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Escrow Fee:</span>
                   <span className="font-semibold">
-                    {formatCurrency(
-                      selectedPayment.transaction.escrowCost
-                    )}
+                    {formatCurrency(selectedPayment.transaction.escrowCost)}
                   </span>
                 </div>
                 <div className="border-t border-border/50 pt-4 flex justify-between">

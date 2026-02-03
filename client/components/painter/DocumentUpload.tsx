@@ -13,7 +13,11 @@ interface UploadedDocument {
 }
 
 interface DocumentUploadProps {
-  onUpload: (documentType: string, documentUrl: string, expiry?: string) => Promise<void>;
+  onUpload: (
+    documentType: string,
+    documentUrl: string,
+    expiry?: string,
+  ) => Promise<void>;
   existingDocuments?: UploadedDocument[];
   isLoading?: boolean;
 }
@@ -91,7 +95,7 @@ export function DocumentUpload({
       toast.success("Document uploaded successfully");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to upload document"
+        error instanceof Error ? error.message : "Failed to upload document",
       );
     } finally {
       setUploading(false);
@@ -121,7 +125,9 @@ export function DocumentUpload({
                   }`}
                 >
                   <div className="font-medium text-sm">{type.label}</div>
-                  <div className="text-xs text-gray-600">{type.description}</div>
+                  <div className="text-xs text-gray-600">
+                    {type.description}
+                  </div>
                 </button>
               ))}
             </div>
@@ -144,16 +150,21 @@ export function DocumentUpload({
               >
                 <Upload className="w-8 h-8 text-gray-400" />
                 <div className="text-sm font-medium">
-                  {selectedFile ? selectedFile.name : "Click to upload or drag and drop"}
+                  {selectedFile
+                    ? selectedFile.name
+                    : "Click to upload or drag and drop"}
                 </div>
-                <div className="text-xs text-gray-500">PNG, JPG, PDF up to 5MB</div>
+                <div className="text-xs text-gray-500">
+                  PNG, JPG, PDF up to 5MB
+                </div>
               </label>
             </div>
           </div>
 
           {/* Expiry Date (if required) */}
           {selectedType &&
-            DOCUMENT_TYPES.find((t) => t.id === selectedType)?.requiresExpiry && (
+            DOCUMENT_TYPES.find((t) => t.id === selectedType)
+              ?.requiresExpiry && (
               <div>
                 <Label htmlFor="expiry">Expiry Date *</Label>
                 <input

@@ -9,18 +9,21 @@ All backend API code and database schema has been created and is ready for deplo
 ## What Phase 1 Includes
 
 ### ✅ Database Schema (PostgreSQL)
+
 - 15 core Prisma models
 - Complete relationships defined
 - Enum types for statuses and user types
 - All fields documented
 
 ### ✅ API Routes
+
 - Authentication (register, login, get user)
 - Jobs (CRUD, list, filtering)
 - Quotes (submit, accept/reject, negotiate)
 - Payments (initiate escrow, webhooks, release funds)
 
 ### ✅ Core Business Logic
+
 - JWT authentication with bcrypt password hashing
 - Role-based access control (customer/painter)
 - Commission calculation system
@@ -29,6 +32,7 @@ All backend API code and database schema has been created and is ready for deplo
 - Quote negotiation tracking
 
 ### ✅ Type Safety
+
 - Shared TypeScript types (402 lines)
 - All API request/response interfaces defined
 - Prisma-generated client types
@@ -38,7 +42,9 @@ All backend API code and database schema has been created and is ready for deplo
 ## Setup Instructions
 
 ### 1. Prerequisites
+
 Ensure you have:
+
 - PostgreSQL 12+ running locally or accessible
 - Node.js 16+ and pnpm
 - Port 3000 available
@@ -46,6 +52,7 @@ Ensure you have:
 ### 2. Configure Database
 
 **Option A: Local PostgreSQL**
+
 ```bash
 # Install PostgreSQL (macOS with Homebrew)
 brew install postgresql@15
@@ -58,6 +65,7 @@ createdb paintbook_test
 ```
 
 **Option B: Docker PostgreSQL**
+
 ```bash
 docker run -d \
   --name paintbook-db \
@@ -73,6 +81,7 @@ Update `DATABASE_URL` in `.env` with your connection string.
 ### 3. Update Environment Variables
 
 Edit `.env`:
+
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/paintbook_test"
 JWT_SECRET="your-secret-change-in-production"
@@ -153,6 +162,7 @@ npx ts-node tests/phase1.test.ts
 ```
 
 **Expected Output:**
+
 ```
 🧪 PaintBook Phase 1 API Tests
 
@@ -284,7 +294,8 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 
 **Error:** `Can't reach database server`
 
-**Solution:** 
+**Solution:**
+
 - Verify PostgreSQL is running: `pg_isready -h localhost -p 5432`
 - Check DATABASE_URL in .env
 - For Docker: `docker ps | grep paintbook-db`
@@ -294,6 +305,7 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 **Error:** `Error validating datasource`
 
 **Solution:**
+
 - Ensure DATABASE_URL matches your database provider
 - For PostgreSQL: `postgresql://user:password@host:port/database`
 - Regenerate: `pnpm db:generate`
@@ -303,6 +315,7 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 **Error:** `Invalid token` or `No token provided`
 
 **Solution:**
+
 - Include Authorization header: `Authorization: Bearer <token>`
 - Token format must be: `Bearer <jwt_token>` (with space)
 - Token expires in 7 days
@@ -312,6 +325,7 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 **Error:** `404 Not Found`
 
 **Solution:**
+
 - Verify server is running on correct port (default 3000)
 - Check endpoint path matches documentation
 - Verify authentication middleware is passing
@@ -321,30 +335,35 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 ## What's Working
 
 ✅ **Authentication**
+
 - User registration with email validation
 - Login with JWT tokens
 - Password hashing with bcryptjs
 - Role-based access control
 
 ✅ **Job Management**
+
 - Create jobs with room dimensions
 - List jobs with filters
 - Update/delete jobs
 - Status workflow tracking
 
 ✅ **Quoting System**
+
 - Submit quotes with prices
 - Accept/reject quotes
 - Negotiation history
 - Auto-notification on status changes
 
 ✅ **Payment Flow**
+
 - Escrow initiation
 - Commission calculation (12%/10%/8% tiered)
 - Transaction tracking
 - Webhook support ready
 
 ✅ **Authorization**
+
 - Customer-only operations
 - Painter-only operations
 - Job ownership validation
@@ -367,6 +386,7 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 ## Database Schema Highlights
 
 ### Key Entities
+
 - **Users**: Authentication with roles (customer/painter)
 - **PainterProfile**: Verification, insurance, reputation
 - **Jobs**: Status workflow with room dimensions
@@ -377,6 +397,7 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 - **Notifications**: 8 event types
 
 ### Key Relations
+
 - User → Jobs (one-to-many)
 - User → Quotes (one-to-many)
 - Job → Quotes (one-to-many)
@@ -386,6 +407,7 @@ curl -X POST http://localhost:3000/api/payments/initiate \
 ### Sample Calculations
 
 **Commission Calculation Example:**
+
 ```
 Job price: £1000
 Commission rate: 12% (jobs 1-5)
@@ -457,6 +479,7 @@ Painter receives: £880
 ## Success Criteria
 
 Phase 1 is complete when:
+
 - ✅ Database schema deployed
 - ✅ All 24 API endpoints working
 - ✅ Test script passes 15/15 tests

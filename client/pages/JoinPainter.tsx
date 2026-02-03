@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +45,12 @@ export default function JoinPainter() {
     setErrors({});
 
     // Validate form
-    const result = schema.safeParse({ email, password, confirmPassword, postcode });
+    const result = schema.safeParse({
+      email,
+      password,
+      confirmPassword,
+      postcode,
+    });
     if (!result.success) {
       const newErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
@@ -109,7 +120,9 @@ export default function JoinPainter() {
       <div className="mx-auto max-w-md px-4">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">Join as a Painter</h1>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Join as a Painter
+          </h1>
           <p className="mt-2 text-slate-600">
             Get access to nearby painting jobs in your area
           </p>
@@ -230,7 +243,10 @@ export default function JoinPainter() {
               {/* Login Link */}
               <div className="text-center text-sm">
                 Already have an account?{" "}
-                <a href="/auth?type=login" className="font-semibold text-primary hover:underline">
+                <a
+                  href="/auth?type=login"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Sign in
                 </a>
               </div>

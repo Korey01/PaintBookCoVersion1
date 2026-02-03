@@ -8,7 +8,12 @@ import {
   isValidPassword,
 } from "@server/lib/auth";
 import { authMiddleware } from "@server/middleware/auth";
-import type { AuthResponse, UserResponse, RegisterRequest, LoginRequest } from "@shared/types";
+import type {
+  AuthResponse,
+  UserResponse,
+  RegisterRequest,
+  LoginRequest,
+} from "@shared/types";
 
 const router = Router();
 const prisma = getPrismaClient();
@@ -199,45 +204,49 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
  * GET /api/auth/me
  * Get current user info
  */
-router.get("/me", authMiddleware, async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.userId },
-      include: {
-        customerProfile: true,
-        painterProfile: true,
-      },
-    });
-
-    if (!user) {
-      res.status(404).json({
-        success: false,
-        error: "User not found",
-      });
-      return;
-    }
-
-    const response = {
-      success: true,
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          userType: user.userType as "customer" | "painter",
-          customerProfile: user.customerProfile || undefined,
-          painterProfile: user.painterProfile || undefined,
+router.get(
+  "/me",
+  authMiddleware,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        include: {
+          customerProfile: true,
+          painterProfile: true,
         },
-      },
-    };
+      });
 
-    res.json(response);
-  } catch (error) {
-    console.error("Get user error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Internal server error",
-    });
-  }
-});
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          error: "User not found",
+        });
+        return;
+      }
+
+      const response = {
+        success: true,
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            userType: user.userType as "customer" | "painter",
+            customerProfile: user.customerProfile || undefined,
+            painterProfile: user.painterProfile || undefined,
+          },
+        },
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Internal server error",
+      });
+    }
+  },
+);
 
 export default router;

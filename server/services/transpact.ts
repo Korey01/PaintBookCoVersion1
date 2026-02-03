@@ -57,7 +57,7 @@ export class TranspactService {
    * Returns payment URL for customer to complete payment
    */
   async createTransaction(
-    request: TranspactPaymentRequest
+    request: TranspactPaymentRequest,
   ): Promise<{ transactionId: string; paymentUrl: string }> {
     try {
       const payload = {
@@ -75,7 +75,7 @@ export class TranspactService {
 
       console.log(
         `[Transpact] Creating transaction: ${request.transactionId}`,
-        payload
+        payload,
       );
 
       // For MVP, simulate Transpact response
@@ -113,7 +113,7 @@ export class TranspactService {
    * Get transaction status
    */
   async getTransactionStatus(
-    transactionId: string
+    transactionId: string,
   ): Promise<TranspactTransaction> {
     try {
       console.log(`[Transpact] Fetching transaction status: ${transactionId}`);
@@ -129,7 +129,7 @@ export class TranspactService {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -160,7 +160,7 @@ export class TranspactService {
   async releaseFunds(request: TranspactReleaseRequest): Promise<boolean> {
     try {
       console.log(
-        `[Transpact] Releasing funds for transaction: ${request.transactionId}`
+        `[Transpact] Releasing funds for transaction: ${request.transactionId}`,
       );
 
       if (this.testMode) {
@@ -178,7 +178,7 @@ export class TranspactService {
           body: JSON.stringify({
             seller_email: request.sellerEmail,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -211,7 +211,7 @@ export class TranspactService {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -228,10 +228,7 @@ export class TranspactService {
   /**
    * Verify webhook signature for security
    */
-  verifyWebhookSignature(
-    payload: string,
-    signature: string
-  ): boolean {
+  verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
       // In production, verify HMAC signature
       // const crypto = require('crypto');

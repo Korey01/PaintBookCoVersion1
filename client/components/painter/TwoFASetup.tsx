@@ -17,7 +17,10 @@ interface SetupData {
   instructions: string[];
 }
 
-export function TwoFASetup({ onSetupComplete, isLoading = false }: TwoFASetupProps) {
+export function TwoFASetup({
+  onSetupComplete,
+  isLoading = false,
+}: TwoFASetupProps) {
   const [step, setStep] = useState<"start" | "scan" | "verify">("start");
   const [setupData, setSetupData] = useState<SetupData | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
@@ -53,7 +56,7 @@ export function TwoFASetup({ onSetupComplete, isLoading = false }: TwoFASetupPro
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to setup 2FA"
+        error instanceof Error ? error.message : "Failed to setup 2FA",
       );
     } finally {
       setLoading(false);
@@ -107,7 +110,7 @@ export function TwoFASetup({ onSetupComplete, isLoading = false }: TwoFASetupPro
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Verification failed"
+        error instanceof Error ? error.message : "Verification failed",
       );
     } finally {
       setLoading(false);
@@ -125,7 +128,9 @@ export function TwoFASetup({ onSetupComplete, isLoading = false }: TwoFASetupPro
                 Enable Two-Factor Authentication
               </h3>
               <p className="text-gray-600 mb-4">
-                Protect your account with an extra layer of security. You'll need to enter a code from your authenticator app when you log in.
+                Protect your account with an extra layer of security. You'll
+                need to enter a code from your authenticator app when you log
+                in.
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <h4 className="font-semibold text-sm text-blue-900 mb-2">
@@ -218,7 +223,8 @@ export function TwoFASetup({ onSetupComplete, isLoading = false }: TwoFASetupPro
           <h3 className="text-lg font-semibold mb-4">Verify Setup</h3>
 
           <p className="text-gray-600 mb-4">
-            Enter the 6-digit code shown in your authenticator app to confirm 2FA is working correctly.
+            Enter the 6-digit code shown in your authenticator app to confirm
+            2FA is working correctly.
           </p>
 
           <div className="space-y-4">
@@ -264,7 +270,8 @@ export function TwoFASetup({ onSetupComplete, isLoading = false }: TwoFASetupPro
             <p className="text-sm text-amber-900 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>
-                Save your backup codes somewhere safe. You'll need them if you lose access to your authenticator app.
+                Save your backup codes somewhere safe. You'll need them if you
+                lose access to your authenticator app.
               </span>
             </p>
           </div>
@@ -277,9 +284,13 @@ export function TwoFASetup({ onSetupComplete, isLoading = false }: TwoFASetupPro
           <div className="flex items-start gap-3">
             <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
             <div>
-              <h4 className="font-semibold text-green-900">2FA Setup Complete!</h4>
+              <h4 className="font-semibold text-green-900">
+                2FA Setup Complete!
+              </h4>
               <p className="text-sm text-green-800 mt-1">
-                Your account is now protected with two-factor authentication. You'll be asked to enter a code from your authenticator app when you log in.
+                Your account is now protected with two-factor authentication.
+                You'll be asked to enter a code from your authenticator app when
+                you log in.
               </p>
             </div>
           </div>

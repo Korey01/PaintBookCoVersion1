@@ -72,6 +72,7 @@ kycRejectionReason     String?
 - Toast notifications for success/failure
 
 **Key Features:**
+
 - Date picker for date of birth
 - Business type selector (sole trader, limited company, partnership, other)
 - Optional insurance information with expiry date
@@ -87,8 +88,9 @@ kycRejectionReason     String?
 - Document requirements checklist
 
 **Document Types:**
+
 1. **ID Document** (Passport or Driving License) - Requires expiry
-2. **Insurance Certificate** (Public Liability) - Requires expiry  
+2. **Insurance Certificate** (Public Liability) - Requires expiry
 3. **Address Proof** (Utility bill, council tax) - No expiry required
 
 #### KYCStatus Component (`client/components/painter/KYCStatus.tsx`)
@@ -110,6 +112,7 @@ kycRejectionReason     String?
 - Handles token-based authentication
 
 **Routes:**
+
 - `/painter-onboarding` - Main onboarding page
 
 ### Type Definitions
@@ -118,36 +121,36 @@ kycRejectionReason     String?
 
 ```typescript
 interface KYCVerificationRequest {
-  firstName: string
-  lastName: string
-  dateOfBirth: string
-  phone?: string
-  businessName?: string
-  businessRegistration?: string
-  businessType?: string
-  address: string
-  city?: string
-  postcode: string
-  businessPhone?: string
-  hasInsurance?: boolean
-  insuranceProvider?: string
-  insurancePolicyNumber?: string
-  insuranceExpiry?: string
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  phone?: string;
+  businessName?: string;
+  businessRegistration?: string;
+  businessType?: string;
+  address: string;
+  city?: string;
+  postcode: string;
+  businessPhone?: string;
+  hasInsurance?: boolean;
+  insuranceProvider?: string;
+  insurancePolicyNumber?: string;
+  insuranceExpiry?: string;
 }
 
 interface KYCStatusResponse {
-  verificationStatus: "pending" | "under_review" | "approved" | "denied"
-  idDocuments: number
-  insuranceDocs: number
-  hasInsurance: boolean
-  kycCompletedAt?: string
-  kycRejectionReason?: string
+  verificationStatus: "pending" | "under_review" | "approved" | "denied";
+  idDocuments: number;
+  insuranceDocs: number;
+  hasInsurance: boolean;
+  kycCompletedAt?: string;
+  kycRejectionReason?: string;
 }
 
 interface DocumentListResponse {
-  idDocuments: Document[]
-  insuranceDocs: Document[]
-  addressProofDocuments: Document[]
+  idDocuments: Document[];
+  insuranceDocs: Document[];
+  addressProofDocuments: Document[];
 }
 ```
 
@@ -190,6 +193,7 @@ pnpm exec prisma db push --accept-data-loss
 ### Manual Testing Steps
 
 1. **Register as Painter**
+
    ```bash
    curl -X POST http://localhost:3000/api/auth/register \
      -H "Content-Type: application/json" \
@@ -205,6 +209,7 @@ pnpm exec prisma db push --accept-data-loss
    - Should fetch current KYC status
 
 3. **Submit KYC Information**
+
    ```bash
    curl -X POST http://localhost:3000/api/kyc/submit \
      -H "Content-Type: application/json" \
@@ -219,6 +224,7 @@ pnpm exec prisma db push --accept-data-loss
    ```
 
 4. **Upload Documents**
+
    ```bash
    curl -X POST http://localhost:3000/api/kyc/documents/upload \
      -H "Content-Type: application/json" \
@@ -239,6 +245,7 @@ pnpm exec prisma db push --accept-data-loss
 ## Verification Workflow (Admin)
 
 ### Approve KYC
+
 ```bash
 curl -X POST http://localhost:3000/api/kyc/verify \
   -H "Content-Type: application/json" \
@@ -250,6 +257,7 @@ curl -X POST http://localhost:3000/api/kyc/verify \
 ```
 
 ### Reject KYC
+
 ```bash
 curl -X POST http://localhost:3000/api/kyc/verify \
   -H "Content-Type: application/json" \
@@ -329,18 +337,21 @@ Frontend:
 ## Troubleshooting
 
 ### Documents Not Uploading
+
 - Check file size (max 5MB)
 - Ensure token is valid
 - Check network console for error messages
 - Verify documentType is one of: id_document, insurance, address_proof
 
 ### KYC Status Not Updating
+
 - Clear browser cache
 - Check network requests to `/api/kyc/status`
 - Verify database has painter profile
 - Check for errors in server logs
 
 ### Form Validation Errors
+
 - Ensure all required fields are filled
 - Date format should be YYYY-MM-DD
 - Postcode format requirements may vary by region

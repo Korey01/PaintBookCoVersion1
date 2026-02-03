@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth";
 import jobsRoutes from "./routes/jobs";
 import quotesRoutes from "./routes/quotes";
 import paymentsRoutes from "./routes/payments";
+import kycRoutes from "./routes/kyc";
 
 export function createServer() {
   const app = express();

@@ -94,6 +94,13 @@ const App = () => (
             <Route path="/auth-new" element={<AuthPage />} />
             <Route path="/painter-dashboard" element={<PainterDashboard />} />
             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+
+            {/* B2B Commercial Routes */}
+            <Route path="/b2b/find-painter" element={<B2BFindPainter />} />
+            <Route path="/b2b/consultation" element={<B2BConsultation />} />
+            <Route path="/b2b/confirmation" element={<B2BConfirmation />} />
+            <Route path="/b2b/consultation-confirmation" element={<B2BConsultationConfirmation />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

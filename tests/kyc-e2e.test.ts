@@ -271,6 +271,9 @@ async function runTests() {
     );
 
     const data = await res.json();
+    if (!data.success || data.data.twoFAEnabled !== true) {
+      console.log("Verify 2FA Response:", JSON.stringify(data, null, 2));
+    }
     return data.success && data.data.twoFAEnabled === true;
   });
 

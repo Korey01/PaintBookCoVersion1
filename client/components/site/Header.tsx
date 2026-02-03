@@ -75,18 +75,28 @@ export default function Header() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[300px] p-4">
           <nav className="grid gap-3 text-sm">
-            <Link to="/find-painter" onClick={()=>setMobileOpen(false)}>Find A Painter/Decorator</Link>
-            <Link to="/vestimator" onClick={()=>setMobileOpen(false)}>Vestimator</Link>
-                        <Link to="/trust-safety" onClick={()=>setMobileOpen(false)}>Trust & Safety</Link>
-            {loggedIn && <Link to={`/dashboard${search||""}`} onClick={()=>setMobileOpen(false)}>Dashboard</Link>}
+            <Link to="/vestimator" onClick={()=>setMobileOpen(false)} className="font-medium">Estimate</Link>
+            <Link to="/about" onClick={()=>setMobileOpen(false)} className="font-medium">About</Link>
+            <Link to="/trust-safety" onClick={()=>setMobileOpen(false)} className="font-medium">Trust & Safety</Link>
+            {loggedIn && <Link to={`/dashboard${search||""}`} onClick={()=>setMobileOpen(false)} className="font-medium">Dashboard</Link>}
+
+            <div className="border-t border-border my-4 pt-4 space-y-3">
+              <Button asChild className="w-full bg-black text-white hover:bg-black/90 rounded-full">
+                <Link to="/post-job" onClick={()=>setMobileOpen(false)}>Post a Job</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/join-painter" onClick={()=>setMobileOpen(false)}>Join as Painter</Link>
+              </Button>
+            </div>
+
             {loggedIn ? (
-              <Button variant="outline" onClick={()=>{ setMobileOpen(false); handleLogout(); }} className="mt-2">
+              <Button variant="outline" onClick={()=>{ setMobileOpen(false); handleLogout(); }} className="w-full mt-2">
                 <LogOut className="mr-2 h-4 w-4"/> Log out
               </Button>
             ) : (
-              <>
-                <Button asChild className="mt-2 bg-black text-white hover:bg-black/90"><Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in</Link></Button>
-              </>
+              <Button asChild variant="outline" className="w-full mt-2">
+                <Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in</Link>
+              </Button>
             )}
           </nav>
         </SheetContent>

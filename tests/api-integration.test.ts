@@ -189,7 +189,7 @@ async function runTests() {
       "/quotes",
       {
         jobId,
-        amount: 450,
+        totalPrice: 450,
         description:
           "Professional interior painting service. Includes prep, primer, and 2 coats.",
         timelineWeeks: 2,
@@ -198,11 +198,11 @@ async function runTests() {
     );
 
     const data = await res.json();
-    if (data.quote && data.quote.id) {
-      quoteId = data.quote.id;
+    if (data.data && data.data.id) {
+      quoteId = data.data.id;
       return true;
     }
-    console.log("Response:", data);
+    console.log("Submit Quote Response:", data);
     return false;
   });
 
@@ -210,7 +210,7 @@ async function runTests() {
   await test("Get Quote Details", async () => {
     const res = await request("GET", `/quotes/${quoteId}`, undefined, customerToken);
     const data = await res.json();
-    return data.quote && data.quote.amount === 450;
+    return data.data && data.data.totalPrice === 450;
   });
 
   // Test 11: List Quotes for Job
@@ -218,9 +218,9 @@ async function runTests() {
     const res = await request("GET", `/quotes/job/${jobId}`, undefined, customerToken);
     const data = await res.json();
     return (
-      data.quotes &&
-      data.quotes.length > 0 &&
-      data.quotes.some((q: any) => q.id === quoteId)
+      data.data &&
+      data.data.length > 0 &&
+      data.data.some((q: any) => q.id === quoteId)
     );
   });
 
@@ -234,7 +234,7 @@ async function runTests() {
     );
 
     const data = await res.json();
-    return data.quote && data.quote.decision === "accepted";
+    return data.data && data.data.decision === "accepted";
   });
 
   // Test 13: Initiate Payment

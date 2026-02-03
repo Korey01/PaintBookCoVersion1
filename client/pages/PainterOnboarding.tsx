@@ -142,9 +142,9 @@ export function PainterOnboarding() {
     documentUrl: string,
     expiry?: string
   ) => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("paintbook:token");
     if (!token) {
-      navigate("/login");
+      navigate("/join-painter");
       return;
     }
 

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowRight, MapPin, Briefcase, Calendar, Building2 } from 'lucide-react';
+import { ArrowRight, MapPin, Briefcase, Calendar, Building2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function B2BFindPainter() {

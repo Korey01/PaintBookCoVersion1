@@ -6,6 +6,19 @@ import type { ApiResponse } from "@shared/types";
 const router = Router();
 const prisma = getPrismaClient();
 
+// Valid notification types from Prisma schema
+const VALID_NOTIFICATION_TYPES = [
+  "job_posted",
+  "quote_requested",
+  "quote_received",
+  "quote_accepted",
+  "payment_received",
+  "job_complete",
+  "job_approved",
+  "dispute_raised",
+  "message_received",
+];
+
 /**
  * GET /api/notifications
  * Get all notifications for authenticated user
@@ -23,7 +36,8 @@ router.get(
         userId: req.userId,
       };
 
-      if (type) {
+      // Only filter by type if it's a valid notification type
+      if (type && VALID_NOTIFICATION_TYPES.includes(String(type))) {
         where.type = String(type);
       }
 

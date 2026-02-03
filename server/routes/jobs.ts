@@ -78,7 +78,7 @@ router.post("/", authMiddleware, requireCustomer, async (req: Request, res: Resp
           data: {
             userId: painter.userId,
             jobId: job.id,
-            type: "job_available",
+            type: "job_posted", // Use job_posted enum value
             title: "New Job Available",
             body: `A new ${job.jobType} painting job is available: "${job.title}"`,
           },

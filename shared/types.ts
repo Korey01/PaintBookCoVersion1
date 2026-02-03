@@ -399,3 +399,57 @@ export interface ApiError {
   statusCode?: number;
   details?: Record<string, any>;
 }
+
+// ============================================================================
+// KYC & VERIFICATION TYPES
+// ============================================================================
+
+export interface KYCVerificationRequest {
+  // Personal info
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  phone?: string;
+
+  // Business info
+  businessName?: string;
+  businessRegistration?: string;
+  businessType?: string;
+  address: string;
+  city?: string;
+  postcode: string;
+  businessPhone?: string;
+
+  // Insurance
+  hasInsurance?: boolean;
+  insuranceProvider?: string;
+  insurancePolicyNumber?: string;
+  insuranceExpiry?: string;
+}
+
+export interface DocumentUploadRequest {
+  documentType: "id_document" | "insurance" | "address_proof";
+  documentUrl: string;
+  documentExpiry?: string;
+}
+
+export interface KYCStatusResponse {
+  verificationStatus: "pending" | "under_review" | "approved" | "denied";
+  idDocuments: number;
+  insuranceDocs: number;
+  hasInsurance: boolean;
+  kycCompletedAt?: string;
+  kycRejectionReason?: string;
+}
+
+export interface DocumentListResponse {
+  idDocuments: Document[];
+  insuranceDocs: Document[];
+  addressProofDocuments: Document[];
+}
+
+export interface Document {
+  url: string;
+  uploadedAt: string;
+  expiresAt?: string;
+}

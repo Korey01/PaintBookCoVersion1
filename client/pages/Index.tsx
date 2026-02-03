@@ -70,12 +70,14 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold">Top rated near you</h2>
-        <p className="mt-1 text-muted-foreground">Compare profiles at a glance and contact instantly.</p>
-        <div className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
+      <section ref={sectionRef2} className="container mx-auto px-4 scroll-animate">
+        <div className="space-y-3 mb-8">
+          <h2>Top rated near you</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl">Compare profiles at a glance and contact instantly.</p>
+        </div>
+        <div className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
           {[...painters].sort((a,b)=> b.rating - a.rating).slice(0,3).map((p) => (
-            <div key={p.id} className="min-w-[80%] snap-center sm:min-w-0">
+            <div key={p.id} className="min-w-[80%] snap-center sm:min-w-0 scroll-animate">
               <PainterCard painter={p} />
             </div>
           ))}

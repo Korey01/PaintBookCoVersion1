@@ -195,10 +195,8 @@ async function runTests() {
       "/quotes",
       {
         jobId,
-        totalPrice: 450,
-        description:
-          "Professional interior painting service. Includes prep, primer, and 2 coats.",
-        timelineWeeks: 2,
+        jobPrice: 450,
+        consultationFee: 0,
       },
       painterToken
     );

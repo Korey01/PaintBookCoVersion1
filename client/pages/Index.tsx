@@ -122,6 +122,107 @@ export default function Index() {
         </div>
       </section>
 
+      {/* B2B Commercial Section */}
+      <section className="relative py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white via-slate-50 to-white border-t border-border/50">
+        <div className="container mx-auto px-4 animate-fade-in">
+          <div className="space-y-8 md:space-y-12 text-center max-w-4xl mx-auto">
+            {/* Section Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-block px-4 py-2 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-semibold text-sm"
+            >
+              For Bulk & Multi-Project Work
+            </motion.div>
+
+            {/* Main Heading */}
+            <div className="space-y-4">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-foreground">
+                Commercial painting projects, handled end-to-end.
+              </h2>
+
+              {/* Supporting Text */}
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                From multi-site refurbishments to ongoing maintenance, PaintBookCo connects you with verified painting teams and manages scope, payments, and delivery — milestone by milestone.
+              </p>
+            </div>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <Button
+                onClick={() => navigate('/b2b/find-painter')}
+                size="lg"
+                className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+              >
+                Find a Commercial Painter
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button
+                onClick={() => navigate('/b2b/consultation')}
+                size="lg"
+                variant="outline"
+                className="rounded-full px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold w-full sm:w-auto"
+              >
+                Book a Consultation
+              </Button>
+            </motion.div>
+
+            {/* Supporting Text */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="pt-8 space-y-4"
+            >
+              <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                Tell us where you're working, what you need done, and when.
+              </h3>
+              <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                We'll handle vetting, pricing alignment, escrow protection, and project coordination — so you stay in control without the admin.
+              </p>
+            </motion.div>
+
+            {/* B2B Features */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 mt-8"
+            >
+              <div className="space-y-4 p-6 rounded-2xl border border-border/50 bg-card/50 backdrop-blur hover:bg-card hover:border-border transition-all duration-300">
+                <div className="flex justify-center mb-4">
+                  <Sparkles className="h-8 w-8 text-secondary flex-shrink-0" />
+                </div>
+                <h4 className="font-bold text-lg">Milestone-Based Management</h4>
+                <p className="text-sm text-muted-foreground">Track progress and trigger payments at each project milestone with full transparency.</p>
+              </div>
+
+              <div className="space-y-4 p-6 rounded-2xl border border-border/50 bg-card/50 backdrop-blur hover:bg-card hover:border-border transition-all duration-300">
+                <div className="flex justify-center mb-4">
+                  <ShieldCheck className="h-8 w-8 text-secondary flex-shrink-0" />
+                </div>
+                <h4 className="font-bold text-lg">Escrow Protection</h4>
+                <p className="text-sm text-muted-foreground">Protect both your business and your painters with secure, regulated escrow settlement.</p>
+              </div>
+
+              <div className="space-y-4 p-6 rounded-2xl border border-border/50 bg-card/50 backdrop-blur hover:bg-card hover:border-border transition-all duration-300">
+                <div className="flex justify-center mb-4">
+                  <MapPin className="h-8 w-8 text-secondary flex-shrink-0" />
+                </div>
+                <h4 className="font-bold text-lg">Multi-Site Coordination</h4>
+                <p className="text-sm text-muted-foreground">Manage multiple projects across multiple locations with one point of contact.</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       <section ref={sectionRef2} className="container mx-auto px-4 scroll-animate">
         <div className="space-y-3 mb-8">
           <h2>Top rated near you</h2>

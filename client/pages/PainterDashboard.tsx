@@ -337,9 +337,9 @@ export default function PainterDashboard() {
             </Card>
           ) : (
             myQuotes.map((quote) => (
-              <Card key={quote.id}>
+              <Card key={quote.id} className="hover-lift">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <CardTitle>Quote #{quote.id.slice(0, 8)}</CardTitle>
                     <Badge className={getStatusColor(quote.status)}>
                       {quote.status}
@@ -347,23 +347,23 @@ export default function PainterDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <p className="text-sm text-gray-500">Quote Price</p>
-                        <p className="text-2xl font-bold">£{quote.jobPrice}</p>
+                        <p className="text-sm font-medium text-muted-foreground">Quote Price</p>
+                        <p className="text-2xl sm:text-3xl font-bold mt-2">£{quote.jobPrice}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Total Price</p>
-                        <p className="text-2xl font-bold">£{quote.totalPrice}</p>
+                        <p className="text-sm font-medium text-muted-foreground">Total Price</p>
+                        <p className="text-2xl sm:text-3xl font-bold mt-2">£{quote.totalPrice}</p>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-muted-foreground pt-2 border-t border-border/50">
                       Submitted on{' '}
                       {new Date(quote.createdAt).toLocaleDateString()}
                     </div>
                     {quote.status === 'accepted' && (
-                      <div className="rounded-lg bg-green-50 p-3 border border-green-200">
+                      <div className="rounded-lg bg-green-50 p-4 border border-green-200">
                         <p className="text-sm text-green-900 font-semibold">
                           ✓ Quote accepted! Ready to start work
                         </p>

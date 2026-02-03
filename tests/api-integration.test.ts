@@ -121,9 +121,9 @@ async function runTests() {
       title: "Living Room Paint Job",
       description: "Paint my living room walls",
       jobType: "interior",
-      location: "London, UK",
       postcode: "SW1A 1AA",
-      budget: 500,
+      budgetMin: 400,
+      budgetMax: 600,
       rooms: [
         {
           id: "room_1",
@@ -145,11 +145,11 @@ async function runTests() {
     }, customerToken);
 
     const data = await res.json();
-    if (data.job && data.job.id) {
-      jobId = data.job.id;
+    if (data.data && data.data.id) {
+      jobId = data.data.id;
       return true;
     }
-    console.log("Response:", data);
+    console.log("Create Job Response:", data);
     return false;
   });
 

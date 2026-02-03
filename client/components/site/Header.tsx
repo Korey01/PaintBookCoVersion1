@@ -59,16 +59,11 @@ export default function Header() {
           <Button asChild className="hidden sm:inline-flex bg-black text-white hover:bg-black/90 rounded-full">
             <Link to="/post-job"><span>Post a Job</span></Link>
           </Button>
-          {!loggedIn && (
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in</Link>
-            </Button>
-          )}
-          {loggedIn ? (
+          {loggedIn && (
             <Button className="shadow-md" variant="outline" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4"/> Log out
             </Button>
-          ) : null}
+          )}
         </div>
       </div>
 

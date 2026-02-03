@@ -90,7 +90,7 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
       await prisma.painterProfile.create({
         data: {
           userId: user.id,
-          postcode: "", // Will be filled in onboarding
+          postcode: postcode || "", // Can be provided at registration or during onboarding
         },
       });
     }

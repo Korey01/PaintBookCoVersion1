@@ -9,6 +9,7 @@ import paymentsRoutes from "./routes/payments";
 import kycRoutes from "./routes/kyc";
 import twoFARoutes from "./routes/2fa";
 import notificationsRoutes from "./routes/notifications";
+import adminRoutes from "./routes/admin";
 
 export function createServer() {
   const app = express();

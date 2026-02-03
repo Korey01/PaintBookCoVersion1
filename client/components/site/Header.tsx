@@ -84,13 +84,9 @@ export default function Header() {
               </Button>
             </div>
 
-            {loggedIn ? (
+            {loggedIn && (
               <Button variant="outline" onClick={()=>{ setMobileOpen(false); handleLogout(); }} className="w-full mt-2">
                 <LogOut className="mr-2 h-4 w-4"/> Log out
-              </Button>
-            ) : (
-              <Button asChild variant="outline" className="w-full mt-2">
-                <Link to="/auth" onClick={()=>setMobileOpen(false)}><LogIn className="mr-2 h-4 w-4"/> Log in</Link>
               </Button>
             )}
           </nav>

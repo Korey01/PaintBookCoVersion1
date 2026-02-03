@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { getPrismaClient } from "@server/lib/db";
 import { authMiddleware, requireCustomer } from "@server/middleware/auth";
+import { transpactService } from "@server/services/transpact";
 import type { InitiatePaymentRequest, PaymentResponse, EscrowTransactionResponse, ApiResponse } from "@shared/types";
 
 const router = Router();

@@ -151,7 +151,7 @@ router.post(
       await prisma.notification.create({
         data: {
           userId: req.userId!,
-          type: "2fa_enabled",
+          type: "message_received", // Use existing type for 2FA notifications
           title: "2FA Enabled",
           body: "Two-factor authentication has been successfully enabled on your account.",
         },

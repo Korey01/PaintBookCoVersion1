@@ -8,6 +8,7 @@ import quotesRoutes from "./routes/quotes";
 import paymentsRoutes from "./routes/payments";
 import kycRoutes from "./routes/kyc";
 import twoFARoutes from "./routes/2fa";
+import notificationsRoutes from "./routes/notifications";
 
 export function createServer() {
   const app = express();

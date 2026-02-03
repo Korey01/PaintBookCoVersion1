@@ -43,6 +43,8 @@ import Estimates from "./pages/Estimates";
 import Admin from "./pages/Admin";
 import { PainterOnboarding } from "./pages/PainterOnboarding";
 import AdminDashboard from "./pages/AdminDashboard";
+import AuthPage from "./pages/AuthPage";
+import PainterDashboard from "./pages/PainterDashboard";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

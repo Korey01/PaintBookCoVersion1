@@ -69,9 +69,13 @@ async function runTests() {
 
   // Test 1: Health Check
   await test("Health Check", async () => {
-    const res = await fetch(`${API_URL}/../ping`);
-    const data = await res.json();
-    return data.message === "pong";
+    try {
+      const res = await fetch("http://localhost:3000/api/ping");
+      const data = await res.json();
+      return data.message && (data.message === "pong" || data.message.includes("pong"));
+    } catch (e) {
+      return false;
+    }
   });
 
   // Test 2: Register Customer

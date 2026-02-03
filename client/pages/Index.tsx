@@ -101,9 +101,12 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4">
-        <h3 className="text-2xl font-bold">What customers say</h3>
-        <div className="mt-6 grid gap-6 md:grid-cols-3">
+      <section ref={sectionRef4} className="container mx-auto px-4 scroll-animate">
+        <div className="space-y-3 mb-8">
+          <h3>What customers say</h3>
+          <p className="text-lg text-muted-foreground">Trusted by hundreds of homeowners and businesses</p>
+        </div>
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
           {[{
             quote: "Flawless finish and super professional. The escrow deposit made payment stress-free.", name: "Ella R.", location: "London"
           },{
@@ -111,11 +114,11 @@ export default function Index() {
           },{
             quote: "Felt safe with ID verified and insured badges. Great experience.", name: "Priya S.", location: "Bristol"
           }].map((t, i) => (
-            <Card key={i} className="border-muted/60">
-              <CardContent className="p-6">
+            <Card key={i} className="border-muted/60 scroll-animate">
+              <CardContent className="p-6 sm:p-8">
                 <Quote className="h-6 w-6 text-primary"/>
-                <p className="mt-3 text-sm">{t.quote}</p>
-                <p className="mt-4 text-xs text-muted-foreground">{t.name} · {t.location}</p>
+                <p className="mt-4 text-base leading-relaxed">{t.quote}</p>
+                <p className="mt-6 text-sm text-muted-foreground font-medium">{t.name} · {t.location}</p>
               </CardContent>
             </Card>
           ))}

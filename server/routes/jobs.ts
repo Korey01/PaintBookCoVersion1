@@ -325,6 +325,138 @@ router.put("/:jobId", authMiddleware, requireCustomer, async (req: Request, res:
 });
 
 /**
+ * POST /api/jobs/:id/cancel
+ * Cancel job with full refund logic
+ * Pre-escrow: Customer gets 100%
+ * Post-escrow: Customer 75%, Painter 12%, PaintBookCo 13%
+ */
+router.post("/:jobId/cancel", authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { jobId } = req.params;
+    const { reason } = req.body;
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        escrowTransactions: true,
+        painter: true,
+      },
+    });
+
+    if (!job) {
+      res.status(404).json({
+        success: false,
+        error: "Job not found",
+      });
+      return;
+    }
+
+    // Authorization: customer or painter can cancel
+    if (job.customerId !== req.userId && job.painterId !== req.userId) {
+      res.status(403).json({
+        success: false,
+        error: "Not authorized to cancel this job",
+      });
+      return;
+    }
+
+    // Only allow cancellation for certain statuses
+    if (!["open", "quote_received", "quote_accepted", "escrow_funded", "in_progress"].includes(job.status)) {
+      res.status(400).json({
+        success: false,
+        error: "This job cannot be cancelled in its current status",
+      });
+      return;
+    }
+
+    const escrowTransaction = job.escrowTransactions?.[0];
+    let refundData: any = {};
+
+    // Handle refund logic
+    if (escrowTransaction && escrowTransaction.status === "funded") {
+      // POST-ESCROW CANCELLATION: Customer 75%, Painter 12%, PaintBookCo 13%
+      const totalAmount = escrowTransaction.totalAmount;
+      const customerRefund = Math.round(totalAmount * 0.75 * 100) / 100;
+      const painterCompensation = Math.round(totalAmount * 0.12 * 100) / 100;
+      const paintbookcoKeeps = Math.round(totalAmount * 0.13 * 100) / 100;
+
+      refundData = {
+        customerRefundAmount: customerRefund,
+        painterCompensationAmount: painterCompensation,
+        cancellationType: "post_escrow",
+      };
+
+      // Update escrow transaction
+      await prisma.escrowTransaction.update({
+        where: { id: escrowTransaction.id },
+        data: {
+          cancelled: true,
+          cancellationType: "post_escrow",
+          cancellationReason: reason || "Job cancelled",
+          customerPaidAmount: customerRefund,
+          painterPaidAmount: painterCompensation,
+        },
+      });
+    } else if (job.escrowStatus === "not_initiated" || job.escrowStatus === "pending") {
+      // PRE-ESCROW CANCELLATION: Customer gets 100%
+      refundData = {
+        customerRefundAmount: job.escrowAmount || 0,
+        painterCompensationAmount: 0,
+        cancellationType: "pre_escrow",
+      };
+
+      if (escrowTransaction) {
+        await prisma.escrowTransaction.update({
+          where: { id: escrowTransaction.id },
+          data: {
+            cancelled: true,
+            cancellationType: "pre_escrow",
+            cancellationReason: reason || "Job cancelled",
+            customerPaidAmount: job.escrowAmount || 0,
+            painterPaidAmount: 0,
+          },
+        });
+      }
+    }
+
+    // Update job status
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: { status: "cancelled" },
+    });
+
+    // Notify other party
+    const otherUserId = job.customerId === req.userId ? job.painterId : job.customerId;
+    if (otherUserId) {
+      await prisma.notification.create({
+        data: {
+          userId: otherUserId,
+          jobId,
+          type: "job_complete",
+          title: "Job Cancelled",
+          body: `The job "${job.title}" has been cancelled. ${reason ? `Reason: ${reason}` : ""}`,
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: updatedJob.id,
+        status: "cancelled",
+        ...refundData,
+      },
+    });
+  } catch (error) {
+    console.error("Cancel job error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+    });
+  }
+});
+
+/**
  * DELETE /api/jobs/:id
  * Cancel/delete job (customer only, before escrow funded)
  */

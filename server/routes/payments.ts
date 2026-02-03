@@ -113,35 +113,71 @@ router.post("/initiate", authMiddleware, requireCustomer, async (req: Request, r
       });
     }
 
-    // TODO: Call Transpact API to initiate escrow
-    // For now, we'll create a mock response
-    const transpactTransactionId = `TRANS_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-    // Update escrow transaction with Transpact ID
-    await prisma.escrowTransaction.update({
-      where: { id: escrowTransaction.id },
-      data: {
-        transpactTransactionId,
-        transpactStatus: "pending",
-      },
+    // Get customer and painter details
+    const customer = await prisma.user.findUnique({
+      where: { id: job.customerId },
     });
 
-    const response: ApiResponse<any> = {
-      success: true,
-      data: {
-        escrowTransactionId: escrowTransaction.id,
-        transpactTransactionId,
-        amount,
-        commission,
-        escrowCost,
-        painterAmount,
-        commissionRate,
-        // In production, would return Transpact payment URL
-        paymentUrl: `https://escrow.transpact.com/pay/${transpactTransactionId}`,
-      },
-    };
+    const painterUser = await prisma.user.findUnique({
+      where: { id: (job.painter?.userId || "") as string },
+    });
 
-    res.status(201).json(response);
+    if (!customer || !painterUser) {
+      res.status(400).json({
+        success: false,
+        error: "Customer or painter information not found",
+      });
+      return;
+    }
+
+    // Create Transpact transaction via Transpact service
+    try {
+      const transpactResult = await transpactService.createTransaction({
+        transactionId: escrowTransaction.id,
+        amount,
+        currency: "GBP",
+        description: `PaintBookCo: ${job.title}`,
+        buyerName: customer.email.split("@")[0],
+        buyerEmail: customer.email,
+        sellerName: painterUser.email.split("@")[0],
+        sellerEmail: painterUser.email,
+        webhookUrl: `${process.env.WEBHOOK_URL || "http://localhost:3000"}/api/payments/webhook/transpact`,
+        successUrl: `${process.env.APP_URL || "http://localhost:8080"}/payment/success`,
+        failureUrl: `${process.env.APP_URL || "http://localhost:8080"}/payment/failed`,
+      });
+
+      // Update escrow transaction with Transpact ID and payment URL
+      await prisma.escrowTransaction.update({
+        where: { id: escrowTransaction.id },
+        data: {
+          transpactTransactionId: transpactResult.transactionId,
+          transpactStatus: "pending",
+        },
+      });
+
+      const response: ApiResponse<any> = {
+        success: true,
+        data: {
+          escrowTransactionId: escrowTransaction.id,
+          transpactTransactionId: transpactResult.transactionId,
+          amount,
+          commission,
+          escrowCost,
+          painterAmount,
+          commissionRate,
+          paymentUrl: transpactResult.paymentUrl,
+          breakdown: transpactService.constructor.calculatePaymentBreakdown(amount),
+        },
+      };
+
+      res.status(201).json(response);
+    } catch (transpactError) {
+      console.error("Transpact API error:", transpactError);
+      res.status(500).json({
+        success: false,
+        error: "Failed to initiate escrow payment with Transpact",
+      });
+    }
   } catch (error) {
     console.error("Initiate payment error:", error);
     res.status(500).json({

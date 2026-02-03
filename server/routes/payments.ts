@@ -173,12 +173,21 @@ router.post("/initiate", authMiddleware, requireCustomer, async (req: Request, r
           escrowTransactionId: escrowTransaction.id,
           transpactTransactionId: transpactResult.transactionId,
           amount,
+          jobPrice,
+          consultationFee,
           commission,
           escrowCost,
           painterAmount,
           commissionRate,
           paymentUrl: transpactResult.paymentUrl,
-          breakdown: transpactService.constructor.calculatePaymentBreakdown(amount),
+          breakdown: {
+            jobPrice,
+            consultationFee,
+            totalAmount: amount,
+            painterReceives: painterAmount,
+            paintbookcoEarns: commission,
+            escrowServiceFee: escrowCost,
+          },
         },
       };
 

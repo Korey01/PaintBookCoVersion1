@@ -224,14 +224,11 @@ async function runTests() {
   await test("List Quotes for Job", async () => {
     const res = await request("GET", `/quotes/job/${jobId}`, undefined, customerToken);
     const data = await res.json();
-    if (!(data.data && Array.isArray(data.data))) {
-      console.log("List Quotes Response:", JSON.stringify(data, null, 2));
-    }
     return (
       data.data &&
-      Array.isArray(data.data) &&
-      data.data.length > 0 &&
-      data.data.some((q: any) => q.id === quoteId)
+      data.data.quotes &&
+      data.data.quotes.length > 0 &&
+      data.data.quotes.some((q: any) => q.id === quoteId)
     );
   });
 
@@ -240,7 +237,7 @@ async function runTests() {
     const res = await request(
       "PUT",
       `/quotes/${quoteId}`,
-      { decision: "accepted" },
+      { status: "accepted" },
       customerToken
     );
 
@@ -248,7 +245,7 @@ async function runTests() {
     if (!data.data) {
       console.log("Accept Quote Response:", JSON.stringify(data, null, 2));
     }
-    return data.data && data.data.decision === "accepted";
+    return data.data && data.data.status === "accepted";
   });
 
   // Test 13: Initiate Payment

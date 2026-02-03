@@ -435,12 +435,20 @@ export default function PostJob() {
       />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-background/65 backdrop-blur-[2px]" />
       <div className="container mx-auto px-4 py-10">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Post a Job</h1>
-          <p className="text-sm text-muted-foreground">
-            Start your job in a few steps. We'll notify nearby verified
-            painters.
-          </p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Post a Job</h1>
+            <p className="text-sm text-muted-foreground">
+              Start your job in a few steps. We'll notify nearby verified
+              painters.
+            </p>
+          </div>
+          <div className="text-sm text-muted-foreground whitespace-nowrap">
+            Already have an account?{" "}
+            <a href="/auth?type=login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+              Sign in
+            </a>
+          </div>
         </div>
 
         <div className="mb-6 flex gap-2 text-sm">

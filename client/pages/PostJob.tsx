@@ -369,12 +369,18 @@ export default function PostJob() {
 
         // Store token for future use
         localStorage.setItem("paintbook:token", token);
-        localStorage.setItem("paintbook:user", JSON.stringify(registerData.user));
+        localStorage.setItem(
+          "paintbook:user",
+          JSON.stringify(registerData.user),
+        );
       }
 
       // Prepare estimate payload
       const estimatePayload = attachedEstimate
-        ? { ...attachedEstimate, brand: attachedEstimate.brand ?? selectedBrand }
+        ? {
+            ...attachedEstimate,
+            brand: attachedEstimate.brand ?? selectedBrand,
+          }
         : { ...estimatorInput, ...estimate, brand: selectedBrand };
 
       // Create job via API
@@ -445,7 +451,10 @@ export default function PostJob() {
           </div>
           <div className="text-sm text-muted-foreground whitespace-nowrap">
             Already have an account?{" "}
-            <a href="/auth?type=login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+            <a
+              href="/auth?type=login"
+              className="font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
               Sign in
             </a>
           </div>

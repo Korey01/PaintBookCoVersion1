@@ -16,7 +16,9 @@ export interface ReputationMetrics {
  * Calculate reliability score based on painter's ReliabilityEvents
  * Score ranges from 0 to 100
  */
-export async function calculateReliabilityScore(painterId: string): Promise<number> {
+export async function calculateReliabilityScore(
+  painterId: string,
+): Promise<number> {
   const painter = await prisma.painterProfile.findUnique({
     where: { id: painterId },
     include: {
@@ -60,7 +62,7 @@ export async function recordReliabilityEvent(
   painterId: string,
   eventType: string,
   value: number,
-  reason?: string
+  reason?: string,
 ): Promise<void> {
   await prisma.reliabilityEvent.create({
     data: {
@@ -80,7 +82,8 @@ export async function recordReliabilityEvent(
   if (painter) {
     const totalJobs = painter.totalJobs || 0;
     const cancelledJobs = painter.totalJobs || 0; // This will be calculated properly
-    const newCancellationRate = totalJobs > 0 ? (cancelledJobs / totalJobs) * 100 : 0;
+    const newCancellationRate =
+      totalJobs > 0 ? (cancelledJobs / totalJobs) * 100 : 0;
 
     await prisma.painterProfile.update({
       where: { id: painterId },
@@ -95,7 +98,9 @@ export async function recordReliabilityEvent(
 /**
  * Get comprehensive reputation metrics for a painter
  */
-export async function getPainterReputation(painterId: string): Promise<ReputationMetrics> {
+export async function getPainterReputation(
+  painterId: string,
+): Promise<ReputationMetrics> {
   const painter = await prisma.painterProfile.findUnique({
     where: { id: painterId },
     include: {
@@ -117,10 +122,15 @@ export async function getPainterReputation(painterId: string): Promise<Reputatio
 
   const totalJobs = painter.totalJobs || 0;
   const completedJobs = painter.jobs.filter(
-    (j) => j.status === "approved" || (j.status === "completed" && j.completion?.approvedAt)
+    (j) =>
+      j.status === "approved" ||
+      (j.status === "completed" && j.completion?.approvedAt),
   ).length;
-  const cancelledJobs = painter.jobs.filter((j) => j.status === "cancelled").length;
-  const cancellationRate = totalJobs > 0 ? (cancelledJobs / totalJobs) * 100 : 0;
+  const cancelledJobs = painter.jobs.filter(
+    (j) => j.status === "cancelled",
+  ).length;
+  const cancellationRate =
+    totalJobs > 0 ? (cancelledJobs / totalJobs) * 100 : 0;
 
   // Determine tier based on reliability score
   const reliabilityScore = painter.reliabilityScore || 0;
@@ -156,7 +166,10 @@ export function getCommissionTier(jobCount: number): number {
 /**
  * Update painter statistics after job completion
  */
-export async function updatePainterStatistics(painterId: string, jobAmount: number): Promise<void> {
+export async function updatePainterStatistics(
+  painterId: string,
+  jobAmount: number,
+): Promise<void> {
   const painter = await prisma.painterProfile.findUnique({
     where: { id: painterId },
   });
@@ -169,7 +182,12 @@ export async function updatePainterStatistics(painterId: string, jobAmount: numb
   const newTotalEarnings = (painter.totalEarnings || 0) + jobAmount;
 
   // Record positive event for job completion
-  await recordReliabilityEvent(painterId, "job_completed", 0.5, "Job successfully completed and approved");
+  await recordReliabilityEvent(
+    painterId,
+    "job_completed",
+    0.5,
+    "Job successfully completed and approved",
+  );
 
   // Update painter profile
   await prisma.painterProfile.update({
@@ -185,7 +203,10 @@ export async function updatePainterStatistics(painterId: string, jobAmount: numb
 /**
  * Handle painter cancellation - apply penalty
  */
-export async function handlePainterCancellation(painterId: string, reason?: string): Promise<void> {
+export async function handlePainterCancellation(
+  painterId: string,
+  reason?: string,
+): Promise<void> {
   const painter = await prisma.painterProfile.findUnique({
     where: { id: painterId },
   });
@@ -195,7 +216,12 @@ export async function handlePainterCancellation(painterId: string, reason?: stri
   }
 
   // Record negative event
-  await recordReliabilityEvent(painterId, "job_cancelled", -0.5, reason || "Job cancelled by painter");
+  await recordReliabilityEvent(
+    painterId,
+    "job_cancelled",
+    -0.5,
+    reason || "Job cancelled by painter",
+  );
 
   // Update cancellation rate
   const totalJobs = painter.totalJobs || 0;
@@ -212,7 +238,8 @@ export async function handlePainterCancellation(painterId: string, reason?: stri
     cancelledCount = cancelledJobs;
   }
 
-  const newCancellationRate = totalJobs > 0 ? (cancelledCount / totalJobs) * 100 : 0;
+  const newCancellationRate =
+    totalJobs > 0 ? (cancelledCount / totalJobs) * 100 : 0;
 
   await prisma.painterProfile.update({
     where: { id: painterId },

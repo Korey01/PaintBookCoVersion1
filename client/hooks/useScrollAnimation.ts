@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 export function useScrollAnimation(options?: {
   threshold?: number;
@@ -10,14 +10,14 @@ export function useScrollAnimation(options?: {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('in-view');
+          entry.target.classList.add("in-view");
           observer.unobserve(entry.target);
         }
       },
       {
         threshold: options?.threshold ?? 0.1,
-        rootMargin: options?.rootMargin ?? '0px 0px -100px 0px',
-      }
+        rootMargin: options?.rootMargin ?? "0px 0px -100px 0px",
+      },
     );
 
     if (ref.current) {
@@ -44,10 +44,10 @@ export function useScrollAnimationList(options?: {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          const children = entry.target.querySelectorAll('.scroll-animate');
+          const children = entry.target.querySelectorAll(".scroll-animate");
           children.forEach((child, index) => {
             setTimeout(() => {
-              child.classList.add('in-view');
+              child.classList.add("in-view");
             }, index * 100);
           });
           observer.unobserve(entry.target);
@@ -55,8 +55,8 @@ export function useScrollAnimationList(options?: {
       },
       {
         threshold: options?.threshold ?? 0.1,
-        rootMargin: options?.rootMargin ?? '0px 0px -100px 0px',
-      }
+        rootMargin: options?.rootMargin ?? "0px 0px -100px 0px",
+      },
     );
 
     if (ref.current) {

@@ -1,8 +1,8 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Home, Calendar } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle2, Home, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function B2BConfirmation() {
   const navigate = useNavigate();
@@ -38,7 +38,9 @@ export default function B2BConfirmation() {
             We've Got Your Project!
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Thank you for submitting your commercial painting project. Our team is reviewing your details and will contact you within 24 hours to discuss next steps.
+            Thank you for submitting your commercial painting project. Our team
+            is reviewing your details and will contact you within 24 hours to
+            discuss next steps.
           </p>
         </motion.div>
 
@@ -60,7 +62,9 @@ export default function B2BConfirmation() {
             <CardContent className="pt-6 text-center space-y-2">
               <Home className="h-8 w-8 text-secondary mx-auto" />
               <p className="text-sm text-muted-foreground">Project Type</p>
-              <p className="text-lg font-bold capitalize">{formData?.projectType || 'Commercial'}</p>
+              <p className="text-lg font-bold capitalize">
+                {formData?.projectType || "Commercial"}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -90,7 +94,8 @@ export default function B2BConfirmation() {
                 <div>
                   <h4 className="font-semibold mb-1">We Review Your Project</h4>
                   <p className="text-sm text-muted-foreground">
-                    Our team analyzes your project scope, locations, and requirements to identify the best-fit painters.
+                    Our team analyzes your project scope, locations, and
+                    requirements to identify the best-fit painters.
                   </p>
                 </div>
               </div>
@@ -102,7 +107,8 @@ export default function B2BConfirmation() {
                 <div>
                   <h4 className="font-semibold mb-1">We Call You</h4>
                   <p className="text-sm text-muted-foreground">
-                    Our team contacts you within 24 hours to discuss your project in detail and answer any questions.
+                    Our team contacts you within 24 hours to discuss your
+                    project in detail and answer any questions.
                   </p>
                 </div>
               </div>
@@ -114,7 +120,8 @@ export default function B2BConfirmation() {
                 <div>
                   <h4 className="font-semibold mb-1">We Provide a Quote</h4>
                   <p className="text-sm text-muted-foreground">
-                    We send you a detailed proposal with pricing, timeline, team information, and escrow protection details.
+                    We send you a detailed proposal with pricing, timeline, team
+                    information, and escrow protection details.
                   </p>
                 </div>
               </div>
@@ -126,7 +133,8 @@ export default function B2BConfirmation() {
                 <div>
                   <h4 className="font-semibold mb-1">Execute Agreement</h4>
                   <p className="text-sm text-muted-foreground">
-                    Once you approve, we execute the project agreement and set up escrow protection for milestone-based payments.
+                    Once you approve, we execute the project agreement and set
+                    up escrow protection for milestone-based payments.
                   </p>
                 </div>
               </div>
@@ -138,7 +146,8 @@ export default function B2BConfirmation() {
                 <div>
                   <h4 className="font-semibold mb-1">Work Begins</h4>
                   <p className="text-sm text-muted-foreground">
-                    Your dedicated project manager oversees all work and milestones, keeping you updated throughout.
+                    Your dedicated project manager oversees all work and
+                    milestones, keeping you updated throughout.
                   </p>
                 </div>
               </div>
@@ -153,12 +162,23 @@ export default function B2BConfirmation() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8"
         >
-          <h3 className="font-bold text-blue-900 mb-3">Important: Check Your Email</h3>
+          <h3 className="font-bold text-blue-900 mb-3">
+            Important: Check Your Email
+          </h3>
           <p className="text-sm text-blue-800 mb-4">
-            We've sent a confirmation email to <span className="font-semibold">{formData?.email}</span>. Check your inbox and spam folder for updates.
+            We've sent a confirmation email to{" "}
+            <span className="font-semibold">{formData?.email}</span>. Check your
+            inbox and spam folder for updates.
           </p>
           <p className="text-sm text-blue-800">
-            Questions? Contact us at <a href="mailto:support@paintbookco.co.uk" className="underline font-semibold">support@paintbookco.co.uk</a> or call us on your preferred date/time.
+            Questions? Contact us at{" "}
+            <a
+              href="mailto:support@paintbookco.co.uk"
+              className="underline font-semibold"
+            >
+              support@paintbookco.co.uk
+            </a>{" "}
+            or call us on your preferred date/time.
           </p>
         </motion.div>
 
@@ -170,7 +190,7 @@ export default function B2BConfirmation() {
           className="flex flex-col sm:flex-row gap-4"
         >
           <Button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             variant="outline"
             size="lg"
             className="flex-1 rounded-full"
@@ -178,7 +198,7 @@ export default function B2BConfirmation() {
             Back to Home
           </Button>
           <Button
-            onClick={() => navigate('/vestimator')}
+            onClick={() => navigate("/vestimator")}
             size="lg"
             className="flex-1 rounded-full bg-primary hover:bg-primary/90"
           >
@@ -197,25 +217,34 @@ export default function B2BConfirmation() {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6">
-                <h4 className="font-semibold mb-2">How long will the call take?</h4>
+                <h4 className="font-semibold mb-2">
+                  How long will the call take?
+                </h4>
                 <p className="text-sm text-muted-foreground">
-                  Most initial consultations take 15-30 minutes. We'll discuss your project scope, answer questions, and explain our process.
+                  Most initial consultations take 15-30 minutes. We'll discuss
+                  your project scope, answer questions, and explain our process.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <h4 className="font-semibold mb-2">What's included in the proposal?</h4>
+                <h4 className="font-semibold mb-2">
+                  What's included in the proposal?
+                </h4>
                 <p className="text-sm text-muted-foreground">
-                  Detailed breakdown of work, labor costs, materials, timeline, team bios, insurance details, and escrow structure.
+                  Detailed breakdown of work, labor costs, materials, timeline,
+                  team bios, insurance details, and escrow structure.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <h4 className="font-semibold mb-2">What if I need to reschedule?</h4>
+                <h4 className="font-semibold mb-2">
+                  What if I need to reschedule?
+                </h4>
                 <p className="text-sm text-muted-foreground">
-                  Just reply to our confirmation email or call us. We'll find a time that works better for you.
+                  Just reply to our confirmation email or call us. We'll find a
+                  time that works better for you.
                 </p>
               </CardContent>
             </Card>

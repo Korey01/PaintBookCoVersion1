@@ -17,7 +17,7 @@ declare global {
 export function authMiddleware(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   const authHeader = req.headers.authorization;
   const token = extractTokenFromHeader(authHeader);
@@ -46,7 +46,7 @@ export function authMiddleware(
 export function requireAuth(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (!req.userId) {
     res.status(401).json({ success: false, error: "Authentication required" });
@@ -61,7 +61,7 @@ export function requireAuth(
 export function requireCustomer(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (req.userType !== "customer") {
     res.status(403).json({
@@ -79,7 +79,7 @@ export function requireCustomer(
 export function requirePainter(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (req.userType !== "painter") {
     res.status(403).json({
@@ -97,7 +97,7 @@ export function requirePainter(
 export function optionalAuth(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   const authHeader = req.headers.authorization;
   const token = extractTokenFromHeader(authHeader);

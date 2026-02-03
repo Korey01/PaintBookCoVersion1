@@ -1,8 +1,8 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Calendar, Clock, Mail, Phone } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle2, Calendar, Clock, Mail, Phone } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function B2BConsultationConfirmation() {
   const navigate = useNavigate();
@@ -10,16 +10,16 @@ export default function B2BConsultationConfirmation() {
   const bookingData = location.state;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':');
+    const [hours, minutes] = timeString.split(":");
     return `${hours}:${minutes}`;
   };
 
@@ -52,7 +52,8 @@ export default function B2BConsultationConfirmation() {
             Consultation Confirmed!
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Your consultation is scheduled. We've sent a confirmation email with all the details and a video call link.
+            Your consultation is scheduled. We've sent a confirmation email with
+            all the details and a video call link.
           </p>
         </motion.div>
 
@@ -74,7 +75,8 @@ export default function B2BConsultationConfirmation() {
                   <div>
                     <p className="text-sm text-muted-foreground">Date</p>
                     <p className="text-lg font-bold">
-                      {bookingData?.preferredDate && formatDate(bookingData.preferredDate)}
+                      {bookingData?.preferredDate &&
+                        formatDate(bookingData.preferredDate)}
                     </p>
                   </div>
                 </div>
@@ -84,7 +86,9 @@ export default function B2BConsultationConfirmation() {
                   <div>
                     <p className="text-sm text-muted-foreground">Time</p>
                     <p className="text-lg font-bold">
-                      {bookingData?.preferredTime && formatTime(bookingData.preferredTime)} GMT
+                      {bookingData?.preferredTime &&
+                        formatTime(bookingData.preferredTime)}{" "}
+                      GMT
                     </p>
                   </div>
                 </div>
@@ -93,7 +97,9 @@ export default function B2BConsultationConfirmation() {
                   <Clock className="h-6 w-6 text-secondary flex-shrink-0 mt-1" />
                   <div>
                     <p className="text-sm text-muted-foreground">Duration</p>
-                    <p className="text-lg font-bold">{bookingData?.callDuration || 30} minutes</p>
+                    <p className="text-lg font-bold">
+                      {bookingData?.callDuration || 30} minutes
+                    </p>
                   </div>
                 </div>
 
@@ -121,7 +127,10 @@ export default function B2BConsultationConfirmation() {
             <ul className="text-sm text-blue-800 space-y-2">
               <li className="flex gap-2">
                 <span className="text-blue-600 font-bold">•</span>
-                <span>A video call link has been sent to your email - no need to download anything</span>
+                <span>
+                  A video call link has been sent to your email - no need to
+                  download anything
+                </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-blue-600 font-bold">•</span>
@@ -129,39 +138,55 @@ export default function B2BConsultationConfirmation() {
               </li>
               <li className="flex gap-2">
                 <span className="text-blue-600 font-bold">•</span>
-                <span>Have any photos or documents ready to share if relevant</span>
+                <span>
+                  Have any photos or documents ready to share if relevant
+                </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-blue-600 font-bold">•</span>
-                <span>We'll send a summary of discussion points after the call</span>
+                <span>
+                  We'll send a summary of discussion points after the call
+                </span>
               </li>
             </ul>
           </div>
 
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">We'll Discuss During Your Call</CardTitle>
+              <CardTitle className="text-lg">
+                We'll Discuss During Your Call
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-muted-foreground">Your project scope, locations, and specific requirements</p>
+                <p className="text-muted-foreground">
+                  Your project scope, locations, and specific requirements
+                </p>
               </div>
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-muted-foreground">Timeline and budget expectations</p>
+                <p className="text-muted-foreground">
+                  Timeline and budget expectations
+                </p>
               </div>
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-muted-foreground">Our process and how we manage commercial projects</p>
+                <p className="text-muted-foreground">
+                  Our process and how we manage commercial projects
+                </p>
               </div>
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-muted-foreground">Escrow protection and milestone-based payment structure</p>
+                <p className="text-muted-foreground">
+                  Escrow protection and milestone-based payment structure
+                </p>
               </div>
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-muted-foreground">Introduction to your dedicated project manager</p>
+                <p className="text-muted-foreground">
+                  Introduction to your dedicated project manager
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -175,7 +200,9 @@ export default function B2BConsultationConfirmation() {
           className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8"
         >
           <p className="text-sm text-amber-900">
-            <span className="font-bold">Need to reschedule?</span> Just reply to your confirmation email or call us directly. We're flexible and happy to find a better time.
+            <span className="font-bold">Need to reschedule?</span> Just reply to
+            your confirmation email or call us directly. We're flexible and
+            happy to find a better time.
           </p>
         </motion.div>
 
@@ -187,7 +214,7 @@ export default function B2BConsultationConfirmation() {
           className="flex flex-col sm:flex-row gap-4"
         >
           <Button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             variant="outline"
             size="lg"
             className="flex-1 rounded-full"
@@ -195,7 +222,7 @@ export default function B2BConsultationConfirmation() {
             Back to Home
           </Button>
           <Button
-            onClick={() => navigate('/b2b/find-painter')}
+            onClick={() => navigate("/b2b/find-painter")}
             size="lg"
             className="flex-1 rounded-full bg-secondary hover:bg-secondary/90"
           >
@@ -216,7 +243,8 @@ export default function B2BConsultationConfirmation() {
               <CardContent className="pt-6">
                 <h4 className="font-semibold mb-2">Within 1-2 Business Days</h4>
                 <p className="text-sm text-muted-foreground">
-                  We'll send you a customized proposal with detailed breakdown, timeline, team information, and next steps.
+                  We'll send you a customized proposal with detailed breakdown,
+                  timeline, team information, and next steps.
                 </p>
               </CardContent>
             </Card>
@@ -224,7 +252,8 @@ export default function B2BConsultationConfirmation() {
               <CardContent className="pt-6">
                 <h4 className="font-semibold mb-2">Review & Questions</h4>
                 <p className="text-sm text-muted-foreground">
-                  Take time to review. Schedule a follow-up if you have questions. We're here to help.
+                  Take time to review. Schedule a follow-up if you have
+                  questions. We're here to help.
                 </p>
               </CardContent>
             </Card>
@@ -232,7 +261,8 @@ export default function B2BConsultationConfirmation() {
               <CardContent className="pt-6">
                 <h4 className="font-semibold mb-2">Ready to Proceed</h4>
                 <p className="text-sm text-muted-foreground">
-                  Once you approve, we execute the agreement and set up escrow. Your project manager takes over from there.
+                  Once you approve, we execute the agreement and set up escrow.
+                  Your project manager takes over from there.
                 </p>
               </CardContent>
             </Card>

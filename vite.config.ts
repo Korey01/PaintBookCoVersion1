@@ -30,4 +30,4 @@ export default defineConfig(({ mode }) => ({
       "@server": path.resolve(__dirname, "./server"),
     },
   },
-}))
+}));

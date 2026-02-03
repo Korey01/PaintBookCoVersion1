@@ -16,7 +16,7 @@ async function request(
   method: string,
   path: string,
   body?: any,
-  token?: string
+  token?: string,
 ): Promise<Response> {
   const options: RequestInit = {
     method,
@@ -40,10 +40,7 @@ async function request(
   return response;
 }
 
-async function test(
-  name: string,
-  fn: () => Promise<boolean>
-): Promise<void> {
+async function test(name: string, fn: () => Promise<boolean>): Promise<void> {
   try {
     const passed = await fn();
     results.push({ name, passed });
@@ -73,7 +70,10 @@ async function runTests() {
     try {
       const res = await fetch("http://localhost:3000/api/ping");
       const data = await res.json();
-      return data.message && (data.message === "pong" || data.message.includes("pong"));
+      return (
+        data.message &&
+        (data.message === "pong" || data.message.includes("pong"))
+      );
     } catch (e) {
       return false;
     }
@@ -119,37 +119,47 @@ async function runTests() {
   await test("Get Current User (Customer)", async () => {
     const res = await request("GET", "/auth/me", undefined, customerToken);
     const data = await res.json();
-    return data.data && data.data.user && data.data.user.email && data.data.user.userType === "customer";
+    return (
+      data.data &&
+      data.data.user &&
+      data.data.user.email &&
+      data.data.user.userType === "customer"
+    );
   });
 
   // Test 5: Create Job
   await test("Create Paint Job", async () => {
-    const res = await request("POST", "/jobs", {
-      title: "Living Room Paint Job",
-      description: "Paint my living room walls",
-      jobType: "interior",
-      postcode: "SW1A 1AA",
-      budgetMin: 400,
-      budgetMax: 600,
-      rooms: [
-        {
-          id: "room_1",
-          name: "Living Room",
-          length: 5,
-          width: 4,
-          height: 2.8,
-          coats: 2,
-        },
-        {
-          id: "room_2",
-          name: "Hallway",
-          length: 3,
-          width: 2,
-          height: 2.8,
-          coats: 1,
-        },
-      ],
-    }, customerToken);
+    const res = await request(
+      "POST",
+      "/jobs",
+      {
+        title: "Living Room Paint Job",
+        description: "Paint my living room walls",
+        jobType: "interior",
+        postcode: "SW1A 1AA",
+        budgetMin: 400,
+        budgetMax: 600,
+        rooms: [
+          {
+            id: "room_1",
+            name: "Living Room",
+            length: 5,
+            width: 4,
+            height: 2.8,
+            coats: 2,
+          },
+          {
+            id: "room_2",
+            name: "Hallway",
+            length: 3,
+            width: 2,
+            height: 2.8,
+            coats: 1,
+          },
+        ],
+      },
+      customerToken,
+    );
 
     const data = await res.json();
     if (data.data && data.data.id) {
@@ -162,7 +172,12 @@ async function runTests() {
 
   // Test 6: Get Job Details
   await test("Get Job Details", async () => {
-    const res = await request("GET", `/jobs/${jobId}`, undefined, customerToken);
+    const res = await request(
+      "GET",
+      `/jobs/${jobId}`,
+      undefined,
+      customerToken,
+    );
     const data = await res.json();
     return data.data && data.data.title === "Living Room Paint Job";
   });
@@ -205,7 +220,7 @@ async function runTests() {
         jobPrice: 450,
         consultationFee: 0,
       },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -219,14 +234,24 @@ async function runTests() {
 
   // Test 10: Get Quote Details
   await test("Get Quote Details", async () => {
-    const res = await request("GET", `/quotes/${quoteId}`, undefined, customerToken);
+    const res = await request(
+      "GET",
+      `/quotes/${quoteId}`,
+      undefined,
+      customerToken,
+    );
     const data = await res.json();
     return data.data && data.data.jobPrice === 450;
   });
 
   // Test 11: List Quotes for Job
   await test("List Quotes for Job", async () => {
-    const res = await request("GET", `/quotes/job/${jobId}`, undefined, customerToken);
+    const res = await request(
+      "GET",
+      `/quotes/job/${jobId}`,
+      undefined,
+      customerToken,
+    );
     const data = await res.json();
     return (
       data.data &&
@@ -242,7 +267,7 @@ async function runTests() {
       "PUT",
       `/quotes/${quoteId}`,
       { status: "accepted" },
-      customerToken
+      customerToken,
     );
 
     const data = await res.json();
@@ -258,7 +283,7 @@ async function runTests() {
       "POST",
       "/payments/initiate",
       { jobId, amount: 450 },
-      customerToken
+      customerToken,
     );
 
     const data = await res.json();
@@ -267,7 +292,11 @@ async function runTests() {
       console.log("Response Status:", res.status);
     }
     // Payment should return escrow transaction ID and Transpact transaction ID
-    return data.data && data.data.escrowTransactionId && data.data.transpactTransactionId;
+    return (
+      data.data &&
+      data.data.escrowTransactionId &&
+      data.data.transpactTransactionId
+    );
   });
 
   // Test 14: Authorization - Painter Cannot Accept Quote
@@ -276,7 +305,7 @@ async function runTests() {
       "PUT",
       `/quotes/${quoteId}`,
       { decision: "rejected" },
-      painterToken
+      painterToken,
     );
 
     const data = await res.json();
@@ -294,11 +323,13 @@ async function runTests() {
         jobPrice: 400,
         consultationFee: 0,
       },
-      customerToken
+      customerToken,
     );
 
     const data = await res.json();
-    return res.status >= 400 || (data.error && data.error.includes("Customers"));
+    return (
+      res.status >= 400 || (data.error && data.error.includes("Customers"))
+    );
   });
 
   // Print Results
@@ -309,7 +340,7 @@ async function runTests() {
 
   if (passed === total) {
     console.log(
-      "✅ All Phase 1 tests passed! Your API is working correctly.\n"
+      "✅ All Phase 1 tests passed! Your API is working correctly.\n",
     );
   } else {
     console.log("❌ Some tests failed. Review the errors above.\n");

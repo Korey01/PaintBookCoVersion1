@@ -34,13 +34,16 @@ export function KYCReviewCard({
   onApprove,
   onReject,
 }: KYCReviewCardProps) {
-  const totalDocs = documentsCount.idDocs + documentsCount.insuranceDocs + documentsCount.addressProof;
+  const totalDocs =
+    documentsCount.idDocs +
+    documentsCount.insuranceDocs +
+    documentsCount.addressProof;
   const requiredDocs = 3; // ID + Insurance + Address
   const docsComplete = totalDocs >= requiredDocs;
 
   const submittedDate = new Date(submittedAt).toLocaleDateString();
   const daysAgo = Math.floor(
-    (Date.now() - new Date(submittedAt).getTime()) / (1000 * 60 * 60 * 24)
+    (Date.now() - new Date(submittedAt).getTime()) / (1000 * 60 * 60 * 24),
   );
 
   return (
@@ -55,7 +58,10 @@ export function KYCReviewCard({
           )}
           <p className="text-sm text-gray-600">{email}</p>
         </div>
-        <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50">
+        <Badge
+          variant="outline"
+          className="text-amber-700 border-amber-300 bg-amber-50"
+        >
           Pending Review
         </Badge>
       </div>
@@ -70,7 +76,9 @@ export function KYCReviewCard({
           <p className="text-gray-600">Submitted</p>
           <p className="font-medium">
             {submittedDate}
-            {daysAgo > 0 && <span className="text-xs text-gray-500"> ({daysAgo}d ago)</span>}
+            {daysAgo > 0 && (
+              <span className="text-xs text-gray-500"> ({daysAgo}d ago)</span>
+            )}
           </p>
         </div>
       </div>
@@ -89,20 +97,42 @@ export function KYCReviewCard({
         <div className="space-y-1 text-xs">
           <div className="flex justify-between">
             <span>ID Document:</span>
-            <span className={documentsCount.idDocs > 0 ? "text-green-600" : "text-gray-500"}>
-              {documentsCount.idDocs > 0 ? `✓ ${documentsCount.idDocs}` : "✗ Missing"}
+            <span
+              className={
+                documentsCount.idDocs > 0 ? "text-green-600" : "text-gray-500"
+              }
+            >
+              {documentsCount.idDocs > 0
+                ? `✓ ${documentsCount.idDocs}`
+                : "✗ Missing"}
             </span>
           </div>
           <div className="flex justify-between">
             <span>Insurance:</span>
-            <span className={documentsCount.insuranceDocs > 0 ? "text-green-600" : "text-gray-500"}>
-              {documentsCount.insuranceDocs > 0 ? `✓ ${documentsCount.insuranceDocs}` : "✗ Missing"}
+            <span
+              className={
+                documentsCount.insuranceDocs > 0
+                  ? "text-green-600"
+                  : "text-gray-500"
+              }
+            >
+              {documentsCount.insuranceDocs > 0
+                ? `✓ ${documentsCount.insuranceDocs}`
+                : "✗ Missing"}
             </span>
           </div>
           <div className="flex justify-between">
             <span>Address Proof:</span>
-            <span className={documentsCount.addressProof > 0 ? "text-green-600" : "text-gray-500"}>
-              {documentsCount.addressProof > 0 ? `✓ ${documentsCount.addressProof}` : "✗ Missing"}
+            <span
+              className={
+                documentsCount.addressProof > 0
+                  ? "text-green-600"
+                  : "text-gray-500"
+              }
+            >
+              {documentsCount.addressProof > 0
+                ? `✓ ${documentsCount.addressProof}`
+                : "✗ Missing"}
             </span>
           </div>
         </div>

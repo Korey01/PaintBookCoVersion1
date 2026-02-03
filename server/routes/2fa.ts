@@ -77,7 +77,8 @@ router.post(
         data: {
           secret,
           qrCodeUrl,
-          message: "Scan this QR code with your authenticator app (Google Authenticator, Authy, Microsoft Authenticator, etc.)",
+          message:
+            "Scan this QR code with your authenticator app (Google Authenticator, Authy, Microsoft Authenticator, etc.)",
           instructions: [
             "1. Download an authenticator app if you don't have one",
             "2. Scan the QR code with your authenticator app",
@@ -95,7 +96,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -166,7 +167,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -247,7 +248,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -288,7 +289,7 @@ router.get(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 export default router;

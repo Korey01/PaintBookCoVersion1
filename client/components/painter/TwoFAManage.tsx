@@ -44,7 +44,7 @@ export function TwoFAManage({ onStatusChange }: TwoFAManageProps) {
   const handleDisable = async () => {
     if (
       !window.confirm(
-        "Are you sure you want to disable 2FA? This makes your account less secure."
+        "Are you sure you want to disable 2FA? This makes your account less secure.",
       )
     ) {
       return;
@@ -82,7 +82,7 @@ export function TwoFAManage({ onStatusChange }: TwoFAManageProps) {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to disable 2FA"
+        error instanceof Error ? error.message : "Failed to disable 2FA",
       );
     } finally {
       setDisabling(false);
@@ -96,7 +96,9 @@ export function TwoFAManage({ onStatusChange }: TwoFAManageProps) {
   return (
     <Card
       className={`p-6 border-2 ${
-        twoFAEnabled ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"
+        twoFAEnabled
+          ? "bg-green-50 border-green-200"
+          : "bg-yellow-50 border-yellow-200"
       }`}
     >
       <div className="flex items-start justify-between">
@@ -122,7 +124,8 @@ export function TwoFAManage({ onStatusChange }: TwoFAManageProps) {
                   ✓ Your account is protected with 2FA
                 </p>
                 <p className="text-sm text-green-700">
-                  You'll need to enter a code from your authenticator app when you log in.
+                  You'll need to enter a code from your authenticator app when
+                  you log in.
                 </p>
                 <p className="text-xs text-green-600 mt-3">
                   Last updated: {new Date().toLocaleDateString()}

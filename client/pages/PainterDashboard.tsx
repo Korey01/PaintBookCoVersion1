@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +18,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { MapPin, Clock, Briefcase, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { useWebSocketNotifications } from '@/hooks/useWebSocketNotifications';
+} from "@/components/ui/dialog";
+import {
+  MapPin,
+  Clock,
+  Briefcase,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useWebSocketNotifications } from "@/hooks/useWebSocketNotifications";
 
 interface Job {
   id: string;
@@ -50,33 +63,33 @@ export default function PainterDashboard() {
   const [submittingQuote, setSubmittingQuote] = useState<string | null>(null);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [quotePrice, setQuotePrice] = useState('');
+  const [quotePrice, setQuotePrice] = useState("");
 
   // Fetch available jobs
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const token = localStorage.getItem('paintbook:token');
+        const token = localStorage.getItem("paintbook:token");
         if (!token) {
-          navigate('/join-painter');
+          navigate("/join-painter");
           return;
         }
 
-        const response = await fetch('/api/jobs', {
+        const response = await fetch("/api/jobs", {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
-        if (!response.ok) throw new Error('Failed to fetch jobs');
+        if (!response.ok) throw new Error("Failed to fetch jobs");
 
         const data = await response.json();
         if (data.data && Array.isArray(data.data.jobs)) {
           setAvailableJobs(data.data.jobs);
         }
       } catch (error) {
-        console.error('Error fetching jobs:', error);
-        toast.error('Failed to load available jobs');
+        console.error("Error fetching jobs:", error);
+        toast.error("Failed to load available jobs");
       } finally {
         setLoading(false);
       }
@@ -89,7 +102,7 @@ export default function PainterDashboard() {
   useEffect(() => {
     const fetchMyQuotes = async () => {
       try {
-        const token = localStorage.getItem('paintbook:token');
+        const token = localStorage.getItem("paintbook:token");
         if (!token) return;
 
         // Fetch quotes for this painter - we'll need to implement a GET endpoint
@@ -99,7 +112,7 @@ export default function PainterDashboard() {
         for (const job of availableJobs) {
           const response = await fetch(`/api/quotes/job/${job.id}`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           });
 
@@ -115,7 +128,7 @@ export default function PainterDashboard() {
 
         setMyQuotes(Array.from(quotesSet.values()));
       } catch (error) {
-        console.error('Error fetching quotes:', error);
+        console.error("Error fetching quotes:", error);
       }
     };
 
@@ -127,23 +140,23 @@ export default function PainterDashboard() {
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedJob || !quotePrice) {
-      toast.error('Please enter a price');
+      toast.error("Please enter a price");
       return;
     }
 
     setSubmittingQuote(selectedJob.id);
     try {
-      const token = localStorage.getItem('paintbook:token');
+      const token = localStorage.getItem("paintbook:token");
       if (!token) {
-        navigate('/join-painter');
+        navigate("/join-painter");
         return;
       }
 
-      const response = await fetch('/api/quotes', {
-        method: 'POST',
+      const response = await fetch("/api/quotes", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           jobId: selectedJob.id,
@@ -154,18 +167,18 @@ export default function PainterDashboard() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to submit quote');
+        throw new Error(error.error || "Failed to submit quote");
       }
 
-      toast.success('Quote submitted successfully!');
+      toast.success("Quote submitted successfully!");
       setQuoteDialogOpen(false);
-      setQuotePrice('');
+      setQuotePrice("");
       setSelectedJob(null);
 
       // Refresh quotes
       const quotesResponse = await fetch(`/api/quotes/job/${selectedJob.id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -179,8 +192,10 @@ export default function PainterDashboard() {
         }
       }
     } catch (error) {
-      console.error('Error submitting quote:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit quote');
+      console.error("Error submitting quote:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit quote",
+      );
     } finally {
       setSubmittingQuote(null);
     }
@@ -188,14 +203,14 @@ export default function PainterDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
+      case "accepted":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -225,7 +240,8 @@ export default function PainterDashboard() {
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-blue-600" />
                 <span className="text-blue-900">
-                  You have {unreadCount} new notification{unreadCount !== 1 ? 's' : ''}
+                  You have {unreadCount} new notification
+                  {unreadCount !== 1 ? "s" : ""}
                 </span>
               </div>
               <Button variant="outline" size="sm">
@@ -256,7 +272,10 @@ export default function PainterDashboard() {
                 <p className="text-gray-600 mb-4">
                   No jobs available in your area right now
                 </p>
-                <Button variant="outline" onClick={() => navigate('/painter-onboarding')}>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/painter-onboarding")}
+                >
                   Update Your Profile
                 </Button>
               </CardContent>
@@ -279,13 +298,17 @@ export default function PainterDashboard() {
                 <CardContent>
                   <div className="space-y-6">
                     {job.description && (
-                      <p className="text-base text-muted-foreground leading-relaxed">{job.description}</p>
+                      <p className="text-base text-muted-foreground leading-relaxed">
+                        {job.description}
+                      </p>
                     )}
 
                     <div className="grid grid-cols-2 gap-6">
                       {job.budgetMin && (
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Budget</p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Budget
+                          </p>
                           <p className="text-lg font-bold mt-1">
                             £{job.budgetMin}
                             {job.budgetMax && ` - £${job.budgetMax}`}
@@ -293,7 +316,9 @@ export default function PainterDashboard() {
                         </div>
                       )}
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Posted</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Posted
+                        </p>
                         <p className="font-semibold text-lg mt-1">
                           {new Date(job.createdAt).toLocaleDateString()}
                         </p>
@@ -350,19 +375,27 @@ export default function PainterDashboard() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Quote Price</p>
-                        <p className="text-2xl sm:text-3xl font-bold mt-2">£{quote.jobPrice}</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Quote Price
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-bold mt-2">
+                          £{quote.jobPrice}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Total Price</p>
-                        <p className="text-2xl sm:text-3xl font-bold mt-2">£{quote.totalPrice}</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Total Price
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-bold mt-2">
+                          £{quote.totalPrice}
+                        </p>
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground pt-2 border-t border-border/50">
-                      Submitted on{' '}
+                      Submitted on{" "}
                       {new Date(quote.createdAt).toLocaleDateString()}
                     </div>
-                    {quote.status === 'accepted' && (
+                    {quote.status === "accepted" && (
                       <div className="rounded-lg bg-green-50 p-4 border border-green-200">
                         <p className="text-sm text-green-900 font-semibold">
                           ✓ Quote accepted! Ready to start work
@@ -403,7 +436,8 @@ export default function PainterDashboard() {
             </div>
             {selectedJob?.budgetMin && selectedJob?.budgetMax && (
               <p className="text-sm text-gray-600">
-                Customer budget: £{selectedJob.budgetMin} - £{selectedJob.budgetMax}
+                Customer budget: £{selectedJob.budgetMin} - £
+                {selectedJob.budgetMax}
               </p>
             )}
             <DialogFooter>
@@ -424,7 +458,7 @@ export default function PainterDashboard() {
                     Submitting...
                   </>
                 ) : (
-                  'Submit Quote'
+                  "Submit Quote"
                 )}
               </Button>
             </DialogFooter>

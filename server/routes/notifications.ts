@@ -70,7 +70,7 @@ router.get(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -105,7 +105,7 @@ router.get(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -158,7 +158,7 @@ router.delete(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -230,7 +230,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 /**
@@ -264,7 +264,7 @@ router.post(
         error: "Internal server error",
       });
     }
-  }
+  },
 );
 
 export default router;

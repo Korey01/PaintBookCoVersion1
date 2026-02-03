@@ -31,7 +31,7 @@ async function request(
   method: string,
   path: string,
   body?: any,
-  token?: string
+  token?: string,
 ) {
   const headers: any = { "Content-Type": "application/json" };
   if (token) {
@@ -47,9 +47,7 @@ async function request(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      `${response.status}: ${data.error || response.statusText}`
-    );
+    throw new Error(`${response.status}: ${data.error || response.statusText}`);
   }
 
   return data;
@@ -142,7 +140,7 @@ async function runTests() {
         customerEmail: "test@example.com",
         customerPhone: "07700900000",
       },
-      customerToken
+      customerToken,
     );
 
     if (!response.success || !response.data || !response.data.id) {
@@ -158,7 +156,12 @@ async function runTests() {
 
   // Test 5: Get Job
   await test("Get Job Details", async () => {
-    const response = await request("GET", `/jobs/${jobId}`, undefined, customerToken);
+    const response = await request(
+      "GET",
+      `/jobs/${jobId}`,
+      undefined,
+      customerToken,
+    );
 
     if (!response.success || !response.data) {
       throw new Error("No job data in response");
@@ -177,7 +180,11 @@ async function runTests() {
   await test("List Jobs (Painter)", async () => {
     const response = await request("GET", "/jobs", undefined, painterToken);
 
-    if (!response.success || !response.data || !Array.isArray(response.data.jobs)) {
+    if (
+      !response.success ||
+      !response.data ||
+      !Array.isArray(response.data.jobs)
+    ) {
       throw new Error("No jobs array in response");
     }
 
@@ -199,7 +206,7 @@ async function runTests() {
         jobPrice: 800,
         consultationFee: 50,
       },
-      painterToken
+      painterToken,
     );
 
     if (!response.success || !response.data || !response.data.id) {
@@ -219,7 +226,12 @@ async function runTests() {
 
   // Test 8: Get Quote
   await test("Get Quote Details", async () => {
-    const response = await request("GET", `/quotes/${quoteId}`, undefined, customerToken);
+    const response = await request(
+      "GET",
+      `/quotes/${quoteId}`,
+      undefined,
+      customerToken,
+    );
 
     if (!response.success || !response.data) {
       throw new Error("No quote data in response");
@@ -232,9 +244,18 @@ async function runTests() {
 
   // Test 9: List Quotes for Job
   await test("List Quotes for Job", async () => {
-    const response = await request("GET", `/quotes/job/${jobId}`, undefined, customerToken);
+    const response = await request(
+      "GET",
+      `/quotes/job/${jobId}`,
+      undefined,
+      customerToken,
+    );
 
-    if (!response.success || !response.data || !Array.isArray(response.data.quotes)) {
+    if (
+      !response.success ||
+      !response.data ||
+      !Array.isArray(response.data.quotes)
+    ) {
       throw new Error("No quotes array in response");
     }
 
@@ -252,7 +273,7 @@ async function runTests() {
       {
         status: "accepted",
       },
-      customerToken
+      customerToken,
     );
 
     if (!response.success || !response.data) {
@@ -266,14 +287,21 @@ async function runTests() {
 
   // Test 11: Verify Job Status Updated
   await test("Verify Job Status Updated After Quote Acceptance", async () => {
-    const response = await request("GET", `/jobs/${jobId}`, undefined, customerToken);
+    const response = await request(
+      "GET",
+      `/jobs/${jobId}`,
+      undefined,
+      customerToken,
+    );
 
     if (!response.success || !response.data) {
       throw new Error("No job data in response");
     }
 
     if (response.data.status !== "quote_accepted") {
-      throw new Error(`Job status should be 'quote_accepted', got '${response.data.status}'`);
+      throw new Error(
+        `Job status should be 'quote_accepted', got '${response.data.status}'`,
+      );
     }
 
     if (response.data.escrowAmount !== 850) {
@@ -291,7 +319,7 @@ async function runTests() {
         amount: 850,
         paymentMethod: "stripe",
       },
-      customerToken
+      customerToken,
     );
 
     if (!response.success || !response.data) {
@@ -334,7 +362,10 @@ async function runTests() {
 
       throw new Error("Should have failed with duplicate email");
     } catch (error: any) {
-      if (!error.message.includes("409") && !error.message.includes("already")) {
+      if (
+        !error.message.includes("409") &&
+        !error.message.includes("already")
+      ) {
         throw error; // Re-throw if it's not the expected error
       }
     }
@@ -346,7 +377,10 @@ async function runTests() {
       await request("DELETE", `/jobs/${jobId}`, undefined, painterToken);
       throw new Error("Should have failed with 403");
     } catch (error: any) {
-      if (!error.message.includes("403") && !error.message.includes("Not authorized")) {
+      if (
+        !error.message.includes("403") &&
+        !error.message.includes("Not authorized")
+      ) {
         throw error;
       }
     }
@@ -366,7 +400,7 @@ async function runTests() {
           budgetMin: 500,
           budgetMax: 1000,
         },
-        customerToken
+        customerToken,
       );
 
       const newJobId = jobResponse.data.id;
@@ -380,12 +414,15 @@ async function runTests() {
           jobPrice: 500,
           consultationFee: 0,
         },
-        customerToken
+        customerToken,
       );
 
       throw new Error("Should have failed with 403");
     } catch (error: any) {
-      if (!error.message.includes("403") && !error.message.includes("painter")) {
+      if (
+        !error.message.includes("403") &&
+        !error.message.includes("painter")
+      ) {
         throw error;
       }
     }
@@ -403,9 +440,11 @@ async function runTests() {
 
   if (failed > 0) {
     console.log("\nFailed Tests:");
-    results.filter((r) => !r.passed).forEach((r) => {
-      console.log(`  - ${r.name}: ${r.error}`);
-    });
+    results
+      .filter((r) => !r.passed)
+      .forEach((r) => {
+        console.log(`  - ${r.name}: ${r.error}`);
+      });
   }
 
   return failed === 0;

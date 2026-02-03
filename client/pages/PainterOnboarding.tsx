@@ -84,11 +84,26 @@ export function PainterOnboarding() {
         if (data.success) {
           const allDocs: UploadedDocument[] = [];
           if (data.data.idDocuments)
-            allDocs.push(...data.data.idDocuments.map((d: any) => ({ ...d, type: "id_document" })));
+            allDocs.push(
+              ...data.data.idDocuments.map((d: any) => ({
+                ...d,
+                type: "id_document",
+              })),
+            );
           if (data.data.insuranceDocs)
-            allDocs.push(...data.data.insuranceDocs.map((d: any) => ({ ...d, type: "insurance" })));
+            allDocs.push(
+              ...data.data.insuranceDocs.map((d: any) => ({
+                ...d,
+                type: "insurance",
+              })),
+            );
           if (data.data.addressProofDocuments)
-            allDocs.push(...data.data.addressProofDocuments.map((d: any) => ({ ...d, type: "address_proof" })));
+            allDocs.push(
+              ...data.data.addressProofDocuments.map((d: any) => ({
+                ...d,
+                type: "address_proof",
+              })),
+            );
           setDocuments(allDocs);
         }
       } catch (error) {
@@ -140,7 +155,7 @@ export function PainterOnboarding() {
   const handleDocumentUpload = async (
     documentType: string,
     documentUrl: string,
-    expiry?: string
+    expiry?: string,
   ) => {
     const token = localStorage.getItem("paintbook:token");
     if (!token) {
@@ -178,11 +193,26 @@ export function PainterOnboarding() {
       if (data.success) {
         const allDocs: UploadedDocument[] = [];
         if (data.data.idDocuments)
-          allDocs.push(...data.data.idDocuments.map((d: any) => ({ ...d, type: "id_document" })));
+          allDocs.push(
+            ...data.data.idDocuments.map((d: any) => ({
+              ...d,
+              type: "id_document",
+            })),
+          );
         if (data.data.insuranceDocs)
-          allDocs.push(...data.data.insuranceDocs.map((d: any) => ({ ...d, type: "insurance" })));
+          allDocs.push(
+            ...data.data.insuranceDocs.map((d: any) => ({
+              ...d,
+              type: "insurance",
+            })),
+          );
         if (data.data.addressProofDocuments)
-          allDocs.push(...data.data.addressProofDocuments.map((d: any) => ({ ...d, type: "address_proof" })));
+          allDocs.push(
+            ...data.data.addressProofDocuments.map((d: any) => ({
+              ...d,
+              type: "address_proof",
+            })),
+          );
         setDocuments(allDocs);
       }
     }
@@ -237,7 +267,10 @@ export function PainterOnboarding() {
           <p className="text-green-800 mb-4">
             You can now browse available jobs, submit quotes, and start earning.
           </p>
-          <Button onClick={() => navigate("/find-painter")} className="bg-green-600 hover:bg-green-700">
+          <Button
+            onClick={() => navigate("/find-painter")}
+            className="bg-green-600 hover:bg-green-700"
+          >
             Start Accepting Jobs
           </Button>
         </Card>
@@ -254,10 +287,7 @@ export function PainterOnboarding() {
           {/* Information Tab */}
           <TabsContent value="information" className="mt-6">
             <Card className="p-6">
-              <KYCForm
-                onSubmit={handleKYCSubmit}
-                isLoading={submitting}
-              />
+              <KYCForm onSubmit={handleKYCSubmit} isLoading={submitting} />
             </Card>
           </TabsContent>
 

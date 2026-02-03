@@ -62,13 +62,22 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/find-painter" element={<FindPainters />} />
             <Route path="/post-job" element={<PostJob />} />
-            <Route path="/post-job/confirmation" element={<PostJobConfirmation />} />
+            <Route
+              path="/post-job/confirmation"
+              element={<PostJobConfirmation />}
+            />
             <Route path="/vestimator" element={<Vestimator />} />
             <Route path="/estimator" element={<Estimator />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
+            <Route
+              path="/checkout/confirmation"
+              element={<CheckoutConfirmation />}
+            />
             <Route path="/join-painter" element={<JoinPainter />} />
-            <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
+            <Route
+              path="/join-painter/completed"
+              element={<JoinPainterComplete />}
+            />
             <Route path="/painter-onboarding" element={<PainterOnboarding />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/auth" element={<Auth />} />
@@ -89,8 +98,14 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/trust-safety" element={<TrustSafety />} />
             <Route path="/visualizer" element={<PaintVisualizer />} />
-            <Route path="/escrow-demo/customer" element={<EscrowCustomerDemo />} />
-            <Route path="/escrow-demo/painter" element={<EscrowPainterDemo />} />
+            <Route
+              path="/escrow-demo/customer"
+              element={<EscrowCustomerDemo />}
+            />
+            <Route
+              path="/escrow-demo/painter"
+              element={<EscrowPainterDemo />}
+            />
             <Route path="/painter/:id" element={<PainterProfile />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/auth-new" element={<AuthPage />} />
@@ -101,7 +116,10 @@ const App = () => (
             <Route path="/b2b/find-painter" element={<B2BFindPainter />} />
             <Route path="/b2b/consultation" element={<B2BConsultation />} />
             <Route path="/b2b/confirmation" element={<B2BConfirmation />} />
-            <Route path="/b2b/consultation-confirmation" element={<B2BConsultationConfirmation />} />
+            <Route
+              path="/b2b/consultation-confirmation"
+              element={<B2BConsultationConfirmation />}
+            />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

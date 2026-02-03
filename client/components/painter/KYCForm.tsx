@@ -48,7 +48,7 @@ export function KYCForm({ onSubmit, isLoading = false }: KYCFormProps) {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
@@ -77,7 +77,7 @@ export function KYCForm({ onSubmit, isLoading = false }: KYCFormProps) {
       toast.success("KYC information submitted successfully");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to submit KYC"
+        error instanceof Error ? error.message : "Failed to submit KYC",
       );
     }
   };
@@ -286,12 +286,7 @@ export function KYCForm({ onSubmit, isLoading = false }: KYCFormProps) {
 
       {/* Submit Button */}
       <div className="flex gap-4">
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="flex-1"
-          size="lg"
-        >
+        <Button type="submit" disabled={isLoading} className="flex-1" size="lg">
           {isLoading ? "Submitting..." : "Submit KYC Information"}
         </Button>
       </div>

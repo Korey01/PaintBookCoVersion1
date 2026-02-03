@@ -87,11 +87,15 @@ router.post("/initiate", authMiddleware, requireCustomer, async (req: Request, r
       return;
     }
 
+    // Separate job price and consultation fee
+    const jobPrice = acceptedQuote.jobPrice;
+    const consultationFee = acceptedQuote.consultationFee || 0;
+
     // Calculate commission and escrow cost
     const commissionRate = calculateCommissionRate(job.painterId!);
-    const commission = amount * (commissionRate / 100);
+    const commission = jobPrice * (commissionRate / 100); // Commission applies only to job price, not consultation fee
     const escrowCost = calculateEscrowCost(amount); // Transpact fee
-    const painterAmount = amount - commission; // Painter gets amount minus commission
+    const painterAmount = jobPrice - commission + consultationFee; // Painter gets job price (minus commission) plus full consultation fee
 
     // Check if escrow transaction already exists
     let escrowTransaction = await prisma.escrowTransaction.findFirst({

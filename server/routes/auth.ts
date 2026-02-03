@@ -217,14 +217,16 @@ router.get("/me", authMiddleware, async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const response: AuthResponse = {
+    const response = {
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        userType: user.userType as "customer" | "painter",
-        customerProfile: user.customerProfile || undefined,
-        painterProfile: user.painterProfile || undefined,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          userType: user.userType as "customer" | "painter",
+          customerProfile: user.customerProfile || undefined,
+          painterProfile: user.painterProfile || undefined,
+        },
       },
     };
 

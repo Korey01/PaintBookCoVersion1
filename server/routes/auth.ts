@@ -19,7 +19,7 @@ const prisma = getPrismaClient();
  */
 router.post("/register", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, userType }: RegisterRequest = req.body;
+    const { email, password, userType, postcode }: RegisterRequest = req.body;
 
     // Validation
     if (!email || !password || !userType) {

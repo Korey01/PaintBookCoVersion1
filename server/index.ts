@@ -10,6 +10,7 @@ import kycRoutes from "./routes/kyc";
 import twoFARoutes from "./routes/2fa";
 import notificationsRoutes from "./routes/notifications";
 import adminRoutes from "./routes/admin";
+import disputesRoutes from "./routes/disputes";
 
 export function createServer() {
   const app = express();

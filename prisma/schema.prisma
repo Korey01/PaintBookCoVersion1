@@ -28,7 +28,6 @@ model User {
   jobs              Job[]
   quotes            Quote[]
   notifications     Notification[]
-  messages          Message[]
   sentMessages      Message[] @relation("SentMessages")
   receivedMessages  Message[] @relation("ReceivedMessages")
   disputes          Dispute[]

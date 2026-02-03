@@ -181,8 +181,11 @@ async function runTests() {
   await test("List Available Jobs (Painter View)", async () => {
     const res = await request("GET", "/jobs", undefined, painterToken);
     const data = await res.json();
-    if (!(data.data && data.data.jobs)) {
-      console.log("List Jobs Response:", JSON.stringify(data, null, 2));
+    if (!(data.data && data.data.jobs && data.data.jobs.length > 0)) {
+      console.log("List Jobs Response (empty):", JSON.stringify(data, null, 2));
+    } else if (!data.data.jobs.some((j: any) => j.id === jobId)) {
+      console.log("List Jobs found:", data.data.jobs.map((j: any) => ({ id: j.id, status: j.status, postcode: j.postcode })));
+      console.log("Looking for jobId:", jobId);
     }
     return (
       data.data &&

@@ -68,9 +68,20 @@ model PainterProfile {
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Personal Information
+  firstName      String?
+  lastName       String?
+  dateOfBirth    DateTime?
+
   businessName   String?
+  businessRegistration String? // Business registration/company number
+  businessType   String? // sole trader, limited company, etc
   bio            String?
   phone          String?
+  businessPhone  String?
+
+  address        String? // Full address
+  city           String?
   postcode       String
   serviceRadius  Int @default(15) // miles
 
@@ -87,14 +98,21 @@ model PainterProfile {
   idType            String? // passport, driving_license, etc
   idNumber          String?
   idExpiryDate      DateTime?
-  idDocuments       String[] @default([])
+  idDocuments       Json[] @default([]) // Array of {url, uploadedAt, expiresAt}
 
   // Insurance
-  hasInsurance      Boolean @default(false)
-  insuranceInsurer  String?
-  insurancePolicy   String?
-  insuranceExpiry   DateTime?
-  insuranceDocs     String[] @default([])
+  hasInsurance       Boolean @default(false)
+  insuranceProvider  String?
+  insurancePolicyNumber String?
+  insuranceExpiry    DateTime?
+  insuranceDocs      Json[] @default([]) // Array of {url, uploadedAt, expiresAt}
+
+  // Address Proof
+  addressProofDocuments Json[] @default([]) // Array of {url, uploadedAt}
+
+  // KYC Status
+  kycCompletedAt     DateTime?
+  kycRejectionReason String?
 
   // Reputation & Tier
   tier              Tier @default(starter)

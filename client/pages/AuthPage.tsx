@@ -164,19 +164,19 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center py-12 px-4">
+      <Card className="w-full max-w-md shadow-xl hover-lift">
+        <CardHeader className="space-y-4">
+          <CardTitle>
             {isLogin
               ? userType === 'painter'
-                ? 'Sign in as Painter'
-                : 'Sign in to your account'
+                ? 'Welcome Back'
+                : 'Sign In'
               : userType === 'painter'
               ? 'Join as a Painter'
-              : 'Create account'}
+              : 'Create Your Account'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-base">
             {isLogin
               ? 'Welcome back! Sign in to continue.'
               : userType === 'painter'
@@ -187,13 +187,13 @@ export default function AuthPage() {
 
         <CardContent>
           {errors.form && (
-            <div className="mb-4 flex gap-2 rounded-lg bg-red-50 p-3 border border-red-200">
-              <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600" />
-              <p className="text-sm text-red-900">{errors.form}</p>
+            <div className="mb-6 flex gap-3 rounded-lg bg-red-50 p-4 border border-red-200">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600 mt-0.5" />
+              <p className="text-sm text-red-900 leading-relaxed">{errors.form}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
               <Label htmlFor="email">Email address</Label>

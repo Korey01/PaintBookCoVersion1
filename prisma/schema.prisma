@@ -456,13 +456,6 @@ model ReliabilityEvent {
   createdAt DateTime @default(now())
 }
 
-model PainterProfile_ReliabilityEvents {
-  id String @id @default(cuid())
-  painter PainterProfile @relation(fields: [painterId], references: [id], onDelete: Cascade)
-  painterId String
-  reliabilityEvents ReliabilityEvent[]
-}
-
 enum ReliabilityEventType {
   job_completed
   job_cancelled

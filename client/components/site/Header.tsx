@@ -53,8 +53,14 @@ export default function Header() {
           <Button variant="ghost" className="md:hidden" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
             <Menu className="h-5 w-5"/>
           </Button>
+          <Button asChild variant="outline" className="hidden lg:inline-flex">
+            <Link to="/join-painter">Join as Painter</Link>
+          </Button>
+          <Button asChild className="hidden sm:inline-flex bg-black text-white hover:bg-black/90 rounded-full">
+            <Link to="/post-job"><span>Post a Job</span></Link>
+          </Button>
           {!loggedIn && (
-            <Button asChild className="hidden sm:inline-flex bg-black text-white hover:bg-black/90">
+            <Button asChild variant="ghost" className="hidden sm:inline-flex">
               <Link to="/auth"><LogIn className="mr-2 h-4 w-4"/> Log in</Link>
             </Button>
           )}

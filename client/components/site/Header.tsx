@@ -41,16 +41,15 @@ export default function Header() {
           />
           <span className="sr-only">PaintBookco</span>
         </Link>
-        <nav className="hidden items-center gap-6 md:flex">
-          <NavLink to="/find-painter" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Find A Painter/Decorator</NavLink>
-          <NavLink to="/vestimator" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Vestimator</NavLink>
-                    <NavLink to="/about" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>About</NavLink>
-          <NavLink to="/trust-safety" className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Trust & Safety</NavLink>
+        <nav className="hidden items-center gap-8 md:flex">
+          <NavLink to="/vestimator" className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Estimate</NavLink>
+          <NavLink to="/about" className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>About</NavLink>
+          <NavLink to="/trust-safety" className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Trust & Safety</NavLink>
           {loggedIn && (
-            <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
+            <NavLink to={`/dashboard${search || ""}`} className={({ isActive }) => `text-sm font-medium hover:text-primary transition-colors ${isActive ? "text-primary" : "text-foreground/80"}`}>Dashboard</NavLink>
           )}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 md:gap-4">
           <Button variant="ghost" className="md:hidden" onClick={()=>setMobileOpen(true)} aria-label="Open menu">
             <Menu className="h-5 w-5"/>
           </Button>

@@ -208,11 +208,11 @@ export default function PainterDashboard() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto py-8 px-4 md:py-12 md:px-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Painter Dashboard</h1>
-        <p className="text-gray-600 mt-2">
+      <div className="mb-12 space-y-3">
+        <h1>Painter Dashboard</h1>
+        <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
           Browse available jobs and manage your quotes
         </p>
       </div>

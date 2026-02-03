@@ -190,91 +190,87 @@ export function PainterOnboarding() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="max-w-4xl mx-auto py-8">
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-600">Loading KYC status...</p>
-          </div>
+      <div className="max-w-4xl mx-auto py-8">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-600">Loading KYC status...</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/dashboard")}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
-          </Button>
-          <h1 className="text-3xl font-bold">Painter Onboarding</h1>
-          <p className="text-gray-600 mt-2">
-            Complete your KYC verification to start accepting jobs
-          </p>
-        </div>
-
-        {/* KYC Status */}
-        {kycStatus && (
-          <div className="mb-8">
-            <KYCStatus
-              status={kycStatus.verificationStatus}
-              completedAt={kycStatus.kycCompletedAt}
-              rejectionReason={kycStatus.kycRejectionReason}
-              documentsUploaded={kycStatus.idDocuments + kycStatus.insuranceDocs}
-              totalDocumentsRequired={3}
-            />
-          </div>
-        )}
-
-        {/* If Approved, Show Success Message */}
-        {kycStatus?.verificationStatus === "approved" && (
-          <Card className="mb-8 p-6 bg-green-50 border-green-200">
-            <h3 className="text-lg font-semibold text-green-900 mb-2">
-              ✓ Your KYC verification is complete!
-            </h3>
-            <p className="text-green-800 mb-4">
-              You can now browse available jobs, submit quotes, and start earning.
-            </p>
-            <Button onClick={() => navigate("/find-jobs")} className="bg-green-600 hover:bg-green-700">
-              Start Accepting Jobs
-            </Button>
-          </Card>
-        )}
-
-        {/* Tabs for Form and Documents */}
-        {kycStatus?.verificationStatus !== "approved" && (
-          <Tabs defaultValue="information" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="information">Your Information</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-            </TabsList>
-
-            {/* Information Tab */}
-            <TabsContent value="information" className="mt-6">
-              <Card className="p-6">
-                <KYCForm
-                  onSubmit={handleKYCSubmit}
-                  isLoading={submitting}
-                />
-              </Card>
-            </TabsContent>
-
-            {/* Documents Tab */}
-            <TabsContent value="documents" className="mt-6">
-              <DocumentUpload
-                onUpload={handleDocumentUpload}
-                existingDocuments={documents}
-                isLoading={false}
-              />
-            </TabsContent>
-          </Tabs>
-        )}
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      {/* Header */}
+      <div className="mb-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard")}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        </Button>
+        <h1 className="text-3xl font-bold">Painter Onboarding</h1>
+        <p className="text-gray-600 mt-2">
+          Complete your KYC verification to start accepting jobs
+        </p>
       </div>
-    </Layout>
+
+      {/* KYC Status */}
+      {kycStatus && (
+        <div className="mb-8">
+          <KYCStatus
+            status={kycStatus.verificationStatus}
+            completedAt={kycStatus.kycCompletedAt}
+            rejectionReason={kycStatus.kycRejectionReason}
+            documentsUploaded={kycStatus.idDocuments + kycStatus.insuranceDocs}
+            totalDocumentsRequired={3}
+          />
+        </div>
+      )}
+
+      {/* If Approved, Show Success Message */}
+      {kycStatus?.verificationStatus === "approved" && (
+        <Card className="mb-8 p-6 bg-green-50 border-green-200">
+          <h3 className="text-lg font-semibold text-green-900 mb-2">
+            ✓ Your KYC verification is complete!
+          </h3>
+          <p className="text-green-800 mb-4">
+            You can now browse available jobs, submit quotes, and start earning.
+          </p>
+          <Button onClick={() => navigate("/find-painter")} className="bg-green-600 hover:bg-green-700">
+            Start Accepting Jobs
+          </Button>
+        </Card>
+      )}
+
+      {/* Tabs for Form and Documents */}
+      {kycStatus?.verificationStatus !== "approved" && (
+        <Tabs defaultValue="information" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="information">Your Information</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
+
+          {/* Information Tab */}
+          <TabsContent value="information" className="mt-6">
+            <Card className="p-6">
+              <KYCForm
+                onSubmit={handleKYCSubmit}
+                isLoading={submitting}
+              />
+            </Card>
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="mt-6">
+            <DocumentUpload
+              onUpload={handleDocumentUpload}
+              existingDocuments={documents}
+              isLoading={false}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
   );
 }

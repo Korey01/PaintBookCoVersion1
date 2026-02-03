@@ -448,12 +448,19 @@ model ReliabilityEvent {
   id        String   @id @default(cuid())
   painterId String
   painter   PainterProfile @relation(fields: [painterId], references: [id], onDelete: Cascade)
-  
+
   eventType ReliabilityEventType
   value     Float     // +1, -0.5, etc
   reason    String?
-  
+
   createdAt DateTime @default(now())
+}
+
+model PainterProfile_ReliabilityEvents {
+  id String @id @default(cuid())
+  painter PainterProfile @relation(fields: [painterId], references: [id], onDelete: Cascade)
+  painterId String
+  reliabilityEvents ReliabilityEvent[]
 }
 
 enum ReliabilityEventType {

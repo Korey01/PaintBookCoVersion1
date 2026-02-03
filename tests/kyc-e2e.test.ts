@@ -349,6 +349,10 @@ async function runTests() {
     );
 
     const data = await res.json();
+    if (!data.success || !data.data.notifications || data.data.notifications.length === 0) {
+      console.log("Painter Notifications Response:", JSON.stringify(data, null, 2));
+      console.log("Looking for jobId:", jobId);
+    }
     return (
       data.success &&
       data.data.notifications &&
@@ -366,6 +370,9 @@ async function runTests() {
     );
 
     const data = await res.json();
+    if (!data.success || data.data.unreadCount < 1) {
+      console.log("Unread Notifications Response:", JSON.stringify(data, null, 2));
+    }
     return data.success && data.data.unreadCount >= 1;
   });
 

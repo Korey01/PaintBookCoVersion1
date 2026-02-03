@@ -113,6 +113,7 @@ model PainterProfile {
 
   // Relationships
   reliabilityEvents ReliabilityEvent[]
+  jobs              Job[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

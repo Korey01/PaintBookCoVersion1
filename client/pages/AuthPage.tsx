@@ -296,13 +296,13 @@ export default function AuthPage() {
             </Button>
 
             {/* Toggle Link */}
-            <div className="text-center text-sm">
+            <div className="text-center text-sm pt-2">
               {isLogin ? (
                 <>
                   Don't have an account?{' '}
                   <a
                     href={`/auth?role=${userType}`}
-                    className="font-semibold text-primary hover:underline"
+                    className="font-semibold text-primary hover:text-primary/80 transition-colors link-smooth"
                   >
                     Sign up
                   </a>
@@ -312,7 +312,7 @@ export default function AuthPage() {
                   Already have an account?{' '}
                   <a
                     href={`/auth?type=login&role=${userType}`}
-                    className="font-semibold text-primary hover:underline"
+                    className="font-semibold text-primary hover:text-primary/80 transition-colors link-smooth"
                   >
                     Sign in
                   </a>
@@ -321,27 +321,22 @@ export default function AuthPage() {
             </div>
 
             {/* Role Switch */}
-            <div className="pt-4 border-t text-center text-sm">
+            <div className="pt-6 border-t border-border/50 text-center text-sm">
+              <p className="text-muted-foreground mb-3">Or choose another role</p>
               {userType === 'painter' ? (
-                <>
-                  Looking to post a job?{' '}
-                  <a
-                    href="/auth?role=customer"
-                    className="font-semibold text-primary hover:underline"
-                  >
-                    Sign up as customer
-                  </a>
-                </>
+                <a
+                  href="/auth?role=customer"
+                  className="inline-block px-4 py-2 rounded-full border border-border/50 text-sm font-medium hover:bg-primary/5 transition-colors"
+                >
+                  Post a Job as Customer
+                </a>
               ) : (
-                <>
-                  Looking to get painting jobs?{' '}
-                  <a
-                    href="/auth?role=painter"
-                    className="font-semibold text-primary hover:underline"
-                  >
-                    Join as painter
-                  </a>
-                </>
+                <a
+                  href="/auth?role=painter"
+                  className="inline-block px-4 py-2 rounded-full border border-border/50 text-sm font-medium hover:bg-primary/5 transition-colors"
+                >
+                  Get Jobs as Painter
+                </a>
               )}
             </div>
           </form>

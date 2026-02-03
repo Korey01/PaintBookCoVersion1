@@ -146,6 +146,9 @@ async function runTests() {
     );
 
     const data = await res.json();
+    if (!data.success || data.data.verificationStatus !== "under_review") {
+      console.log("Submit KYC Response:", JSON.stringify(data, null, 2));
+    }
     return data.success && data.data.verificationStatus === "under_review";
   });
 

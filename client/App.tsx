@@ -31,6 +31,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import DashboardRouter from "./pages/DashboardRouter";
 import Disputes from "./pages/Disputes";
+import PaymentHistory from "./pages/PaymentHistory";
 import About from "./pages/About";
 import Support from "./pages/Support";
 import Privacy from "./pages/Privacy";

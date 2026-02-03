@@ -36,6 +36,7 @@ export function createServer() {
   app.use("/api/kyc", kycRoutes);
   app.use("/api/2fa", twoFARoutes);
   app.use("/api/notifications", notificationsRoutes);
+  app.use("/api/admin", adminRoutes);
 
   // 404 handler
   app.use((_req, res) => {

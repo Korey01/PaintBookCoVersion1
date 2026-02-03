@@ -119,8 +119,16 @@ router.post("/initiate", authMiddleware, requireCustomer, async (req: Request, r
       where: { id: job.customerId },
     });
 
+    if (!job.painter) {
+      res.status(400).json({
+        success: false,
+        error: "Painter information not found for this job",
+      });
+      return;
+    }
+
     const painterUser = await prisma.user.findUnique({
-      where: { id: (job.painter?.userId || "") as string },
+      where: { id: job.painter.userId },
     });
 
     if (!customer || !painterUser) {

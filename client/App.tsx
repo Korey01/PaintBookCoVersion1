@@ -41,6 +41,7 @@ import Messages from "./pages/Messages";
 import Favorites from "./pages/Favorites";
 import Estimates from "./pages/Estimates";
 import Admin from "./pages/Admin";
+import { PainterOnboarding } from "./pages/PainterOnboarding";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

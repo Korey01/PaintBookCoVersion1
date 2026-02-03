@@ -38,6 +38,7 @@ export function createServer() {
   app.use("/api/2fa", twoFARoutes);
   app.use("/api/notifications", notificationsRoutes);
   app.use("/api/admin", adminRoutes);
+  app.use("/api/disputes", disputesRoutes);
 
   // 404 handler
   app.use((_req, res) => {

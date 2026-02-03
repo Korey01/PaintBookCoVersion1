@@ -9,9 +9,15 @@ import { ShieldCheck, BadgeCheck, ArrowRight, Quote, Sparkles, Calculator, MapPi
 import LogoStroke from "@/components/site/LogoStroke";
 import PainterCard from "@/components/site/PainterCard";
 import { painters } from "@/data/painters";
+import { useScrollAnimation, useScrollAnimationList } from "@/hooks/useScrollAnimation";
 
-export default function Index() { useEffect(()=>{ document.title = "PaintBook | Hire Verified Painters"; },[]);
+export default function Index() {
+  useEffect(()=>{ document.title = "PaintBook | Hire Verified Painters"; },[]);
   const navigate = useNavigate();
+  const sectionRef1 = useScrollAnimation();
+  const sectionRef2 = useScrollAnimationList();
+  const sectionRef3 = useScrollAnimation();
+  const sectionRef4 = useScrollAnimationList();
   const [jobType, setJobType] = useState<string>("");
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {

@@ -266,8 +266,8 @@ async function runTests() {
       console.log("Initiate Payment Response:", JSON.stringify(data, null, 2));
       console.log("Response Status:", res.status);
     }
-    // Check for either data.data or data.escrowTransactionId (from Transpact response)
-    return (data.data || (data.success && res.status === 201)) ? true : false;
+    // Payment should return escrow transaction ID and Transpact transaction ID
+    return data.data && data.data.escrowTransactionId && data.data.transpactTransactionId;
   });
 
   // Test 14: Authorization - Painter Cannot Accept Quote

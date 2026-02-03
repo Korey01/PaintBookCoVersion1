@@ -11,6 +11,7 @@ import twoFARoutes from "./routes/2fa";
 import notificationsRoutes from "./routes/notifications";
 import adminRoutes from "./routes/admin";
 import disputesRoutes from "./routes/disputes";
+import paintersRoutes from "./routes/painters";
 
 export function createServer() {
   const app = express();

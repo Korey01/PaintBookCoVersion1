@@ -85,15 +85,17 @@ export default function Index() {
       </section>
 
 
-      <section className="container mx-auto px-4">
-        <div className="grid items-center gap-8 md:grid-cols-2">
-          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fc1db86da96eb40bd97ce4e112a273df4?format=webp&width=1200" alt="Estimate tools" className="rounded-xl shadow-lg"/>
-          <div>
-            <h3 className="text-2xl font-bold">Estimate your paint in minutes</h3>
-            <p className="mt-2 text-muted-foreground">Enter room dimensions, number of coats and openings. Get litres required and a baseline material cost. Attach to your job post with one click.</p>
-            <div className="mt-4 flex gap-3">
-              <Button onClick={() => navigate("/vestimator")}>Open Vestimator</Button>
-              <Button onClick={() => navigate("/find-painter")} variant="outline">Find A Painter/Decorator</Button>
+      <section ref={sectionRef3} className="container mx-auto px-4 scroll-animate">
+        <div className="grid items-center gap-8 md:gap-12 md:grid-cols-2">
+          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fc1db86da96eb40bd97ce4e112a273df4?format=webp&width=1200" alt="Estimate tools" className="rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300"/>
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h3>Estimate your paint in minutes</h3>
+              <p className="text-lg text-muted-foreground leading-relaxed">Enter room dimensions, number of coats and openings. Get litres required and a baseline material cost. Attach to your job post with one click.</p>
+            </div>
+            <div className="flex gap-4 flex-wrap">
+              <Button onClick={() => navigate("/vestimator")} size="lg">Open Vestimator</Button>
+              <Button onClick={() => navigate("/find-painter")} variant="outline" size="lg">Find A Painter</Button>
             </div>
           </div>
         </div>

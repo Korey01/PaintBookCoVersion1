@@ -86,6 +86,10 @@ async function runTests() {
     });
 
     const data = await res.json();
+    if (!res.ok) {
+      console.log("Response status:", res.status);
+      console.log("Error response:", JSON.stringify(data, null, 2));
+    }
     if (data.token) {
       painterToken = data.token;
       return true;

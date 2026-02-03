@@ -109,7 +109,6 @@ router.post("/initiate", authMiddleware, requireCustomer, async (req: Request, r
           painterAmount: painterAmount,
           commissionRate,
           status: "pending",
-          escrowProvider: "transpact",
         },
       });
     }

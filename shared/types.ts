@@ -10,6 +10,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   userType: "customer" | "painter";
+  postcode?: string; // Optional postcode for painters
 }
 
 export interface LoginRequest {

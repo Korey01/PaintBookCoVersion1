@@ -263,13 +263,13 @@ export default function PainterDashboard() {
             </Card>
           ) : (
             availableJobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-lg transition-shadow">
+              <Card key={job.id} className="hover-lift">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <CardTitle className="text-xl">{job.title}</CardTitle>
-                      <CardDescription className="mt-2 flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
+                      <CardTitle>{job.title}</CardTitle>
+                      <CardDescription className="mt-3 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 flex-shrink-0" />
                         {job.postcode}
                       </CardDescription>
                     </div>
@@ -277,24 +277,24 @@ export default function PainterDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {job.description && (
-                      <p className="text-sm text-gray-600">{job.description}</p>
+                      <p className="text-base text-muted-foreground leading-relaxed">{job.description}</p>
                     )}
 
-                    <div className="flex gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                       {job.budgetMin && (
                         <div>
-                          <p className="text-sm text-gray-500">Budget</p>
-                          <p className="font-semibold">
+                          <p className="text-sm font-medium text-muted-foreground">Budget</p>
+                          <p className="text-lg font-bold mt-1">
                             £{job.budgetMin}
                             {job.budgetMax && ` - £${job.budgetMax}`}
                           </p>
                         </div>
                       )}
                       <div>
-                        <p className="text-sm text-gray-500">Posted</p>
-                        <p className="font-semibold text-sm">
+                        <p className="text-sm font-medium text-muted-foreground">Posted</p>
+                        <p className="font-semibold text-lg mt-1">
                           {new Date(job.createdAt).toLocaleDateString()}
                         </p>
                       </div>

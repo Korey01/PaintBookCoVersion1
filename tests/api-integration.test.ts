@@ -61,6 +61,7 @@ async function test(
 // Test Data Storage
 let customerToken = "";
 let painterToken = "";
+let painterUserId = "";
 let jobId = "";
 let quoteId = "";
 

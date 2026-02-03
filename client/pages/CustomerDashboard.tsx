@@ -44,13 +44,48 @@ export default function CustomerDashboard(){
   const favIds: string[] = JSON.parse(localStorage.getItem('paintbook:favs')||'[]');
   const favs = painters.filter(p => favIds.includes(p.id));
   const profile = JSON.parse(localStorage.getItem('paintbook:customerProfile')||'{}');
-  const [jobs, setJobs] = useState<any[]>(() => readJobsFromStorage());
+  const [jobs, setJobs] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>(() => readNotificationsFromStorage());
   const [editOpen, setEditOpen] = useState(false);
   const [name, setName] = useState<string>(profile.name || "");
   const [location, setLocation] = useState<string>(profile.location || "");
   const [phone, setPhone] = useState<string>(profile.phone || "");
   const [signupNotice, setSignupNotice] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch jobs from API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const token = localStorage.getItem('paintbook:token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('/api/jobs', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && Array.isArray(data.data.jobs)) {
+            setJobs(data.data.jobs);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch jobs:', error);
+        // Fallback to localStorage if API fails
+        setJobs(readJobsFromStorage());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
 
   const pendingPayments = useMemo(() => jobs.filter((job: any) => job && job.status === 'awaiting_payment' && job.escrowOptIn), [jobs]);
   const escrowNotifications = useMemo(() => notifications.filter((n: any) => n && n.type === 'escrow_payment_due'), [notifications]);

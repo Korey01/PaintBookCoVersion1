@@ -12,6 +12,7 @@ import notificationsRoutes from "./routes/notifications";
 import adminRoutes from "./routes/admin";
 import disputesRoutes from "./routes/disputes";
 import paintersRoutes from "./routes/painters";
+import messagesRoutes from "./routes/messages";
 
 export function createServer() {
   const app = express();

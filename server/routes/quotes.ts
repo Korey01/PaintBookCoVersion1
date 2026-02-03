@@ -298,11 +298,24 @@ router.put("/:quoteId", authMiddleware, requireCustomer, async (req: Request, re
 
     // Update job if accepted
     if (status === "accepted") {
+      // Get painter's profile to get the correct profileId
+      const painterProfile = await prisma.painterProfile.findUnique({
+        where: { userId: quote.painterId },
+      });
+
+      if (!painterProfile) {
+        res.status(404).json({
+          success: false,
+          error: "Painter profile not found",
+        });
+        return;
+      }
+
       await prisma.job.update({
         where: { id: quote.jobId },
         data: {
           status: "quote_accepted",
-          painterId: quote.painterId,
+          painterId: painterProfile.id,
           escrowAmount: quote.totalPrice,
         },
       });

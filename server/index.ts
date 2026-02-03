@@ -40,6 +40,7 @@ export function createServer() {
   app.use("/api/notifications", notificationsRoutes);
   app.use("/api/admin", adminRoutes);
   app.use("/api/disputes", disputesRoutes);
+  app.use("/api/painters", paintersRoutes);
 
   // 404 handler
   app.use((_req, res) => {

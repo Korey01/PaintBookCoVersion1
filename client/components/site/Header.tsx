@@ -1,7 +1,7 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { LogIn, LogOut, Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Header() {

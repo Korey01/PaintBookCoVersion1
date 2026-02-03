@@ -343,7 +343,7 @@ async function runTests() {
   await test("Painter Receives Job Notification", async () => {
     const res = await request(
       "GET",
-      "/notifications?type=job_available",
+      "/notifications?type=job_posted",
       undefined,
       painterToken
     );

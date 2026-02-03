@@ -63,6 +63,7 @@ const App = () => (
             <Route path="/join-painter" element={<JoinPainter />} />
             <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
             <Route path="/painter-onboarding" element={<PainterOnboarding />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<DashboardRouter />} />

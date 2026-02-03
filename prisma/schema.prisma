@@ -1,0 +1,544 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MODELS
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  userType  UserType // "customer" or "painter"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  customerProfile   CustomerProfile?
+  painterProfile    PainterProfile?
+  jobs              Job[]
+  quotes            Quote[]
+  notifications     Notification[]
+  messages          Message[]
+  sentMessages      Message[] @relation("SentMessages")
+  receivedMessages  Message[] @relation("ReceivedMessages")
+  disputes          Dispute[]
+  disputeInitiated  Dispute[] @relation("InitiatedBy")
+}
+
+enum UserType {
+  customer
+  painter
+}
+
+// ============================================================================
+// CUSTOMER PROFILE
+// ============================================================================
+
+model CustomerProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  firstName String?
+  lastName  String?
+  phone     String?
+  postcode  String?
+  
+  favoritesPainterIds String[] @default([])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================================
+// PAINTER PROFILE & VERIFICATION
+// ============================================================================
+
+model PainterProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  businessName   String?
+  bio            String?
+  phone          String?
+  postcode       String
+  serviceRadius  Int @default(15) // miles
+  
+  skills         String[] @default([]) // interior, exterior, kitchen cabinets, wallpaper
+  availability   String[] @default([]) // This week, Next week, etc
+  
+  rateMin        Float @default(18)
+  rateMax        Float @default(35)
+  
+  portfolioImages String[] @default([])
+  
+  // Verification fields
+  verificationStatus VerificationStatus @default(pending)
+  idType            String? // passport, driving_license, etc
+  idNumber          String?
+  idExpiryDate      DateTime?
+  idDocuments       String[] @default([])
+  
+  // Insurance
+  hasInsurance      Boolean @default(false)
+  insuranceInsurer  String?
+  insurancePolicy   String?
+  insuranceExpiry   DateTime?
+  insuranceDocs     String[] @default([])
+  
+  // Reputation & Tier
+  tier              Tier @default(starter)
+  reliabilityScore  Float @default(0)
+  totalJobs         Int @default(0)
+  totalEarnings     Float @default(0)
+  cancellationRate  Float @default(0)
+  
+  // 2FA
+  twoFAEnabled      Boolean @default(false)
+  twoFASecret       String?
+  
+  // Commission tracking
+  currentCommissionTier Int @default(0) // Jobs 1-5 → 12%, 6-10 → 10%, 11+ → 8%
+  jobsInCurrentTier Int @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum VerificationStatus {
+  pending
+  under_review
+  approved
+  denied
+}
+
+enum Tier {
+  starter
+  pro
+  premium
+}
+
+// ============================================================================
+// JOB MODELS
+// ============================================================================
+
+model Job {
+  id        String   @id @default(cuid())
+  customerId String
+  customer  User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  jobType   JobType // "interior", "exterior", "kitchen", "wallpaper"
+  title     String
+  description String?
+  
+  // Location & scope
+  postcode  String
+  
+  // Budget
+  budgetMin Float?
+  budgetMax Float?
+  
+  // Images
+  images    String[] @default([])
+  
+  // Paint details (from estimator)
+  paintBrand     String?
+  rooms          Json[] @default([]) // Array of Room objects with dimensions
+  estimatedMaterialCost Float?
+  estimatedLitres Float?
+  estimatedWallArea Float?
+  
+  // Escrow & payment
+  useEscrow Boolean @default(true)
+  escrowAmount Float?
+  escrowProvider String @default("transpact") // transpact
+  escrowTransactionId String?
+  escrowStatus EscrowStatus @default(not_initiated)
+  
+  // Job status
+  status    JobStatus @default(open)
+  
+  // Selected painter (after quote accepted)
+  painterId String?
+  painter   PainterProfile? @relation(fields: [painterId], references: [id])
+  
+  // Contact info
+  customerEmail String?
+  customerPhone String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  quotes Quote[]
+  escrowTransactions EscrowTransaction[]
+  messages Message[]
+  notifications Notification[]
+  disputes Dispute[]
+  completion JobCompletion?
+}
+
+enum JobType {
+  interior
+  exterior
+  kitchen
+  wallpaper
+  other
+}
+
+enum JobStatus {
+  open           // Posted, awaiting quotes
+  quote_requested // Quote requested from specific painter
+  quote_received  // Quote submitted, awaiting acceptance
+  quote_accepted  // Quote accepted by customer
+  escrow_funded   // Payment received, job active
+  in_progress     // Work started
+  completed       // Work done, pending approval
+  approved        // Customer approved, job finished
+  cancelled       // Job cancelled
+  dispute         // Under dispute
+}
+
+// ============================================================================
+// QUOTE & NEGOTIATION
+// ============================================================================
+
+model Quote {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  painterId String
+  painter   User     @relation(fields: [painterId], references: [id], onDelete: Cascade)
+  
+  // Quote details
+  jobPrice  Float
+  consultationFee Float @default(0)
+  totalPrice Float
+  
+  // Negotiation
+  status    QuoteStatus @default(pending)
+  rejectionReason String?
+  
+  // Negotiation history
+  negotiationHistory Json[] @default([]) // Array of { proposedBy, price, timestamp, status }
+  
+  // Timing
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  acceptedAt DateTime?
+  expiresAt DateTime?
+}
+
+enum QuoteStatus {
+  pending        // Awaiting customer response
+  accepted       // Customer accepted quote
+  rejected       // Customer rejected quote
+  counter_offered // Painter counter-offered
+  expired        // Quote expired
+}
+
+// ============================================================================
+// ESCROW & PAYMENT
+// ============================================================================
+
+model EscrowTransaction {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  // Transpact details
+  transpactTransactionId String?
+  transpactStatus String? // "pending", "completed", "released", "refunded"
+  
+  // Amounts
+  totalAmount Float    // Total customer pays
+  painterbookcoCommission Float  // PaintBookCo commission
+  escrowCost Float     // Cost of escrow service (paid by PaintBookCo from commission)
+  painterAmount Float   // What painter gets
+  
+  // Commission calculation
+  commissionRate Float @default(12) // 12%, 10%, or 8% based on painter tier
+  
+  // Funds
+  customerPaidAmount Float @default(0)
+  painterPaidAmount Float @default(0)
+  
+  // Status
+  status    EscrowStatus @default(not_initiated)
+  
+  // Cancellation handling
+  cancelled Boolean @default(false)
+  cancellationType CancellationType? // "pre_escrow" or "post_escrow"
+  cancellationReason String?
+  
+  // Timestamps
+  fundedAt DateTime?
+  releasedAt DateTime?
+  cancelledAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum EscrowStatus {
+  not_initiated    // Job posted, no payment
+  pending          // Payment initiated
+  funded           // Money received from customer
+  released         // Money released to painter
+  refunded         // Money refunded to customer
+  frozen           // Dispute/hold on funds
+}
+
+enum CancellationType {
+  pre_escrow   // Cancel before payment
+  post_escrow  // Cancel after payment
+  late         // Cancel <24-48h before start
+}
+
+// ============================================================================
+// JOB COMPLETION & APPROVAL
+// ============================================================================
+
+model JobCompletion {
+  id        String   @id @default(cuid())
+  jobId     String   @unique
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  // Painter completion details
+  markedCompleteAt DateTime?
+  completionNotes String?
+  completionImages String[] @default([])
+  
+  // Customer approval
+  approvedAt DateTime?
+  approvalNotes String?
+  
+  // Auto-approval
+  autoApprovedAt DateTime? // Auto-approve after 7 days if no dispute
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================================
+// DISPUTES
+// ============================================================================
+
+model Dispute {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  initiatedBy String
+  initiatedByUser User @relation("InitiatedBy", fields: [initiatedBy], references: [id], onDelete: Cascade)
+  
+  otherId String
+  otherUser User @relation(fields: [otherId], references: [id], onDelete: Cascade)
+  
+  // Dispute details
+  reason String
+  description String?
+  evidence EvidenceSubmission[]
+  
+  // Status
+  status DisputeStatus @default(open)
+  resolution String?
+  
+  // Resolution amounts (if applicable)
+  customerRefundAmount Float?
+  painterCompensationAmount Float?
+  
+  // Timing
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  openedAt DateTime @default(now())
+  resolvedAt DateTime?
+}
+
+enum DisputeStatus {
+  open       // Awaiting evidence & review
+  in_review  // Admin reviewing
+  resolved   // Resolved
+  closed     // Closed without resolution
+}
+
+model EvidenceSubmission {
+  id        String   @id @default(cuid())
+  disputeId String
+  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  
+  submittedBy String
+  evidence Json // { type: "photo" | "message", data: string }
+  
+  createdAt DateTime @default(now())
+}
+
+// ============================================================================
+// MESSAGING
+// ============================================================================
+
+model Message {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  senderId  String
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  recipientId String
+  recipient User     @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  
+  content   String
+  attachments String[] @default([])
+  
+  createdAt DateTime @default(now())
+  readAt DateTime?
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id])
+  
+  type      NotificationType
+  title     String
+  body      String
+  
+  readAt DateTime?
+  
+  createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  job_posted         // New job posted in area
+  quote_requested    // Quote requested from painter
+  quote_received     // Quote received by customer
+  quote_accepted     // Quote accepted
+  payment_received   // Payment received in escrow
+  job_complete       // Job marked complete
+  job_approved       // Job approved by customer
+  dispute_raised     // Dispute raised
+  message_received   // New message
+}
+
+// ============================================================================
+// REPUTATION & RELIABILITY
+// ============================================================================
+
+model ReliabilityEvent {
+  id        String   @id @default(cuid())
+  painterId String
+  painter   PainterProfile @relation(fields: [painterId], references: [id], onDelete: Cascade)
+  
+  eventType ReliabilityEventType
+  value     Float     // +1, -0.5, etc
+  reason    String?
+  
+  createdAt DateTime @default(now())
+}
+
+enum ReliabilityEventType {
+  job_completed
+  job_cancelled
+  late_arrival
+  customer_dispute
+  low_quality_work
+  on_time
+  excellent_review
+}
+
+relation ReliabilityEvent {
+  painter PainterProfile
+}
+
+// ============================================================================
+// B2B CUSTOMER
+// ============================================================================
+
+model B2BCustomer {
+  id        String   @id @default(cuid())
+  
+  companyName String
+  contactEmail String @unique
+  contactPhone String?
+  
+  projectDescription String?
+  location String?
+  
+  status B2BStatus @default(discovery)
+  
+  meetingNotes String?
+  meetingDate DateTime?
+  
+  // Agreement
+  agreementStatus AgreementStatus @default(none)
+  agreementUrl String?
+  
+  // Milestones (if project accepted)
+  milestones B2BMilestone[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum B2BStatus {
+  discovery      // Initial inquiry
+  consultation   // Discussing with team
+  agreement      // Agreement drafted/signed
+  active         // Project ongoing
+  completed      // Project complete
+  rejected       // Rejected or inactive
+}
+
+enum AgreementStatus {
+  none
+  drafted
+  pending_signature
+  signed
+}
+
+model B2BMilestone {
+  id        String   @id @default(cuid())
+  customerId String
+  customer  B2BCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  title     String
+  description String?
+  scope     String?
+  
+  budgetAmount Float
+  
+  status    MilestoneStatus @default(pending)
+  
+  dueDate   DateTime?
+  completedAt DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum MilestoneStatus {
+  pending
+  in_progress
+  completed
+  approved
+}

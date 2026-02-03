@@ -68,50 +68,54 @@ model PainterProfile {
   id        String   @id @default(cuid())
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   businessName   String?
   bio            String?
   phone          String?
   postcode       String
   serviceRadius  Int @default(15) // miles
-  
+
   skills         String[] @default([]) // interior, exterior, kitchen cabinets, wallpaper
   availability   String[] @default([]) // This week, Next week, etc
-  
+
   rateMin        Float @default(18)
   rateMax        Float @default(35)
-  
+
   portfolioImages String[] @default([])
-  
+
   // Verification fields
   verificationStatus VerificationStatus @default(pending)
   idType            String? // passport, driving_license, etc
   idNumber          String?
   idExpiryDate      DateTime?
   idDocuments       String[] @default([])
-  
+
   // Insurance
   hasInsurance      Boolean @default(false)
   insuranceInsurer  String?
   insurancePolicy   String?
   insuranceExpiry   DateTime?
   insuranceDocs     String[] @default([])
-  
+
   // Reputation & Tier
   tier              Tier @default(starter)
   reliabilityScore  Float @default(0)
   totalJobs         Int @default(0)
   totalEarnings     Float @default(0)
   cancellationRate  Float @default(0)
-  
+
   // 2FA
   twoFAEnabled      Boolean @default(false)
   twoFASecret       String?
-  
+
   // Commission tracking
   currentCommissionTier Int @default(0) // Jobs 1-5 → 12%, 6-10 → 10%, 11+ → 8%
   jobsInCurrentTier Int @default(0)
-  
+
+  // Relationships
+  reliabilityEvents ReliabilityEvent[]
+  jobs Job[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

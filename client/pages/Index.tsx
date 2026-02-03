@@ -32,40 +32,92 @@ export default function Index() {
 
   return (
     <div className="space-y-20 sm:space-y-28 lg:space-y-32">
-      <section className="relative overflow-hidden">
-        <div className="container mx-auto px-4 pt-0 pb-0 md:pt-0 animate-fade-in">
-          <div className="flex flex-col items-center text-center gap-6 py-12 md:hidden">
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
-              alt="PaintBookco logo"
-              className="h-16 w-auto"
-            />
-            <p className="max-w-xs text-sm text-muted-foreground">Find ID-verified painters near you and pay safely through escrow.</p>
-            <div className="flex w-full max-w-xs flex-col gap-3">
-              <Button onClick={() => navigate("/find-painter")} className="h-11 rounded-lg bg-black text-white hover:bg-black/90">Find A Painter/Decorator</Button>
-              <Button onClick={() => navigate("/join-painter")} variant="outline" className="h-11 rounded-lg border-black text-black hover:bg-black/5">Join as A Painter/Decorator</Button>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-12 md:pt-20">
+        <div className="container mx-auto px-4 animate-fade-in">
+          <div className="space-y-8 md:space-y-12 text-center max-w-4xl mx-auto">
+            {/* Main Heading */}
+            <div className="space-y-4">
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-tight text-foreground">
+                Painting jobs, finally done the smart way.
+              </h1>
+
+              {/* Supporting Text */}
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                See your project, price it accurately, and book a verified painter — all in one place. Built exclusively for painting & decorating.
+              </p>
             </div>
-            <div className="flex w-full max-w-xs flex-col gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary"/> ID verified professionals</span>
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Insured & vetted</span>
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Escrow protection via Stripe</span>
-            </div>
-          </div>
-          <div className="relative hidden h-[60vh] w-full flex-col items-center text-center md:flex">
-            <LogoStroke />
-            <motion.div className="pointer-events-auto absolute inset-x-0 top-[calc(56%-101px)] md:top-[calc(56%-48px)] z-20 flex flex-wrap items-center justify-center gap-3 px-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
-                <Button onClick={() => navigate('/find-painter')} size="sm" className="bg-black text-white hover:bg-black/90 rounded-lg md:h-14 md:px-10 md:text-base">Find A Painter/Decorator</Button>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}>
-                <Button onClick={() => navigate('/join-painter')} size="sm" variant="outline" className="bg-transparent text-black border-black hover:bg-black/5 rounded-lg md:h-14 md:px-10 md:text-base">Join as A Painter/Decorator</Button>
-              </motion.div>
+
+            {/* CTA Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              className="flex justify-center"
+            >
+              <Button
+                onClick={() => navigate('/vestimator')}
+                size="lg"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                See Your Estimate in Minutes
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
             </motion.div>
-            <div className="pointer-events-none absolute bottom-[168px] left-1/2 z-10 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 px-4 text-sm text-black" style={{ filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.25)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.6))" }}>
-              <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-black"/> ID verified</span>
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-black"/> Insured</span>
-              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-black"/> 100% escrow protection — via Stripe (FCA-regulated payment partner)</span>
-            </div>
+
+            {/* Trust Badges */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              className="flex flex-wrap justify-center gap-4 sm:gap-6 pt-4"
+            >
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <BadgeCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="font-medium">ID Verified</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="font-medium">Fully Insured</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="font-medium">100% Escrow Protected</span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Decorative Elements */}
+          <div className="mt-16 md:mt-24 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="space-y-4 p-6 rounded-2xl border border-border/50 bg-card/50 backdrop-blur hover:bg-card hover:border-border transition-all duration-300"
+            >
+              <div className="flex items-start gap-4">
+                <Calculator className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                <div className="text-left">
+                  <h3 className="font-bold text-lg">Smart Estimating</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Get accurate quotes in minutes with our AI-powered estimator tool.</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="space-y-4 p-6 rounded-2xl border border-border/50 bg-card/50 backdrop-blur hover:bg-card hover:border-border transition-all duration-300"
+            >
+              <div className="flex items-start gap-4">
+                <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                <div className="text-left">
+                  <h3 className="font-bold text-lg">Local Professionals</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Connect with verified, insured painters in your area instantly.</p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>

@@ -40,6 +40,7 @@ router.post("/initiate", authMiddleware, requireCustomer, async (req: Request, r
         quotes: {
           where: { status: "accepted" },
         },
+        painter: true,
       },
     });
 

@@ -87,6 +87,9 @@ const App = () => (
             <Route path="/escrow-demo/painter" element={<EscrowPainterDemo />} />
             <Route path="/painter/:id" element={<PainterProfile />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/auth-new" element={<AuthPage />} />
+            <Route path="/painter-dashboard" element={<PainterDashboard />} />
+            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -193,19 +193,21 @@ export default function CustomerDashboard(){
   }, []);
 
   return (
-    <div className="container mx-auto grid gap-8 px-4 py-10">
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold flex items-center gap-2">Customer Dashboard</div>
-            <div className="text-xs text-muted-foreground inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> Deposits are escrow‑protected</div>
+    <div className="container mx-auto grid gap-8 px-4 py-10 md:py-14">
+      <div>
+        <div className="space-y-3 mb-8">
+          <h1>Customer Dashboard</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl">Manage your painting projects, track quotes, and secure payments with escrow protection</p>
+        </div>
+        <div className="flex flex-wrap gap-4">
+          <Button onClick={()=>navigate('/post-job')} size="lg">Post a Job</Button>
+          <Button variant="outline" onClick={()=>navigate('/find-painter')} size="lg">Browse Painters</Button>
+          <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground p-2">
+            <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0"/>
+            <span>All payments protected by escrow</span>
           </div>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button onClick={()=>navigate('/post-job')}>Post a Job</Button>
-            <Button variant="outline" onClick={()=>navigate('/find-painter')}>Browse Painters</Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {signupNotice && (
         <Card className="border-primary/30 bg-primary/5">

@@ -69,7 +69,7 @@ export function PainterOnboarding() {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem("paintbook:token");
         if (!token) return;
 
         const response = await fetch("/api/kyc/documents", {

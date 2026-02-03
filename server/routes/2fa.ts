@@ -147,15 +147,8 @@ router.post(
         },
       });
 
-      // Create notification
-      await prisma.notification.create({
-        data: {
-          userId: req.userId!,
-          type: "message_received", // Use existing type for 2FA notifications
-          title: "2FA Enabled",
-          body: "Two-factor authentication has been successfully enabled on your account.",
-        },
-      });
+      // Note: 2FA notifications are not job-related, so we skip creating them here
+      // In a future enhancement, we could add a separate NotificationMessage model for non-job notifications
 
       const response: ApiResponse = {
         success: true,

@@ -107,8 +107,9 @@ async function runTests() {
       postcode: "SW1A1AA", // Must match job's postcode for job discovery
     });
     const data = await res.json();
-    if (data.token) {
+    if (data.token && data.user) {
       painterToken = data.token;
+      painterUserId = data.user.id;
       return true;
     }
     return false;

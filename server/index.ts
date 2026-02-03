@@ -30,6 +30,7 @@ export function createServer() {
   app.use("/api/jobs", jobsRoutes);
   app.use("/api/quotes", quotesRoutes);
   app.use("/api/payments", paymentsRoutes);
+  app.use("/api/kyc", kycRoutes);
 
   // 404 handler
   app.use((_req, res) => {

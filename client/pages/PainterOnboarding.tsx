@@ -104,9 +104,9 @@ export function PainterOnboarding() {
   const handleKYCSubmit = async (formData: any) => {
     setSubmitting(true);
     try {
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("paintbook:token");
       if (!token) {
-        navigate("/login");
+        navigate("/join-painter");
         return;
       }
 

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Layout } from "@/components/site/Layout";
 import { KYCForm } from "@/components/painter/KYCForm";
 import { DocumentUpload } from "@/components/painter/DocumentUpload";
 import { KYCStatus } from "@/components/painter/KYCStatus";

@@ -97,7 +97,7 @@ router.post(
       await prisma.notification.create({
         data: {
           userId: req.userId!,
-          type: "kyc_submitted",
+          type: "message_received", // Use existing type for KYC notifications
           title: "KYC Information Submitted",
           body: "Your KYC information has been submitted and is under review. We'll notify you once verification is complete.",
         },

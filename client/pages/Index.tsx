@@ -123,7 +123,7 @@ export default function Index() {
       </section>
 
       {/* B2B Commercial Section */}
-      <section className="relative py-16 md:py-24 lg:py-32 bg-gradient-to-b from-white via-slate-50 to-white border-t border-border/50">
+      <section className="relative py-16 md:py-24 lg:py-32">
         <div className="container mx-auto px-4 animate-fade-in">
           <div className="space-y-8 md:space-y-12 text-center max-w-4xl mx-auto">
             {/* Section Badge */}

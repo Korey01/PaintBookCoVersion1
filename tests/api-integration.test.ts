@@ -157,7 +157,7 @@ async function runTests() {
   await test("Get Job Details", async () => {
     const res = await request("GET", `/jobs/${jobId}`, undefined, customerToken);
     const data = await res.json();
-    return data.job && data.job.title === "Living Room Paint Job";
+    return data.data && data.data.title === "Living Room Paint Job";
   });
 
   // Test 7: List Customer Jobs
@@ -165,9 +165,9 @@ async function runTests() {
     const res = await request("GET", "/jobs?limit=10", undefined, customerToken);
     const data = await res.json();
     return (
-      data.jobs &&
-      data.jobs.length > 0 &&
-      data.jobs.some((j: any) => j.id === jobId)
+      data.data &&
+      data.data.length > 0 &&
+      data.data.some((j: any) => j.id === jobId)
     );
   });
 
@@ -176,9 +176,9 @@ async function runTests() {
     const res = await request("GET", "/jobs?limit=10", undefined, painterToken);
     const data = await res.json();
     return (
-      data.jobs &&
-      data.jobs.length > 0 &&
-      data.jobs.some((j: any) => j.id === jobId)
+      data.data &&
+      data.data.length > 0 &&
+      data.data.some((j: any) => j.id === jobId)
     );
   });
 

@@ -227,7 +227,22 @@
   }
 
   .surface-card {
-    @apply rounded-xl border bg-card/80 shadow-sm backdrop-blur;
+    @apply rounded-2xl border bg-card/95 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Modern card with smooth transitions */
+  .card-modern {
+    @apply rounded-2xl border border-border/50 bg-card p-6 sm:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border-primary/30;
+  }
+
+  /* Section divider with gradient */
+  .section-divider {
+    @apply h-px bg-gradient-to-r from-transparent via-border to-transparent;
+  }
+
+  /* Smooth link transition */
+  .link-smooth {
+    @apply transition-all duration-300 hover:text-primary;
   }
 }
 

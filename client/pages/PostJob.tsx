@@ -331,7 +331,7 @@ export default function PostJob() {
     setStep((s) => Math.max(1, (s - 1) as Step));
   }
 
-  function submit() {
+  async function submit() {
     const r = schemaStep3.safeParse({ email, phone });
     if (!r.success) {
       const e: Record<string, string> = {};
@@ -340,104 +340,89 @@ export default function PostJob() {
       return;
     }
 
-    // Store lightweight job (avoid huge base64 images in localStorage)
-    const lightImagesCount = images.length;
-    const jobId = `job_${Date.now()}`;
-    const estimatePayload = attachedEstimate
-      ? { ...attachedEstimate, brand: attachedEstimate.brand ?? selectedBrand }
-      : { ...estimatorInput, ...estimate, brand: selectedBrand };
-    const job = {
-      id: jobId,
-      jobType,
-      desc,
-      budgetMin,
-      budgetMax,
-      postcode,
-      email,
-      phone,
-      images: [],
-      imagesCount: lightImagesCount,
-      attachedEstimate: estimatePayload,
-      painter: prePainter,
-      createdAt: new Date().toISOString(),
-      escrowOptIn: useEscrow,
-      escrowFeeEstimate,
-      status: "pending_painter",
-      acceptedAmount: null,
-      acceptedAt: null,
-    };
-
-    let list: any[] = [];
     try {
-      list = JSON.parse(localStorage.getItem("paintbook:jobs") || "[]");
-    } catch {}
+      // Get authentication token (check if customer is already logged in)
+      let token = localStorage.getItem("paintbook:token");
 
-    // Keep only the most recent 50 to stay under quota
-    if (list.length > 49) list = list.slice(-49);
+      // If not logged in, create a temporary customer account
+      if (!token) {
+        const registerResponse = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password: `customer_${Date.now()}`, // Generate temporary password
+            userType: "customer",
+          }),
+        });
 
-    // Strip any existing heavy images from previous entries
-    list = list.map((j: any) => ({
-      ...j,
-      images: [],
-      imagesCount:
-        j.imagesCount ?? (Array.isArray(j.images) ? j.images.length : 0),
-    }));
+        if (!registerResponse.ok) {
+          // Email might already exist
+          const { toast } = await import("sonner");
+          toast.error("Please sign in to post a job");
+          navigate("/auth?type=login");
+          return;
+        }
 
-    list.push(job);
+        const registerData = await registerResponse.json();
+        token = registerData.token;
 
-    const json = JSON.stringify(list);
-    const trySet = () => {
-      try {
-        localStorage.setItem("paintbook:jobs", json);
-        return true;
-      } catch {
-        return false;
+        // Store token for future use
+        localStorage.setItem("paintbook:token", token);
+        localStorage.setItem("paintbook:user", JSON.stringify(registerData.user));
       }
-    };
 
-    if (!trySet()) {
-      // As a fallback, store only the latest job
-      const minimal = JSON.stringify([job]);
-      try {
-        localStorage.setItem("paintbook:jobs", minimal);
-      } catch {
-        // Last resort: sessionStorage (won't persist across tabs)
-        try {
-          sessionStorage.setItem("paintbook:jobs", minimal);
-        } catch {}
+      // Prepare estimate payload
+      const estimatePayload = attachedEstimate
+        ? { ...attachedEstimate, brand: attachedEstimate.brand ?? selectedBrand }
+        : { ...estimatorInput, ...estimate, brand: selectedBrand };
+
+      // Create job via API
+      const jobResponse = await fetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          jobType,
+          title: desc || `${jobType} painting job`,
+          description: desc,
+          postcode,
+          budgetMin: budgetMin || undefined,
+          budgetMax: budgetMax || undefined,
+          images: images.slice(0, 5), // Limit to 5 images
+          paintBrand: estimatePayload.brand,
+          rooms: rooms.length > 0 ? rooms : undefined,
+          estimatedMaterialCost: estimatePayload.materialCost,
+          estimatedLitres: estimatePayload.litres,
+          estimatedWallArea: estimatePayload.totalWallArea,
+          useEscrow,
+          customerEmail: email,
+          customerPhone: phone,
+        }),
+      });
+
+      if (!jobResponse.ok) {
+        const error = await jobResponse.json();
+        const { toast } = await import("sonner");
+        toast.error(error.error || "Failed to post job");
+        return;
       }
+
+      const { toast } = await import("sonner");
+      toast.success("Job posted successfully!");
+
+      // Navigate to confirmation
+      const qs = prePainter
+        ? `?mode=quote&painter=${encodeURIComponent(prePainter)}`
+        : "";
+      navigate(`/post-job/confirmation${qs}`);
+    } catch (error) {
+      console.error("Error posting job:", error);
+      const { toast } = await import("sonner");
+      toast.error("Failed to post job. Please try again.");
     }
-
-    const existingAccount = findAccount(email);
-    if (!existingAccount || !existingAccount.roles.includes("customer")) {
-      const pending = {
-        jobId,
-        email,
-        phone,
-        postcode,
-        jobType,
-        painter: prePainter || null,
-        createdAt: job.createdAt,
-        status: "pending",
-      };
-      try {
-        localStorage.setItem(
-          "paintbook:pendingCustomerSignup",
-          JSON.stringify(pending),
-        );
-      } catch {}
-    } else {
-      try {
-        localStorage.removeItem("paintbook:pendingCustomerSignup");
-      } catch {}
-    }
-
-    window.dispatchEvent(new Event("paintbook:jobs:updated"));
-
-    const qs = prePainter
-      ? `?mode=quote&painter=${encodeURIComponent(prePainter)}`
-      : "";
-    navigate(`/post-job/confirmation${qs}`);
   }
 
   return (

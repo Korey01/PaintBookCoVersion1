@@ -180,6 +180,9 @@ async function runTests() {
   await test("List Available Jobs (Painter View)", async () => {
     const res = await request("GET", "/jobs", undefined, painterToken);
     const data = await res.json();
+    if (!(data.data && data.data.jobs)) {
+      console.log("List Jobs Response:", JSON.stringify(data, null, 2));
+    }
     return (
       data.data &&
       data.data.jobs &&

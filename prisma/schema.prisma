@@ -466,10 +466,6 @@ enum ReliabilityEventType {
   excellent_review
 }
 
-relation ReliabilityEvent {
-  painter PainterProfile
-}
-
 // ============================================================================
 // B2B CUSTOMER
 // ============================================================================

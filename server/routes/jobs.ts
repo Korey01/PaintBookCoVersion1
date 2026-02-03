@@ -62,8 +62,32 @@ router.post("/", authMiddleware, requireCustomer, async (req: Request, res: Resp
       },
     });
 
-    // Create notification for painters in this location
-    // TODO: Implement painter notifications based on location
+    // Notify painters in this location about the new job (async, don't block response)
+    // In production, use a queue system like Bull or RabbitMQ
+    try {
+      const painters = await prisma.painterProfile.findMany({
+        where: {
+          verificationStatus: "approved",
+          postcode: job.postcode,
+        },
+        select: { userId: true },
+      });
+
+      for (const painter of painters) {
+        await prisma.notification.create({
+          data: {
+            userId: painter.userId,
+            jobId: job.id,
+            type: "job_available",
+            title: "New Job Available",
+            body: `A new ${job.jobType} painting job is available: "${job.title}"`,
+          },
+        });
+      }
+    } catch (notificationError) {
+      // Don't fail job creation if notification fails
+      console.error("Error notifying painters:", notificationError);
+    }
 
     const response: ApiResponse<JobResponse> = {
       success: true,

@@ -119,7 +119,7 @@ async function runTests() {
   await test("Get Current User (Customer)", async () => {
     const res = await request("GET", "/auth/me", undefined, customerToken);
     const data = await res.json();
-    return data.user && data.user.email && data.user.userType === "customer";
+    return data.data && data.data.user && data.data.user.email && data.data.user.userType === "customer";
   });
 
   // Test 5: Create Job

@@ -28,7 +28,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useWebSocketNotifications } from "@/hooks/useWebSocketNotifications";
 
 interface Job {
   id: string;

@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build:client"
+  command = "pnpm install --frozen-lockfile && npm run build:client"
   functions = "netlify/functions"
   publish = "dist/spa"
 

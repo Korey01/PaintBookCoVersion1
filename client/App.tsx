@@ -121,6 +121,7 @@ const App = () => (
               path="/b2b/consultation-confirmation"
               element={<B2BConsultationConfirmation />}
             />
+            <Route path="/commercial-painting-projects/testimonials" element={<CommercialTestimonials />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

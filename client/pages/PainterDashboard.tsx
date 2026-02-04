@@ -54,7 +54,7 @@ interface Quote {
 
 export default function PainterDashboard() {
   const navigate = useNavigate();
-  const { notifications, unreadCount } = useWebSocketNotifications();
+  const [unreadCount] = useState(0); // TODO: Implement real-time notifications with socket.io
 
   const [availableJobs, setAvailableJobs] = useState<Job[]>([]);
   const [myQuotes, setMyQuotes] = useState<Quote[]>([]);

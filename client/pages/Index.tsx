@@ -81,7 +81,7 @@ export default function Index() {
               <Button
                 onClick={() => navigate("/vestimator")}
                 size="lg"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
               >
                 See Your Estimate in Minutes
                 <ArrowRight className="ml-2 h-5 w-5" />

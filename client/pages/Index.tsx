@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import LogoStroke from "@/components/site/LogoStroke";
 import PainterCard from "@/components/site/PainterCard";
+import TestimonialsSection from "@/components/site/TestimonialsSection";
 import { painters } from "@/data/painters";
 import {
   useScrollAnimation,

@@ -189,7 +189,7 @@ export default function Index() {
               <Button
                 onClick={() => navigate("/b2b/find-painter")}
                 size="lg"
-                className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+                className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
               >
                 Find a Commercial Painter
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -198,7 +198,7 @@ export default function Index() {
                 onClick={() => navigate("/b2b/consultation")}
                 size="lg"
                 variant="outline"
-                className="rounded-full px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold w-full sm:w-auto"
+                className="px-8 h-12 sm:h-14 text-base sm:text-lg font-semibold w-full sm:w-auto"
               >
                 Book a Consultation
               </Button>

@@ -266,6 +266,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <TestimonialsSection />
+
       <section
         ref={sectionRef2}
         className="container mx-auto px-4 scroll-animate"

@@ -1,7 +1,10 @@
 [build]
-  command = "npm install -g pnpm && pnpm install --frozen-lockfile && npm run build:client"
+  command = "npm run build:client"
   functions = "netlify/functions"
   publish = "dist/spa"
+
+[build.environment]
+  NPM_FLAGS = "--legacy-peer-deps"
 
 
 [functions]

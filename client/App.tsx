@@ -50,6 +50,7 @@ import B2BFindPainter from "./pages/B2BFindPainter";
 import B2BConsultation from "./pages/B2BConsultation";
 import B2BConfirmation from "./pages/B2BConfirmation";
 import B2BConsultationConfirmation from "./pages/B2BConsultationConfirmation";
+import CommercialTestimonials from "./pages/CommercialTestimonials";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

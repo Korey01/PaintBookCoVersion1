@@ -81,9 +81,17 @@ export async function recordReliabilityEvent(
 
   if (painter) {
     const totalJobs = painter.totalJobs || 0;
-    const cancelledJobs = painter.totalJobs || 0; // This will be calculated properly
+
+    // Query actual count of cancelled jobs
+    const cancelledJobsCount = await prisma.job.count({
+      where: {
+        painterId,
+        status: "cancelled",
+      },
+    });
+
     const newCancellationRate =
-      totalJobs > 0 ? (cancelledJobs / totalJobs) * 100 : 0;
+      totalJobs > 0 ? (cancelledJobsCount / totalJobs) * 100 : 0;
 
     await prisma.painterProfile.update({
       where: { id: painterId },

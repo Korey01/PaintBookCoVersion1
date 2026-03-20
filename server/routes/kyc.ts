@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { getPrismaClient } from "@server/lib/db";
 import { authMiddleware, requirePainter } from "@server/middleware/auth";
+import { adminMiddleware, requireAdmin } from "@server/middleware/admin";
 import type { ApiResponse, KYCVerificationRequest } from "@shared/types";
 
 const router = Router();
@@ -320,19 +321,16 @@ router.get(
 /**
  * POST /api/kyc/verify
  * Admin endpoint to approve/reject KYC verification
- * TODO: Implement admin authentication
+ * Requires admin authentication
  */
 router.post(
   "/verify",
   authMiddleware,
+  adminMiddleware,
+  requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { painterId, status, rejectionReason } = req.body;
-
-      // TODO: Check if user is admin
-      // if (req.userType !== "admin") {
-      //   return res.status(403).json({ error: "Admin access required" });
-      // }
 
       if (!painterId || !status) {
         res.status(400).json({

@@ -101,7 +101,7 @@ router.post(
       const consultationFee = acceptedQuote.consultationFee || 0;
 
       // Calculate commission and escrow cost
-      const commissionRate = calculateCommissionRate(job.painterId!);
+      const commissionRate = await calculateCommissionRate(job.painterId!);
       const commission = jobPrice * (commissionRate / 100); // Commission applies only to job price, not consultation fee
       const escrowCost = calculateEscrowCost(amount); // Transpact fee
       const painterAmount = jobPrice - commission + consultationFee; // Painter gets job price (minus commission) plus full consultation fee
@@ -275,6 +275,7 @@ router.get(
 /**
  * POST /api/payments/webhook/transpact
  * Webhook for Transpact to notify of payment status changes
+ * Validates webhook signature for security
  */
 router.post(
   "/webhook/transpact",
@@ -282,8 +283,18 @@ router.post(
     try {
       const { transactionId, status, amount } = req.body;
 
-      // Verify webhook signature (TODO: implement in production)
-      // const isValid = verifyTranspactSignature(req);
+      // Verify webhook signature
+      const signature = req.headers["x-transpact-signature"] as string;
+      const payload = JSON.stringify(req.body);
+
+      if (!signature || !transpactService.verifyWebhookSignature(payload, signature)) {
+        console.warn(`[Webhook] Invalid signature for transaction: ${transactionId}`);
+        res.status(401).json({
+          success: false,
+          error: "Invalid webhook signature",
+        });
+        return;
+      }
 
       // Find escrow transaction
       const escrowTransaction = await prisma.escrowTransaction.findFirst({
@@ -415,7 +426,39 @@ router.post(
         return;
       }
 
-      // TODO: Call Transpact API to release funds
+      // Get painter email for fund release
+      const painter = await prisma.user.findUnique({
+        where: { id: job.painterId! },
+      });
+
+      if (!painter) {
+        res.status(404).json({
+          success: false,
+          error: "Painter not found",
+        });
+        return;
+      }
+
+      // Call Transpact API to release funds
+      try {
+        const released = await transpactService.releaseFunds({
+          transactionId: escrowTransaction.transpactTransactionId!,
+          sellerEmail: painter.email,
+        });
+
+        if (!released) {
+          throw new Error("Transpact release funds failed");
+        }
+      } catch (error) {
+        console.error("Transpact release error:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to release funds with Transpact. Please try again.",
+        });
+        return;
+      }
+
+      // Update database after successful Transpact release
       const updatedTransaction = await prisma.escrowTransaction.update({
         where: { id: escrowTransaction.id },
         data: {
@@ -466,10 +509,17 @@ router.post(
  * Jobs 6-10: 10%
  * Jobs 11+: 8%
  */
-function calculateCommissionRate(painterId: string): number {
-  // TODO: Fetch painter's job count and calculate actual tier
-  // For now, return default 12%
-  return 12;
+async function calculateCommissionRate(painterId: string): Promise<number> {
+  const painter = await prisma.painterProfile.findUnique({
+    where: { id: painterId },
+  });
+
+  const jobCount = painter?.totalJobs || 0;
+
+  // Tiered commission structure
+  if (jobCount <= 5) return 12;
+  if (jobCount <= 10) return 10;
+  return 8;
 }
 
 /**

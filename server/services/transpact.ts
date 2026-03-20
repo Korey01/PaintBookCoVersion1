@@ -227,20 +227,27 @@ export class TranspactService {
 
   /**
    * Verify webhook signature for security
+   * Uses HMAC-SHA256 to validate Transpact webhooks
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
-      // In production, verify HMAC signature
-      // const crypto = require('crypto');
-      // const hash = crypto
-      //   .createHmac('sha256', this.apiKey)
-      //   .update(payload)
-      //   .digest('hex');
-      // return hash === signature;
+      const crypto = require("crypto");
+      // Use webhook secret (or API key as fallback)
+      const secret = process.env.TRANSPACT_WEBHOOK_SECRET || this.apiKey;
+      const hash = crypto
+        .createHmac("sha256", secret)
+        .update(payload)
+        .digest("hex");
 
-      // For MVP, skip verification
-      console.log("[Transpact] Webhook signature verified (test mode)");
-      return true;
+      const isValid = hash === signature;
+
+      if (!isValid) {
+        console.warn("[Transpact] Webhook signature verification failed");
+      } else {
+        console.log("[Transpact] Webhook signature verified successfully");
+      }
+
+      return isValid;
     } catch (error) {
       console.error("[Transpact] Webhook verification error:", error);
       return false;
@@ -277,17 +284,21 @@ export class TranspactService {
 
   /**
    * Calculate commission and fees
+   * Uses tiered commission rates based on painter job count
+   * Jobs 1-5: 12%, Jobs 6-10: 10%, Jobs 11+: 8%
    */
-  static calculatePaymentBreakdown(jobPrice: number): {
+  static calculatePaymentBreakdown(
+    jobPrice: number,
+    commissionRate: number = 12,
+  ): {
     jobPrice: number;
     platformCommission: number;
     transpactFee: number;
     painterNetAmount: number;
     customerTotalAmount: number;
   } {
-    // Commission structure
-    let commission = jobPrice * 0.12; // 12% base commission
-    // TODO: Apply tiered rates when painter has >= 6 jobs
+    // Commission structure with tiered rates
+    const commission = jobPrice * (commissionRate / 100);
 
     // Transpact fee (2.5% of transaction)
     const transpactFee = (jobPrice + commission) * 0.025;

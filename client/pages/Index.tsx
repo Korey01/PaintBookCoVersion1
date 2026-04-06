@@ -71,20 +71,18 @@ export default function Index() {
       {/* ══════════════════════════════════════════════
           HERO — full-viewport, dark, editorial
       ══════════════════════════════════════════════ */}
-      <section className="section-dark relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
+      {/* ── Video hero: no background colour — the Layout video shows through ── */}
+      <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
+
+        {/* Dark scrim — lets video breathe while keeping text legible */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/62 via-black/55 to-black/75" />
 
         {/* Subtle grain texture overlay */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           }}
-        />
-
-        {/* Faint coral glow — top right */}
-        <div
-          className="pointer-events-none absolute -top-1/4 right-0 h-[600px] w-[500px] rounded-full blur-[120px] opacity-[0.07]"
-          style={{ background: "hsl(var(--coral))" }}
         />
 
         <motion.div

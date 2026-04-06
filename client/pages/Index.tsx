@@ -75,7 +75,7 @@ export default function Index() {
       <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
 
         {/* Dark scrim — lets video breathe while keeping text legible */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/62 via-black/55 to-black/75" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/62 to-black/80" />
 
         {/* Subtle grain texture overlay */}
         <div
@@ -117,7 +117,7 @@ export default function Index() {
           <motion.p
             variants={fadeUp}
             custom={0.12}
-            className="mx-auto max-w-lg text-lg text-white/55 leading-[1.7] mb-12"
+            className="mx-auto max-w-lg text-lg text-white/90 leading-[1.7] mb-12 drop-shadow-sm"
           >
             See your project, price it accurately, and book a verified painter
             — all in one place.
@@ -129,20 +129,22 @@ export default function Index() {
             custom={0.2}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
           >
+            {/* Primary — solid white fill, dark text, most prominent */}
             <Button
               onClick={() => navigate("/post-job")}
-              variant="outline-light"
+              variant="default"
               size="xl"
-              className="min-w-[200px]"
+              className="min-w-[200px] bg-white text-foreground hover:bg-white/90 shadow-[0_4px_24px_rgba(0,0,0,0.35)]"
             >
               Post a Job
               <ArrowRight className="h-4 w-4" />
             </Button>
+            {/* Secondary — white border, white text, semi-transparent fill */}
             <Button
               onClick={() => navigate("/vestimator")}
-              variant="ghost-light"
+              variant="outline-light"
               size="xl"
-              className="min-w-[200px]"
+              className="min-w-[200px] bg-white/15 hover:bg-white/25 border-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]"
             >
               Get an Estimate
             </Button>
@@ -152,7 +154,7 @@ export default function Index() {
           <motion.div
             variants={fadeIn}
             custom={0.3}
-            className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/35"
+            className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/80"
           >
             {[
               { icon: BadgeCheck, label: "ID Verified Painters" },

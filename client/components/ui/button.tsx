@@ -1,55 +1,51 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  // Base: bold, uppercase, smooth transitions, lift on hover
-  "inline-flex items-center justify-center gap-2 whitespace-normal md:whitespace-nowrap rounded-xl text-sm font-bold uppercase tracking-wide ring-offset-background transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  // Base — editorial, refined, sentence-case, no shadow
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium tracking-wide ring-offset-background transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 select-none",
   {
     variants: {
       variant: {
-        // Coral-orange primary with glow shadow
+        // Squarespace primary — dark fill, white text
         default:
-          "bg-primary text-primary-foreground shadow-md hover:shadow-glow-primary hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0 active:shadow-md",
+          "bg-foreground text-background hover:bg-foreground/85 active:bg-foreground/75",
 
-        // Deep teal — secondary brand action
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-md hover:shadow-glow-secondary hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0",
+        // Outlined — transparent with dark border, fills on hover
+        outline:
+          "border border-foreground/80 bg-transparent text-foreground hover:bg-foreground hover:text-background active:bg-foreground/85",
 
-        // Gradient paint stripe — for hero / top CTAs
-        paint:
-          "bg-gradient-to-r from-primary via-[hsl(28_95%_55%)] to-[hsl(42_96%_52%)] text-white shadow-md hover:shadow-glow-primary hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0 bg-[size:150%] bg-left hover:bg-right transition-[background-position,box-shadow,transform] duration-500",
+        // Outlined light — for dark section backgrounds
+        "outline-light":
+          "border border-white/60 bg-transparent text-white hover:bg-white hover:text-foreground active:bg-white/90",
 
-        // Lime accent — tertiary / positive action
-        accent:
-          "bg-accent text-accent-foreground shadow-md hover:shadow-glow-accent hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0",
+        // Coral accent — primary CTA
+        primary:
+          "bg-primary text-primary-foreground hover:bg-primary/85 active:bg-primary/75",
+
+        // Ghost — no border, minimal
+        ghost:
+          "bg-transparent text-foreground hover:bg-foreground/6 active:bg-foreground/10",
+
+        // Ghost light — for dark backgrounds
+        "ghost-light":
+          "bg-transparent text-white/80 hover:text-white hover:bg-white/10",
+
+        // Link — underline style
+        link:
+          "bg-transparent text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground transition-all p-0 h-auto",
 
         destructive:
-          "bg-destructive text-destructive-foreground shadow-md hover:shadow-lg hover:-translate-y-0.5",
-
-        // Bordered with primary colour
-        outline:
-          "border-2 border-primary text-primary bg-transparent hover:bg-primary/8 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
-
-        // Bordered with secondary colour
-        "outline-secondary":
-          "border-2 border-secondary text-secondary bg-transparent hover:bg-secondary/8 hover:shadow-md hover:-translate-y-0.5",
-
-        ghost:
-          "hover:bg-primary/10 text-foreground hover:-translate-y-0.5 shadow-none hover:shadow-sm",
-
-        link: "text-primary underline decoration-2 underline-offset-4 hover:opacity-80 shadow-none hover:shadow-none hover:-translate-y-0",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/85",
       },
       size: {
-        xs:      "h-8 px-4 text-xs rounded-lg",
-        sm:      "h-9 px-5 text-xs rounded-xl",
-        default: "h-11 px-8",
-        lg:      "h-12 px-10 text-sm",
+        sm:      "h-9 px-5 text-xs tracking-wide",
+        default: "h-11 px-7",
+        lg:      "h-12 px-9 text-sm",
         xl:      "h-14 px-12 text-base",
-        "2xl":   "h-16 px-14 text-lg rounded-2xl",
-        icon:    "h-10 w-10 rounded-full",
+        icon:    "h-10 w-10",
       },
     },
     defaultVariants: {

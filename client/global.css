@@ -1,12 +1,12 @@
 /** @import must precede all other statements */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================================
-   KEYFRAME ANIMATIONS — Paint & Decorator Brand
+   KEYFRAMES — Editorial, refined, Squarespace-inspired
    ============================================================ */
 
 @keyframes fadeIn {
@@ -14,206 +14,166 @@
   to   { opacity: 1; }
 }
 
-@keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(24px); }
+/* Slow, editorial slide-up — signature Squarespace feel */
+@keyframes editorialUp {
+  from { opacity: 0; transform: translateY(32px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideDownFade {
-  from { opacity: 0; transform: translateY(-24px); }
+@keyframes editorialDown {
+  from { opacity: 0; transform: translateY(-20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideLeftFade {
+@keyframes editorialLeft {
   from { opacity: 0; transform: translateX(-24px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes slideRightFade {
+@keyframes editorialRight {
   from { opacity: 0; transform: translateX(24px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
+/* Clip-path reveal — text wipes in from bottom */
+@keyframes clipReveal {
+  from { clip-path: inset(0 0 100% 0); opacity: 0; }
+  to   { clip-path: inset(0 0 0% 0);   opacity: 1; }
+}
+
+/* Scale in — subtle, no bounce */
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.92); }
+  from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* Paint drip — drop from above like a paint run */
-@keyframes paintDrip {
-  0%   { transform: scaleY(0) translateY(-50%); opacity: 0; transform-origin: top; }
-  60%  { transform: scaleY(1.08) translateY(4px); opacity: 1; transform-origin: top; }
-  100% { transform: scaleY(1) translateY(0); opacity: 1; transform-origin: top; }
+/* Underline grow — nav hover */
+@keyframes underlineGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 
-/* Brush-stroke reveal — left-to-right clip-path sweep */
-@keyframes brushReveal {
-  from { clip-path: inset(0 100% 0 0); }
-  to   { clip-path: inset(0 0% 0 0); }
-}
-
-/* Shimmer sweep — for highlights and loading states */
+/* Shimmer — loading skeleton */
 @keyframes shimmer {
   0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  100% { background-position:  200% center; }
 }
 
-/* Glow pulse — for CTA buttons and featured elements */
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
-  50%       { box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+/* Scroll indicator bounce */
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50%       { transform: translateY(6px); opacity: 0.6; }
 }
 
-/* Float bob — gentle up-down float for decorative blobs */
-@keyframes floatBob {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  33%       { transform: translateY(-16px) rotate(3deg); }
-  66%       { transform: translateY(-8px) rotate(-2deg); }
+/* Pulse soft */
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
 }
 
-/* Float bob reversed */
-@keyframes floatBobReverse {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  33%       { transform: translateY(14px) rotate(-3deg); }
-  66%       { transform: translateY(7px) rotate(2deg); }
-}
-
-/* Slow spin for decorative rings */
+/* Slow spin — decorative */
 @keyframes spinSlow {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
-/* Paint splash — scale + rotate burst */
-@keyframes paintSplash {
-  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
-  70%  { transform: scale(1.1) rotate(5deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
-}
-
-/* Color wash pulse — background hue shift */
-@keyframes colorWash {
-  0%, 100% { background-position: 0% 50%; }
-  50%       { background-position: 100% 50%; }
-}
-
-/* Soft pulse for badges / indicators */
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.82; transform: scale(0.98); }
-}
-
-/* Ripple on click */
-@keyframes ripple {
-  0%   { transform: scale(0); opacity: 0.5; }
-  100% { transform: scale(4); opacity: 0; }
-}
-
-/* Underline grow — brush-stroke underline effect */
-@keyframes underlineGrow {
-  from { width: 0; }
-  to   { width: 100%; }
-}
-
-/* Count up fade — for stat numbers */
-@keyframes countFade {
-  from { opacity: 0; transform: translateY(12px) scale(0.9); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 /* ============================================================
-   CSS CUSTOM PROPERTIES — Design Tokens
+   DESIGN TOKENS
    ============================================================ */
 
 @layer base {
   :root {
-    /* ── Light theme: coral-orange · deep teal · lime green ── */
+    /* ── Squarespace-inspired: near-black · warm cream · coral accent ── */
 
-    --background: 35 28% 98%;        /* warm cream white */
-    --foreground: 220 22% 9%;        /* rich near-black */
+    --background:    36 25% 97%;      /* warm cream */
+    --foreground:    220 18% 9%;      /* near-black */
 
-    --card: 35 20% 99%;
-    --card-foreground: 220 22% 9%;
+    --card:          0 0% 100%;
+    --card-foreground: 220 18% 9%;
 
-    --popover: 35 20% 99%;
-    --popover-foreground: 220 22% 9%;
+    --popover:       0 0% 100%;
+    --popover-foreground: 220 18% 9%;
 
-    --primary: 18 92% 55%;           /* vibrant coral-orange */
+    /* Coral-orange accent — used sparingly */
+    --primary:       18 88% 52%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 186 70% 33%;        /* deep teal */
-    --secondary-foreground: 0 0% 98%;
+    /* Charcoal — secondary dark action */
+    --secondary:     220 18% 14%;
+    --secondary-foreground: 36 25% 97%;
 
-    --muted: 35 18% 94%;             /* warm light gray */
-    --muted-foreground: 220 10% 42%;
+    --muted:         36 15% 93%;
+    --muted-foreground: 220 10% 48%;
 
-    --accent: 82 68% 46%;            /* fresh lime green */
-    --accent-foreground: 220 22% 9%;
+    --accent:        36 25% 92%;
+    --accent-foreground: 220 18% 9%;
 
-    --destructive: 4 84% 55%;
+    --destructive:   4 84% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 35 18% 88%;
-    --input: 35 18% 88%;
-    --ring: 18 92% 55%;
+    --border:        36 12% 88%;
+    --input:         36 12% 88%;
+    --ring:          18 88% 52%;
 
-    --radius: 0.625rem;
+    --radius:        0.25rem;   /* tight, editorial */
 
-    /* Sidebar tokens */
-    --sidebar-background: 35 20% 99%;
-    --sidebar-foreground: 220 22% 9%;
-    --sidebar-primary: 18 92% 55%;
+    /* Sidebar */
+    --sidebar-background: 220 18% 9%;
+    --sidebar-foreground: 36 25% 97%;
+    --sidebar-primary: 18 88% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 186 70% 33%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 35 18% 88%;
-    --sidebar-ring: 18 92% 55%;
+    --sidebar-accent: 220 15% 18%;
+    --sidebar-accent-foreground: 36 25% 97%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 18 88% 52%;
 
-    /* Extended brand palette (used in gradient utilities) */
-    --paint-coral: 18 92% 55%;
-    --paint-teal: 186 70% 33%;
-    --paint-lime: 82 68% 46%;
-    --paint-gold: 42 96% 52%;
-    --paint-indigo: 245 65% 55%;
+    /* Editorial custom tokens */
+    --ink:           220 18% 9%;    /* same as foreground */
+    --paper:         36 25% 97%;    /* same as background */
+    --ink-muted:     220 10% 42%;
+    --coral:         18 88% 52%;
+    --coral-muted:   18 88% 94%;
+    --section-dark-bg:  220 18% 9%;
+    --section-dark-fg:  36 20% 93%;
   }
 
   .dark {
-    --background: 220 20% 7%;
-    --foreground: 35 25% 96%;
+    --background:    220 18% 7%;
+    --foreground:    36 20% 93%;
 
-    --card: 220 18% 11%;
-    --card-foreground: 35 25% 96%;
+    --card:          220 16% 10%;
+    --card-foreground: 36 20% 93%;
 
-    --popover: 220 18% 11%;
-    --popover-foreground: 35 25% 96%;
+    --popover:       220 16% 10%;
+    --popover-foreground: 36 20% 93%;
 
-    --primary: 18 92% 58%;
-    --primary-foreground: 220 22% 9%;
+    --primary:       18 88% 56%;
+    --primary-foreground: 220 18% 9%;
 
-    --secondary: 186 65% 48%;
-    --secondary-foreground: 220 22% 9%;
+    --secondary:     36 20% 90%;
+    --secondary-foreground: 220 18% 9%;
 
-    --muted: 220 16% 18%;
-    --muted-foreground: 220 10% 65%;
+    --muted:         220 14% 16%;
+    --muted-foreground: 220 10% 58%;
 
-    --accent: 82 65% 52%;
-    --accent-foreground: 220 22% 9%;
+    --accent:        220 14% 16%;
+    --accent-foreground: 36 20% 90%;
 
-    --destructive: 4 75% 58%;
+    --destructive:   4 75% 58%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 16% 22%;
-    --input: 220 16% 22%;
-    --ring: 18 92% 58%;
+    --border:        220 14% 20%;
+    --input:         220 14% 20%;
+    --ring:          18 88% 56%;
 
-    --sidebar-background: 220 20% 7%;
-    --sidebar-foreground: 35 25% 96%;
-    --sidebar-primary: 18 92% 58%;
-    --sidebar-primary-foreground: 220 22% 9%;
-    --sidebar-accent: 186 65% 48%;
-    --sidebar-accent-foreground: 220 22% 9%;
-    --sidebar-border: 220 16% 22%;
-    --sidebar-ring: 18 92% 58%;
+    --sidebar-background: 220 18% 5%;
+    --sidebar-foreground: 36 20% 93%;
+    --sidebar-primary: 18 88% 56%;
+    --sidebar-primary-foreground: 220 18% 9%;
+    --sidebar-accent: 220 14% 14%;
+    --sidebar-accent-foreground: 36 20% 93%;
+    --sidebar-border: 220 14% 14%;
+    --sidebar-ring: 18 88% 56%;
   }
 }
 
@@ -222,245 +182,109 @@
    ============================================================ */
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
 
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-      Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
-      "Segoe UI Emoji";
+    font-family: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1;
   }
 
-  /* Display headings use Plus Jakarta Sans for extra punch */
-  h1, h2 {
-    font-family: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui;
-  }
-
+  /* Display headings — DM Serif Display (editorial) */
   h1 {
-    @apply text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08];
+    font-family: "DM Serif Display", Georgia, "Times New Roman", serif;
+    @apply text-4xl sm:text-5xl lg:text-6xl font-normal tracking-[-0.02em] leading-[1.05];
   }
 
   h2 {
-    @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.12];
+    font-family: "DM Serif Display", Georgia, "Times New Roman", serif;
+    @apply text-3xl sm:text-4xl lg:text-5xl font-normal tracking-[-0.02em] leading-[1.1];
   }
 
   h3 {
-    @apply text-2xl sm:text-3xl font-bold tracking-tight;
+    font-family: "DM Serif Display", Georgia, "Times New Roman", serif;
+    @apply text-2xl sm:text-3xl font-normal tracking-[-0.01em] leading-[1.2];
   }
 
-  h4 {
-    @apply text-xl font-bold;
-  }
+  h4 { @apply text-lg font-semibold tracking-tight; }
+  h5 { @apply text-base font-semibold; }
+  h6 { @apply text-sm font-semibold uppercase tracking-widest; }
 
-  h5 {
-    @apply text-lg font-semibold;
-  }
-
-  h6 {
-    @apply text-base font-semibold;
-  }
-
-  p {
-    @apply text-base leading-relaxed;
-  }
+  p  { @apply text-base leading-[1.7]; }
 }
 
 /* ============================================================
-   COMPONENT LAYER — Reusable UI Patterns
+   COMPONENT LAYER
    ============================================================ */
 
 @layer components {
 
-  /* ─── Layout containers ─── */
-  .page-container {
-    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-10;
+  /* ── Layout ── */
+  .page-container       { @apply mx-auto w-full max-w-6xl px-6 sm:px-8 lg:px-12; }
+  .page-container-wide  { @apply mx-auto w-full max-w-7xl px-6 sm:px-8 lg:px-16; }
+  .page-container-narrow{ @apply mx-auto w-full max-w-2xl px-6 sm:px-8; }
+  .section-gap          { @apply py-16 sm:py-20 lg:py-28; }
+  .section-stack        { @apply flex flex-col gap-8 sm:gap-12 lg:gap-16; }
+
+  /* ── Editorial section types ── */
+  .section-light {
+    @apply bg-background text-foreground;
   }
 
-  .page-container-wide {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-12;
+  .section-dark {
+    background: hsl(var(--section-dark-bg));
+    color: hsl(var(--section-dark-fg));
   }
 
-  .page-container-narrow {
-    @apply mx-auto w-full max-w-3xl px-4 sm:px-6;
+  .section-warm {
+    background: hsl(36 25% 94%);
+    @apply text-foreground;
   }
 
-  .section-gap {
-    @apply py-10 sm:py-14 lg:py-20;
-  }
-
-  .section-stack {
-    @apply flex flex-col gap-6 sm:gap-8 lg:gap-12;
-  }
-
-  /* ─── Card variants ─── */
-
-  /* Standard surface card */
+  /* ── Cards ── */
   .surface-card {
-    @apply rounded-2xl border bg-card/95 shadow-sm backdrop-blur
-           transition-all duration-300
-           hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/25;
+    @apply rounded-sm border border-border/60 bg-card shadow-none
+           transition-all duration-500
+           hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1;
   }
 
-  /* Modern card with colored glow on hover */
   .card-modern {
-    @apply rounded-2xl border border-border/50 bg-card p-6 sm:p-8
-           transition-all duration-300
-           hover:shadow-2xl hover:-translate-y-2 hover:border-primary/30;
-    &:hover {
-      box-shadow: 0 20px 40px -12px hsl(var(--primary) / 0.18),
-                  0 8px 16px -4px hsl(var(--foreground) / 0.06);
-    }
+    @apply rounded-sm border border-border/40 bg-card p-8
+           transition-all duration-500
+           hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1;
   }
 
-  /* Glass card — frosted glass effect */
-  .glass-card {
-    @apply rounded-2xl border border-white/20 bg-white/80 backdrop-blur-xl
-           shadow-lg transition-all duration-300
-           hover:shadow-2xl hover:-translate-y-1.5 hover:bg-white/90;
+  /* ── Editorial label (small caps category tag) ── */
+  .editorial-label {
+    @apply text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground;
   }
 
-  .dark .glass-card {
-    @apply border-white/10 bg-white/5 hover:bg-white/8;
-  }
-
-  /* ─── Paint gradient backgrounds ─── */
-
-  /* Mesh gradient for hero sections */
-  .hero-mesh {
-    background:
-      radial-gradient(ellipse 80% 50% at 20% -10%, hsl(var(--primary) / 0.12) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 110%, hsl(var(--secondary) / 0.10) 0%, transparent 55%),
-      radial-gradient(ellipse 50% 60% at 50% 50%, hsl(var(--accent) / 0.06) 0%, transparent 70%),
-      hsl(var(--background));
-  }
-
-  /* Section wash variants */
-  .section-wash-primary {
-    background: radial-gradient(ellipse 100% 80% at 50% 0%,
-      hsl(var(--primary) / 0.08) 0%, transparent 70%),
-      hsl(var(--background));
-  }
-
-  .section-wash-secondary {
-    background: radial-gradient(ellipse 100% 80% at 50% 0%,
-      hsl(var(--secondary) / 0.08) 0%, transparent 70%),
-      hsl(var(--background));
-  }
-
-  .section-wash-dark {
-    @apply bg-foreground text-background;
-  }
-
-  /* ─── Text effects ─── */
-
-  /* Animated paint gradient text */
-  .text-paint-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)) 0%,
-      hsl(var(--paint-gold)) 30%,
-      hsl(var(--secondary)) 60%,
-      hsl(var(--accent)) 100%
-    );
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: colorWash 6s ease infinite;
-  }
-
-  /* Static gradient text */
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent;
-  }
-
-  /* Brush-stroke underline */
-  .brush-underline {
-    @apply relative inline-block;
-    &::after {
-      content: '';
-      @apply absolute bottom-0 left-0 h-[3px] w-0 rounded-full bg-primary;
-      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    &:hover::after {
-      @apply w-full;
-    }
-  }
-
-  /* ─── Buttons ─── */
-
-  /* Glow animation for primary CTA buttons */
-  .btn-glow {
-    animation: glowPulse 2.4s ease-in-out infinite;
-  }
-
-  /* Paint badge — pill with colour accent */
-  .paint-badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold
-           border tracking-wide uppercase;
-  }
-
-  .paint-badge-coral {
-    @apply paint-badge bg-primary/10 border-primary/30 text-primary;
-  }
-
-  .paint-badge-teal {
-    @apply paint-badge bg-secondary/10 border-secondary/30 text-secondary;
-  }
-
-  .paint-badge-lime {
-    @apply paint-badge bg-accent/15 border-accent/30 text-accent
-           dark:text-accent;
-  }
-
-  /* ─── Section helpers ─── */
-
-  /* Gradient divider line */
+  /* ── Dividers ── */
   .section-divider {
-    @apply h-px bg-gradient-to-r from-transparent via-border to-transparent;
+    @apply h-px bg-border;
   }
 
-  /* Paint-brush divider (thicker with color) */
-  .brush-divider {
-    @apply h-1 w-16 rounded-full bg-gradient-to-r from-primary to-accent;
+  .editorial-rule {
+    @apply h-px w-12 bg-foreground;
   }
 
-  /* ─── Stat counter pill ─── */
-  .stat-pill {
-    @apply flex flex-col items-center rounded-2xl border border-border/60 bg-card
-           px-6 py-5 shadow-sm transition-all duration-300
-           hover:shadow-lg hover:-translate-y-1 hover:border-primary/30;
-  }
-
-  /* ─── Smooth transitions ─── */
-  .link-smooth {
-    @apply transition-all duration-300 hover:text-primary;
-  }
-
-  .transition-smooth {
-    @apply transition-all duration-300 ease-out;
-  }
-
-  .transition-smooth-lg {
-    @apply transition-all duration-500 ease-out;
-  }
+  /* ── Transitions ── */
+  .transition-smooth    { @apply transition-all duration-400 ease-out; }
+  .transition-smooth-lg { @apply transition-all duration-600 ease-out; }
+  .link-smooth          { @apply transition-colors duration-300 hover:text-primary; }
 }
 
 /* ============================================================
-   UTILITY LAYER — Low-level helpers
+   UTILITY LAYER
    ============================================================ */
 
 @layer utilities {
 
-  /* ─── Grid layouts ─── */
+  /* ── Grid ── */
   .auto-grid {
     display: grid;
     gap: 1.5rem;
@@ -469,18 +293,18 @@
 
   .auto-grid-tight {
     display: grid;
-    gap: 1.25rem;
+    gap: 1rem;
     grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   }
 
-  /* ─── Stack utilities ─── */
-  .stack-sm  { display: flex; flex-direction: column; gap: 0.75rem; }
-  .stack-md  { display: flex; flex-direction: column; gap: 1.25rem; }
-  .stack-lg  { display: flex; flex-direction: column; gap: clamp(1.5rem, 5vw, 3rem); }
+  /* ── Stack ── */
+  .stack-sm { display: flex; flex-direction: column; gap: 0.75rem; }
+  .stack-md { display: flex; flex-direction: column; gap: 1.5rem; }
+  .stack-lg { display: flex; flex-direction: column; gap: clamp(2rem, 5vw, 4rem); }
 
   .split-stack {
     display: grid;
-    gap: clamp(1.5rem, 4vw, 3rem);
+    gap: clamp(2rem, 5vw, 4rem);
   }
   @media (min-width: 768px) {
     .split-stack {
@@ -489,108 +313,108 @@
     }
   }
 
-  /* ─── Animation utilities ─── */
-  .animate-fade-in    { animation: fadeIn 0.5s ease-out; }
-  .animate-slide-up   { animation: slideUpFade 0.6s ease-out; }
-  .animate-slide-down { animation: slideDownFade 0.6s ease-out; }
-  .animate-slide-left { animation: slideLeftFade 0.6s ease-out; }
-  .animate-slide-right{ animation: slideRightFade 0.6s ease-out; }
-  .animate-scale-in   { animation: scaleIn 0.5s ease-out; }
-  .animate-paint-drip { animation: paintDrip 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  .animate-paint-splash { animation: paintSplash 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  .animate-brush-reveal { animation: brushReveal 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
-  .animate-float      { animation: floatBob 6s ease-in-out infinite; }
-  .animate-float-reverse { animation: floatBobReverse 7s ease-in-out infinite; }
-  .animate-spin-slow  { animation: spinSlow 20s linear infinite; }
-  .animate-pulse-soft { animation: pulse-soft 3s ease-in-out infinite; }
-  .animate-shimmer    {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      hsl(var(--primary) / 0.15) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
-  }
+  /* ── Animations ── */
+  .animate-fade-in        { animation: fadeIn 0.6s ease-out; }
+  .animate-editorial-up   { animation: editorialUp 0.9s cubic-bezier(0.25, 0.1, 0.25, 1) both; }
+  .animate-editorial-down { animation: editorialDown 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) both; }
+  .animate-editorial-left { animation: editorialLeft 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) both; }
+  .animate-editorial-right{ animation: editorialRight 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) both; }
+  .animate-clip-reveal    { animation: clipReveal 0.9s cubic-bezier(0.25, 0.1, 0.25, 1) both; }
+  .animate-scale-in       { animation: scaleIn 0.7s cubic-bezier(0.25, 0.1, 0.25, 1) both; }
+  .animate-scroll-bounce  { animation: scrollBounce 1.8s ease-in-out infinite; }
+  .animate-pulse-soft     { animation: pulseSoft 3s ease-in-out infinite; }
+  .animate-spin-slow      { animation: spinSlow 24s linear infinite; }
 
-  /* Staggered animation delays for child elements */
+  /* Stagger delays */
   .animate-stagger > * {
     opacity: 0;
-    animation: slideUpFade 0.6s ease-out forwards;
+    animation: editorialUp 0.9s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
   }
-  .animate-stagger > *:nth-child(1) { animation-delay: 0.08s; }
-  .animate-stagger > *:nth-child(2) { animation-delay: 0.18s; }
-  .animate-stagger > *:nth-child(3) { animation-delay: 0.28s; }
-  .animate-stagger > *:nth-child(4) { animation-delay: 0.38s; }
-  .animate-stagger > *:nth-child(5) { animation-delay: 0.48s; }
-  .animate-stagger > *:nth-child(n + 6) { animation-delay: 0.56s; }
+  .animate-stagger > *:nth-child(1) { animation-delay: 0.10s; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 0.22s; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 0.34s; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 0.46s; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 0.58s; }
+  .animate-stagger > *:nth-child(n+6) { animation-delay: 0.68s; }
 
-  /* Scroll-based animations */
+  /* Scroll-triggered reveal */
   .scroll-animate {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(28px);
+    transition:
+      opacity 0.9s cubic-bezier(0.25, 0.1, 0.25, 1),
+      transform 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
   .scroll-animate.in-view {
     opacity: 1;
     transform: translateY(0);
   }
 
-  /* ─── Hover effects ─── */
-  .hover-lift    { @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg; }
-  .hover-lift-lg { @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-xl; }
-  .hover-scale   { @apply transition-transform duration-300 hover:scale-105; }
+  /* Stagger for scroll-animate children */
+  .scroll-stagger > .scroll-animate:nth-child(1) { transition-delay: 0.0s; }
+  .scroll-stagger > .scroll-animate:nth-child(2) { transition-delay: 0.15s; }
+  .scroll-stagger > .scroll-animate:nth-child(3) { transition-delay: 0.30s; }
+  .scroll-stagger > .scroll-animate:nth-child(4) { transition-delay: 0.45s; }
+  .scroll-stagger > .scroll-animate:nth-child(5) { transition-delay: 0.60s; }
 
-  .hover-glow {
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px -6px hsl(var(--primary) / 0.35),
-                  0 4px 12px -2px hsl(var(--foreground) / 0.08);
-    }
+  /* ── Hover effects ── */
+  .hover-lift    { @apply transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)]; }
+  .hover-lift-lg { @apply transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.16)]; }
+  .hover-scale   { @apply transition-transform duration-500 hover:scale-[1.03]; }
+
+  /* ── Text utilities ── */
+  .text-serif {
+    font-family: "DM Serif Display", Georgia, "Times New Roman", serif;
   }
 
-  /* ─── Decorative paint blobs ─── */
-  .paint-blob {
-    @apply absolute rounded-full blur-3xl opacity-30 pointer-events-none select-none;
+  .text-display {
+    font-family: "DM Serif Display", Georgia, "Times New Roman", serif;
+    @apply font-normal tracking-[-0.02em] leading-[1.05];
   }
 
-  .paint-blob-coral {
-    @apply paint-blob bg-primary;
+  .text-gradient-warm {
+    background: linear-gradient(135deg, hsl(var(--ink)) 0%, hsl(var(--coral)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  .paint-blob-teal {
-    @apply paint-blob bg-secondary;
+  /* On dark sections */
+  .text-gradient-light {
+    background: linear-gradient(135deg, hsl(36 25% 97%) 0%, hsl(var(--coral)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  .paint-blob-lime {
-    @apply paint-blob bg-accent;
+  /* ── Nav underline (animated) ── */
+  .nav-underline {
+    @apply relative;
+  }
+  .nav-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-px w-full bg-foreground origin-left;
+    transform: scaleX(0);
+    transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  .nav-underline:hover::after,
+  .nav-underline.active::after {
+    transform: scaleX(1);
   }
 
-  /* ─── Page transitions ─── */
-  .page-enter { animation: fadeIn 0.4s ease-out; }
+  /* On dark backgrounds */
+  .nav-underline-light::after {
+    @apply bg-white/70;
+  }
+
+  /* ── Page transitions ── */
+  .page-enter { animation: fadeIn 0.5s ease-out; }
   .page-exit  { animation: fadeIn 0.3s ease-in reverse; }
 
-  /* ─── Gradient borders ─── */
-  .gradient-border {
-    position: relative;
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      padding: 1.5px;
-      background: linear-gradient(135deg,
-        hsl(var(--primary)),
-        hsl(var(--secondary)),
-        hsl(var(--accent))
-      );
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: destination-out;
-      mask-composite: exclude;
-    }
+  /* ── Shimmer skeleton ── */
+  .animate-shimmer {
+    background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--background)) 50%, hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease infinite;
   }
 }

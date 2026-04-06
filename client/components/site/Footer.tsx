@@ -1,136 +1,87 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, BadgeCheck, Paintbrush2, Mail, Instagram, Linkedin } from "lucide-react";
+import { ShieldCheck, BadgeCheck, ArrowUpRight } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden">
-      {/* Gradient top border */}
-      <div
-        className="h-[3px] w-full"
-        style={{
-          background:
-            "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(42 96% 52%) 35%, hsl(var(--secondary)) 65%, hsl(var(--accent)) 100%)",
-        }}
-      />
+    <footer className="section-dark">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
 
-      {/* Dark branded background */}
-      <div className="bg-foreground text-background">
-        {/* Decorative blob — top right */}
-        <div
-          className="pointer-events-none absolute right-0 top-0 h-80 w-80 -translate-y-1/4 translate-x-1/4 rounded-full opacity-[0.04] blur-3xl"
-          style={{ background: "hsl(var(--primary))" }}
-        />
-        <div
-          className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 translate-y-1/4 -translate-x-1/4 rounded-full opacity-[0.04] blur-3xl"
-          style={{ background: "hsl(var(--secondary))" }}
-        />
+        {/* Top rule */}
+        <div className="h-px bg-white/10" />
 
-        <div className="container relative mx-auto grid gap-10 px-4 py-14 md:grid-cols-4">
-          {/* Brand column */}
-          <div className="col-span-2 space-y-5">
+        {/* Main grid */}
+        <div className="grid gap-12 py-16 md:grid-cols-12">
+
+          {/* Brand — 5 cols */}
+          <div className="md:col-span-5 space-y-6">
             <img
               src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
-              alt="PaintBookco logo"
-              className="h-[2.1rem] w-auto brightness-0 invert drop-shadow-sm"
+              alt="PaintBookco"
+              className="h-7 w-auto brightness-0 invert opacity-90"
             />
-            <p className="max-w-[28ch] text-sm leading-relaxed text-background/65">
-              Find trusted, verified painters and decorators. Book with
-              confidence — deposit protection via secure escrow.
+            <p className="text-sm leading-[1.7] text-white/50 max-w-[32ch]">
+              The platform built exclusively for painting &amp; decorating.
+              Find verified professionals, get accurate estimates, and pay with confidence.
             </p>
-
-            {/* Trust badges */}
-            <div className="flex flex-wrap gap-4 text-sm">
-              <span className="inline-flex items-center gap-1.5 text-background/70">
-                <BadgeCheck
-                  className="h-4 w-4"
-                  style={{ color: "hsl(var(--primary))" }}
-                />
-                ID Verified
+            <div className="flex flex-wrap gap-5 text-xs text-white/40">
+              <span className="inline-flex items-center gap-1.5">
+                <BadgeCheck className="h-3.5 w-3.5 text-primary" /> ID Verified
               </span>
-              <span className="inline-flex items-center gap-1.5 text-background/70">
-                <ShieldCheck
-                  className="h-4 w-4"
-                  style={{ color: "hsl(var(--accent))" }}
-                />
-                Fully Insured
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Fully Insured
               </span>
-              <span className="inline-flex items-center gap-1.5 text-background/70">
-                <Paintbrush2
-                  className="h-4 w-4"
-                  style={{ color: "hsl(var(--secondary))" }}
-                />
-                Escrow Protected
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Escrow Protected
               </span>
-            </div>
-
-            {/* Social icons */}
-            <div className="flex gap-3 pt-1">
-              {[
-                { icon: Instagram, label: "Instagram" },
-                { icon: Linkedin,  label: "LinkedIn" },
-                { icon: Mail,      label: "Email" },
-              ].map(({ icon: Icon, label }) => (
-                <button
-                  key={label}
-                  aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-background/15 bg-background/8 text-background/60 transition-all duration-200 hover:bg-primary hover:text-white hover:border-primary hover:-translate-y-0.5"
-                >
-                  <Icon className="h-4 w-4" />
-                </button>
-              ))}
             </div>
           </div>
 
-          {/* Product links */}
-          <div>
-            <h4
-              className="mb-4 text-xs font-bold uppercase tracking-widest"
-              style={{ color: "hsl(var(--primary))" }}
-            >
-              Product
-            </h4>
-            <ul className="space-y-2.5 text-sm text-background/60">
+          {/* Spacer */}
+          <div className="hidden md:block md:col-span-1" />
+
+          {/* Product links — 3 cols */}
+          <div className="md:col-span-3">
+            <p className="editorial-label text-white/30 mb-5">Product</p>
+            <ul className="space-y-3">
               {[
-                { to: "/find-painter",  label: "Find A Painter/Decorator" },
+                { to: "/find-painter",  label: "Find a Painter" },
                 { to: "/post-job",      label: "Post a Job" },
                 { to: "/vestimator",    label: "Paint Vestimator" },
-                { to: "/join-painter",  label: "Join as A Painter" },
+                { to: "/join-painter",  label: "Join as a Painter" },
+                { to: "/b2b/find-painter", label: "Commercial Projects" },
               ].map(({ to, label }) => (
                 <li key={to}>
                   <Link
                     to={to}
-                    className="transition-colors duration-200 hover:text-background"
+                    className="text-sm text-white/50 hover:text-white transition-colors duration-200 inline-flex items-center gap-1 group"
                   >
                     {label}
+                    <ArrowUpRight className="h-3 w-3 opacity-0 -translate-y-0.5 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200" />
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Company links */}
-          <div>
-            <h4
-              className="mb-4 text-xs font-bold uppercase tracking-widest"
-              style={{ color: "hsl(var(--secondary))" }}
-            >
-              Company
-            </h4>
-            <ul className="space-y-2.5 text-sm text-background/60">
+          {/* Company links — 3 cols */}
+          <div className="md:col-span-3">
+            <p className="editorial-label text-white/30 mb-5">Company</p>
+            <ul className="space-y-3">
               {[
                 { to: "/about",        label: "About" },
-                { to: "/help",         label: "Help & Support" },
                 { to: "/trust-safety", label: "Trust & Safety" },
-                { to: "/privacy",      label: "Privacy" },
-                { to: "/terms",        label: "Terms" },
-                { to: "/cookies",      label: "Cookies" },
+                { to: "/help",         label: "Help & Support" },
+                { to: "/privacy",      label: "Privacy Policy" },
+                { to: "/terms",        label: "Terms of Service" },
+                { to: "/cookies",      label: "Cookie Policy" },
               ].map(({ to, label }) => (
                 <li key={to}>
                   <Link
                     to={to}
-                    className="transition-colors duration-200 hover:text-background"
+                    className="text-sm text-white/50 hover:text-white transition-colors duration-200 inline-flex items-center gap-1 group"
                   >
                     {label}
+                    <ArrowUpRight className="h-3 w-3 opacity-0 -translate-y-0.5 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200" />
                   </Link>
                 </li>
               ))}
@@ -139,8 +90,10 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-background/10 py-4 text-center text-xs text-background/35">
-          © {new Date().getFullYear()} The PaintBook Company Ltd. All rights reserved.
+        <div className="h-px bg-white/10" />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-6 text-xs text-white/25">
+          <span>© {new Date().getFullYear()} The PaintBook Company Ltd. All rights reserved.</span>
+          <span>Built for painters, by painters.</span>
         </div>
       </div>
     </footer>

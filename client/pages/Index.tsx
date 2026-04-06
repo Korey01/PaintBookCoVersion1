@@ -1,21 +1,19 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   ShieldCheck,
   BadgeCheck,
   ArrowRight,
-  Quote,
+  ArrowUpRight,
   Sparkles,
   Calculator,
   MapPin,
   PaintBucket,
   Star,
-  Brush,
   Building2,
-  Users,
+  ChevronDown,
 } from "lucide-react";
 import PainterCard from "@/components/site/PainterCard";
 import TestimonialsSection from "@/components/site/TestimonialsSection";
@@ -25,225 +23,191 @@ import {
   useScrollAnimationList,
 } from "@/hooks/useScrollAnimation";
 
-/* ── Framer Motion variants ── */
+/* ── Motion config ── */
+const ease = [0.25, 0.1, 0.25, 1] as const;
+
 const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
+  hidden:  { opacity: 0, y: 32 },
   visible: (delay = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.65, delay, ease: [0.4, 0, 0.2, 1] },
+    opacity: 1, y: 0,
+    transition: { duration: 0.9, delay, ease },
   }),
 };
 
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+const fadeIn = {
+  hidden:  { opacity: 0 },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    transition: { duration: 0.7, delay, ease },
+  }),
 };
 
-/* ── Small trust badge ── */
-function TrustBadge({
-  icon: Icon,
-  label,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  color: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <Icon className={`h-4 w-4 flex-shrink-0 ${color}`} />
-      <span className="font-medium">{label}</span>
-    </div>
-  );
-}
+const stagger = {
+  hidden:  {},
+  visible: { transition: { staggerChildren: 0.14, delayChildren: 0.05 } },
+};
 
-/* ── Stat pill ── */
-function StatPill({
-  value,
-  label,
-  color,
-}: {
-  value: string;
-  label: string;
-  color: string;
-}) {
+/* ── Shared section heading ── */
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div
-      variants={fadeUp}
-      className="stat-pill text-center min-w-[110px]"
-    >
-      <span className={`text-2xl font-black tracking-tight ${color}`}>
-        {value}
-      </span>
-      <span className="mt-0.5 text-xs font-medium text-muted-foreground">
-        {label}
-      </span>
-    </motion.div>
+    <p className="editorial-label text-muted-foreground mb-4 flex items-center gap-3">
+      <span className="inline-block h-px w-8 bg-current" />
+      {children}
+    </p>
   );
 }
 
 export default function Index() {
-  useEffect(() => {
-    document.title = "PaintBook | Hire Verified Painters";
-  }, []);
+  useEffect(() => { document.title = "PaintBook | Hire Verified Painters"; }, []);
 
-  const navigate = useNavigate();
-  const sectionRef2 = useScrollAnimationList();
-  const sectionRef3 = useScrollAnimation();
-  const sectionRef4 = useScrollAnimationList();
+  const navigate   = useNavigate();
+  const ref2 = useScrollAnimationList();
+  const ref3 = useScrollAnimation();
+  const ref4 = useScrollAnimationList();
 
   return (
     <div className="overflow-x-hidden">
+
       {/* ══════════════════════════════════════════════
-          HERO SECTION
+          HERO — full-viewport, dark, editorial
       ══════════════════════════════════════════════ */}
-      <section className="hero-mesh relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24">
-        {/* Floating paint blobs — decorative */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.6 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          className="pointer-events-none absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full blur-3xl"
-          style={{ background: "hsl(var(--primary) / 0.12)" }}
+      <section className="section-dark relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
+
+        {/* Subtle grain texture overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          }}
         />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.6 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.4, delay: 0.3, ease: "easeOut" }}
-          className="pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full blur-3xl"
-          style={{ background: "hsl(var(--secondary) / 0.10)" }}
+
+        {/* Faint coral glow — top right */}
+        <div
+          className="pointer-events-none absolute -top-1/4 right-0 h-[600px] w-[500px] rounded-full blur-[120px] opacity-[0.07]"
+          style={{ background: "hsl(var(--coral))" }}
         />
+
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={stagger}
+          className="relative mx-auto max-w-4xl"
+        >
+          {/* Label */}
+          <motion.p
+            variants={fadeIn}
+            custom={0}
+            className="editorial-label text-white/40 mb-8 tracking-[0.2em]"
+          >
+            Painting &amp; Decorating Platform
+          </motion.p>
+
+          {/* Headline — large serif */}
+          <motion.h1
+            variants={fadeUp}
+            custom={0.05}
+            className="text-display text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] text-white leading-[1.02] tracking-[-0.03em] mb-8"
+          >
+            Your home,
+            <br />
+            <em className="not-italic" style={{ color: "hsl(var(--coral))" }}>
+              beautifully painted.
+            </em>
+          </motion.h1>
+
+          {/* Sub-copy */}
+          <motion.p
+            variants={fadeUp}
+            custom={0.12}
+            className="mx-auto max-w-lg text-lg text-white/55 leading-[1.7] mb-12"
+          >
+            See your project, price it accurately, and book a verified painter
+            — all in one place.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            variants={fadeUp}
+            custom={0.2}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+          >
+            <Button
+              onClick={() => navigate("/post-job")}
+              variant="outline-light"
+              size="xl"
+              className="min-w-[200px]"
+            >
+              Post a Job
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => navigate("/vestimator")}
+              variant="ghost-light"
+              size="xl"
+              className="min-w-[200px]"
+            >
+              Get an Estimate
+            </Button>
+          </motion.div>
+
+          {/* Trust row */}
+          <motion.div
+            variants={fadeIn}
+            custom={0.3}
+            className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/35"
+          >
+            {[
+              { icon: BadgeCheck, label: "ID Verified Painters" },
+              { icon: ShieldCheck, label: "Fully Insured" },
+              { icon: ShieldCheck, label: "Escrow Protected" },
+            ].map(({ icon: Icon, label }) => (
+              <span key={label} className="inline-flex items-center gap-2">
+                <Icon className="h-4 w-4 text-primary" />
+                {label}
+              </span>
+            ))}
+          </motion.div>
+        </motion.div>
+
+        {/* Scroll indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.8, delay: 0.6 }}
-          className="pointer-events-none absolute top-1/2 left-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-          style={{ background: "hsl(var(--accent) / 0.07)" }}
-        />
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/25"
+        >
+          <span className="editorial-label text-[10px] text-white/25">Scroll</span>
+          <ChevronDown className="h-4 w-4 animate-scroll-bounce" />
+        </motion.div>
+      </section>
 
-        <div className="container relative mx-auto px-4">
+      {/* ══════════════════════════════════════════════
+          STATS BAND — light, minimal
+      ══════════════════════════════════════════════ */}
+      <section className="section-warm border-b border-border/40">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10 py-10">
           <motion.div
             initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="mx-auto max-w-4xl space-y-8 text-center"
-          >
-            {/* Pill tag */}
-            <motion.div variants={fadeUp} custom={0}>
-              <span className="paint-badge-coral">
-                <Brush className="h-3 w-3" />
-                Painting & Decorating Platform
-              </span>
-            </motion.div>
-
-            {/* Main headline */}
-            <motion.h1
-              variants={fadeUp}
-              custom={0.05}
-              className="font-display text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.06] tracking-tight"
-            >
-              Painting jobs,{" "}
-              <span className="text-paint-gradient">done the smart way.</span>
-            </motion.h1>
-
-            {/* Sub-copy */}
-            <motion.p
-              variants={fadeUp}
-              custom={0.1}
-              className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed"
-            >
-              See your project, price it accurately, and book a verified
-              painter — all in one place. Built exclusively for painting &
-              decorating.
-            </motion.p>
-
-            {/* Primary CTA */}
-            <motion.div
-              variants={fadeUp}
-              custom={0.15}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
-              <Button
-                onClick={() => navigate("/vestimator")}
-                variant="paint"
-                size="xl"
-                className="rounded-full animate-glow-pulse shadow-glow-primary min-w-[240px]"
-              >
-                See Your Estimate in Minutes
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-              <Button
-                onClick={() => navigate("/find-painter")}
-                variant="outline"
-                size="xl"
-                className="rounded-full min-w-[200px]"
-              >
-                <MapPin className="h-4 w-4" />
-                Find a Painter
-              </Button>
-            </motion.div>
-
-            {/* Trust badges row */}
-            <motion.div
-              variants={fadeUp}
-              custom={0.2}
-              className="flex flex-wrap justify-center gap-5 pt-2"
-            >
-              <TrustBadge icon={BadgeCheck} label="ID Verified" color="text-primary" />
-              <TrustBadge icon={ShieldCheck} label="Fully Insured" color="text-secondary" />
-              <TrustBadge icon={ShieldCheck} label="Escrow Protected" color="text-accent dark:text-accent" />
-            </motion.div>
-          </motion.div>
-
-          {/* Stats strip */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="mx-auto mt-14 flex flex-wrap justify-center gap-4 md:mt-16"
-          >
-            <StatPill value="2,400+" label="Verified Painters" color="text-primary" />
-            <StatPill value="18,000+" label="Jobs Completed" color="text-secondary" />
-            <StatPill value="4.9★" label="Avg. Rating" color="text-[hsl(42_96%_48%)]" />
-            <StatPill value="100%" label="Escrow Protected" color="text-accent dark:text-accent" />
-          </motion.div>
-
-          {/* Feature cards */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="mx-auto mt-14 grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.4 }}
+            variants={stagger}
+            className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/40"
           >
             {[
-              {
-                icon: Calculator,
-                title: "Smart Estimating",
-                body: "Get accurate quotes in minutes with our AI-powered Vestimator tool.",
-                color: "text-primary",
-                bg: "bg-primary/8",
-              },
-              {
-                icon: MapPin,
-                title: "Local Professionals",
-                body: "Connect with verified, insured painters in your area instantly.",
-                color: "text-secondary",
-                bg: "bg-secondary/8",
-              },
-            ].map(({ icon: Icon, title, body, color, bg }) => (
+              { value: "2,400+",  label: "Verified Painters" },
+              { value: "18,000+", label: "Jobs Completed" },
+              { value: "4.9",     label: "Average Rating", suffix: "★" },
+              { value: "100%",    label: "Escrow Protected" },
+            ].map(({ value, label, suffix }) => (
               <motion.div
-                key={title}
+                key={label}
                 variants={fadeUp}
-                className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur transition-all duration-300 hover:bg-card hover:shadow-card-hover hover:-translate-y-1 hover:border-primary/25"
+                className="flex flex-col items-center py-6 px-4 text-center"
               >
-                <div className={`flex-shrink-0 rounded-xl p-2.5 ${bg}`}>
-                  <Icon className={`h-5 w-5 ${color}`} />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-base font-bold">{title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-                </div>
+                <span className="text-serif text-3xl sm:text-4xl font-normal tracking-tight text-foreground">
+                  {value}{suffix}
+                </span>
+                <span className="editorial-label mt-1.5">{label}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -251,108 +215,248 @@ export default function Index() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          B2B COMMERCIAL SECTION
+          HOW IT WORKS — light, 3-step editorial
       ══════════════════════════════════════════════ */}
-      <section className="section-wash-secondary relative py-20 md:py-28 lg:py-36">
-        {/* Blob accent */}
-        <div
-          className="pointer-events-none absolute top-0 right-0 h-[420px] w-[420px] -translate-y-1/3 translate-x-1/3 rounded-full blur-3xl opacity-[0.08]"
-          style={{ background: "hsl(var(--secondary))" }}
-        />
-
-        <div className="container relative mx-auto px-4">
+      <section className="section-light py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
-            variants={staggerContainer}
-            className="mx-auto max-w-4xl space-y-10 text-center"
+            variants={stagger}
           >
             <motion.div variants={fadeUp}>
-              <span className="paint-badge-teal">
-                <Building2 className="h-3 w-3" />
-                For Bulk & Multi-Project Work
-              </span>
+              <SectionLabel>How it works</SectionLabel>
+              <h2 className="text-serif max-w-xl mb-16">
+                From estimate to booking,<br />in three steps.
+              </h2>
             </motion.div>
 
-            <motion.h2 variants={fadeUp} className="font-display font-black">
-              Commercial painting projects,{" "}
-              <span className="text-gradient">handled end-to-end.</span>
-            </motion.h2>
+            <div className="grid gap-0 md:grid-cols-3 border border-border/50">
+              {[
+                {
+                  num: "01",
+                  icon: Calculator,
+                  title: "Get your estimate",
+                  body: "Use the Vestimator to calculate exact paint quantities and a material cost baseline — before you speak to a single painter.",
+                  cta: "Open Vestimator",
+                  href: "/vestimator",
+                },
+                {
+                  num: "02",
+                  icon: MapPin,
+                  title: "Find & compare painters",
+                  body: "Browse verified, insured painters by location, specialty, rating and price. See real portfolios, not just profiles.",
+                  cta: "Find Painters",
+                  href: "/find-painter",
+                },
+                {
+                  num: "03",
+                  icon: ShieldCheck,
+                  title: "Book with confidence",
+                  body: "Post your job, receive quotes, and pay securely through escrow. Funds release only when the work is done to your standard.",
+                  cta: "Post a Job",
+                  href: "/post-job",
+                },
+              ].map(({ num, icon: Icon, title, body, cta, href }, i) => (
+                <motion.div
+                  key={num}
+                  variants={fadeUp}
+                  custom={i * 0.1}
+                  className="group flex flex-col p-8 sm:p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 transition-colors duration-300 hover:bg-muted/40"
+                >
+                  <span className="editorial-label text-primary mb-6">{num}</span>
+                  <div className="mb-4 p-3 w-fit bg-muted">
+                    <Icon className="h-5 w-5 text-foreground/70" />
+                  </div>
+                  <h3 className="text-serif text-xl mb-3 font-normal">{title}</h3>
+                  <p className="text-sm text-muted-foreground leading-[1.7] mb-6 flex-1">{body}</p>
+                  <Link
+                    to={href}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors group-hover:gap-2.5"
+                  >
+                    {cta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-            <motion.p
-              variants={fadeUp}
-              className="mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed"
+      {/* ══════════════════════════════════════════════
+          TOP-RATED PAINTERS
+      ══════════════════════════════════════════════ */}
+      <section ref={ref2} className="section-warm py-24 sm:py-32 scroll-animate">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <SectionLabel>Professionals</SectionLabel>
+              <h2 className="text-serif max-w-sm">Top rated near you.</h2>
+            </div>
+            <Button
+              onClick={() => navigate("/find-painter")}
+              variant="outline"
+              size="sm"
+              className="hidden sm:inline-flex"
             >
-              From multi-site refurbishments to ongoing maintenance,
-              PaintBookCo connects you with verified painting teams and
-              manages scope, payments, and delivery — milestone by milestone.
-            </motion.p>
+              View all <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
 
-            <motion.div
-              variants={fadeUp}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
-              <Button
-                onClick={() => navigate("/b2b/find-painter")}
-                variant="secondary"
-                size="lg"
-                className="rounded-full min-w-[240px]"
-              >
-                Find a Commercial Painter
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => navigate("/b2b/consultation")}
-                variant="outline-secondary"
-                size="lg"
-                className="rounded-full min-w-[200px]"
-              >
-                Book a Consultation
-              </Button>
-            </motion.div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 scroll-stagger">
+            {[...painters]
+              .sort((a, b) => b.rating - a.rating)
+              .slice(0, 3)
+              .map((p) => (
+                <div key={p.id} className="scroll-animate">
+                  <PainterCard painter={p} />
+                </div>
+              ))}
+          </div>
 
-            {/* B2B feature cards */}
-            <motion.div
-              variants={staggerContainer}
-              className="grid grid-cols-1 gap-5 pt-4 md:grid-cols-3"
-            >
+          <div className="mt-8 sm:hidden">
+            <Button onClick={() => navigate("/find-painter")} variant="outline" size="sm" className="w-full">
+              View all painters <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          VESTIMATOR FEATURE — dark split
+      ══════════════════════════════════════════════ */}
+      <section ref={ref3} className="section-dark py-24 sm:py-32 scroll-animate">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="grid gap-16 md:grid-cols-2 md:items-center">
+
+            {/* Image */}
+            <div className="relative order-last md:order-first">
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fc1db86da96eb40bd97ce4e112a273df4?format=webp&width=1200"
+                alt="Vestimator tool"
+                className="w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+              />
+              {/* Floating card */}
+              <div className="absolute -bottom-4 -right-4 bg-background border border-border/40 px-4 py-3 shadow-editorial">
+                <div className="flex items-center gap-3">
+                  <PaintBucket className="h-5 w-5 text-primary flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Estimate ready</p>
+                    <p className="text-[11px] text-muted-foreground">Under 2 minutes</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Copy */}
+            <div className="space-y-8">
+              <div>
+                <SectionLabel>
+                  <span className="text-white/30">Vestimator</span>
+                </SectionLabel>
+                <h2 className="text-serif text-white mb-6">
+                  Estimate your paint<br />
+                  <em className="not-italic" style={{ color: "hsl(var(--coral))" }}>in minutes.</em>
+                </h2>
+                <p className="text-white/55 leading-[1.7] text-base">
+                  Enter room dimensions, number of coats and openings.
+                  Get exact litres required and a material cost — with brand
+                  comparisons across Dulux, Farrow &amp; Ball, and Crown.
+                </p>
+              </div>
+
+              <ul className="space-y-3">
+                {[
+                  "Multi-room support with openings & coats",
+                  "Brand-by-brand cost comparison",
+                  "Instant material cost breakdown",
+                  "Attach directly to your job post",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-sm text-white/60">
+                    <span className="h-px w-5 bg-primary flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex flex-wrap gap-4">
+                <Button onClick={() => navigate("/vestimator")} variant="outline-light" size="lg">
+                  Open Vestimator
+                </Button>
+                <Button onClick={() => navigate("/find-painter")} variant="ghost-light" size="lg">
+                  Find a Painter
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          COMMERCIAL / B2B — light
+      ══════════════════════════════════════════════ */}
+      <section className="section-light py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={stagger}
+            className="grid md:grid-cols-2 gap-16 items-center"
+          >
+            <div>
+              <motion.div variants={fadeUp}>
+                <SectionLabel>Commercial</SectionLabel>
+                <h2 className="text-serif mb-6">
+                  Large-scale projects,<br />handled end-to-end.
+                </h2>
+                <p className="text-muted-foreground leading-[1.7] mb-8">
+                  From multi-site refurbishments to ongoing maintenance contracts,
+                  PaintBookCo connects you with verified painting teams and manages
+                  scope, payments, and delivery — milestone by milestone.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Button onClick={() => navigate("/b2b/find-painter")} variant="default" size="lg">
+                    Find Commercial Painters <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <Button onClick={() => navigate("/b2b/consultation")} variant="outline" size="lg">
+                    Book a Consultation
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div variants={fadeUp} custom={0.15} className="space-y-0 border border-border/50">
               {[
                 {
                   icon: Sparkles,
-                  title: "Milestone-Based Management",
-                  body: "Track progress and trigger payments at each project milestone with full transparency.",
-                  accent: "text-primary",
-                  bg: "bg-primary/8",
+                  title: "Milestone-based payments",
+                  body: "Funds release at each agreed milestone — keeping projects moving and both parties protected.",
                 },
                 {
                   icon: ShieldCheck,
-                  title: "Escrow Protection",
-                  body: "Protect both your business and painters with secure, regulated escrow settlement.",
-                  accent: "text-secondary",
-                  bg: "bg-secondary/8",
+                  title: "Regulated escrow",
+                  body: "Every payment sits in regulated escrow until work is verified complete.",
                 },
                 {
-                  icon: MapPin,
-                  title: "Multi-Site Coordination",
-                  body: "Manage multiple projects across multiple locations with one point of contact.",
-                  accent: "text-accent dark:text-accent",
-                  bg: "bg-accent/10",
+                  icon: Building2,
+                  title: "Multi-site coordination",
+                  body: "Manage multiple locations and teams from one dashboard with a single point of contact.",
                 },
-              ].map(({ icon: Icon, title, body, accent, bg }) => (
-                <motion.div
+              ].map(({ icon: Icon, title, body }, i) => (
+                <div
                   key={title}
-                  variants={fadeUp}
-                  className="flex flex-col items-center rounded-2xl border border-border/60 bg-card/70 p-6 text-center backdrop-blur transition-all duration-300 hover:bg-card hover:shadow-card-hover hover:-translate-y-1.5 hover:border-primary/25"
+                  className="flex gap-5 p-6 border-b border-border/50 last:border-0 hover:bg-muted/40 transition-colors duration-300"
                 >
-                  <div className={`mb-4 rounded-2xl p-3 ${bg}`}>
-                    <Icon className={`h-6 w-6 ${accent}`} />
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <h4 className="font-bold text-base">{title}</h4>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    {body}
-                  </p>
-                </motion.div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">{title}</h4>
+                    <p className="text-sm text-muted-foreground leading-[1.6]">{body}</p>
+                  </div>
+                </div>
               ))}
             </motion.div>
           </motion.div>
@@ -365,275 +469,104 @@ export default function Index() {
       <TestimonialsSection />
 
       {/* ══════════════════════════════════════════════
-          TOP-RATED PAINTERS
+          CUSTOMER QUOTES — warm light
       ══════════════════════════════════════════════ */}
-      <section
-        ref={sectionRef2}
-        className="container mx-auto px-4 py-16 scroll-animate"
-      >
-        <div className="mb-10 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="brush-divider" />
+      <section ref={ref4} className="section-warm py-24 sm:py-32 scroll-animate">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="mb-12">
+            <SectionLabel>Reviews</SectionLabel>
+            <h2 className="text-serif max-w-md">
+              Trusted by homeowners &amp; businesses.
+            </h2>
           </div>
-          <h2 className="font-display font-bold">Top rated near you</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Compare profiles at a glance and contact instantly.
-          </p>
-        </div>
 
-        <div className="mt-4 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:pb-0 lg:grid-cols-3">
-          {[...painters]
-            .sort((a, b) => b.rating - a.rating)
-            .slice(0, 3)
-            .map((p) => (
+          <div className="grid gap-0 md:grid-cols-3 border border-border/50 scroll-stagger">
+            {[
+              {
+                quote: "Flawless finish and super professional. The escrow deposit made payment completely stress-free.",
+                name: "Ella R.", location: "London", rating: 5,
+              },
+              {
+                quote: "Booked in a day, loved the portfolio. The estimate tool was spot-on for my budget.",
+                name: "James K.", location: "Leeds", rating: 5,
+              },
+              {
+                quote: "Felt completely safe with ID verified and insured badges. Great experience throughout.",
+                name: "Priya S.", location: "Bristol", rating: 5,
+              },
+            ].map((t, i) => (
               <div
-                key={p.id}
-                className="min-w-[82%] snap-center sm:min-w-0 scroll-animate"
+                key={i}
+                className="scroll-animate flex flex-col p-8 sm:p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 bg-card"
               >
-                <PainterCard painter={p} />
-              </div>
-            ))}
-        </div>
-
-        <div className="mt-8 flex justify-center">
-          <Button
-            onClick={() => navigate("/find-painter")}
-            variant="outline"
-            size="lg"
-            className="rounded-full"
-          >
-            View All Painters
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════
-          VESTIMATOR FEATURE SECTION
-      ══════════════════════════════════════════════ */}
-      <section
-        ref={sectionRef3}
-        className="section-wash-primary py-16 md:py-24 scroll-animate"
-      >
-        <div className="container mx-auto px-4">
-          <div className="grid items-center gap-10 md:gap-16 md:grid-cols-2">
-            <div className="relative">
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fc1db86da96eb40bd97ce4e112a273df4?format=webp&width=1200"
-                alt="Vestimator — paint estimate tool"
-                className="rounded-3xl shadow-2xl transition-shadow duration-300 hover:shadow-[0_32px_64px_-16px_hsl(var(--primary)/0.25)]"
-              />
-              {/* Floating badge on image */}
-              <div className="absolute -bottom-4 -right-4 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <PaintBucket className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-xs font-semibold">Estimate ready</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      in under 2 minutes
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <span className="paint-badge-coral">
-                  <Calculator className="h-3 w-3" />
-                  Vestimator Tool
-                </span>
-                <h2 className="font-display font-bold mt-4">
-                  Estimate your paint{" "}
-                  <span className="text-gradient">in minutes.</span>
-                </h2>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  Enter room dimensions, number of coats and openings. Get
-                  litres required and a baseline material cost. Attach to your
-                  job post with one click.
-                </p>
-              </div>
-
-              <ul className="space-y-3 text-sm">
-                {[
-                  "Multi-room support with openings & coats",
-                  "Brand comparison — Dulux, Farrow & Ball, Crown",
-                  "Instant material cost breakdown",
-                  "Attach directly to your job post",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5">
-                    <span
-                      className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full"
-                      style={{ background: "hsl(var(--primary) / 0.12)" }}
-                    >
-                      <Star
-                        className="h-3 w-3 text-primary"
-                        fill="currentColor"
-                      />
-                    </span>
-                    <span className="text-foreground/80">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="flex gap-4 flex-wrap pt-2">
-                <Button
-                  onClick={() => navigate("/vestimator")}
-                  variant="paint"
-                  size="lg"
-                  className="rounded-full"
-                >
-                  Open Vestimator
-                </Button>
-                <Button
-                  onClick={() => navigate("/find-painter")}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full"
-                >
-                  Find a Painter
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════
-          CUSTOMER QUOTES
-      ══════════════════════════════════════════════ */}
-      <section
-        ref={sectionRef4}
-        className="container mx-auto px-4 py-16 md:py-24 scroll-animate"
-      >
-        <div className="mb-10 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="brush-divider" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-lg font-semibold text-muted-foreground uppercase tracking-wide">
-              What customers say
-            </h3>
-          </div>
-          <h2 className="font-display font-bold">
-            Trusted by thousands of{" "}
-            <span className="text-gradient">homeowners & businesses.</span>
-          </h2>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-3">
-          {[
-            {
-              quote:
-                "Flawless finish and super professional. The escrow deposit made payment completely stress-free.",
-              name: "Ella R.",
-              location: "London",
-              rating: 5,
-              color: "border-primary/30 hover:border-primary/50",
-            },
-            {
-              quote:
-                "Booked in a day, loved the portfolio, and the estimate tool was spot on for my budget.",
-              name: "James K.",
-              location: "Leeds",
-              rating: 5,
-              color: "border-secondary/30 hover:border-secondary/50",
-            },
-            {
-              quote:
-                "Felt safe with ID verified and insured badges. Great experience from start to finish.",
-              name: "Priya S.",
-              location: "Bristol",
-              rating: 5,
-              color: "border-accent/30 hover:border-accent/50",
-            },
-          ].map((t, i) => (
-            <Card
-              key={i}
-              className={`border-2 scroll-animate transition-all duration-300 ${t.color}`}
-            >
-              <CardContent className="p-6 sm:p-8">
                 {/* Stars */}
-                <div className="mb-3 flex gap-0.5">
+                <div className="flex gap-0.5 mb-6">
                   {Array.from({ length: t.rating }).map((_, s) => (
-                    <Star
-                      key={s}
-                      className="h-4 w-4 text-[hsl(42_96%_52%)] fill-[hsl(42_96%_52%)]"
-                    />
+                    <Star key={s} className="h-3.5 w-3.5 fill-primary text-primary" />
                   ))}
                 </div>
-                <Quote className="h-6 w-6 text-primary opacity-60" />
-                <p className="mt-3 text-base leading-relaxed">{t.quote}</p>
-                <p className="mt-5 text-sm font-semibold text-muted-foreground">
-                  {t.name}{" "}
-                  <span className="font-normal">· {t.location}</span>
+                <p className="text-sm leading-[1.75] text-foreground/80 flex-1 mb-8">
+                  "{t.quote}"
                 </p>
-              </CardContent>
-            </Card>
-          ))}
+                <div>
+                  <p className="text-sm font-semibold">{t.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.location}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════
-          BOTTOM CTA BAND
+          CTA BAND — dark, full-width
       ══════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden py-20 md:py-28">
-        {/* Gradient background */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(28 95% 55%) 40%, hsl(var(--secondary)) 100%)",
-          }}
-        />
-        {/* Decorative rings */}
-        <div className="pointer-events-none absolute -top-20 -right-20 h-80 w-80 rounded-full border-2 border-white/10 animate-spin-slow" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full border border-white/8 animate-float-bob" />
+      <section className="section-dark py-28 sm:py-36 overflow-hidden relative">
+        {/* Faint decorative rings */}
+        <div className="pointer-events-none absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full border border-white/5 animate-spin-slow" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-[360px] w-[360px] rounded-full border border-white/5 animate-spin-slow" style={{ animationDuration: "32s", animationDirection: "reverse" }} />
 
-        <div className="container relative mx-auto px-4 text-center text-white">
+        <div className="relative mx-auto max-w-3xl px-6 text-center">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            variants={staggerContainer}
-            className="mx-auto max-w-2xl space-y-6"
+            variants={stagger}
+            className="space-y-8"
           >
-            <motion.div variants={fadeUp}>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-widest">
-                <Sparkles className="h-3 w-3" /> Ready to get started?
-              </span>
-            </motion.div>
+            <motion.p variants={fadeIn} custom={0} className="editorial-label text-white/30 tracking-[0.2em]">
+              Ready to begin
+            </motion.p>
             <motion.h2
               variants={fadeUp}
-              className="font-display font-black text-white"
+              custom={0.05}
+              className="text-serif text-white text-4xl sm:text-5xl lg:text-6xl tracking-[-0.03em] leading-[1.05]"
             >
-              Your perfect painter is one click away.
+              Your perfect painter<br />is one click away.
             </motion.h2>
-            <motion.p
-              variants={fadeUp}
-              className="text-lg text-white/80 leading-relaxed"
-            >
-              Post your job for free. No commitment. Verified painters will
-              send you quotes — you choose.
+            <motion.p variants={fadeUp} custom={0.12} className="text-white/45 text-base leading-[1.7] max-w-lg mx-auto">
+              Post your job for free. No commitment. Verified painters send
+              quotes — you choose the best fit.
             </motion.p>
             <motion.div
               variants={fadeUp}
+              custom={0.2}
               className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2"
             >
               <Button
                 onClick={() => navigate("/post-job")}
+                variant="outline-light"
                 size="xl"
-                className="rounded-full bg-white text-foreground font-bold shadow-lg hover:bg-white/95 hover:shadow-glow-primary hover:-translate-y-0.5 min-w-[200px]"
+                className="min-w-[200px]"
               >
                 Post a Job Free
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-4 w-4" />
               </Button>
               <Button
                 onClick={() => navigate("/find-painter")}
+                variant="ghost-light"
                 size="xl"
-                variant="ghost"
-                className="rounded-full border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 min-w-[180px]"
+                className="min-w-[180px]"
               >
                 Browse Painters
               </Button>

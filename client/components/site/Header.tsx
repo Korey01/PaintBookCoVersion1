@@ -1,19 +1,19 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { LogOut, Menu, Paintbrush2 } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Header() {
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled]     = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const loc = useLocation();
+  const [loggedIn, setLoggedIn]     = useState(false);
+  const loc      = useLocation();
   const { search } = loc;
-  const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
@@ -29,225 +29,157 @@ export default function Header() {
     navigate("/auth");
   }
 
-  return (
-    <header className="sticky top-0 z-40 w-full">
-      {/* Animated paint-stripe accent bar at very top */}
-      <div
-        className="h-[3px] w-full"
-        style={{
-          background:
-            "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(42 96% 52%) 35%, hsl(var(--secondary)) 65%, hsl(var(--accent)) 100%)",
-          backgroundSize: "200% 100%",
-          animation: "shimmer 4s linear infinite",
-        }}
-      />
+  const navLinks = [
+    { to: "/vestimator",   label: "Estimate" },
+    { to: "/find-painter", label: "Find Painters" },
+    { to: "/about",        label: "About" },
+    { to: "/trust-safety", label: "Trust & Safety" },
+    ...(loggedIn ? [{ to: `/dashboard${search || ""}`, label: "Dashboard" }] : []),
+  ];
 
-      {/* Main nav bar */}
-      <div
-        className={`w-full transition-all duration-300 ${
+  return (
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
           scrolled
-            ? "backdrop-blur-xl bg-background/85 border-b border-border/60 shadow-sm"
-            : "bg-transparent"
+            ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-[0_1px_0_0_hsl(var(--border)/0.5)]"
+            : "bg-transparent border-b border-transparent"
         }`}
       >
-        <div className="container mx-auto flex items-center justify-between px-4 py-3 md:py-4">
-          {/* Logo */}
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
+
+          {/* Logo — left */}
           <Link
             to="/"
-            className="flex items-center gap-2 font-extrabold tracking-tight group"
             aria-label="PaintBookco home"
+            className="flex-shrink-0 transition-opacity duration-200 hover:opacity-75"
           >
             <img
               src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
-              alt="PaintBookco logo"
-              className="h-[2.1rem] w-auto sm:h-[2.45rem] drop-shadow-md contrast-110 saturate-110 transition-transform duration-300 group-hover:scale-105"
+              alt="PaintBookco"
+              className="h-7 w-auto"
             />
-            <span className="sr-only">PaintBookco</span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-7 md:flex">
-            {[
-              { to: "/vestimator", label: "Estimate" },
-              { to: "/about", label: "About" },
-              { to: "/trust-safety", label: "Trust & Safety" },
-            ].map(({ to, label }) => (
+          {/* Nav — center (desktop) */}
+          <nav className="hidden absolute left-1/2 -translate-x-1/2 items-center gap-8 md:flex">
+            {navLinks.map(({ to, label }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `relative text-sm font-semibold transition-colors duration-200 group ${
-                    isActive ? "text-primary" : "text-foreground/75 hover:text-foreground"
+                  `nav-underline text-sm font-medium pb-0.5 transition-colors duration-200 ${
+                    isActive
+                      ? "text-foreground active"
+                      : "text-foreground/60 hover:text-foreground"
                   }`
                 }
               >
-                {({ isActive }) => (
-                  <>
-                    {label}
-                    {/* Animated underline — brush-stroke style */}
-                    <span
-                      className={`absolute -bottom-0.5 left-0 h-[2.5px] rounded-full bg-primary transition-all duration-300 ${
-                        isActive ? "w-full" : "w-0 group-hover:w-full"
-                      }`}
-                    />
-                  </>
-                )}
+                {label}
               </NavLink>
             ))}
-
-            {loggedIn && (
-              <NavLink
-                to={`/dashboard${search || ""}`}
-                className={({ isActive }) =>
-                  `relative text-sm font-semibold transition-colors duration-200 group ${
-                    isActive ? "text-primary" : "text-foreground/75 hover:text-foreground"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    Dashboard
-                    <span
-                      className={`absolute -bottom-0.5 left-0 h-[2.5px] rounded-full bg-primary transition-all duration-300 ${
-                        isActive ? "w-full" : "w-0 group-hover:w-full"
-                      }`}
-                    />
-                  </>
-                )}
-              </NavLink>
-            )}
           </nav>
 
-          {/* Desktop CTAs */}
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* Mobile hamburger */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
+          {/* CTAs — right */}
+          <div className="flex items-center gap-3">
+            {/* Mobile toggle */}
+            <button
               onClick={() => setMobileOpen(true)}
+              className="md:hidden p-2 text-foreground/70 hover:text-foreground transition-colors"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
-            </Button>
+            </button>
 
-            {/* Join as Painter — outline secondary */}
+            {/* Join as Painter */}
             <Button
               asChild
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="hidden lg:inline-flex"
+              className="hidden lg:inline-flex text-foreground/70 hover:text-foreground"
             >
-              <Link to="/join-painter">
-                <Paintbrush2 className="h-3.5 w-3.5" />
-                Join as Painter
-              </Link>
+              <Link to="/join-painter">Join as Painter</Link>
             </Button>
 
-            {/* Post a Job — gradient paint button */}
+            {/* Post a Job — primary CTA */}
             <Button
               asChild
-              variant="paint"
+              variant="default"
               size="sm"
-              className="hidden sm:inline-flex rounded-full"
+              className="hidden sm:inline-flex"
             >
               <Link to="/post-job">Post a Job</Link>
             </Button>
 
             {loggedIn && (
-              <Button
-                size="sm"
-                variant="outline"
+              <button
                 onClick={handleLogout}
-                className="hidden sm:inline-flex"
+                className="hidden sm:flex items-center gap-1.5 text-sm text-foreground/50 hover:text-foreground transition-colors"
               >
-                <LogOut className="h-3.5 w-3.5" /> Log out
-              </Button>
+                <LogOut className="h-4 w-4" />
+              </button>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile sheet drawer */}
+      {/* Spacer so content doesn't sit under fixed header */}
+      <div className="h-16" />
+
+      {/* Mobile sheet */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-[300px] p-0 overflow-y-auto">
-          {/* Sheet header accent */}
-          <div
-            className="h-1 w-full"
-            style={{
-              background:
-                "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)))",
-            }}
-          />
-          <div className="p-6">
-            <Link
-              to="/"
-              onClick={() => setMobileOpen(false)}
-              className="mb-6 block"
-            >
+        <SheetContent side="right" className="w-full max-w-xs p-0 border-l border-border/40">
+          <div className="flex items-center justify-between px-6 h-16 border-b border-border/40">
+            <Link to="/" onClick={() => setMobileOpen(false)}>
               <img
                 src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
-                alt="PaintBookco logo"
-                className="h-[2.1rem] w-auto"
+                alt="PaintBookco"
+                className="h-6 w-auto"
               />
             </Link>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="p-2 text-foreground/50 hover:text-foreground transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-            <nav className="flex flex-col gap-1 text-sm">
-              {[
-                { to: "/vestimator", label: "Estimate" },
-                { to: "/about", label: "About" },
-                { to: "/trust-safety", label: "Trust & Safety" },
-              ].map(({ to, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-foreground/80 transition-all hover:bg-primary/8 hover:text-primary"
-                >
-                  {label}
-                </Link>
-              ))}
-
-              {loggedIn && (
-                <Link
-                  to={`/dashboard${search || ""}`}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-foreground/80 transition-all hover:bg-primary/8 hover:text-primary"
-                >
-                  Dashboard
-                </Link>
-              )}
-            </nav>
-
-            <div className="mt-6 space-y-3 border-t border-border pt-6">
-              <Button asChild variant="paint" className="w-full rounded-full">
-                <Link to="/post-job" onClick={() => setMobileOpen(false)}>
-                  Post a Job
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/join-painter" onClick={() => setMobileOpen(false)}>
-                  <Paintbrush2 className="h-4 w-4" />
-                  Join as Painter
-                </Link>
-              </Button>
-            </div>
-
-            {loggedIn && (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setMobileOpen(false);
-                  handleLogout();
-                }}
-                className="mt-3 w-full"
+          <nav className="flex flex-col px-6 py-8 gap-1">
+            {navLinks.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMobileOpen(false)}
+                className="py-3 text-base font-medium text-foreground/70 hover:text-foreground border-b border-border/30 transition-colors duration-200 last:border-0"
               >
-                <LogOut className="mr-2 h-4 w-4" /> Log out
-              </Button>
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="px-6 space-y-3">
+            <Button asChild variant="default" size="lg" className="w-full">
+              <Link to="/post-job" onClick={() => setMobileOpen(false)}>
+                Post a Job
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="w-full">
+              <Link to="/join-painter" onClick={() => setMobileOpen(false)}>
+                Join as Painter
+              </Link>
+            </Button>
+            {loggedIn && (
+              <button
+                onClick={() => { setMobileOpen(false); handleLogout(); }}
+                className="w-full flex items-center justify-center gap-2 text-sm text-foreground/50 hover:text-foreground py-2 transition-colors"
+              >
+                <LogOut className="h-4 w-4" /> Log out
+              </button>
             )}
           </div>
         </SheetContent>
       </Sheet>
-    </header>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,12 @@ export default function Auth() {
   }
 
   return (
-    <div className="container mx-auto grid gap-6 px-4 py-10 md:max-w-xl">
+    <motion.div
+      className="container mx-auto grid gap-6 px-4 py-16 md:max-w-xl"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       <div className="text-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
           <Sparkles className="h-3.5 w-3.5" /> Secure login for all roles
@@ -163,7 +169,7 @@ export default function Auth() {
             <Button type="submit" className="h-11">Log in</Button>
           </form>
 
-          <div className="mt-6 grid gap-2 rounded-lg bg-secondary/70 p-4 text-xs text-muted-foreground">
+          <div className="mt-6 grid gap-2 border border-border/50 bg-muted/40 p-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2 font-medium text-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-primary" /> How sign-up works now
             </div>
@@ -176,6 +182,6 @@ export default function Auth() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

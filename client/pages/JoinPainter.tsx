@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -116,14 +117,19 @@ export default function JoinPainter() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12">
+    <motion.div
+      className="min-h-screen bg-background py-12"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       <div className="mx-auto max-w-md px-4">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="font-display text-3xl font-normal text-foreground">
             Join as a Painter
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-muted-foreground">
             Get access to nearby painting jobs in your area
           </p>
         </div>
@@ -215,7 +221,7 @@ export default function JoinPainter() {
                     {errors.postcode}
                   </p>
                 )}
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   We'll use this to match you with nearby jobs
                 </p>
               </div>
@@ -253,12 +259,12 @@ export default function JoinPainter() {
             </form>
 
             {/* Info Box */}
-            <div className="mt-6 rounded-lg bg-blue-50 p-4">
+            <div className="mt-6 border border-primary/15 bg-primary/5 p-4">
               <div className="flex gap-3">
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-blue-600" />
-                <div className="text-sm text-blue-900">
+                <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
+                <div className="text-sm text-foreground">
                   <p className="font-semibold">What happens next?</p>
-                  <ul className="mt-2 space-y-1 text-xs">
+                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
                     <li>• Complete your KYC verification</li>
                     <li>• Upload required documents (ID, insurance)</li>
                     <li>• Get approved to access jobs</li>
@@ -271,24 +277,24 @@ export default function JoinPainter() {
         </Card>
 
         {/* Trust Footer */}
-        <div className="mt-8 text-center text-xs text-slate-600">
+        <div className="mt-8 text-center text-xs text-muted-foreground">
           <p>No credit card required · Free to join · Secure registration</p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export function JoinPainterComplete() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-16">
+    <div className="min-h-screen bg-background py-16">
       <div className="mx-auto max-w-md px-4 text-center">
-        <CheckCircle2 className="mx-auto h-16 w-16 text-green-600" />
-        <h1 className="mt-6 text-3xl font-bold text-slate-900">
+        <CheckCircle2 className="mx-auto h-16 w-16 text-primary" />
+        <h1 className="mt-6 font-display text-3xl font-normal text-foreground">
           Profile complete!
         </h1>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-muted-foreground">
           Your account is verified and ready. Start browsing nearby jobs.
         </p>
         <div className="mt-8 flex flex-col gap-3">

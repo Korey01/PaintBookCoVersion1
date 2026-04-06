@@ -36,7 +36,7 @@ export default function Layout({ children }: PropsWithChildren) {
         </div>
       )}
       {!isHome && !isFind && (
-        <div aria-hidden className="fixed inset-0 -z-10 bg-white/75" />
+        <div aria-hidden className="fixed inset-0 -z-10 bg-background" />
       )}
       <Header />
       {/* Perspective container for book-like page turns */}

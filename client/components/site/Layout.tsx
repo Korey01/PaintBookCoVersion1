@@ -3,6 +3,8 @@ import type { PropsWithChildren } from "react";
 
 import Header from "./Header";
 import Footer from "./Footer";
+import CookieConsent from "./CookieConsent";
+import CookieSettingsButton from "./CookieSettingsButton";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import PageTurn from "./PageTurn";
@@ -50,6 +52,9 @@ export default function Layout({ children }: PropsWithChildren) {
         </AnimatePresence>
       </div>
       <Footer />
+      {/* Cookie consent banner + floating settings button */}
+      <CookieConsent />
+      <CookieSettingsButton />
     </div>
   );
 }

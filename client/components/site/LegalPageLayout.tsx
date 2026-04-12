@@ -1,223 +1,193 @@
 /**
  * Shared layout wrapper for all legal pages (Privacy, Terms, Cookies).
- * Renders within the main Layout (Header + Footer already present).
- *
- * Styling spec:
- *  - Navy #1B3A5C headings
- *  - Arial / system sans-serif body
+ * Styled to match the PaintBookCo editorial brand theme:
+ *  - DM Serif Display headings, DM Sans body
+ *  - Near-black/cream palette via CSS custom properties
+ *  - Coral primary accent for visual anchors
  *  - Max-width 800px centered
  */
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 interface LegalPageLayoutProps {
   title: string;
   lastUpdated: string;
+  version?: string;
   children: ReactNode;
 }
-
-const navy = "#1B3A5C";
 
 export default function LegalPageLayout({
   title,
   lastUpdated,
+  version,
   children,
 }: LegalPageLayoutProps) {
   return (
-    <div
-      style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
-      className="w-full bg-white"
-    >
-      {/* ── Breadcrumb bar ── */}
-      <div
-        style={{ borderBottom: "1px solid #e5e7eb", backgroundColor: "#f9fafb" }}
-        className="w-full"
-      >
-        <div
-          style={{ maxWidth: "800px" }}
-          className="mx-auto px-6 py-3 flex items-center gap-1.5 text-sm"
-        >
-          <Link
-            to="/"
-            className="flex items-center gap-1 hover:underline"
-            style={{ color: navy }}
-          >
-            <Home style={{ width: "13px", height: "13px" }} />
-            Home
-          </Link>
-          <ChevronRight style={{ width: "13px", height: "13px", color: "#9ca3af" }} />
-          <span style={{ color: "#6b7280" }}>{title}</span>
+    <div className="w-full bg-background text-foreground">
+
+      {/* ── Page header ── */}
+      <div className="section-dark py-14 px-6">
+        <div className="mx-auto" style={{ maxWidth: "800px" }}>
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-xs text-white/40 mb-8">
+            <Link to="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-white/60">{title}</span>
+          </nav>
+          {/* Title */}
+          <p className="editorial-label text-primary mb-3">Legal</p>
+          <h1 className="font-display text-4xl md:text-5xl font-normal text-white leading-[1.1] mb-5">
+            {title}
+          </h1>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/45">
+            <span>Last updated: <strong className="text-white/65">{lastUpdated}</strong></span>
+            {version && <span>Version: <strong className="text-white/65">{version}</strong></span>}
+            <span>The PaintBook Company Ltd · Co. No. 16690724</span>
+          </div>
         </div>
       </div>
 
       {/* ── Main content ── */}
-      <div style={{ maxWidth: "800px" }} className="mx-auto px-6 py-12">
-        {/* Page title + metadata */}
-        <header style={{ borderBottom: "2px solid #e5e7eb", paddingBottom: "1.5rem", marginBottom: "2rem" }}>
-          <h1
-            style={{
-              color: navy,
-              fontFamily: "Arial, Helvetica, sans-serif",
-              fontSize: "2rem",
-              fontWeight: "700",
-              lineHeight: "1.2",
-              margin: "0 0 0.5rem 0",
-            }}
-          >
-            {title}
-          </h1>
-          <p style={{ color: "#6b7280", fontSize: "0.875rem", margin: 0 }}>
-            Last updated: <strong style={{ color: "#374151" }}>{lastUpdated}</strong>
-          </p>
-        </header>
-
-        {/* Page body */}
-        <div className="legal-content">
+      <div className="px-6 py-14">
+        <div className="mx-auto legal-content" style={{ maxWidth: "800px" }}>
           {children}
         </div>
       </div>
 
-      {/* ── Legal page footer ── */}
-      <div
-        style={{
-          borderTop: "1px solid #e5e7eb",
-          backgroundColor: "#f9fafb",
-        }}
-      >
-        <div
-          style={{ maxWidth: "800px" }}
-          className="mx-auto px-6 py-10"
-        >
-          <div
-            className="grid gap-6 md:grid-cols-3"
-            style={{ fontSize: "0.8125rem", color: "#6b7280" }}
-          >
+      {/* ── Footer ── */}
+      <div className="section-warm border-t border-border/50">
+        <div className="mx-auto px-6 py-12" style={{ maxWidth: "800px" }}>
+          <div className="grid gap-8 md:grid-cols-3 text-sm">
             <div>
-              <p style={{ fontWeight: "700", color: navy, marginBottom: "0.5rem" }}>
-                PaintBookco Ltd
-              </p>
-              <p style={{ margin: 0, lineHeight: "1.6" }}>
+              <p className="font-semibold text-foreground mb-2">The PaintBook Company Ltd</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Trading as PaintBookCo<br />
                 Registered in England &amp; Wales<br />
-                Company No. [Registration No.]<br />
-                ICO Registration No. [ICO No.]
+                Company No. 16690724<br />
+                ICO Registration No. ZC118117<br />
+                1, 1 Fenman Mews, Walkden<br />
+                Manchester, M28 3YU
               </p>
             </div>
             <div>
-              <p style={{ fontWeight: "700", color: "#374151", marginBottom: "0.5rem" }}>
-                Legal
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                <Link to="/privacy" style={{ color: navy, textDecoration: "none" }}
-                  onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-                  onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-                >Privacy Policy</Link>
-                <Link to="/terms" style={{ color: navy, textDecoration: "none" }}
-                  onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-                  onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-                >Terms of Service</Link>
-                <Link to="/cookies" style={{ color: navy, textDecoration: "none" }}
-                  onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-                  onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-                >Cookie Policy</Link>
+              <p className="font-semibold text-foreground mb-2">Legal</p>
+              <div className="flex flex-col gap-1.5 text-xs">
+                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+                <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+                <Link to="/cookies" className="text-primary hover:underline">Cookie Policy</Link>
               </div>
             </div>
             <div>
-              <p style={{ fontWeight: "700", color: "#374151", marginBottom: "0.5rem" }}>
-                Contact
-              </p>
-              <p style={{ margin: 0, lineHeight: "1.6" }}>
-                General: <a href="mailto:hello@paintbookco.com" style={{ color: navy }}>hello@paintbookco.com</a><br />
-                Privacy: <a href="mailto:privacy@paintbookco.com" style={{ color: navy }}>privacy@paintbookco.com</a><br />
-                Support: <Link to="/help" style={{ color: navy }}>Help Centre</Link>
-              </p>
+              <p className="font-semibold text-foreground mb-2">Contact</p>
+              <div className="text-xs text-muted-foreground leading-relaxed">
+                <p>General: <a href="mailto:hello@paintbookco.co.uk" className="text-primary hover:underline">hello@paintbookco.co.uk</a></p>
+                <p>Privacy: <a href="mailto:privacy@paintbookco.co.uk" className="text-primary hover:underline">privacy@paintbookco.co.uk</a></p>
+                <p>Website: <a href="https://paintbookco.co.uk" className="text-primary hover:underline">paintbookco.co.uk</a></p>
+              </div>
             </div>
           </div>
-          <p style={{ marginTop: "1.5rem", fontSize: "0.75rem", color: "#9ca3af", borderTop: "1px solid #e5e7eb", paddingTop: "1rem" }}>
-            © {new Date().getFullYear()} PaintBookco Ltd. All rights reserved.
+          <p className="mt-8 pt-6 border-t border-border/40 text-xs text-muted-foreground">
+            © {new Date().getFullYear()} The PaintBook Company Ltd (trading as PaintBookCo). All rights reserved.
           </p>
         </div>
       </div>
 
-      {/* Global legal content styles */}
+      {/* ── Legal content styles ── */}
       <style>{`
+        .legal-content .notice-box {
+          background: hsl(var(--muted));
+          border-left: 3px solid hsl(var(--primary));
+          padding: 1rem 1.25rem;
+          margin: 0 0 2rem 0;
+          font-size: 0.9rem;
+          color: hsl(var(--muted-foreground));
+          line-height: 1.7;
+        }
+        .legal-content .notice-box strong {
+          color: hsl(var(--foreground));
+        }
         .legal-content h2 {
-          color: ${navy};
-          font-family: Arial, Helvetica, sans-serif;
-          font-size: 1.25rem;
-          font-weight: 700;
-          margin: 2.25rem 0 0.75rem 0;
-          padding-bottom: 0.375rem;
-          border-bottom: 1px solid #e5e7eb;
+          font-family: "DM Serif Display", Georgia, serif;
+          font-size: 1.35rem;
+          font-weight: 400;
+          color: hsl(var(--foreground));
+          margin: 2.5rem 0 0.75rem 0;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid hsl(var(--border));
         }
         .legal-content h3 {
-          color: ${navy};
-          font-family: Arial, Helvetica, sans-serif;
-          font-size: 1rem;
+          font-family: "DM Sans", ui-sans-serif, sans-serif;
+          font-size: 0.95rem;
           font-weight: 700;
-          margin: 1.5rem 0 0.5rem 0;
+          color: hsl(var(--foreground));
+          margin: 1.75rem 0 0.5rem 0;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
         }
         .legal-content p {
-          color: #374151;
+          font-family: "DM Sans", ui-sans-serif, sans-serif;
           font-size: 0.9375rem;
-          line-height: 1.75;
+          color: hsl(var(--muted-foreground));
+          line-height: 1.8;
           margin: 0 0 1rem 0;
         }
         .legal-content ul, .legal-content ol {
-          color: #374151;
+          font-family: "DM Sans", ui-sans-serif, sans-serif;
           font-size: 0.9375rem;
-          line-height: 1.75;
+          color: hsl(var(--muted-foreground));
+          line-height: 1.8;
           margin: 0 0 1rem 0;
           padding-left: 1.5rem;
         }
         .legal-content li {
-          margin-bottom: 0.375rem;
+          margin-bottom: 0.4rem;
         }
         .legal-content a {
-          color: ${navy};
+          color: hsl(var(--primary));
           text-decoration: underline;
+          text-underline-offset: 3px;
         }
         .legal-content a:hover {
-          color: #2563eb;
+          opacity: 0.75;
         }
         .legal-content strong {
-          color: #1f2937;
-          font-weight: 700;
-        }
-        .legal-content .notice-box {
-          background: #eff6ff;
-          border-left: 4px solid ${navy};
-          padding: 1rem 1.25rem;
-          margin: 1.25rem 0;
-          border-radius: 0 4px 4px 0;
-        }
-        .legal-content .notice-box p {
-          margin: 0;
-          font-size: 0.875rem;
-          color: #1e3a5f;
+          color: hsl(var(--foreground));
+          font-weight: 600;
         }
         .legal-content table {
           width: 100%;
           border-collapse: collapse;
           font-size: 0.875rem;
-          margin: 1rem 0 1.5rem 0;
+          margin: 1rem 0 1.75rem 0;
+          font-family: "DM Sans", ui-sans-serif, sans-serif;
         }
         .legal-content th {
-          background: #f3f4f6;
-          color: ${navy};
+          background: hsl(var(--muted));
+          color: hsl(var(--foreground));
           font-weight: 700;
           text-align: left;
           padding: 0.625rem 0.875rem;
-          border: 1px solid #e5e7eb;
+          border: 1px solid hsl(var(--border));
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
         }
         .legal-content td {
           padding: 0.5rem 0.875rem;
-          border: 1px solid #e5e7eb;
-          color: #374151;
+          border: 1px solid hsl(var(--border));
+          color: hsl(var(--muted-foreground));
           vertical-align: top;
+          line-height: 1.6;
         }
         .legal-content tr:nth-child(even) td {
-          background: #f9fafb;
+          background: hsl(var(--muted) / 0.4);
+        }
+        .legal-content .section-intro {
+          font-size: 1rem;
+          color: hsl(var(--foreground));
+          line-height: 1.75;
+          margin-bottom: 1.5rem;
         }
       `}</style>
     </div>

@@ -3,22 +3,12 @@
 -- Migration: 20260412000005_job_matching_webhook
 -- ============================================================
 --
--- SETUP REQUIRED before running this migration:
---
--- Run the following in the Supabase SQL editor to set the
--- database configuration variables that the trigger reads:
---
---   ALTER DATABASE postgres
---     SET app.edge_function_url = 'https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1';
---
---   ALTER DATABASE postgres
---     SET app.service_role_key = '<your-service-role-key>';
---
--- The service role key is available in:
---   Supabase Dashboard → Settings → API → service_role (secret)
---
--- The pg_net extension must also be enabled:
+-- The pg_net extension must be enabled:
 --   CREATE EXTENSION IF NOT EXISTS pg_net;
+--
+-- The SERVICE_ROLE_KEY secret must be stored in Supabase Vault:
+--   INSERT INTO vault.secrets (name, secret)
+--   VALUES ('SERVICE_ROLE_KEY', '<your-service-role-key>');
 --
 -- ============================================================
 
@@ -34,12 +24,11 @@ BEGIN
   IF NEW.status = 'pending_match' THEN
     PERFORM
       net.http_post(
-        url     := current_setting('app.edge_function_url')
-                    || '/match-job-to-painters',
+        url     := 'https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1/match-job-to-painters',
         headers := jsonb_build_object(
           'Content-Type',  'application/json',
           'Authorization', 'Bearer '
-                            || current_setting('app.service_role_key')
+                            || (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'SERVICE_ROLE_KEY')
         ),
         body    := jsonb_build_object('job_id', NEW.id)
       );
@@ -61,5 +50,5 @@ CREATE TRIGGER on_job_inserted
 COMMENT ON FUNCTION trigger_job_matching() IS
   'Fires the match-job-to-painters Edge Function via pg_net '
   'whenever a new job row is inserted with status=pending_match. '
-  'Requires app.edge_function_url and app.service_role_key to be '
-  'set as database-level GUC variables. See migration header for setup.';
+  'The Edge Function URL is hardcoded to the kvuidnkmxqftbmlyvlyl project. '
+  'Requires SERVICE_ROLE_KEY to be stored in Supabase Vault.';

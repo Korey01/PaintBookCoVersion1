@@ -201,20 +201,17 @@ export function PaintBookChat({ jobId, userId, userRole }: PaintBookChatProps) {
   const submitReport = async () => {
     if (!reportState?.reason.trim()) return;
 
-    const webhook = (import.meta as Record<string, unknown> & { env: Record<string, string> }).env.VITE_MAKE_DISPUTE_RAISED_WEBHOOK;
-    if (webhook) {
-      await fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    await supabase.functions
+      .invoke("filter-message", {
+        body: {
+          action: "report_message",
           job_id: jobId,
           message_id: reportState.messageId,
           reporter_id: userId,
           reason: reportState.reason,
-          type: "message_report",
-        }),
-      }).catch(console.error);
-    }
+        },
+      })
+      .catch(console.error);
 
     setReportState(null);
     setReportConfirmation("Message reported. Our team will review it.");

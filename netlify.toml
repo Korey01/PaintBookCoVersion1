@@ -38,12 +38,14 @@
         https://cdnjs.cloudflare.com
         https://cdn.jsdelivr.net;
       style-src 'self' 'unsafe-inline'
-        https://cdn.builder.io;
+        https://cdn.builder.io
+        https://fonts.googleapis.com;
       img-src 'self' data: blob:
         https://cdn.builder.io
         https://*.supabase.co
         https://res.cloudinary.com;
-      font-src 'self' data:;
+      font-src 'self' data:
+        https://fonts.gstatic.com;
       connect-src 'self'
         https://*.supabase.co
         https://kvuidnkmxqftbmlyvlyl.supabase.co

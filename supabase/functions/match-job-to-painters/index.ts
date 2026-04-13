@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
   try {
     // ── Auth: require service role key ────────────────────────
     const authHeader = req.headers.get("Authorization") ?? "";
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
 
     if (authHeader !== `Bearer ${serviceRoleKey}`) {
       return json({ error: "Forbidden." }, 403);
@@ -410,7 +410,7 @@ async function sendCustomerNoMatchEmail(job: JobRecord): Promise<void> {
   // Fetch customer email from auth.users via service-role client
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    Deno.env.get("SERVICE_ROLE_KEY")!,
   );
 
   const { data: userData } = await supabase.auth.admin.getUserById(

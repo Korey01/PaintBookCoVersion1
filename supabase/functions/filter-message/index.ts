@@ -64,12 +64,38 @@ Deno.serve(async (req) => {
 
     // ── Parse body ────────────────────────────────────────────
     const body = await req.json().catch(() => ({}));
-    const { content, job_id, sender_role, layer1_blocked } = body as {
+    const { action, content, job_id, sender_role, layer1_blocked, message_id, reporter_id, reason } = body as {
+      action?: string;
       content?: string;
       job_id?: string;
       sender_role?: string;
       layer1_blocked?: boolean;
+      message_id?: string;
+      reporter_id?: string;
+      reason?: string;
     };
+
+    // ── Report message action ─────────────────────────────────
+    if (action === "report_message") {
+      if (!job_id || !message_id) {
+        return json({ error: "job_id and message_id are required." }, 400);
+      }
+      const disputeWebhook = Deno.env.get("MAKE_DISPUTE_RAISED_WEBHOOK");
+      if (disputeWebhook) {
+        await fetch(disputeWebhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            job_id,
+            message_id,
+            reporter_id: reporter_id ?? user.id,
+            reason: reason ?? "",
+            type: "message_report",
+          }),
+        }).catch((e) => console.error("MAKE_DISPUTE_RAISED_WEBHOOK failed:", e));
+      }
+      return json({ success: true });
+    }
 
     if (!content || !job_id) {
       return json({ error: "content and job_id are required." }, 400);

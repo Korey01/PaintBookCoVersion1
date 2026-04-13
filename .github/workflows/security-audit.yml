@@ -2,25 +2,84 @@ name: Security Audit
 
 on:
   push:
-    branches: [ main, claude/modernize-paintbook-ui-lWcWi ]
+    branches:
+      - main
+      - claude/modernize-paintbook-ui-lWcWi
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
   schedule:
-    - cron: '0 9 * * 1'
+    # Every Monday at 09:00 London time (UTC+1 BST / UTC+0 GMT — use UTC+0 for cron)
+    - cron: "0 9 * * 1"
 
 jobs:
-  audit:
+  npm-audit:
+    name: npm audit (high+)
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+          cache: "npm"
+
       - name: Install dependencies
-        run: npm install
-        
-      - name: Run security audit
+        run: npm ci
+
+      - name: Run npm audit
         run: npm audit --audit-level=high
+        # Fails the job only if high or critical vulnerabilities are found.
+        # Dependabot will open PRs to fix them; this gate prevents merging
+        # known-vulnerable code.
+
+  secret-scan:
+    name: Scan for accidental secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "=== Scanning for hardcoded API keys and secrets ==="
+
+          FAIL=0
+
+          # Supabase service role keys (always start with eyJ and contain 'role":"service_role')
+          if git grep -rn 'service_role' -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.json' \
+              ':!supabase/migrations/' ':!*.md' ':!package-lock.json' 2>/dev/null | \
+              grep -v 'actor_role\|entity_role\|kyc_status\|// .*service_role\|#.*service_role'; then
+            echo "::warning::Possible service_role key reference found — verify it is not hardcoded."
+          fi
+
+          # SendGrid keys
+          if git grep -rn 'SG\.[a-zA-Z0-9_-]\{22\}\.[a-zA-Z0-9_-]\{43\}' -- '*.ts' '*.tsx' '*.js' 2>/dev/null; then
+            echo "::error::Hardcoded SendGrid API key found!"
+            FAIL=1
+          fi
+
+          # Stream Chat secret (32+ char hex after 'secret')
+          if git grep -rEn '"secret"\s*:\s*"[a-f0-9]{32,}"' -- '*.ts' '*.tsx' '*.js' 2>/dev/null; then
+            echo "::error::Hardcoded Stream Chat secret found!"
+            FAIL=1
+          fi
+
+          # Generic high-entropy bearer tokens (not JWT shaped — real secrets)
+          if git grep -rEn 'Bearer [a-zA-Z0-9+/]{40,}[^.]' -- '*.ts' '*.tsx' '*.js' 2>/dev/null | \
+              grep -v 'Authorization.*Bearer.*\$\|Bearer.*\${'; then
+            echo "::warning::Possible hardcoded Bearer token — verify it uses an env var."
+          fi
+
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::Secret scan failed. Remove hardcoded credentials before merging."
+            exit 1
+          fi
+
+          echo "Secret scan passed."

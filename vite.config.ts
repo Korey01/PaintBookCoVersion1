@@ -21,6 +21,12 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: "dist/spa",
+    rollupOptions: {
+      // @builder.io/react is an optional integration not yet installed.
+      // Externalising it lets Rollup skip resolution; the dynamic import()
+      // calls in page files catch the runtime failure silently.
+      external: ["@builder.io/react"],
+    },
   },
   plugins: [react()],
   resolve: {

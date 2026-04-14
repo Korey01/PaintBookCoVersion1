@@ -13,27 +13,25 @@ function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
+const VIDEO_SRC =
+  "https://cdn.builder.io/o/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F2ba0324a63604c4fb1cddfae4fa8a84d?alt=media&token=8b7a4306-e600-43b0-8a83-ff8152892c2d&apiKey=4d3ba4dca12d422aaa4ee4ceafe37a1f";
+
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section className="relative section-dark min-h-screen flex items-center justify-center px-6 overflow-hidden">
-      {/* Geometric background element */}
-      <div className="pointer-events-none absolute inset-0">
-        {/* Subtle radial gradient for depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(18_88%_52%_/_0.12),transparent)]" />
-        {/* Fine grid */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "linear-gradient(hsl(var(--section-dark-fg)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--section-dark-fg)) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-          }}
-        />
-        {/* Decorative ring */}
-        <div className="absolute -top-64 -right-64 h-[640px] w-[640px] rounded-full border border-white/5" />
-        <div className="absolute -bottom-48 -left-48 h-[480px] w-[480px] rounded-full border border-white/5" />
-      </div>
+    <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden bg-[hsl(var(--section-dark-bg))]">
+      {/* Background video */}
+      <video
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover scale-105"
+        autoPlay
+        muted
+        loop
+        playsInline
+        src={VIDEO_SRC}
+      />
+      {/* Dark scrim — keeps text legible over the video */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/62 to-black/80" />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center pt-16">
         {/* Eyebrow — clip-reveal on load */}

@@ -20,6 +20,37 @@ export const SPECIALISMS = [
 
 const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
 
+// Completion screen component
+export function JoinPainterComplete() {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <Link to="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+        </Link>
+      </header>
+      <main className="flex-1 flex items-center justify-center px-6">
+        <div className="max-w-md text-center space-y-4">
+          <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+            <Mail className="h-7 w-7 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-semibold">Registration Complete</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Your application has been submitted successfully.<br />
+            Check your email for next steps and verification instructions.
+          </p>
+          <Link
+            to="/login"
+            className="inline-block mt-4 text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground"
+          >
+            Back to login
+          </Link>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function JoinPainter() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isLoading, setIsLoading] = useState(false);

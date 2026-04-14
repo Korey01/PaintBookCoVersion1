@@ -38,7 +38,7 @@ export function KYCStatus({
   const getStatusLabel = () => {
     switch (status) {
       case "approved":
-        return "KYC Verified";
+        return "Verified";
       case "denied":
         return "KYC Rejected";
       case "under_review":

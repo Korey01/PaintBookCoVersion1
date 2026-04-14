@@ -15,12 +15,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, Job, JobMilestone } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRealtime } from "@/contexts/RealtimeContext";
 import AvailableJobs from "./AvailableJobs";
 import MilestoneSubmission from "./MilestoneSubmission";
 import EarningsTracker from "./EarningsTracker";
 import AvailabilityCalendar from "./AvailabilityCalendar";
 import PainterProfile from "./PainterProfile";
 import JobCard from "./JobCard";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import {
   LayoutDashboard, Briefcase, Bell, CreditCard,
   Calendar, Settings, LogOut, Loader2, Star,
@@ -78,6 +80,7 @@ function commissionRate(n: number) {
 export default function PainterDashboard() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { subscribeToJobUpdates, subscribeToMilestoneUpdates } = useRealtime();
 
   const [loading,  setLoading]  = useState(true);
   const [painter,  setPainter]  = useState<PainterRecord | null>(null);
@@ -98,6 +101,17 @@ export default function PainterDashboard() {
       fetchData(user.id);
     }
   }, [user]);
+
+  // ── Subscribe to job and milestone updates ─────────────────────────────────
+
+  useEffect(() => {
+    if (jobs.length === 0) return;
+
+    jobs.forEach((job) => {
+      subscribeToJobUpdates(job.id);
+      subscribeToMilestoneUpdates(job.id);
+    });
+  }, [jobs, subscribeToJobUpdates, subscribeToMilestoneUpdates]);
 
   const fetchData = useCallback(async (userId: string) => {
     setLoading(true);
@@ -237,6 +251,7 @@ export default function PainterDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <span className="text-xs text-dashboard-painter-text-secondary hidden sm:block">
               {painter.email}
             </span>

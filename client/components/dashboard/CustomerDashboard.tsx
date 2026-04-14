@@ -15,11 +15,13 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, Job, JobMilestone, Review } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRealtime } from "@/contexts/RealtimeContext";
 import JobCard from "./JobCard";
 import MilestoneTracker from "./MilestoneTracker";
 import PostJobForm from "./PostJobForm";
 import PaymentHistory from "./PaymentHistory";
 import ReviewsSection from "./ReviewsSection";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import {
   LayoutDashboard,
   Briefcase,
@@ -64,6 +66,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 export default function CustomerDashboard() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { subscribeToJobUpdates, subscribeToMilestoneUpdates } = useRealtime();
 
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("overview");
@@ -81,6 +84,17 @@ export default function CustomerDashboard() {
       fetchData(user.id);
     }
   }, [user]);
+
+  // ── Subscribe to job and milestone updates ─────────────────────────────────
+
+  useEffect(() => {
+    if (jobs.length === 0) return;
+
+    jobs.forEach((job) => {
+      subscribeToJobUpdates(job.id);
+      subscribeToMilestoneUpdates(job.id);
+    });
+  }, [jobs, subscribeToJobUpdates, subscribeToMilestoneUpdates]);
 
   // ── Data fetching ─────────────────────────────────────────────────────────
 
@@ -206,6 +220,7 @@ export default function CustomerDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             {user?.email && (
               <span className="text-xs text-dashboard-customer-text-secondary hidden sm:block">
                 {user.email}

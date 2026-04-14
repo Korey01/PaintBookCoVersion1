@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RealtimeProvider } from "@/contexts/RealtimeContext";
 
 // ── Legacy layout + pages ──────────────────────────────────────────────────────
 import Layout from "@/components/site/Layout";
@@ -89,10 +90,11 @@ function LegacyLayout() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <RealtimeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
 
           {/* ── New public pages (canonical brand Header + Footer) ── */}
@@ -174,7 +176,8 @@ const App = () => (
           <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </RealtimeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

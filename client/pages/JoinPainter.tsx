@@ -138,13 +138,16 @@ export default function JoinPainter() {
       );
 
       const data = await response.json();
+      console.log("Registration response:", { status: response.status, data });
 
-      if (data.success) {
+      if (response.ok && data.success) {
         setIsLoading(false);
         setConfirmed(true);
       } else {
         setIsLoading(false);
-        setError(data.error || "Registration failed. Please try again.");
+        const errorMsg = data.error || data.message || "Registration failed. Please try again.";
+        console.error("Registration failed:", errorMsg);
+        setError(errorMsg);
       }
     } catch (err) {
       setIsLoading(false);

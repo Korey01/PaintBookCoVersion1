@@ -16,7 +16,7 @@ function Label({ children }: { children: React.ReactNode }) {
 // Local file served from /public — CDN URL is the fallback if the file is unavailable
 const VIDEO_LOCAL = "/Diverse_Painters_Decorate_White_Room.mp4";
 const VIDEO_CDN   =
-  "https://cdn.builder.io/o/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2Fa6fd54b5579f4855a2c9380f5681e9bf?alt=media&token=b5d3adac-1243-4792-90e0-6f1bff275d96&apiKey=4d3ba4dca12d422aaa4ee4ceafe37a1f";
+  "https://cdn.builder.io/o/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F16aaf4673b78497aa9cb253a3570affb?alt=media&token=2a307d06-93cf-4b11-b277-6a0acd42b68d&apiKey=4d3ba4dca12d422aaa4ee4ceafe37a1f";
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {

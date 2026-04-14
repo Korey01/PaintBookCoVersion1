@@ -1,5 +1,5 @@
 /**
- * ProtectedRoute — auth guard with optional role-based protection.
+ * ProtectedRoute — auth guard with role-based protection.
  *
  * Behaviour:
  *  • loading  → spinner (waits for both session AND role to resolve)
@@ -31,13 +31,22 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     return <Navigate to="/login" replace />;
   }
 
-  // User is on the wrong dashboard — silently redirect them to the right one
-  if (requiredRole && role && role !== requiredRole) {
+  // Role fully resolved — redirect if on the wrong dashboard
+  if (requiredRole && role !== null && role !== requiredRole) {
     return (
       <Navigate
         to={role === "painter" ? "/dashboard/painter" : "/dashboard/customer"}
         replace
       />
+    );
+  }
+
+  // If role is still null (still resolving) keep showing spinner
+  if (requiredRole && role === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
     );
   }
 

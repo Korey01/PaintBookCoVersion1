@@ -1,21 +1,23 @@
 /**
- * ProtectedRoute — wraps any page that requires an authenticated session.
+ * ProtectedRoute — auth guard with optional role-based protection.
  *
- * • Shows a spinner while the auth state is being resolved.
- * • Redirects to /login (replacing history) if there is no active session.
- * • Renders children once the user is confirmed.
- *
- * Usage:
- *   <Route path="/dashboard/customer" element={
- *     <ProtectedRoute><CustomerDashboard /></ProtectedRoute>
- *   } />
+ * Behaviour:
+ *  • loading  → spinner (waits for both session AND role to resolve)
+ *  • no user  → redirect to /login
+ *  • wrong role → redirect to the user's correct dashboard
+ *  • correct  → render children
  */
 import { Loader2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredRole?: "painter" | "customer";
+}
+
+export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+  const { user, role, loading } = useAuth();
 
   if (loading) {
     return (
@@ -27,6 +29,16 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // User is on the wrong dashboard — silently redirect them to the right one
+  if (requiredRole && role && role !== requiredRole) {
+    return (
+      <Navigate
+        to={role === "painter" ? "/dashboard/painter" : "/dashboard/customer"}
+        replace
+      />
+    );
   }
 
   return <>{children}</>;

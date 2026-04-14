@@ -73,6 +73,7 @@ import PainterDashboardPage from "./pages/PainterDashboardPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import KYCPainter from "./pages/KYCPainter";
 import KYCCustomer from "./pages/KYCCustomer";
+import PaintVestimator from "./pages/PaintVestimator";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +118,7 @@ const App = () => (
           <Route path="/confirm" element={<ConfirmPage />} />
           <Route path="/kyc/painter" element={<KYCPainter />} />
           <Route path="/kyc/customer" element={<KYCCustomer />} />
+          <Route path="/vestimator" element={<PaintVestimator />} />
 
           {/* ── Dashboard pages — role-protected ── */}
           <Route path="/dashboard/customer" element={

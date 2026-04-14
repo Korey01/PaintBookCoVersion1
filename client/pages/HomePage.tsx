@@ -13,28 +13,19 @@ function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
-const VIDEO_SRC =
+// Local file served from /public — CDN URL is the fallback if the file is unavailable
+const VIDEO_LOCAL = "/Diverse_Painters_Decorate_White_Room.mp4";
+const VIDEO_CDN   =
   "https://cdn.builder.io/o/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F2ba0324a63604c4fb1cddfae4fa8a84d?alt=media&token=8b7a4306-e600-43b0-8a83-ff8152892c2d&apiKey=4d3ba4dca12d422aaa4ee4ceafe37a1f";
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden bg-[hsl(var(--section-dark-bg))]">
-      {/* Background video */}
-      <video
-        aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover scale-105"
-        autoPlay
-        muted
-        loop
-        playsInline
-        src={VIDEO_SRC}
-      />
-      {/* Dark scrim — keeps text legible over the video */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/45" />
+    <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+      {/* Gradient scrim — keeps hero text legible over the video */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/32 to-black/52" />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center pt-16">
-        {/* Eyebrow — clip-reveal on load */}
         <p
           className="editorial-label text-white/35 mb-10 tracking-[0.2em] animate-fade-in"
           style={{ animationDelay: "0.1s", animationFillMode: "both" }}
@@ -42,7 +33,6 @@ function Hero() {
           UK Painters &amp; Decorators Marketplace
         </p>
 
-        {/* Headline — staggered word slide-up */}
         <h1
           className="font-display text-[clamp(2.8rem,8vw,6rem)] text-white leading-[1.0] tracking-[-0.03em] mb-8"
           style={{ animationFillMode: "both" }}
@@ -63,16 +53,14 @@ function Hero() {
           ))}
         </h1>
 
-        {/* Sub-copy */}
         <p
-          className="text-lg sm:text-xl text-white/60 max-w-xl mx-auto leading-[1.7] mb-12 animate-editorial-up"
+          className="text-lg sm:text-xl text-white/65 max-w-xl mx-auto leading-[1.7] mb-12 animate-editorial-up"
           style={{ animationDelay: "0.65s", animationFillMode: "both" }}
         >
           Find KYC-verified painters near you. Pay securely via FCA-authorised
           escrow. Guaranteed quality on every job.
         </p>
 
-        {/* CTAs */}
         <div
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-editorial-up"
           style={{ animationDelay: "0.8s", animationFillMode: "both" }}
@@ -86,15 +74,14 @@ function Hero() {
           </Link>
           <Link
             to="/join-painter"
-            className="inline-flex items-center gap-2 border border-white/25 text-white/80 font-medium text-base px-8 py-4 w-full sm:w-auto justify-center hover:border-white/50 hover:text-white transition-all duration-200"
+            className="inline-flex items-center gap-2 border border-white/30 text-white/85 font-medium text-base px-8 py-4 w-full sm:w-auto justify-center hover:border-white/55 hover:text-white transition-all duration-200"
           >
             Join as a Painter
           </Link>
         </div>
 
-        {/* Trust row */}
         <div
-          className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/40 animate-fade-in"
+          className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/45 animate-fade-in"
           style={{ animationDelay: "1s", animationFillMode: "both" }}
         >
           {[
@@ -110,8 +97,10 @@ function Hero() {
         </div>
       </div>
 
-      {/* Scroll cue */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in" style={{ animationDelay: "1.4s", animationFillMode: "both" }}>
+      <div
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in"
+        style={{ animationDelay: "1.4s", animationFillMode: "both" }}
+      >
         <div className="h-10 w-px bg-gradient-to-b from-transparent via-white/25 to-transparent animate-scroll-bounce" />
       </div>
     </section>
@@ -128,7 +117,10 @@ const STEPS = [
 function HowItWorks() {
   const ref = useScrollAnimationList();
   return (
-    <section className="section-warm py-28 sm:py-36 px-6">
+    <section
+      className="py-28 sm:py-36 px-6 backdrop-blur-[3px] text-foreground"
+      style={{ background: "hsl(36 25% 94% / 0.84)" }}
+    >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
           <Label>Simple process</Label>
@@ -137,10 +129,11 @@ function HowItWorks() {
           </h2>
         </div>
         <div ref={ref} className="grid md:grid-cols-3 gap-0 border border-border/50 scroll-stagger">
-          {STEPS.map(({ number, title, description }, i) => (
+          {STEPS.map(({ number, title, description }) => (
             <div
               key={number}
-              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 hover:bg-background transition-colors duration-300"
+              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 hover:bg-white/40 transition-colors duration-300"
+              style={{ background: "hsl(36 25% 97% / 0.72)" }}
             >
               <span className="editorial-label text-primary mb-8">{number}</span>
               <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
@@ -170,7 +163,10 @@ const TRUST_ITEMS = [
 function TrustSignals() {
   const ref = useScrollAnimationList();
   return (
-    <section className="section-light py-28 sm:py-36 px-6">
+    <section
+      className="py-28 sm:py-36 px-6 backdrop-blur-[3px] text-foreground"
+      style={{ background: "hsl(36 25% 97% / 0.80)" }}
+    >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
           <Label>Built on trust</Label>
@@ -182,9 +178,10 @@ function TrustSignals() {
           {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="scroll-animate surface-card p-8 flex flex-col"
+              className="scroll-animate rounded-sm border border-border/50 p-8 flex flex-col transition-all duration-500 hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1"
+              style={{ background: "hsl(36 25% 97% / 0.78)" }}
             >
-              <div className="w-10 h-10 flex items-center justify-center mb-6 bg-muted">
+              <div className="w-10 h-10 flex items-center justify-center mb-6 bg-muted/70">
                 <Icon className="h-5 w-5 text-primary" />
               </div>
               <h3 className="font-semibold text-sm text-foreground mb-3">{title}</h3>
@@ -207,16 +204,20 @@ const PAINTER_BENEFITS = [
 function ForPainters() {
   const ref = useScrollAnimation();
   return (
-    <section className="section-dark py-28 sm:py-36 px-6">
+    <section
+      className="py-28 sm:py-36 px-6 backdrop-blur-[3px]"
+      style={{
+        background: "hsl(220 18% 9% / 0.88)",
+        color: "hsl(var(--section-dark-fg))",
+      }}
+    >
       <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
         <div className="grid md:grid-cols-2 gap-20 items-center">
           <div>
             <Label>
               <span className="text-white/35">For painters</span>
             </Label>
-            <h2 className="font-display text-white mb-8">
-              Grow your painting business
-            </h2>
+            <h2 className="font-display text-white mb-8">Grow your painting business</h2>
             <p className="text-white/50 leading-[1.8] mb-10 max-w-md">
               Join thousands of professional painters who use PaintBookCo to
               fill their diary with matched, verified jobs — and get paid
@@ -231,9 +232,12 @@ function ForPainters() {
             </Link>
           </div>
 
-          <div className="space-y-0 border border-white/8">
+          <div
+            className="space-y-0 border border-white/8"
+            style={{ background: "hsl(220 18% 9% / 0.60)" }}
+          >
             {PAINTER_BENEFITS.map(({ title, description }) => (
-              <div key={title} className="flex gap-5 p-8 border-b border-white/8 last:border-0 hover:bg-white/[0.03] transition-colors duration-200">
+              <div key={title} className="flex gap-5 p-8 border-b border-white/8 last:border-0 hover:bg-white/[0.04] transition-colors duration-200">
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-sm text-white mb-1.5">{title}</h4>
@@ -252,7 +256,10 @@ function ForPainters() {
 function CTABand() {
   const ref = useScrollAnimation();
   return (
-    <section className="section-warm py-28 sm:py-36 px-6">
+    <section
+      className="py-28 sm:py-36 px-6 backdrop-blur-[3px] text-foreground"
+      style={{ background: "hsl(36 25% 94% / 0.84)" }}
+    >
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
         <Label>Ready to begin</Label>
         <h2 className="font-display text-foreground mb-6">
@@ -286,13 +293,28 @@ function CTABand() {
 export default function HomePage() {
   useEffect(() => { document.title = "PaintBookCo | Hire Verified Painters"; }, []);
   return (
-    <>
+    <div className="relative">
+      {/* Fixed background video — sits behind every section on the homepage.
+          Local MP4 served from /public; CDN URL used as fallback.
+          autoPlay + muted + loop + playsInline: plays silently on all devices. */}
+      <video
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+      >
+        <source src={VIDEO_LOCAL} type="video/mp4" />
+        <source src={VIDEO_CDN}   type="video/mp4" />
+      </video>
+
       <Hero />
       <HowItWorks />
       <TrustSignals />
       <ForPainters />
       <CTABand />
-    </>
+    </div>
   );
 }
 

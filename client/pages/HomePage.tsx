@@ -22,6 +22,20 @@ const VIDEO_CDN   =
 function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+      {/* Background video — fits hero section only */}
+      <video
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+        style={{ filter: "contrast(1.35) saturate(1.25) brightness(1.08)" }}
+        autoPlay
+        muted
+        loop
+        playsInline
+      >
+        <source src={VIDEO_LOCAL} type="video/mp4" />
+        <source src={VIDEO_CDN}   type="video/mp4" />
+      </video>
+
       {/* Gradient scrim — keeps hero text legible over the video */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/65" />
 
@@ -118,8 +132,7 @@ function HowItWorks() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "rgba(255, 255, 255, 0.92)" }}
+      className="py-28 sm:py-36 px-6 text-foreground bg-white"
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -132,8 +145,7 @@ function HowItWorks() {
           {STEPS.map(({ number, title, description }) => (
             <div
               key={number}
-              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-300"
-              style={{ background: "rgba(255, 255, 255, 0.95)" }}
+              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-300 bg-white"
             >
               <span className="editorial-label text-primary mb-8">{number}</span>
               <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
@@ -164,8 +176,7 @@ function TrustSignals() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "rgba(255, 255, 255, 0.92)" }}
+      className="py-28 sm:py-36 px-6 text-foreground bg-white"
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -178,8 +189,7 @@ function TrustSignals() {
           {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="scroll-animate rounded-lg border border-gray-200 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1"
-              style={{ background: "rgba(255, 255, 255, 0.95)" }}
+              className="scroll-animate rounded-lg border border-gray-200 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 bg-white"
             >
               <div className="w-10 h-10 flex items-center justify-center mb-6 bg-muted/70">
                 <Icon className="h-5 w-5 text-primary" />
@@ -205,8 +215,7 @@ function ForPainters() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "rgba(255, 255, 255, 0.90)" }}
+      className="py-28 sm:py-36 px-6 text-foreground bg-gray-50"
     >
       <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
         <div className="grid md:grid-cols-2 gap-20 items-center">
@@ -230,11 +239,10 @@ function ForPainters() {
           </div>
 
           <div
-            className="space-y-0 border border-gray-200"
-            style={{ background: "rgba(255, 255, 255, 0.95)" }}
+            className="space-y-0 border border-gray-200 bg-white"
           >
             {PAINTER_BENEFITS.map(({ title, description }) => (
-              <div key={title} className="flex gap-5 p-8 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-200">
+              <div key={title} className="flex gap-5 p-8 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-200 bg-white">
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-sm text-foreground mb-1.5">{title}</h4>
@@ -254,8 +262,7 @@ function CTABand() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "rgba(255, 255, 255, 0.92)" }}
+      className="py-28 sm:py-36 px-6 text-foreground bg-white"
     >
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
         <Label>Ready to begin</Label>
@@ -291,20 +298,6 @@ export default function HomePage() {
   useEffect(() => { document.title = "PaintBookCo | Hire Verified Painters"; }, []);
   return (
     <div className="relative">
-      {/* Fixed background video — sits behind all sections on the homepage */}
-      <video
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover"
-        style={{ filter: "contrast(1.35) saturate(1.25) brightness(1.08)" }}
-        autoPlay
-        muted
-        loop
-        playsInline
-      >
-        <source src={VIDEO_LOCAL} type="video/mp4" />
-        <source src={VIDEO_CDN}   type="video/mp4" />
-      </video>
-
       <Hero />
       <HowItWorks />
       <TrustSignals />

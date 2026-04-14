@@ -6,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 // ── Legacy layout + pages ──────────────────────────────────────────────────────
 import Layout from "@/components/site/Layout";
@@ -70,6 +71,8 @@ import ConfirmPage from "./pages/ConfirmPage";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import PainterDashboardPage from "./pages/PainterDashboardPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import KYCPainter from "./pages/KYCPainter";
+import KYCCustomer from "./pages/KYCCustomer";
 
 const queryClient = new QueryClient();
 
@@ -84,11 +87,12 @@ function LegacyLayout() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
 
           {/* ── New public pages (canonical brand Header + Footer) ── */}
           <Route element={<PublicLayout />}>
@@ -111,6 +115,8 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/confirm" element={<ConfirmPage />} />
+          <Route path="/kyc/painter" element={<KYCPainter />} />
+          <Route path="/kyc/customer" element={<KYCCustomer />} />
 
           {/* ── Dashboard pages — role-protected ── */}
           <Route path="/dashboard/customer" element={
@@ -164,9 +170,10 @@ const App = () => (
 
           {/* ── 404 ── */}
           <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

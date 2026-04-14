@@ -27,7 +27,9 @@ async function redirectByRole(userId: string, navigate: ReturnType<typeof useNav
     .eq("user_id", userId)
     .maybeSingle();
 
-  navigate(painterRecord ? "/dashboard/painter" : "/dashboard/customer", { replace: true });
+  // Redirect to KYC verification page instead of dashboard
+  // The KYC page will check status and redirect appropriately
+  navigate(painterRecord ? "/kyc/painter" : "/kyc/customer", { replace: true });
 }
 
 export default function ConfirmPage() {

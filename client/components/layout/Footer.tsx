@@ -21,8 +21,12 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-[2fr_1fr_1fr]">
           {/* Brand column */}
           <div>
-            <Link to="/" className="font-display text-2xl text-white/90 inline-block mb-5">
-              PaintBookCo
+            <Link to="/" aria-label="PaintBookCo home" className="inline-block mb-5 hover:opacity-75 transition-opacity duration-200">
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
+                alt="PaintBookCo"
+                className="h-7 w-auto brightness-[10]"
+              />
             </Link>
             <p className="text-sm text-white/45 leading-[1.8] max-w-xs mb-8">
               The UK's dedicated marketplace connecting homeowners and businesses

@@ -118,8 +118,8 @@ function HowItWorks() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 backdrop-blur-[3px] text-foreground"
-      style={{ background: "hsl(36 25% 94% / 0.84)" }}
+      className="py-28 sm:py-36 px-6 text-foreground"
+      style={{ background: "rgba(0, 0, 0, 0.35)" }}
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -133,7 +133,7 @@ function HowItWorks() {
             <div
               key={number}
               className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 hover:bg-white/40 transition-colors duration-300"
-              style={{ background: "hsl(36 25% 97% / 0.72)" }}
+              style={{ background: "rgba(0, 0, 0, 0.25)" }}
             >
               <span className="editorial-label text-primary mb-8">{number}</span>
               <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
@@ -164,8 +164,8 @@ function TrustSignals() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 backdrop-blur-[3px] text-foreground"
-      style={{ background: "hsl(36 25% 97% / 0.80)" }}
+      className="py-28 sm:py-36 px-6 text-foreground"
+      style={{ background: "rgba(0, 0, 0, 0.35)" }}
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -179,7 +179,7 @@ function TrustSignals() {
             <div
               key={title}
               className="scroll-animate rounded-sm border border-border/50 p-8 flex flex-col transition-all duration-500 hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1"
-              style={{ background: "hsl(36 25% 97% / 0.78)" }}
+              style={{ background: "rgba(0, 0, 0, 0.25)" }}
             >
               <div className="w-10 h-10 flex items-center justify-center mb-6 bg-muted/70">
                 <Icon className="h-5 w-5 text-primary" />
@@ -205,9 +205,9 @@ function ForPainters() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6 backdrop-blur-[3px]"
+      className="py-28 sm:py-36 px-6"
       style={{
-        background: "hsl(220 18% 9% / 0.88)",
+        background: "rgba(0, 0, 0, 0.45)",
         color: "hsl(var(--section-dark-fg))",
       }}
     >
@@ -234,7 +234,7 @@ function ForPainters() {
 
           <div
             className="space-y-0 border border-white/8"
-            style={{ background: "hsl(220 18% 9% / 0.60)" }}
+            style={{ background: "rgba(0, 0, 0, 0.35)" }}
           >
             {PAINTER_BENEFITS.map(({ title, description }) => (
               <div key={title} className="flex gap-5 p-8 border-b border-white/8 last:border-0 hover:bg-white/[0.04] transition-colors duration-200">
@@ -257,8 +257,8 @@ function CTABand() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6 backdrop-blur-[3px] text-foreground"
-      style={{ background: "hsl(36 25% 94% / 0.84)" }}
+      className="py-28 sm:py-36 px-6 text-foreground"
+      style={{ background: "rgba(0, 0, 0, 0.35)" }}
     >
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
         <Label>Ready to begin</Label>
@@ -300,7 +300,7 @@ export default function HomePage() {
       <video
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-contain"
-        style={{ filter: "contrast(1.15) saturate(1.1)" }}
+        style={{ filter: "contrast(1.35) saturate(1.25) brightness(1.08)" }}
         autoPlay
         muted
         loop

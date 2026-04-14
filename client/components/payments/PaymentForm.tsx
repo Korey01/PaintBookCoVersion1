@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Loader2, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
-import { createPaymentIntent, fundEscrowAccount } from "@/lib/payments";
+import { createTranspactAccount, getTranspactStatus } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PaymentFormProps {
   jobId: string;
@@ -17,6 +18,7 @@ export default function PaymentForm({
   onSuccess,
   onCancel,
 }: PaymentFormProps) {
+  const { customerProfile } = useAuth();
   const [step, setStep] = useState<"amount" | "card" | "processing" | "success">(
     "amount"
   );
@@ -33,21 +35,13 @@ export default function PaymentForm({
     setLoading(true);
     setError("");
 
-    const { clientSecret, error: intentError } = await createPaymentIntent(
-      Math.round(amount * 100), // Convert to cents
-      jobId
-    );
-
-    if (intentError) {
-      setError(intentError);
+    if (!customerProfile) {
+      setError("Unable to load customer profile");
       setLoading(false);
       return;
     }
 
-    if (clientSecret) {
-      setStep("card");
-    }
-
+    setStep("card");
     setLoading(false);
   }
 
@@ -63,22 +57,37 @@ export default function PaymentForm({
       return;
     }
 
+    if (!customerProfile) {
+      setError("Customer profile not loaded");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // In production, submit to server with Stripe token
-      // For now, simulate payment processing
       setStep("processing");
 
-      // Simulate processing delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Fund escrow account
-      const { success, error: escrowError } = await fundEscrowAccount(
+      // Get painter email from job data (would be loaded from database)
+      // For now, we'll need to pass this from the parent component
+      // Create Transpact escrow account
+      const { accountId, error: transpactError } = await createTranspactAccount(
         jobId,
-        jobId
+        amount,
+        customerProfile.email,
+        "" // Painter email would need to be fetched from job data
       );
 
-      if (!success || escrowError) {
-        setError(escrowError || "Failed to fund escrow");
+      if (!accountId || transpactError) {
+        setError(transpactError || "Failed to create escrow account");
+        setStep("card");
+        setLoading(false);
+        return;
+      }
+
+      // Verify escrow status
+      const { status, error: statusError } = await getTranspactStatus(accountId);
+
+      if (!status || statusError) {
+        setError(statusError || "Failed to verify payment");
         setStep("card");
         setLoading(false);
         return;

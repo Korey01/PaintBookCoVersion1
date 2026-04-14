@@ -14,6 +14,26 @@ import { ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const SPECIALISMS = [
+  "Kitchens",
+  "Cabinets",
+  "Wallpaper",
+  "Interior Walls",
+  "Exterior Walls",
+  "Doors",
+  "Trim",
+  "Ceilings",
+  "Bathrooms",
+  "Feature Walls",
+];
 
 export default function JoinPainter() {
   const navigate = useNavigate();
@@ -25,16 +45,27 @@ export default function JoinPainter() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [postcode, setPostcode] = useState("");
+  const [selectedSpecialisms, setSelectedSpecialisms] = useState<string[]>([]);
+  const [serviceRadius, setServiceRadius] = useState("15");
 
   // Validation schema
   const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
+  const ukPhone = /^(?:\+44\s?7\d{3}|(?:0)7\d{3})\s?\d{3}\s?\d{3}$/;
   const schema = z
     .object({
       email: z.string().email("Enter a valid email"),
       password: z.string().min(6, "Password must be at least 6 characters"),
       confirmPassword: z.string().min(6, "Confirm your password"),
+      firstName: z.string().min(2, "First name is required"),
+      lastName: z.string().min(2, "Last name is required"),
+      phone: z.string().regex(ukPhone, "Enter a valid UK phone number"),
       postcode: z.string().regex(ukPostcode, "Use UK format e.g. M1 1AE"),
+      selectedSpecialisms: z.array(z.string()).min(1, "Select at least one specialism"),
+      serviceRadius: z.string().min(1, "Service radius is required"),
     })
     .refine((v) => v.password === v.confirmPassword, {
       message: "Passwords must match",
@@ -50,7 +81,12 @@ export default function JoinPainter() {
       email,
       password,
       confirmPassword,
+      firstName,
+      lastName,
+      phone,
       postcode,
+      selectedSpecialisms,
+      serviceRadius,
     });
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -63,46 +99,43 @@ export default function JoinPainter() {
 
     setIsLoading(true);
     try {
-      // Call the new API endpoint for painter registration
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          userType: "painter",
-          postcode,
-        }),
-      });
+      // Call the Supabase Edge Function for painter registration
+      const response = await fetch(
+        "https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1/register-painter",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            first_name: firstName,
+            last_name: lastName,
+            phone,
+            specialisms: selectedSpecialisms,
+            service_radius_km: parseInt(serviceRadius),
+            postcode,
+          }),
+        }
+      );
 
       const data = await response.json();
 
-      if (!response.ok) {
-        if (data.error === "Email already in use") {
-          setErrors({ email: "This email is already registered" });
-        } else {
-          toast({
-            title: "Registration failed",
-            description: data.error || "Something went wrong",
-            variant: "destructive",
-          });
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // Store token
-      if (data.token) {
-        localStorage.setItem("paintbook:token", data.token);
-        localStorage.setItem("paintbook:user", JSON.stringify(data.user));
-
+      if (data.success) {
         toast({
-          title: "Account created",
-          description: "Welcome to PaintBookco! Let's complete your profile.",
+          title: "Registration successful!",
+          description:
+            "Please check your email to confirm your account before logging in.",
         });
-
-        // Redirect to painter onboarding (KYC)
-        navigate("/painter-onboarding");
+        navigate("/login");
+      } else {
+        toast({
+          title: "Registration failed",
+          description: data.error || "Registration failed. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -204,6 +237,64 @@ export default function JoinPainter() {
                 )}
               </div>
 
+              {/* First Name */}
+              <div>
+                <Label htmlFor="firstName">First name</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="John"
+                  disabled={isLoading}
+                  className={errors.firstName ? "border-red-500" : ""}
+                />
+                {errors.firstName && (
+                  <p className="mt-1 flex items-center text-sm text-red-500">
+                    <AlertCircle className="mr-1 h-4 w-4" />
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <Label htmlFor="lastName">Last name</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Smith"
+                  disabled={isLoading}
+                  className={errors.lastName ? "border-red-500" : ""}
+                />
+                {errors.lastName && (
+                  <p className="mt-1 flex items-center text-sm text-red-500">
+                    <AlertCircle className="mr-1 h-4 w-4" />
+                    {errors.lastName}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone */}
+              <div>
+                <Label htmlFor="phone">Phone number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="07700 900000"
+                  disabled={isLoading}
+                  className={errors.phone ? "border-red-500" : ""}
+                />
+                {errors.phone && (
+                  <p className="mt-1 flex items-center text-sm text-red-500">
+                    <AlertCircle className="mr-1 h-4 w-4" />
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
+
               {/* Postcode */}
               <div>
                 <Label htmlFor="postcode">Work postcode</Label>
@@ -223,6 +314,81 @@ export default function JoinPainter() {
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">
                   We'll use this to match you with nearby jobs
+                </p>
+              </div>
+
+              {/* Specialisms */}
+              <div>
+                <Label>Specialisms</Label>
+                <p className="mt-1 text-xs text-muted-foreground mb-2">
+                  Select the areas you specialize in
+                </p>
+                <div className="space-y-2 border rounded-md p-3 bg-muted/30">
+                  {SPECIALISMS.map((spec) => (
+                    <label
+                      key={spec}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSpecialisms.includes(spec)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSpecialisms([
+                              ...selectedSpecialisms,
+                              spec,
+                            ]);
+                          } else {
+                            setSelectedSpecialisms(
+                              selectedSpecialisms.filter((s) => s !== spec)
+                            );
+                          }
+                        }}
+                        disabled={isLoading}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">{spec}</span>
+                    </label>
+                  ))}
+                </div>
+                {errors.selectedSpecialisms && (
+                  <p className="mt-1 flex items-center text-sm text-red-500">
+                    <AlertCircle className="mr-1 h-4 w-4" />
+                    {errors.selectedSpecialisms}
+                  </p>
+                )}
+              </div>
+
+              {/* Service Radius */}
+              <div>
+                <Label htmlFor="serviceRadius">Service radius (km)</Label>
+                <Select value={serviceRadius} onValueChange={setServiceRadius}>
+                  <SelectTrigger
+                    id="serviceRadius"
+                    disabled={isLoading}
+                    className={errors.serviceRadius ? "border-red-500" : ""}
+                  >
+                    <SelectValue placeholder="Select radius" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 km</SelectItem>
+                    <SelectItem value="10">10 km</SelectItem>
+                    <SelectItem value="15">15 km</SelectItem>
+                    <SelectItem value="20">20 km</SelectItem>
+                    <SelectItem value="25">25 km</SelectItem>
+                    <SelectItem value="30">30 km</SelectItem>
+                    <SelectItem value="40">40 km</SelectItem>
+                    <SelectItem value="50">50 km</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.serviceRadius && (
+                  <p className="mt-1 flex items-center text-sm text-red-500">
+                    <AlertCircle className="mr-1 h-4 w-4" />
+                    {errors.serviceRadius}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  How far are you willing to travel for jobs?
                 </p>
               </div>
 

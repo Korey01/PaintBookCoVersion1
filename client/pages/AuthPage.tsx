@@ -99,7 +99,13 @@ export default function AuthPage() {
           navigate("/customer-dashboard");
         }
       } else {
-        // Signup
+        // For painter signup, redirect to dedicated JoinPainter page
+        if (userType === "painter") {
+          navigate("/join-painter");
+          return;
+        }
+
+        // Signup for customers
         const result = signupSchema.safeParse({
           email,
           password,
@@ -123,8 +129,7 @@ export default function AuthPage() {
           body: JSON.stringify({
             email,
             password,
-            userType,
-            postcode: userType === "painter" ? postcode : undefined,
+            userType: "customer",
           }),
         });
 
@@ -145,18 +150,9 @@ export default function AuthPage() {
         localStorage.setItem("paintbook:token", data.token);
         localStorage.setItem("paintbook:user", JSON.stringify(data.user));
 
-        toast.success(
-          userType === "painter"
-            ? "Welcome to PaintBookco! Let's verify your account."
-            : "Account created successfully!",
-        );
+        toast.success("Account created successfully!");
 
-        // Redirect based on user type
-        if (userType === "painter") {
-          navigate("/painter-onboarding");
-        } else {
-          navigate("/customer-dashboard");
-        }
+        navigate("/customer-dashboard");
       }
     } catch (error) {
       console.error("Auth error:", error);

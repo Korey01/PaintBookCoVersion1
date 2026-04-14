@@ -59,6 +59,28 @@ export default {
         ink:    "hsl(var(--ink))",
         paper:  "hsl(var(--paper))",
         coral:  "hsl(var(--coral))",
+
+        // Dashboard themes
+        "dashboard-customer": {
+          bg: "hsl(var(--dashboard-customer-bg))",
+          card: "hsl(var(--dashboard-customer-card))",
+          accent: "hsl(var(--dashboard-customer-accent))",
+          "text-primary": "hsl(var(--dashboard-customer-text-primary))",
+          "text-secondary": "hsl(var(--dashboard-customer-text-secondary))",
+          success: "hsl(var(--dashboard-customer-success))",
+          warning: "hsl(var(--dashboard-customer-warning))",
+          danger: "hsl(var(--dashboard-customer-danger))",
+        },
+        "dashboard-painter": {
+          bg: "hsl(var(--dashboard-painter-bg))",
+          card: "hsl(var(--dashboard-painter-card))",
+          accent: "hsl(var(--dashboard-painter-accent))",
+          "text-primary": "hsl(var(--dashboard-painter-text-primary))",
+          "text-secondary": "hsl(var(--dashboard-painter-text-secondary))",
+          success: "hsl(var(--dashboard-painter-success))",
+          warning: "hsl(var(--dashboard-painter-warning))",
+          danger: "hsl(var(--dashboard-painter-danger))",
+        },
       },
       fontFamily: {
         serif:   ['"DM Serif Display"', "Georgia", '"Times New Roman"', "serif"],

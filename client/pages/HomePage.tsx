@@ -4,9 +4,9 @@ import { ShieldCheck, BadgeCheck, Lock, Handshake, CheckCircle, ArrowRight } fro
 import { useScrollAnimation, useScrollAnimationList } from "@/hooks/useScrollAnimation";
 
 // ── Shared label ──────────────────────────────────────────────────────────────
-function Label({ children }: { children: React.ReactNode }) {
+function Label({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className="editorial-label text-primary mb-4 flex items-center gap-3">
+    <p className={`editorial-label text-primary mb-4 flex items-center gap-3 ${className}`}>
       <span className="inline-block h-px w-8 bg-current" />
       {children}
     </p>
@@ -22,13 +22,27 @@ const VIDEO_CDN   =
 function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+      {/* Background video — only visible in hero section */}
+      <video
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-contain"
+        style={{ filter: "contrast(1.35) saturate(1.25) brightness(1.08)" }}
+        autoPlay
+        muted
+        loop
+        playsInline
+      >
+        <source src={VIDEO_LOCAL} type="video/mp4" />
+        <source src={VIDEO_CDN}   type="video/mp4" />
+      </video>
+
       {/* Gradient scrim — keeps hero text legible over the video */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/65" />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center pt-16">
         <p
-          className="editorial-label text-white/35 mb-10 tracking-[0.2em] animate-fade-in"
-          style={{ animationDelay: "0.1s", animationFillMode: "both" }}
+          className="editorial-label text-white/40 mb-10 tracking-[0.2em] animate-fade-in"
+          style={{ animationDelay: "0.05s", animationFillMode: "both" }}
         >
           UK Painters &amp; Decorators Marketplace
         </p>
@@ -40,9 +54,9 @@ function Hero() {
           {["Paint.", "Book.", "Done."].map((word, i) => (
             <span
               key={word}
-              className="inline-block animate-editorial-up"
+              className="inline-block animate-fade-in"
               style={{
-                animationDelay: `${0.2 + i * 0.15}s`,
+                animationDelay: `${0.2 + i * 0.1}s`,
                 animationFillMode: "both",
                 marginRight: "0.25em",
                 color: i === 1 ? "hsl(var(--primary))" : undefined,
@@ -54,16 +68,16 @@ function Hero() {
         </h1>
 
         <p
-          className="text-lg sm:text-xl text-white/65 max-w-xl mx-auto leading-[1.7] mb-12 animate-editorial-up"
-          style={{ animationDelay: "0.65s", animationFillMode: "both" }}
+          className="text-lg sm:text-xl text-white/65 max-w-xl mx-auto leading-[1.7] mb-12 animate-fade-in"
+          style={{ animationDelay: "0.5s", animationFillMode: "both" }}
         >
           Find KYC-verified painters near you. Pay securely via FCA-authorised
           escrow. Guaranteed quality on every job.
         </p>
 
         <div
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-editorial-up"
-          style={{ animationDelay: "0.8s", animationFillMode: "both" }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in"
+          style={{ animationDelay: "0.65s", animationFillMode: "both" }}
         >
           <Link
             to="/register/customer"
@@ -74,15 +88,15 @@ function Hero() {
           </Link>
           <Link
             to="/join-painter"
-            className="inline-flex items-center gap-2 border border-white/30 text-white/85 font-medium text-base px-8 py-4 w-full sm:w-auto justify-center hover:border-white/55 hover:text-white transition-all duration-200"
+            className="inline-flex items-center gap-2 border border-white/40 text-white font-medium text-base px-8 py-4 w-full sm:w-auto justify-center hover:border-white/60 hover:bg-white/10 transition-all duration-200"
           >
             Join as a Painter
           </Link>
         </div>
 
         <div
-          className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/45 animate-fade-in"
-          style={{ animationDelay: "1s", animationFillMode: "both" }}
+          className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/50 animate-fade-in"
+          style={{ animationDelay: "0.8s", animationFillMode: "both" }}
         >
           {[
             { icon: BadgeCheck, label: "ID Verified Painters" },
@@ -118,8 +132,7 @@ function HowItWorks() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "rgba(0, 0, 0, 0.35)" }}
+      className="py-28 sm:py-36 px-6 text-foreground bg-white"
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -132,8 +145,7 @@ function HowItWorks() {
           {STEPS.map(({ number, title, description }) => (
             <div
               key={number}
-              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 hover:bg-white/40 transition-colors duration-300"
-              style={{ background: "rgba(0, 0, 0, 0.25)" }}
+              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-300 bg-white"
             >
               <span className="editorial-label text-primary mb-8">{number}</span>
               <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
@@ -164,8 +176,7 @@ function TrustSignals() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "rgba(0, 0, 0, 0.35)" }}
+      className="py-28 sm:py-36 px-6 text-foreground bg-white"
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -178,8 +189,7 @@ function TrustSignals() {
           {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="scroll-animate rounded-sm border border-border/50 p-8 flex flex-col transition-all duration-500 hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1"
-              style={{ background: "rgba(0, 0, 0, 0.25)" }}
+              className="scroll-animate rounded-lg border border-gray-200 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 bg-white"
             >
               <div className="w-10 h-10 flex items-center justify-center mb-6 bg-muted/70">
                 <Icon className="h-5 w-5 text-primary" />
@@ -205,11 +215,7 @@ function ForPainters() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6"
-      style={{
-        background: "rgba(0, 0, 0, 0.45)",
-        color: "hsl(var(--section-dark-fg))",
-      }}
+      className="py-28 sm:py-36 px-6 bg-gray-50 text-foreground"
     >
       <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
         <div className="grid md:grid-cols-2 gap-20 items-center">
@@ -233,15 +239,14 @@ function ForPainters() {
           </div>
 
           <div
-            className="space-y-0 border border-white/8"
-            style={{ background: "rgba(0, 0, 0, 0.35)" }}
+            className="space-y-0 border border-gray-200 bg-white"
           >
             {PAINTER_BENEFITS.map(({ title, description }) => (
-              <div key={title} className="flex gap-5 p-8 border-b border-white/8 last:border-0 hover:bg-white/[0.04] transition-colors duration-200">
+              <div key={title} className="flex gap-5 p-8 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-200">
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-sm text-white mb-1.5">{title}</h4>
-                  <p className="text-sm text-white/45 leading-[1.7]">{description}</p>
+                  <h4 className="font-semibold text-sm text-foreground mb-1.5">{title}</h4>
+                  <p className="text-sm text-muted-foreground leading-[1.7]">{description}</p>
                 </div>
               </div>
             ))}
@@ -257,8 +262,7 @@ function CTABand() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "rgba(0, 0, 0, 0.35)" }}
+      className="py-28 sm:py-36 px-6 text-foreground bg-white"
     >
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
         <Label>Ready to begin</Label>
@@ -294,22 +298,6 @@ export default function HomePage() {
   useEffect(() => { document.title = "PaintBookCo | Hire Verified Painters"; }, []);
   return (
     <div className="relative">
-      {/* Fixed background video — sits behind every section on the homepage.
-          Local MP4 served from /public; CDN URL used as fallback.
-          autoPlay + muted + loop + playsInline: plays silently on all devices. */}
-      <video
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-contain"
-        style={{ filter: "contrast(1.35) saturate(1.25) brightness(1.08)" }}
-        autoPlay
-        muted
-        loop
-        playsInline
-      >
-        <source src={VIDEO_LOCAL} type="video/mp4" />
-        <source src={VIDEO_CDN}   type="video/mp4" />
-      </video>
-
       <Hero />
       <HowItWorks />
       <TrustSignals />

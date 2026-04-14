@@ -154,7 +154,7 @@ function HowItWorks() {
 
 // ── Trust Signals ─────────────────────────────────────────────────────────────
 const TRUST_ITEMS = [
-  { icon: BadgeCheck, title: "KYC Verified Painters", description: "Every painter passes identity, address, and insurance verification before joining." },
+  { icon: BadgeCheck, title: "Verified Painters", description: "Every painter passes identity, address, and insurance verification before joining." },
   { icon: ShieldCheck, title: "FCA Authorised Escrow", description: "All payments held by Transpact (FCA Ref: 546279). PaintBookCo never holds your funds." },
   { icon: Lock, title: "Secure Payments", description: "Your payment is locked in escrow until you confirm the job is complete." },
   { icon: Handshake, title: "Dispute Protection", description: "If something goes wrong, raise a dispute — funds are frozen until resolved." },

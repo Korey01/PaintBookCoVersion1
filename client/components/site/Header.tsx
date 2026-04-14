@@ -55,7 +55,7 @@ export default function Header() {
             className="flex-shrink-0 transition-opacity duration-200 hover:opacity-75"
           >
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
+              src="/logo.png"
               alt="PaintBookco"
               className="h-7 w-auto"
             />
@@ -132,7 +132,7 @@ export default function Header() {
           <div className="flex items-center justify-between px-6 h-16 border-b border-border/40">
             <Link to="/" onClick={() => setMobileOpen(false)}>
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
+                src="/logo.png"
                 alt="PaintBookco"
                 className="h-6 w-auto"
               />

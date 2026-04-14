@@ -28,7 +28,9 @@ export default function ConfirmPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
       <div className="w-full max-w-sm text-center animate-editorial-up" style={{ animationFillMode: "both" }}>
-        <Link to="/" className="font-display text-2xl text-foreground block mb-16">PaintBookCo</Link>
+        <Link to="/" aria-label="PaintBookCo home" className="inline-block mb-16">
+          <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800" alt="PaintBookCo" className="h-8 w-auto mx-auto" />
+        </Link>
 
         {status === "loading" && (
           <>

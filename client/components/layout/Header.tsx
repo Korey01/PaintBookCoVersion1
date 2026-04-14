@@ -37,15 +37,17 @@ export default function Header() {
         ].join(" ")}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
-          {/* Wordmark */}
+          {/* Logo */}
           <Link
             to="/"
-            className={[
-              "font-display text-xl tracking-[-0.02em] transition-colors duration-300",
-              transparent ? "text-white" : "text-foreground",
-            ].join(" ")}
+            aria-label="PaintBookCo home"
+            className="flex-shrink-0 transition-opacity duration-200 hover:opacity-75"
           >
-            PaintBookCo
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
+              alt="PaintBookCo"
+              className={`h-7 w-auto transition-all duration-300 ${transparent ? "brightness-[10]" : ""}`}
+            />
           </Link>
 
           {/* Desktop nav */}
@@ -113,8 +115,12 @@ export default function Header() {
         ].join(" ")}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-          <Link to="/" className="font-display text-xl text-foreground">
-            PaintBookCo
+          <Link to="/" aria-label="PaintBookCo home">
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
+              alt="PaintBookCo"
+              className="h-7 w-auto"
+            />
           </Link>
           <button
             onClick={() => setMobileOpen(false)}

@@ -1,16 +1,11 @@
 /**
- * PainterDashboardPage — protected wrapper for the painter dashboard.
- * Auth guard is handled by ProtectedRoute (redirects to /login if no session).
+ * PainterDashboardPage — renders the painter dashboard.
+ * Auth + role guard is handled by ProtectedRoute in App.tsx.
  */
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PainterDashboard from "@/components/dashboard/PainterDashboard";
 
 export default function PainterDashboardPage() {
-  return (
-    <ProtectedRoute>
-      <PainterDashboard />
-    </ProtectedRoute>
-  );
+  return <PainterDashboard />;
 }
 
 // ── Builder.io registration ───────────────────────────────────────────────────

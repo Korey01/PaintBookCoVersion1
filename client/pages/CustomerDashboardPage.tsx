@@ -1,16 +1,11 @@
 /**
- * CustomerDashboardPage — protected wrapper for the customer dashboard.
- * Auth guard is handled by ProtectedRoute (redirects to /login if no session).
+ * CustomerDashboardPage — renders the customer dashboard.
+ * Auth + role guard is handled by ProtectedRoute in App.tsx.
  */
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CustomerDashboard from "@/components/dashboard/CustomerDashboard";
 
 export default function CustomerDashboardPage() {
-  return (
-    <ProtectedRoute>
-      <CustomerDashboard />
-    </ProtectedRoute>
-  );
+  return <CustomerDashboard />;
 }
 
 // ── Builder.io registration ───────────────────────────────────────────────────

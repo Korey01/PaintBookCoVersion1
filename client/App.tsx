@@ -69,6 +69,7 @@ import ResetPassword from "./pages/ResetPassword";
 import ConfirmPage from "./pages/ConfirmPage";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import PainterDashboardPage from "./pages/PainterDashboardPage";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -111,9 +112,17 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/confirm" element={<ConfirmPage />} />
 
-          {/* ── Dashboard pages (self-contained with auth guard) ── */}
-          <Route path="/dashboard/customer" element={<CustomerDashboardPage />} />
-          <Route path="/dashboard/painter" element={<PainterDashboardPage />} />
+          {/* ── Dashboard pages — role-protected ── */}
+          <Route path="/dashboard/customer" element={
+            <ProtectedRoute requiredRole="customer">
+              <CustomerDashboardPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/painter" element={
+            <ProtectedRoute requiredRole="painter">
+              <PainterDashboardPage />
+            </ProtectedRoute>
+          } />
 
           {/* ── Legacy pages (original animated Layout) ── */}
           <Route element={<LegacyLayout />}>

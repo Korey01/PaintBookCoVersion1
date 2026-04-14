@@ -26,11 +26,10 @@ export default function LoginPage() {
     setEmailUnconfirmed(false);
     setLoading(true);
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError) {
       setLoading(false);
-      // Supabase returns "Email not confirmed" when the user hasn't clicked the link yet
       if (signInError.message.toLowerCase().includes("email not confirmed")) {
         setEmailUnconfirmed(true);
         setError("Please confirm your email first. Check your inbox for a confirmation link.");
@@ -40,14 +39,21 @@ export default function LoginPage() {
       return;
     }
 
-    if (!data.user) {
+    // Use getUser() to get the verified user object from the server
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
       setLoading(false);
       setError("Login failed. Please try again.");
       return;
     }
 
+    // Check painters table to determine role and route accordingly
     const { data: painterRecord } = await supabase
-      .from("painters").select("id").eq("user_id", data.user.id).maybeSingle();
+      .from("painters")
+      .select("id, kyc_status")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
     setLoading(false);
     navigate(painterRecord ? "/dashboard/painter" : "/dashboard/customer");
@@ -63,7 +69,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
       <div className="w-full max-w-sm animate-editorial-up" style={{ animationFillMode: "both" }}>
-        {/* Logo */}
         <div className="text-center mb-12">
           <Link to="/" aria-label="PaintBookCo home" className="inline-block">
             <img src={LOGO} alt="PaintBookCo" className="h-8 w-auto" />

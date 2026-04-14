@@ -14,6 +14,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, Job, JobMilestone } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import AvailableJobs from "./AvailableJobs";
 import MilestoneSubmission from "./MilestoneSubmission";
 import EarningsTracker from "./EarningsTracker";
@@ -76,6 +77,7 @@ function commissionRate(n: number) {
 
 export default function PainterDashboard() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const [loading,  setLoading]  = useState(true);
   const [painter,  setPainter]  = useState<PainterRecord | null>(null);
@@ -89,18 +91,13 @@ export default function PainterDashboard() {
 
   const [tab, setTab] = useState<Tab>("overview");
 
-  // ── Auth + data load ───────────────────────────────────────────────────────
+  // ── Data load (uses auth from AuthContext) ─────────────────────────────────
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { navigate("/login"); return; }
-      fetchData(session.user.id);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) navigate("/login");
-    });
-    return () => listener.subscription.unsubscribe();
-  }, [navigate]);
+    if (user) {
+      fetchData(user.id);
+    }
+  }, [user]);
 
   const fetchData = useCallback(async (userId: string) => {
     setLoading(true);
@@ -184,8 +181,8 @@ export default function PainterDashboard() {
     refresh();
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
+  async function handleSignOut() {
+    await signOut();
     navigate("/login");
   }
 
@@ -229,41 +226,47 @@ export default function PainterDashboard() {
   const tierColor   = painter.completed_jobs < 5 ? "text-amber-600 bg-amber-50 border-amber-200" : painter.completed_jobs < 10 ? "text-blue-600 bg-blue-50 border-blue-200" : "text-green-600 bg-green-50 border-green-200";
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily: "Arial, system-ui, sans-serif" }}>
+    <div className="dashboard-painter min-h-screen flex flex-col">
       {/* Header */}
-      <header className="text-white px-6 py-4" style={{ backgroundColor: "#1B3A5C" }}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <header className="border-b border-white/10 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold">PaintBookCo</h1>
-            <p className="text-xs text-white/60 mt-0.5">
+            <h1 className="text-lg font-bold text-white">PaintBookCo</h1>
+            <p className="text-xs text-dashboard-painter-text-secondary mt-0.5">
               {painter.first_name ? `${painter.first_name}'s Dashboard` : "Painter Dashboard"}
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-white/60 hidden sm:block">{painter.email}</span>
-            <button onClick={signOut} className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors">
+            <span className="text-xs text-dashboard-painter-text-secondary hidden sm:block">
+              {painter.email}
+            </span>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-1.5 text-xs text-dashboard-painter-text-secondary hover:text-dashboard-painter-text-primary transition-colors"
+            >
               <LogOut className="h-3.5 w-3.5" /> Sign out
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
         {/* Tab navigation */}
-        <nav className="flex items-center gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
+        <nav className="flex items-center gap-1 mb-6 dashboard-painter-card border-white/10 rounded-xl p-1 shadow-sm overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => { setTab(t.id); setActiveJob(null); }}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors relative ${
-                tab === t.id ? "text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                tab === t.id
+                  ? "dashboard-painter-accent-bg text-white shadow-sm"
+                  : "text-dashboard-painter-text-secondary hover:text-dashboard-painter-text-primary"
               }`}
-              style={tab === t.id ? { backgroundColor: "#1B3A5C" } : undefined}
             >
               {t.icon}
               <span className="hidden sm:inline">{t.label}</span>
               {t.id === "available" && notifiedCount > 0 && (
-                <span className="ml-0.5 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center leading-none">
+                <span className="ml-0.5 bg-dashboard-painter-danger text-white text-xs rounded-full h-4 w-4 flex items-center justify-center leading-none">
                   {notifiedCount}
                 </span>
               )}
@@ -283,26 +286,29 @@ export default function PainterDashboard() {
             </div>
 
             {/* Commission tier */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm mb-6">
+            <div className="dashboard-painter-card border-white/10 rounded-xl p-5 mb-6">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold" style={{ color: "#1B3A5C" }}>Commission Tier</h3>
+                <h3 className="text-sm font-semibold text-white">Commission Tier</h3>
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${tierColor}`}>
                   {tierLabel}
                 </span>
               </div>
               {nextTierAt ? (
                 <>
-                  <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden mb-2">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${tierPct}%`, backgroundColor: "#2E75B6" }} />
+                  <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-2">
+                    <div
+                      className="h-full rounded-full transition-all bg-dashboard-painter-accent"
+                      style={{ width: `${tierPct}%` }}
+                    />
                   </div>
-                  <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <TrendingDown className="h-3 w-3 text-blue-500" />
+                  <p className="text-xs text-dashboard-painter-text-secondary flex items-center gap-1">
+                    <TrendingDown className="h-3 w-3 text-dashboard-painter-accent" />
                     {nextTierAt - painter.completed_jobs} more job{nextTierAt - painter.completed_jobs !== 1 ? "s" : ""} until your commission drops to{" "}
                     <strong>{painter.completed_jobs < 5 ? "10%" : "8%"}</strong>
                   </p>
                 </>
               ) : (
-                <p className="text-xs text-green-600 font-medium">You're at the lowest commission tier — 8%!</p>
+                <p className="text-xs text-dashboard-painter-success font-medium">You're at the lowest commission tier — 8%!</p>
               )}
             </div>
 
@@ -310,30 +316,39 @@ export default function PainterDashboard() {
             {notifiedCount > 0 && (
               <button
                 onClick={() => setTab("available")}
-                className="w-full flex items-center justify-between bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 hover:bg-blue-100 transition-colors"
+                className="w-full flex items-center justify-between dashboard-painter-card border-dashboard-painter-accent/30 rounded-xl p-4 mb-6 hover:border-dashboard-painter-accent/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">{notifiedCount}</span>
+                  <span className="bg-dashboard-painter-danger text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                    {notifiedCount}
+                  </span>
                   <div className="text-left">
-                    <p className="text-sm font-semibold" style={{ color: "#1B3A5C" }}>Job{notifiedCount !== 1 ? "s" : ""} awaiting your response</p>
-                    <p className="text-xs text-gray-500">Accept before the 48-hour window closes</p>
+                    <p className="text-sm font-semibold text-white">
+                      Job{notifiedCount !== 1 ? "s" : ""} awaiting your response
+                    </p>
+                    <p className="text-xs text-dashboard-painter-text-secondary">
+                      Accept before the 48-hour window closes
+                    </p>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-dashboard-painter-text-secondary" />
               </button>
             )}
 
             {/* Recent jobs */}
             {jobs.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold mb-3" style={{ color: "#1B3A5C" }}>Recent Jobs</h3>
+                <h3 className="text-sm font-semibold mb-3 text-white">Recent Jobs</h3>
                 <div className="flex flex-col gap-3">
                   {jobs.slice(0, 3).map((job) => (
                     <PainterJobCard key={job.id} job={job} onViewMilestones={openMilestones} onMarkStarted={markStarted} />
                   ))}
                 </div>
                 {jobs.length > 3 && (
-                  <button className="mt-3 text-sm font-medium flex items-center gap-1" style={{ color: "#2E75B6" }} onClick={() => setTab("jobs")}>
+                  <button
+                    className="mt-3 text-sm font-medium flex items-center gap-1 text-dashboard-painter-accent hover:opacity-80"
+                    onClick={() => setTab("jobs")}
+                  >
                     View all {jobs.length} jobs <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 )}
@@ -344,7 +359,7 @@ export default function PainterDashboard() {
 
         {/* ── AVAILABLE JOBS ─────────────────────────────────────── */}
         {tab === "available" && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
             <AvailableJobs
               painterId={painter.id}
               onJobAccepted={() => { refresh(); setTab("jobs"); }}
@@ -358,7 +373,7 @@ export default function PainterDashboard() {
             {activeJob ? (
               milestonesLoading ? (
                 <div className="flex items-center justify-center py-20">
-                  <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#2E75B6" }} />
+                  <Loader2 className="h-6 w-6 animate-spin text-dashboard-painter-accent" />
                 </div>
               ) : (
                 <MilestoneSubmission
@@ -371,13 +386,16 @@ export default function PainterDashboard() {
               )
             ) : (
               <>
-                <h2 className="text-base font-semibold mb-4" style={{ color: "#1B3A5C" }}>My Jobs ({jobs.length})</h2>
+                <h2 className="text-base font-semibold mb-4 text-white">My Jobs ({jobs.length})</h2>
                 {jobs.length === 0 ? (
-                  <div className="text-center py-20 text-gray-400">
+                  <div className="text-center py-20 text-dashboard-painter-text-secondary">
                     <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-20" />
                     <p className="text-sm">No jobs yet.</p>
                     <p className="text-xs mt-1">Accept an available job to get started.</p>
-                    <Button className="mt-4 text-white text-sm" style={{ backgroundColor: "#1B3A5C" }} onClick={() => setTab("available")}>
+                    <Button
+                      className="mt-4 dashboard-painter-accent text-black text-sm hover:opacity-90"
+                      onClick={() => setTab("available")}
+                    >
                       View Available Jobs
                     </Button>
                   </div>
@@ -395,15 +413,15 @@ export default function PainterDashboard() {
 
         {/* ── EARNINGS ───────────────────────────────────────────── */}
         {tab === "earnings" && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-base font-semibold mb-5" style={{ color: "#1B3A5C" }}>Earnings</h2>
+          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
+            <h2 className="text-base font-semibold mb-5 text-white">Earnings</h2>
             <EarningsTracker jobs={jobs} completedJobs={painter.completed_jobs} />
           </div>
         )}
 
         {/* ── AVAILABILITY ───────────────────────────────────────── */}
         {tab === "availability" && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
             <AvailabilityCalendar
               painter={painter}
               jobs={jobs}
@@ -414,8 +432,8 @@ export default function PainterDashboard() {
 
         {/* ── PROFILE ────────────────────────────────────────────── */}
         {tab === "profile" && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-base font-semibold mb-5" style={{ color: "#1B3A5C" }}>Profile &amp; Settings</h2>
+          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
+            <h2 className="text-base font-semibold mb-5 text-white">Profile &amp; Settings</h2>
             <PainterProfile
               painter={painter}
               onSaved={(updates) => setPainter((p) => p ? { ...p, ...updates } : p)}
@@ -465,12 +483,12 @@ function KycGate({ status, reason, onSignOut }: { status: string; reason: string
 
 function StatCard({ label, value, sub, icon }: { label: string; value: string | number; sub: string; icon?: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-      <p className="text-xs text-gray-400 mb-1">{label}</p>
-      <p className="text-2xl font-bold flex items-center gap-1.5" style={{ color: "#1B3A5C" }}>
+    <div className="dashboard-painter-card border-white/10 rounded-xl p-5">
+      <p className="text-xs text-dashboard-painter-text-secondary mb-1">{label}</p>
+      <p className="text-2xl font-bold flex items-center gap-1.5 text-dashboard-painter-accent">
         {value} {icon}
       </p>
-      <p className="text-xs text-gray-400 mt-1">{sub}</p>
+      <p className="text-xs text-dashboard-painter-text-secondary mt-1">{sub}</p>
     </div>
   );
 }
@@ -504,11 +522,11 @@ function PainterJobCard({ job, onViewMilestones, onMarkStarted }: {
   const colorCls = STATUS_COLORS[job.status] ?? "bg-gray-100 text-gray-600";
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm" style={{ fontFamily: "Arial, system-ui, sans-serif" }}>
+    <div className="dashboard-painter-card border-white/10 rounded-xl p-5">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <h3 className="font-semibold text-sm" style={{ color: "#1B3A5C" }}>{job.title}</h3>
-          <p className="text-xs text-gray-400 mt-0.5">{job.type}</p>
+          <h3 className="font-semibold text-sm text-white">{job.title}</h3>
+          <p className="text-xs text-dashboard-painter-text-secondary mt-0.5">{job.type}</p>
         </div>
         <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${colorCls}`}>
           {STATUS_LABELS[job.status] ?? job.status}
@@ -516,9 +534,9 @@ function PainterJobCard({ job, onViewMilestones, onMarkStarted }: {
       </div>
 
       {(job.total_price ?? job.budget) != null && (
-        <p className="text-xs text-gray-500 mb-3">
+        <p className="text-xs text-dashboard-painter-text-secondary mb-3">
           Value:{" "}
-          <strong className="text-gray-700">
+          <strong className="text-white">
             £{(job.total_price ?? job.budget)!.toLocaleString("en-GB", { minimumFractionDigits: 2 })}
           </strong>
         </p>
@@ -526,7 +544,7 @@ function PainterJobCard({ job, onViewMilestones, onMarkStarted }: {
 
       {/* Escrow funded → show contact + Mark Started */}
       {job.status === "escrow_funded" && (
-        <div className="mb-3 bg-teal-50 border border-teal-100 rounded-lg px-3 py-2 text-xs text-teal-800">
+        <div className="mb-3 bg-dashboard-painter-accent/10 border border-dashboard-painter-accent/30 rounded-lg px-3 py-2 text-xs text-dashboard-painter-accent">
           <p className="font-semibold mb-0.5">Customer contact details (escrow funded)</p>
           <p>Contact has been sent to your registered email address.</p>
         </div>
@@ -534,17 +552,30 @@ function PainterJobCard({ job, onViewMilestones, onMarkStarted }: {
 
       <div className="flex flex-wrap gap-2">
         {job.status === "escrow_funded" && (
-          <Button size="sm" onClick={() => onMarkStarted(job)} className="text-xs text-white" style={{ backgroundColor: "#2E75B6" }}>
+          <Button
+            size="sm"
+            onClick={() => onMarkStarted(job)}
+            className="dashboard-painter-accent text-black text-xs hover:opacity-90"
+          >
             Mark Job Started
           </Button>
         )}
         {(job.status === "in_progress" || job.status === "milestone_review") && (
-          <Button size="sm" onClick={() => onViewMilestones(job)} className="text-xs text-white gap-1" style={{ backgroundColor: "#1B3A5C" }}>
+          <Button
+            size="sm"
+            onClick={() => onViewMilestones(job)}
+            className="dashboard-painter-accent text-black text-xs gap-1 hover:opacity-90"
+          >
             Submit Milestone
           </Button>
         )}
         {(job.status === "escrow_funded" || job.status === "in_progress" || job.status === "milestone_review") && (
-          <Button size="sm" variant="outline" onClick={() => onViewMilestones(job)} className="text-xs border-gray-300">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onViewMilestones(job)}
+            className="text-xs border-white/20 text-white hover:bg-white/5"
+          >
             View Milestones
           </Button>
         )}

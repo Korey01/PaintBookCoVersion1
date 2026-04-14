@@ -1,143 +1,159 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, BadgeCheck, Lock, Handshake, CheckCircle } from "lucide-react";
+import { ShieldCheck, BadgeCheck, Lock, Handshake, CheckCircle, ArrowRight } from "lucide-react";
+import { useScrollAnimation, useScrollAnimationList } from "@/hooks/useScrollAnimation";
+
+// ── Shared label ──────────────────────────────────────────────────────────────
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="editorial-label text-primary mb-4 flex items-center gap-3">
+      <span className="inline-block h-px w-8 bg-current" />
+      {children}
+    </p>
+  );
+}
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
-
 function Hero() {
   return (
-    <section className="relative min-h-[92vh] flex items-center justify-center px-6 overflow-hidden">
-      {/* Background video — painters at work */}
-      <div aria-hidden className="absolute inset-0 -z-10">
-        <video
-          className="h-full w-full object-cover scale-105"
-          autoPlay
-          muted
-          loop
-          playsInline
-          src="https://cdn.builder.io/o/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F2ba0324a63604c4fb1cddfae4fa8a84d?alt=media&token=8b7a4306-e600-43b0-8a83-ff8152892c2d&apiKey=4d3ba4dca12d422aaa4ee4ceafe37a1f"
+    <section className="relative section-dark min-h-screen flex items-center justify-center px-6 overflow-hidden">
+      {/* Geometric background element */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* Subtle radial gradient for depth */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(18_88%_52%_/_0.12),transparent)]" />
+        {/* Fine grid */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(hsl(var(--section-dark-fg)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--section-dark-fg)) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+          }}
         />
-        {/* Dark overlay so text is readable */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/62 to-black/80" />
+        {/* Decorative ring */}
+        <div className="absolute -top-64 -right-64 h-[640px] w-[640px] rounded-full border border-white/5" />
+        <div className="absolute -bottom-48 -left-48 h-[480px] w-[480px] rounded-full border border-white/5" />
       </div>
 
-      {/* Subtle grain texture */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      <div className="relative z-10 max-w-3xl mx-auto text-center pt-16 animate-editorial-up">
-        <div className="editorial-label text-white/40 mb-8 tracking-[0.2em]">
+      <div className="relative z-10 mx-auto max-w-4xl text-center pt-16">
+        {/* Eyebrow — clip-reveal on load */}
+        <p
+          className="editorial-label text-white/35 mb-10 tracking-[0.2em] animate-fade-in"
+          style={{ animationDelay: "0.1s", animationFillMode: "both" }}
+        >
           UK Painters &amp; Decorators Marketplace
-        </div>
-
-        <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.02] tracking-[-0.03em] mb-8">
-          Paint.{" "}
-          <em className="not-italic text-primary">Book.</em>{" "}
-          Done.
-        </h1>
-
-        <p className="text-lg sm:text-xl text-white/75 max-w-xl mx-auto mb-10 leading-[1.7]">
-          Find KYC-verified painters near you. Pay securely via FCA-authorised
-          escrow. Guaranteed quality.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+        {/* Headline — staggered word slide-up */}
+        <h1
+          className="font-display text-[clamp(2.8rem,8vw,6rem)] text-white leading-[1.0] tracking-[-0.03em] mb-8"
+          style={{ animationFillMode: "both" }}
+        >
+          {["Paint.", "Book.", "Done."].map((word, i) => (
+            <span
+              key={word}
+              className="inline-block animate-editorial-up"
+              style={{
+                animationDelay: `${0.2 + i * 0.15}s`,
+                animationFillMode: "both",
+                marginRight: "0.25em",
+                color: i === 1 ? "hsl(var(--primary))" : undefined,
+              }}
+            >
+              {word}
+            </span>
+          ))}
+        </h1>
+
+        {/* Sub-copy */}
+        <p
+          className="text-lg sm:text-xl text-white/60 max-w-xl mx-auto leading-[1.7] mb-12 animate-editorial-up"
+          style={{ animationDelay: "0.65s", animationFillMode: "both" }}
+        >
+          Find KYC-verified painters near you. Pay securely via FCA-authorised
+          escrow. Guaranteed quality on every job.
+        </p>
+
+        {/* CTAs */}
+        <div
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-editorial-up"
+          style={{ animationDelay: "0.8s", animationFillMode: "both" }}
+        >
           <Link
             to="/register/customer"
-            className="text-base font-semibold text-primary-foreground bg-primary px-8 py-4 w-full sm:w-auto text-center transition-opacity hover:opacity-90"
+            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium text-base px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_hsl(18_88%_52%_/_0.4)]"
           >
             Find a Painter
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
           <Link
             to="/join-painter"
-            className="text-base font-semibold px-8 py-4 w-full sm:w-auto text-center border border-white/40 text-white hover:border-white/70 transition-colors"
+            className="inline-flex items-center gap-2 border border-white/25 text-white/80 font-medium text-base px-8 py-4 w-full sm:w-auto justify-center hover:border-white/50 hover:text-white transition-all duration-200"
           >
             Join as a Painter
           </Link>
         </div>
 
-        {/* Trust signals */}
-        <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-white/70">
+        {/* Trust row */}
+        <div
+          className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/40 animate-fade-in"
+          style={{ animationDelay: "1s", animationFillMode: "both" }}
+        >
           {[
             { icon: BadgeCheck, label: "ID Verified Painters" },
             { icon: ShieldCheck, label: "Fully Insured" },
             { icon: Lock, label: "Escrow Protected" },
           ].map(({ icon: Icon, label }) => (
             <span key={label} className="inline-flex items-center gap-2">
-              <Icon className="h-4 w-4 text-primary" />
+              <Icon className="h-4 w-4 text-primary/70" />
               {label}
             </span>
           ))}
         </div>
+      </div>
 
-        <p className="mt-8 text-xs text-white/30 editorial-label tracking-[0.15em]">
-          Free to post · No hidden fees · Pay only when satisfied
-        </p>
+      {/* Scroll cue */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in" style={{ animationDelay: "1.4s", animationFillMode: "both" }}>
+        <div className="h-10 w-px bg-gradient-to-b from-transparent via-white/25 to-transparent animate-scroll-bounce" />
       </div>
     </section>
   );
 }
 
 // ── How It Works ──────────────────────────────────────────────────────────────
-
 const STEPS = [
-  {
-    number: "01",
-    title: "Post your job",
-    description:
-      "Describe your painting job, set your budget, and choose your preferred start date. Free to post — no commitments.",
-  },
-  {
-    number: "02",
-    title: "Get matched",
-    description:
-      "We automatically match your job to KYC-verified painters in your area based on skills, availability, and reviews.",
-  },
-  {
-    number: "03",
-    title: "Pay securely, confirm completion",
-    description:
-      "Confirm your painter by paying into FCA-authorised escrow. Funds are only released when you're satisfied.",
-  },
+  { number: "01", title: "Post your job", description: "Describe your painting job, set your budget, and choose your preferred start date. Free to post — no commitments." },
+  { number: "02", title: "Get matched", description: "Our system matches your job to KYC-verified painters in your area based on skills, availability, and reviews." },
+  { number: "03", title: "Pay securely", description: "Confirm your painter by paying into FCA-authorised escrow. Funds release only when you confirm the work is complete." },
 ];
 
 function HowItWorks() {
+  const ref = useScrollAnimationList();
   return (
-    <section className="section-warm py-24 px-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-16">
-          <p className="editorial-label text-primary mb-4 flex items-center gap-3">
-            <span className="inline-block h-px w-8 bg-current" />
-            Simple process
-          </p>
-          <h2 className="font-display text-foreground max-w-xl">
-            From estimate to booking,<br />in three steps.
+    <section className="section-warm py-28 sm:py-36 px-6">
+      <div className="mx-auto max-w-6xl">
+        <div ref={useScrollAnimation()} className="scroll-animate mb-20">
+          <Label>Simple process</Label>
+          <h2 className="font-display text-foreground max-w-lg">
+            From estimate to booking, in three steps.
           </h2>
         </div>
-
-        <div className="grid md:grid-cols-3 gap-0 border border-border/50">
+        <div ref={ref} className="grid md:grid-cols-3 gap-0 border border-border/50 scroll-stagger">
           {STEPS.map(({ number, title, description }, i) => (
             <div
               key={number}
-              className="group flex flex-col p-8 sm:p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 hover:bg-muted/40 transition-colors duration-300"
+              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-border/50 last:border-0 hover:bg-background transition-colors duration-300"
             >
-              <span className="editorial-label text-primary mb-6">{number}</span>
-              <h3 className="font-display text-xl mb-3 font-normal text-foreground">{title}</h3>
-              <p className="text-sm text-muted-foreground leading-[1.7] mb-6 flex-1">{description}</p>
+              <span className="editorial-label text-primary mb-8">{number}</span>
+              <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
+              <p className="text-sm text-muted-foreground leading-[1.8] flex-1">{description}</p>
             </div>
           ))}
         </div>
-
-        <div className="mt-10">
-          <Link
-            to="/how-it-works/customers"
-            className="text-sm font-medium text-primary hover:underline link-smooth"
-          >
-            See the full process →
+        <div className="mt-10 scroll-animate" ref={useScrollAnimation()}>
+          <Link to="/how-it-works/customers" className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 group">
+            See the full process
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
         </div>
       </div>
@@ -146,59 +162,35 @@ function HowItWorks() {
 }
 
 // ── Trust Signals ─────────────────────────────────────────────────────────────
-
 const TRUST_ITEMS = [
-  {
-    icon: BadgeCheck,
-    title: "KYC Verified Painters",
-    description:
-      "Every painter passes identity, address, and insurance verification before joining the platform.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "FCA Authorised Escrow",
-    description:
-      "All payments held by Transpact, an FCA-authorised escrow provider (Ref: 546279). PaintBookCo never holds funds.",
-  },
-  {
-    icon: Lock,
-    title: "Secure Payments",
-    description:
-      "Your payment is locked in escrow until you confirm the job is complete. You stay in control at every stage.",
-  },
-  {
-    icon: Handshake,
-    title: "Dispute Protection",
-    description:
-      "If something goes wrong, raise a dispute through your dashboard. Funds are frozen until resolved.",
-  },
+  { icon: BadgeCheck, title: "KYC Verified Painters", description: "Every painter passes identity, address, and insurance verification before joining." },
+  { icon: ShieldCheck, title: "FCA Authorised Escrow", description: "All payments held by Transpact (FCA Ref: 546279). PaintBookCo never holds your funds." },
+  { icon: Lock, title: "Secure Payments", description: "Your payment is locked in escrow until you confirm the job is complete." },
+  { icon: Handshake, title: "Dispute Protection", description: "If something goes wrong, raise a dispute — funds are frozen until resolved." },
 ];
 
 function TrustSignals() {
+  const ref = useScrollAnimationList();
   return (
-    <section className="section-light py-24 px-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-16">
-          <p className="editorial-label text-primary mb-4 flex items-center gap-3">
-            <span className="inline-block h-px w-8 bg-current" />
-            Built on trust
-          </p>
-          <h2 className="font-display text-foreground max-w-xl">
+    <section className="section-light py-28 sm:py-36 px-6">
+      <div className="mx-auto max-w-6xl">
+        <div ref={useScrollAnimation()} className="scroll-animate mb-20">
+          <Label>Built on trust</Label>
+          <h2 className="font-display text-foreground max-w-lg">
             Why customers choose PaintBookCo
           </h2>
         </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div ref={ref} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 scroll-stagger">
           {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="surface-card p-6 flex flex-col"
+              className="scroll-animate surface-card p-8 flex flex-col"
             >
-              <div className="w-10 h-10 flex items-center justify-center mb-4 bg-muted">
+              <div className="w-10 h-10 flex items-center justify-center mb-6 bg-muted">
                 <Icon className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold text-foreground mb-2">{title}</h3>
-              <p className="text-xs text-muted-foreground leading-[1.7]">{description}</p>
+              <h3 className="font-semibold text-sm text-foreground mb-3">{title}</h3>
+              <p className="text-xs text-muted-foreground leading-[1.8]">{description}</p>
             </div>
           ))}
         </div>
@@ -208,59 +200,46 @@ function TrustSignals() {
 }
 
 // ── For Painters ──────────────────────────────────────────────────────────────
-
 const PAINTER_BENEFITS = [
-  {
-    title: "No subscription fees",
-    description: "Zero upfront costs. Commission only on completed jobs — and it reduces as you grow.",
-  },
-  {
-    title: "Matched jobs sent to you",
-    description: "No bidding wars. The first verified painter to accept gets the job.",
-  },
-  {
-    title: "Secure, guaranteed payment",
-    description: "Every job is backed by FCA-authorised escrow. You get paid when the job is done.",
-  },
+  { title: "No subscription fees", description: "Zero upfront costs. Commission only on completed jobs — and it reduces as you grow." },
+  { title: "Matched jobs sent to you", description: "No bidding wars. The first verified painter to accept gets the job." },
+  { title: "Secure, guaranteed payment", description: "Every job is backed by FCA-authorised escrow. You get paid when the job is done." },
 ];
 
 function ForPainters() {
+  const ref = useScrollAnimation();
   return (
-    <section className="section-dark py-24 px-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
+    <section className="section-dark py-28 sm:py-36 px-6">
+      <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
+        <div className="grid md:grid-cols-2 gap-20 items-center">
           <div>
-            <p className="editorial-label text-white/35 mb-4 flex items-center gap-3">
-              <span className="inline-block h-px w-8 bg-current" />
-              For painters
-            </p>
-            <h2 className="font-display text-white mb-6">
+            <Label>
+              <span className="text-white/35">For painters</span>
+            </Label>
+            <h2 className="font-display text-white mb-8">
               Grow your painting business
             </h2>
-            <p className="text-white/55 mb-8 leading-[1.7]">
-              Join thousands of professional painters who use PaintBookCo to fill
-              their diary with matched, verified jobs — and get paid securely every time.
+            <p className="text-white/50 leading-[1.8] mb-10 max-w-md">
+              Join thousands of professional painters who use PaintBookCo to
+              fill their diary with matched, verified jobs — and get paid
+              securely every time.
             </p>
             <Link
               to="/join-painter"
-              className="inline-block text-base font-semibold text-primary-foreground bg-primary px-8 py-4 transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-8 py-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_hsl(18_88%_52%_/_0.4)] group"
             >
               Join as a Painter
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>
 
-          <div className="space-y-0 border border-white/10">
-            {PAINTER_BENEFITS.map(({ title, description }, i) => (
-              <div
-                key={title}
-                className="flex gap-5 p-6 border-b border-white/10 last:border-0"
-              >
-                <div className="flex-shrink-0 mt-0.5">
-                  <CheckCircle className="h-5 w-5 text-primary" />
-                </div>
+          <div className="space-y-0 border border-white/8">
+            {PAINTER_BENEFITS.map(({ title, description }) => (
+              <div key={title} className="flex gap-5 p-8 border-b border-white/8 last:border-0 hover:bg-white/[0.03] transition-colors duration-200">
+                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-sm text-white mb-1">{title}</h4>
-                  <p className="text-sm text-white/55 leading-[1.7]">{description}</p>
+                  <h4 className="font-semibold text-sm text-white mb-1.5">{title}</h4>
+                  <p className="text-sm text-white/45 leading-[1.7]">{description}</p>
                 </div>
               </div>
             ))}
@@ -271,25 +250,55 @@ function ForPainters() {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── CTA Band ──────────────────────────────────────────────────────────────────
+function CTABand() {
+  const ref = useScrollAnimation();
+  return (
+    <section className="section-warm py-28 sm:py-36 px-6">
+      <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
+        <Label>Ready to begin</Label>
+        <h2 className="font-display text-foreground mb-6">
+          Your perfect painter is one click away.
+        </h2>
+        <p className="text-muted-foreground leading-[1.8] mb-10 max-w-md mx-auto">
+          Post your job for free. No commitment. Verified painters send
+          quotes — you choose the best fit.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            to="/register/customer"
+            className="group inline-flex items-center gap-2 bg-foreground text-background font-medium px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.02]"
+          >
+            Post a Job Free
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+          </Link>
+          <Link
+            to="/how-it-works/customers"
+            className="inline-flex items-center gap-2 border border-foreground/30 text-foreground font-medium px-8 py-4 w-full sm:w-auto justify-center hover:border-foreground/60 transition-all duration-200"
+          >
+            Learn how it works
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
 
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
+  useEffect(() => { document.title = "PaintBookCo | Hire Verified Painters"; }, []);
   return (
     <>
       <Hero />
       <HowItWorks />
       <TrustSignals />
       <ForPainters />
+      <CTABand />
     </>
   );
 }
 
 // ── Builder.io registration ───────────────────────────────────────────────────
 import("@builder.io/react")
-  .then(({ Builder }) => {
-    Builder.registerComponent(HomePage, {
-      name: "HomePage",
-      inputs: [],
-    });
-  })
+  .then(({ Builder }) => { Builder.registerComponent(HomePage, { name: "HomePage", inputs: [] }); })
   .catch(() => {});

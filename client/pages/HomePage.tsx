@@ -57,7 +57,7 @@ function Hero() {
           className="text-lg sm:text-xl text-white/65 max-w-xl mx-auto leading-[1.7] mb-12 animate-fade-in"
           style={{ animationDelay: "0.5s", animationFillMode: "both" }}
         >
-          Find KYC-verified painters near you. Pay securely via FCA-authorised
+          Find Verified painters near you. Pay securely via FCA-authorised
           escrow. Guaranteed quality on every job.
         </p>
 

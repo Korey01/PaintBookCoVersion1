@@ -18,6 +18,8 @@ export const SPECIALISMS = [
   "Coving & specialist finishes",
 ];
 
+const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
+
 // Completion screen component
 export function JoinPainterComplete() {
   return (
@@ -61,9 +63,10 @@ export default function JoinPainter() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  // Step 2 — account
+  // Step 2 — account + location
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [postcode, setPostcode] = useState("");
 
   // Step 3 — specialisms
   const [selectedSpecialisms, setSelectedSpecialisms] = useState<string[]>([]);
@@ -93,6 +96,10 @@ export default function JoinPainter() {
     }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      return;
+    }
+    if (!ukPostcode.test(postcode.trim())) {
+      setError("Please enter a valid UK postcode (e.g. SW1A 1AA).");
       return;
     }
     setStep(3);
@@ -139,6 +146,7 @@ export default function JoinPainter() {
       last_name: lastName.trim(),
       email: email.trim(),
       phone: phone.trim(),
+      postcode: postcode.trim().toUpperCase(),
       specialisms: selectedSpecialisms,
     });
 
@@ -256,6 +264,10 @@ export default function JoinPainter() {
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Confirm password</label>
                 <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} placeholder="Repeat password" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Postcode</label>
+                <input type="text" required value={postcode} onChange={(e) => setPostcode(e.target.value)} className={fieldClass} placeholder="SW1A 1AA" />
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep(1)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">

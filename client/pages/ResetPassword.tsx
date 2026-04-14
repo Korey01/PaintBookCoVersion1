@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
+
 export default function ResetPassword() {
   useEffect(() => { document.title = "Reset Password | PaintBookCo"; }, []);
 
@@ -18,8 +20,10 @@ export default function ResetPassword() {
     setError("");
     setLoading(true);
 
+    // redirectTo must be an allowed URL in Supabase dashboard →
+    // Authentication → URL Configuration → Redirect URLs
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/confirm`,
+      redirectTo: "https://paintbook-app.netlify.app/confirm",
     });
 
     setLoading(false);
@@ -32,25 +36,25 @@ export default function ResetPassword() {
       <div className="w-full max-w-sm animate-editorial-up" style={{ animationFillMode: "both" }}>
         <div className="text-center mb-12">
           <Link to="/" aria-label="PaintBookCo home" className="inline-block">
-            <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800" alt="PaintBookCo" className="h-8 w-auto" />
+            <img src={LOGO} alt="PaintBookCo" className="h-8 w-auto" />
           </Link>
-          <p className="text-sm text-muted-foreground mt-2">Reset your password</p>
+          <p className="text-sm text-muted-foreground mt-4">Reset your password</p>
         </div>
 
         {sent ? (
           <div className="text-center space-y-4">
             <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
-            <h2 className="font-display text-xl text-foreground">Check your email</h2>
+            <h2 className="font-display text-xl text-foreground">Reset link sent</h2>
             <p className="text-sm text-muted-foreground leading-[1.8]">
-              We have sent a password reset link to <strong className="text-foreground">{email}</strong>.
-              Check your inbox and follow the link to set a new password.
+              We've sent a password reset link to <strong className="text-foreground">{email}</strong>.
+              Check your email and follow the link to set a new password.
             </p>
-            <Link to="/login" className="inline-block text-sm font-medium text-primary hover:underline mt-4">Back to login</Link>
+            <Link to="/login" className="inline-block text-sm font-medium text-foreground hover:text-primary transition-colors mt-4">Back to login</Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">
             <p className="text-sm text-muted-foreground leading-[1.8]">
-              Enter your email address and we will send you a link to reset your password.
+              Enter your email address and we'll send you a link to reset your password.
             </p>
 
             {error && (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase, Job, JobMilestone } from "@/lib/supabase";
+import { submitMilestone as submitMilestoneAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import PayoutCalculator from "./PayoutCalculator";
@@ -56,10 +57,8 @@ export default function MilestoneSubmission({
 
     setSubmittingId(m.id);
     try {
-      const res = await supabase.functions.invoke("submit-milestone", {
-        body: { milestone_id: m.id, painter_notes: note },
-      });
-      if (res.error) throw new Error(res.error.message);
+      const { success, error } = await submitMilestoneAPI(m.id, note);
+      if (!success && error) throw new Error(error);
       showToast("Milestone submitted. The customer will be notified to review.");
       setOpenFormId(null);
       setNotes((p) => { const n = { ...p }; delete n[m.id]; return n; });

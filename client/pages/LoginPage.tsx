@@ -39,105 +39,128 @@ export default function LoginPage() {
       return;
     }
 
-    // Use getUser() to get the verified user object from the server
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       setLoading(false);
-      setError("Login failed. Please try again.");
+      setError("Could not retrieve user. Please try again.");
       return;
     }
 
-    // Check painters table to determine role and route accordingly
+    // Role-based redirect: check painters table
     const { data: painterRecord } = await supabase
       .from("painters")
-      .select("id, kyc_status")
+      .select("id")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    setLoading(false);
-    navigate(painterRecord ? "/dashboard/painter" : "/dashboard/customer");
+    if (painterRecord) {
+      navigate("/dashboard/painter");
+    } else {
+      navigate("/dashboard/customer");
+    }
   }
 
   async function handleResend() {
     setResendLoading(true);
     await supabase.auth.resend({ type: "signup", email });
-    setResendLoading(false);
     setResendSent(true);
+    setResendLoading(false);
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
-      <div className="w-full max-w-sm animate-editorial-up" style={{ animationFillMode: "both" }}>
-        <div className="text-center mb-12">
-          <Link to="/" aria-label="PaintBookCo home" className="inline-block">
-            <img src={LOGO} alt="PaintBookCo" className="h-8 w-auto" />
-          </Link>
-          <p className="text-sm text-muted-foreground mt-4">Sign in to your account</p>
-        </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <Link to="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+        </Link>
+      </header>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-semibold tracking-tight mb-1">Welcome back</h1>
+          <p className="text-sm text-muted-foreground mb-8">Sign in to your PaintBookCo account</p>
+
           {error && (
-            <div className="text-sm text-destructive border-l-2 border-destructive pl-4 py-2 space-y-3">
-              <p>{error}</p>
+            <div className="mb-6 rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {error}
               {emailUnconfirmed && (
-                <div>
-                  {resendSent ? (
-                    <p className="text-xs text-muted-foreground">Confirmation email sent — check your inbox.</p>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleResend}
-                      disabled={resendLoading}
-                      className="text-xs font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                    >
-                      {resendLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-                      Resend confirmation email
-                    </button>
-                  )}
-                </div>
+                <button
+                  onClick={handleResend}
+                  disabled={resendLoading || resendSent}
+                  className="ml-2 underline disabled:opacity-50"
+                >
+                  {resendSent ? "Sent!" : resendLoading ? "Sending…" : "Resend email"}
+                </button>
               )}
             </div>
           )}
 
-          <div>
-            <label className="editorial-label text-muted-foreground mb-2 block">Email address</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className={fieldClass} placeholder="you@example.com" />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="editorial-label text-muted-foreground">Password</label>
-              <Link to="/reset-password" className="text-xs text-muted-foreground hover:text-primary transition-colors duration-200">Forgot?</Link>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={fieldClass}
+                placeholder="you@example.com"
+              />
             </div>
-            <div className="relative">
-              <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" className={fieldClass} placeholder="Your password" />
-              <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-0 bottom-3 text-muted-foreground hover:text-foreground transition-colors" aria-label={showPassword ? "Hide" : "Show"}>
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={fieldClass + " pr-10"}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="mt-2 text-right">
+                <Link to="/reset-password" className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-foreground text-background font-medium py-4 transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.01] disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Log In
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Sign in
+            </button>
+          </form>
 
-        <div className="mt-8 space-y-2 text-center text-sm text-muted-foreground">
-          <p>No account? <Link to="/register/customer" className="text-foreground font-medium hover:text-primary transition-colors">Register</Link></p>
-          <p>Are you a painter? <Link to="/join-painter" className="text-foreground font-medium hover:text-primary transition-colors">Join here</Link></p>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            New customer?{" "}
+            <Link to="/register" className="text-foreground font-medium hover:underline underline-offset-4">
+              Create an account
+            </Link>
+          </p>
+          <p className="mt-3 text-center text-sm text-muted-foreground">
+            Are you a painter or decorator?{" "}
+            <Link to="/join-painter" className="text-foreground font-medium hover:underline underline-offset-4">
+              Join as a painter
+            </Link>
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
-
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(LoginPage, { name: "LoginPage", inputs: [] }); })
-  .catch(() => {});

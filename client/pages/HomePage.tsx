@@ -26,7 +26,7 @@ function Hero() {
       <video
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
-        style={{ filter: "contrast(1.35) saturate(1.25) brightness(1.08)" }}
+        style={{ filter: "contrast(1.35) saturate(1.25) brightness(0.85)" }}
         autoPlay
         muted
         loop
@@ -37,7 +37,7 @@ function Hero() {
       </video>
 
       {/* Gradient scrim — keeps hero text legible over the video */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/65" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/80" />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center pt-16">
         <p
@@ -133,7 +133,7 @@ function HowItWorks() {
   return (
     <section
       className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#FEFDFB" }}
+      style={{ background: "#F5F0EB" }}
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -146,8 +146,8 @@ function HowItWorks() {
           {STEPS.map(({ number, title, description }) => (
             <div
               key={number}
-              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-200/40 last:border-0 hover:bg-white/60 transition-colors duration-300"
-              style={{ background: "rgba(255, 255, 255, 0.60)" }}
+              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-300/40 last:border-0 hover:bg-white/50 transition-colors duration-300"
+              style={{ background: "rgba(255, 255, 255, 0.50)" }}
             >
               <span className="editorial-label text-primary mb-8">{number}</span>
               <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
@@ -179,7 +179,7 @@ function TrustSignals() {
   return (
     <section
       className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#F0E5DB" }}
+      style={{ background: "#E8DBCD" }}
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -192,8 +192,8 @@ function TrustSignals() {
           {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="scroll-animate rounded-lg border-0 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] hover:-translate-y-1"
-              style={{ background: "rgba(255, 255, 255, 0.85)" }}
+              className="scroll-animate rounded-lg border-0 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:-translate-y-1"
+              style={{ background: "rgba(255, 255, 255, 0.75)" }}
             >
               <div className="w-10 h-10 flex items-center justify-center mb-6" style={{ background: "rgba(255, 160, 100, 0.15)" }}>
                 <Icon className="h-5 w-5 text-primary" />
@@ -220,7 +220,7 @@ function ForPainters() {
   return (
     <section
       className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#FEFBF7" }}
+      style={{ background: "#F5F0EB" }}
     >
       <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
         <div className="grid md:grid-cols-2 gap-20 items-center">
@@ -244,11 +244,11 @@ function ForPainters() {
           </div>
 
           <div
-            className="space-y-0 border border-gray-200/40"
-            style={{ background: "rgba(255, 255, 255, 0.70)" }}
+            className="space-y-0 border border-gray-300/40"
+            style={{ background: "rgba(255, 255, 255, 0.60)" }}
           >
             {PAINTER_BENEFITS.map(({ title, description }) => (
-              <div key={title} className="flex gap-5 p-8 border-b border-gray-200/30 last:border-0 hover:bg-white/40 transition-colors duration-200" style={{ background: "rgba(255, 255, 255, 0.50)" }}>
+              <div key={title} className="flex gap-5 p-8 border-b border-gray-300/30 last:border-0 hover:bg-white/30 transition-colors duration-200" style={{ background: "rgba(255, 255, 255, 0.40)" }}>
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-sm text-foreground mb-1.5">{title}</h4>
@@ -269,7 +269,7 @@ function CTABand() {
   return (
     <section
       className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#FEFDFB" }}
+      style={{ background: "#F5F0EB" }}
     >
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
         <Label>Ready to begin</Label>

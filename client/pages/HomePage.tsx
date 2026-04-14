@@ -37,7 +37,7 @@ function Hero() {
           className="font-display text-[clamp(2.8rem,8vw,6rem)] text-white leading-[1.0] tracking-[-0.03em] mb-8"
           style={{ animationFillMode: "both" }}
         >
-          {["Paint.", "Book.", "Done."].map((word, i) => (
+          {["Your Paint", "and Decorating", "Job simplified."].map((word, i) => (
             <span
               key={word}
               className="inline-block animate-fade-in"

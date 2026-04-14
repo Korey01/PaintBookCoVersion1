@@ -31,7 +31,7 @@ function Hero() {
         src={VIDEO_SRC}
       />
       {/* Dark scrim — keeps text legible over the video */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/62 to-black/80" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/45" />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center pt-16">
         {/* Eyebrow — clip-reveal on load */}

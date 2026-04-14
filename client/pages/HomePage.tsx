@@ -132,7 +132,8 @@ function HowItWorks() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground bg-white"
+      className="py-28 sm:py-36 px-6 text-foreground"
+      style={{ background: "#FEFDFB" }}
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -145,7 +146,8 @@ function HowItWorks() {
           {STEPS.map(({ number, title, description }) => (
             <div
               key={number}
-              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-300 bg-white"
+              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-200/40 last:border-0 hover:bg-white/60 transition-colors duration-300"
+              style={{ background: "rgba(255, 255, 255, 0.60)" }}
             >
               <span className="editorial-label text-primary mb-8">{number}</span>
               <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
@@ -176,7 +178,8 @@ function TrustSignals() {
   const ref = useScrollAnimationList();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground bg-white"
+      className="py-28 sm:py-36 px-6 text-foreground"
+      style={{ background: "#F0E5DB" }}
     >
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
@@ -189,9 +192,10 @@ function TrustSignals() {
           {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="scroll-animate rounded-lg border border-gray-200 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 bg-white"
+              className="scroll-animate rounded-lg border-0 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] hover:-translate-y-1"
+              style={{ background: "rgba(255, 255, 255, 0.85)" }}
             >
-              <div className="w-10 h-10 flex items-center justify-center mb-6 bg-muted/70">
+              <div className="w-10 h-10 flex items-center justify-center mb-6" style={{ background: "rgba(255, 160, 100, 0.15)" }}>
                 <Icon className="h-5 w-5 text-primary" />
               </div>
               <h3 className="font-semibold text-sm text-foreground mb-3">{title}</h3>
@@ -215,7 +219,8 @@ function ForPainters() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground bg-gray-50"
+      className="py-28 sm:py-36 px-6 text-foreground"
+      style={{ background: "#FEFBF7" }}
     >
       <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
         <div className="grid md:grid-cols-2 gap-20 items-center">
@@ -239,10 +244,11 @@ function ForPainters() {
           </div>
 
           <div
-            className="space-y-0 border border-gray-200 bg-white"
+            className="space-y-0 border border-gray-200/40"
+            style={{ background: "rgba(255, 255, 255, 0.70)" }}
           >
             {PAINTER_BENEFITS.map(({ title, description }) => (
-              <div key={title} className="flex gap-5 p-8 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors duration-200 bg-white">
+              <div key={title} className="flex gap-5 p-8 border-b border-gray-200/30 last:border-0 hover:bg-white/40 transition-colors duration-200" style={{ background: "rgba(255, 255, 255, 0.50)" }}>
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-sm text-foreground mb-1.5">{title}</h4>
@@ -262,7 +268,8 @@ function CTABand() {
   const ref = useScrollAnimation();
   return (
     <section
-      className="py-28 sm:py-36 px-6 text-foreground bg-white"
+      className="py-28 sm:py-36 px-6 text-foreground"
+      style={{ background: "#FEFDFB" }}
     >
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
         <Label>Ready to begin</Label>

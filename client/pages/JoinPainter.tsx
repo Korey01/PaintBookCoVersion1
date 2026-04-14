@@ -1,69 +1,60 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
+import { Link, useNavigate } from "react-router-dom";
+import { CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+
+const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+
+export const SPECIALISMS = [
+  "Interior walls & ceilings",
+  "Exterior / facade",
+  "Commercial / office",
+  "New build decoration",
+  "Period property restoration",
+  "Kitchen & bathroom",
+  "Wallpapering",
+  "Coving & specialist finishes",
+];
+
+const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
 
 export default function JoinPainter() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const [step, setStep] = useState<1 | 2>(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
 
-  // Form state
+  // Step 1 fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [postcode, setPostcode] = useState("");
 
-  // Validation schema
-  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
-  const schema = z
-    .object({
-      email: z.string().email("Enter a valid email"),
-      password: z.string().min(6, "Password must be at least 6 characters"),
-      confirmPassword: z.string().min(6, "Confirm your password"),
-      postcode: z.string().regex(ukPostcode, "Use UK format e.g. M1 1AE"),
-    })
-    .refine((v) => v.password === v.confirmPassword, {
-      message: "Passwords must match",
-      path: ["confirmPassword"],
-    });
+  // Step 2 fields
+  const [selectedSpecialisms, setSelectedSpecialisms] = useState<string[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function toggleSpecialism(s: string) {
+    setSelectedSpecialisms((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+  }
+
+  function handleStep1(e: React.FormEvent) {
     e.preventDefault();
-    setErrors({});
+    setError("");
 
-    // Validate form
-    const result = schema.safeParse({
-      email,
-      password,
-      confirmPassword,
-      postcode,
-    });
-    if (!result.success) {
-      const newErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        newErrors[issue.path[0] as string] = issue.message;
-      });
-      setErrors(newErrors);
-      return;
-    }
+    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (password !== confirmPassword) { setError("Passwords must match."); return; }
+    if (!ukPostcode.test(postcode)) { setError("Enter a valid UK postcode, e.g. M1 1AE."); return; }
 
+    setStep(2);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
     setIsLoading(true);
+
     try {
-      // Call the new API endpoint for painter registration
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,244 +63,176 @@ export default function JoinPainter() {
           password,
           userType: "painter",
           postcode,
+          specialisms: selectedSpecialisms,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.error === "Email already in use") {
-          setErrors({ email: "This email is already registered" });
-        } else {
-          toast({
-            title: "Registration failed",
-            description: data.error || "Something went wrong",
-            variant: "destructive",
-          });
-        }
+        setError(data.error === "Email already in use"
+          ? "This email is already registered."
+          : data.error || "Something went wrong. Please try again.");
         setIsLoading(false);
         return;
       }
 
-      // Store token
       if (data.token) {
         localStorage.setItem("paintbook:token", data.token);
         localStorage.setItem("paintbook:user", JSON.stringify(data.user));
-
-        toast({
-          title: "Account created",
-          description: "Welcome to PaintBookco! Let's complete your profile.",
-        });
-
-        // Redirect to painter onboarding (KYC)
         navigate("/painter-onboarding");
       }
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create account. Please try again.",
-        variant: "destructive",
-      });
+    } catch {
+      setError("Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <motion.div
-      className="min-h-screen bg-background py-12"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-      <div className="mx-auto max-w-md px-4">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="font-display text-3xl font-normal text-foreground">
-            Join as a Painter
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Get access to nearby painting jobs in your area
-          </p>
+    <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
+      <div className="w-full max-w-sm animate-editorial-up" style={{ animationFillMode: "both" }}>
+        <div className="text-center mb-12">
+          <Link to="/" className="font-display text-2xl text-foreground">PaintBookCo</Link>
+          <p className="text-sm text-muted-foreground mt-2">Join as a painter</p>
         </div>
 
-        {/* Registration Card */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Create your account</CardTitle>
-            <CardDescription>
-              Registration is free. No subscription required.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
-              <div>
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  disabled={isLoading}
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.email}
-                  </p>
-                )}
-              </div>
+        {/* Step indicator */}
+        <div className="flex items-center gap-3 mb-10">
+          <div className={`h-px flex-1 transition-colors duration-300 ${step >= 1 ? "bg-foreground" : "bg-border"}`} />
+          <span className={`editorial-label transition-colors duration-300 ${step === 1 ? "text-foreground" : "text-muted-foreground"}`}>Details</span>
+          <div className={`h-px flex-1 transition-colors duration-300 ${step >= 2 ? "bg-foreground" : "bg-border"}`} />
+          <span className={`editorial-label transition-colors duration-300 ${step === 2 ? "text-foreground" : "text-muted-foreground"}`}>Specialisms</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
 
-              {/* Password */}
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••"
-                  disabled={isLoading}
-                  className={errors.password ? "border-red-500" : ""}
-                />
-                {errors.password && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.password}
-                  </p>
-                )}
-              </div>
+        {error && (
+          <div className="text-sm text-destructive border-l-2 border-destructive pl-4 py-2 mb-8">{error}</div>
+        )}
 
-              {/* Confirm Password */}
-              <div>
-                <Label htmlFor="confirmPassword">Confirm password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••"
-                  disabled={isLoading}
-                  className={errors.confirmPassword ? "border-red-500" : ""}
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
+        {step === 1 && (
+          <form onSubmit={handleStep1} className="space-y-8">
+            <div>
+              <label className="editorial-label text-muted-foreground mb-2 block">Email address</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className={fieldClass} placeholder="you@example.com" />
+            </div>
 
-              {/* Postcode */}
-              <div>
-                <Label htmlFor="postcode">Work postcode</Label>
-                <Input
-                  id="postcode"
-                  value={postcode}
-                  onChange={(e) => setPostcode(e.target.value)}
-                  placeholder="e.g. M1 1AE"
-                  disabled={isLoading}
-                  className={errors.postcode ? "border-red-500" : ""}
-                />
-                {errors.postcode && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.postcode}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  We'll use this to match you with nearby jobs
-                </p>
-              </div>
+            <div>
+              <label className="editorial-label text-muted-foreground mb-2 block">Password</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" className={fieldClass} placeholder="Min. 6 characters" />
+            </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  <>
-                    Continue to verification
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
+            <div>
+              <label className="editorial-label text-muted-foreground mb-2 block">Confirm password</label>
+              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password" className={fieldClass} placeholder="Repeat your password" />
+            </div>
 
-              {/* Login Link */}
-              <div className="text-center text-sm">
-                Already have an account?{" "}
-                <a
-                  href="/auth?type=login"
-                  className="font-semibold text-primary hover:underline"
-                >
-                  Sign in
-                </a>
-              </div>
-            </form>
+            <div>
+              <label className="editorial-label text-muted-foreground mb-2 block">Work postcode</label>
+              <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value.toUpperCase())} required className={fieldClass} placeholder="e.g. M1 1AE" />
+              <p className="text-xs text-muted-foreground mt-2">We'll use this to match you with nearby jobs.</p>
+            </div>
 
-            {/* Info Box */}
-            <div className="mt-6 border border-primary/15 bg-primary/5 p-4">
-              <div className="flex gap-3">
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
-                <div className="text-sm text-foreground">
-                  <p className="font-semibold">What happens next?</p>
-                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                    <li>• Complete your KYC verification</li>
-                    <li>• Upload required documents (ID, insurance)</li>
-                    <li>• Get approved to access jobs</li>
-                    <li>• Earn money with every completed job</li>
-                  </ul>
-                </div>
+            <button
+              type="submit"
+              className="w-full bg-foreground text-background font-medium py-4 transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.01] flex items-center justify-center gap-2"
+            >
+              Continue
+              <ArrowRight className="h-4 w-4" />
+            </button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link to="/login" className="text-foreground font-medium hover:text-primary transition-colors">Log in</Link>
+            </p>
+          </form>
+        )}
+
+        {step === 2 && (
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div>
+              <label className="editorial-label text-muted-foreground mb-4 block">Your specialisms</label>
+              <p className="text-sm text-muted-foreground leading-[1.8] mb-6">
+                Select all that apply. This helps us match you with the right jobs.
+              </p>
+              <div className="space-y-3">
+                {SPECIALISMS.map((s) => (
+                  <label key={s} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={selectedSpecialisms.includes(s)}
+                      onChange={() => toggleSpecialism(s)}
+                      className="accent-primary"
+                    />
+                    <span className="text-sm text-foreground group-hover:text-primary transition-colors">{s}</span>
+                  </label>
+                ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Trust Footer */}
-        <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>No credit card required · Free to join · Secure registration</p>
-        </div>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="flex-1 border border-border text-foreground font-medium py-4 transition-all duration-200 hover:bg-muted"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 bg-foreground text-background font-medium py-4 transition-all duration-200 hover:bg-foreground/85 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                Create Account
+              </button>
+            </div>
+
+            <div className="border-l-2 border-primary/30 pl-6 py-2">
+              <p className="text-xs font-medium text-foreground mb-2">What happens next?</p>
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                <li>Complete your KYC verification</li>
+                <li>Upload ID and insurance documents</li>
+                <li>Get approved and start accepting jobs</li>
+              </ul>
+            </div>
+          </form>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export function JoinPainterComplete() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-background py-16">
-      <div className="mx-auto max-w-md px-4 text-center">
-        <CheckCircle2 className="mx-auto h-16 w-16 text-primary" />
-        <h1 className="mt-6 font-display text-3xl font-normal text-foreground">
-          Profile complete!
-        </h1>
-        <p className="mt-2 text-muted-foreground">
+    <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
+      <div className="w-full max-w-sm text-center animate-editorial-up" style={{ animationFillMode: "both" }}>
+        <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-6" />
+        <h1 className="font-display text-2xl text-foreground mb-3">Profile complete!</h1>
+        <p className="text-sm text-muted-foreground leading-[1.8] mb-10">
           Your account is verified and ready. Start browsing nearby jobs.
         </p>
-        <div className="mt-8 flex flex-col gap-3">
-          <Button onClick={() => navigate("/dashboard")} size="lg">
+        <div className="space-y-4">
+          <button
+            onClick={() => navigate("/dashboard/painter")}
+            className="w-full bg-foreground text-background font-medium py-4 transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.01]"
+          >
             Go to Dashboard
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/find-painters")}
-            size="lg"
+          </button>
+          <button
+            onClick={() => navigate("/find-painter")}
+            className="w-full border border-border text-foreground font-medium py-4 transition-all duration-200 hover:bg-muted"
           >
             Browse Jobs
-          </Button>
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
+// ── Builder.io registration ───────────────────────────────────────────────────
+import("@builder.io/react")
+  .then(({ Builder }) => { Builder.registerComponent(JoinPainter, { name: "JoinPainter", inputs: [] }); })
+  .catch(() => {});

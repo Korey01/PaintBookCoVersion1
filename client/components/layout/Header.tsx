@@ -15,58 +15,77 @@ export default function Header() {
   const isHome = pathname === "/";
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
+    setScrolled(window.scrollY > 60);
+    const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const headerBg =
-    isHome && !scrolled
-      ? "bg-transparent"
-      : "bg-background/95 backdrop-blur-sm shadow-sm border-b border-border/60";
+  // Close mobile menu on route change
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const textColor = isHome && !scrolled ? "text-white/90" : "text-foreground";
-  const hoverColor = isHome && !scrolled ? "hover:text-white" : "hover:text-primary";
+  const transparent = isHome && !scrolled;
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${headerBg}`}>
+      <header
+        className={[
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          transparent
+            ? "bg-transparent border-b border-transparent"
+            : "bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-[0_1px_0_0_hsl(var(--border)/0.5)]",
+        ].join(" ")}
+      >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
           {/* Wordmark */}
           <Link
             to="/"
-            className={`font-display text-xl font-normal tracking-[-0.02em] transition-colors ${
-              isHome && !scrolled ? "text-white" : "text-foreground"
-            }`}
+            className={[
+              "font-display text-xl tracking-[-0.02em] transition-colors duration-300",
+              transparent ? "text-white" : "text-foreground",
+            ].join(" ")}
           >
             PaintBookCo
           </Link>
 
-          {/* Nav — desktop */}
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map(({ to, label }) => (
               <Link
                 key={to}
                 to={to}
-                className={`nav-underline text-sm font-medium transition-colors ${textColor} ${hoverColor}`}
+                className={[
+                  "nav-underline text-sm font-medium transition-colors duration-300",
+                  transparent
+                    ? "text-white/80 hover:text-white nav-underline-light"
+                    : "text-foreground/70 hover:text-foreground",
+                ].join(" ")}
               >
                 {label}
               </Link>
             ))}
           </nav>
 
-          {/* CTAs — desktop */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Desktop CTAs */}
+          <div className="hidden md:flex items-center gap-4">
             <Link
               to="/login"
-              className={`text-sm font-medium transition-colors ${textColor} ${hoverColor}`}
+              className={[
+                "text-sm font-medium transition-colors duration-300",
+                transparent ? "text-white/80 hover:text-white" : "text-foreground/70 hover:text-foreground",
+              ].join(" ")}
             >
               Log In
             </Link>
             <Link
               to="/register/customer"
-              className="text-sm font-semibold text-primary-foreground bg-primary px-5 py-2 transition-opacity hover:opacity-90"
+              className={[
+                "text-sm font-medium px-5 py-2.5 transition-all duration-200",
+                "hover:scale-[1.02] hover:shadow-[0_4px_16px_rgba(0,0,0,0.15)]",
+                transparent
+                  ? "bg-white text-foreground"
+                  : "bg-foreground text-background",
+              ].join(" ")}
             >
               Get Started
             </Link>
@@ -74,76 +93,70 @@ export default function Header() {
 
           {/* Mobile hamburger */}
           <button
-            className={`md:hidden p-2 transition-colors ${textColor}`}
+            className={[
+              "md:hidden p-2 transition-colors duration-200",
+              transparent ? "text-white/80 hover:text-white" : "text-foreground/70 hover:text-foreground",
+            ].join(" ")}
             onClick={() => setMobileOpen(true)}
-            aria-label="Open navigation menu"
+            aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
         </div>
       </header>
 
-      {/* Mobile full-screen menu */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-[60] bg-background flex flex-col">
-          <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-            <Link
-              to="/"
-              onClick={() => setMobileOpen(false)}
-              className="font-display text-xl font-normal text-foreground"
-            >
-              PaintBookCo
-            </Link>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Close navigation menu"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <nav className="flex flex-col px-6 py-8 gap-0">
-            {NAV_LINKS.map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                className="py-4 text-base font-medium text-foreground border-b border-border hover:text-primary transition-colors"
-              >
-                {label}
-              </Link>
-            ))}
-            <Link
-              to="/login"
-              onClick={() => setMobileOpen(false)}
-              className="py-4 text-base font-medium text-foreground border-b border-border hover:text-primary transition-colors"
-            >
-              Log In
-            </Link>
-          </nav>
-
-          <div className="px-6 mt-auto pb-8">
-            <Link
-              to="/register/customer"
-              onClick={() => setMobileOpen(false)}
-              className="block text-center text-primary-foreground bg-primary font-semibold py-3 w-full transition-opacity hover:opacity-90"
-            >
-              Get Started
-            </Link>
-          </div>
+      {/* Mobile overlay */}
+      <div
+        className={[
+          "fixed inset-0 z-[60] bg-background flex flex-col transition-opacity duration-300",
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        ].join(" ")}
+      >
+        <div className="flex items-center justify-between h-16 px-6 border-b border-border">
+          <Link to="/" className="font-display text-xl text-foreground">
+            PaintBookCo
+          </Link>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      )}
+
+        <nav className="flex flex-col px-6 py-8">
+          {NAV_LINKS.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className="py-4 text-base font-medium text-foreground border-b border-border/50 hover:text-primary transition-colors"
+            >
+              {label}
+            </Link>
+          ))}
+          <Link
+            to="/login"
+            className="py-4 text-base font-medium text-foreground border-b border-border/50 hover:text-primary transition-colors"
+          >
+            Log In
+          </Link>
+        </nav>
+
+        <div className="px-6 mt-auto pb-10">
+          <Link
+            to="/register/customer"
+            className="block text-center bg-foreground text-background font-medium py-4 w-full hover:bg-foreground/85 transition-colors"
+          >
+            Get Started
+          </Link>
+        </div>
+      </div>
     </>
   );
 }
 
 // ── Builder.io registration ───────────────────────────────────────────────────
 import("@builder.io/react")
-  .then(({ Builder }) => {
-    Builder.registerComponent(Header, {
-      name: "PublicHeader",
-      inputs: [],
-    });
-  })
+  .then(({ Builder }) => { Builder.registerComponent(Header, { name: "PublicHeader", inputs: [] }); })
   .catch(() => {});

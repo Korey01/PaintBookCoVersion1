@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+
 export default function ResetPassword() {
-  useEffect(() => {
-    document.title = "Reset Password | PaintBookCo";
-  }, []);
+  useEffect(() => { document.title = "Reset Password | PaintBookCo"; }, []);
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,87 +23,57 @@ export default function ResetPassword() {
     });
 
     setLoading(false);
-
-    if (resetError) {
-      setError(resetError.message);
-      return;
-    }
-
+    if (resetError) { setError(resetError.message); return; }
     setSent(true);
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-16 bg-background">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="font-display text-2xl text-foreground">
-            PaintBookCo
-          </Link>
-          <p className="text-muted-foreground text-sm mt-2">Reset your password</p>
+    <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
+      <div className="w-full max-w-sm animate-editorial-up" style={{ animationFillMode: "both" }}>
+        <div className="text-center mb-12">
+          <Link to="/" className="font-display text-2xl text-foreground">PaintBookCo</Link>
+          <p className="text-sm text-muted-foreground mt-2">Reset your password</p>
         </div>
 
-        <div className="bg-card border border-border p-8">
-          {sent ? (
-            <div className="text-center">
-              <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-4" />
-              <h2 className="font-display text-lg text-foreground mb-2">
-                Check your email
-              </h2>
-              <p className="text-sm text-muted-foreground leading-[1.7]">
-                We have sent a password reset link to <strong>{email}</strong>. Check
-                your inbox and follow the link to set a new password.
-              </p>
-              <Link
-                to="/login"
-                className="inline-block mt-6 text-sm text-primary font-medium hover:underline"
-              >
-                Back to login
-              </Link>
+        {sent ? (
+          <div className="text-center space-y-4">
+            <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
+            <h2 className="font-display text-xl text-foreground">Check your email</h2>
+            <p className="text-sm text-muted-foreground leading-[1.8]">
+              We have sent a password reset link to <strong className="text-foreground">{email}</strong>.
+              Check your inbox and follow the link to set a new password.
+            </p>
+            <Link to="/login" className="inline-block text-sm font-medium text-primary hover:underline mt-4">Back to login</Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <p className="text-sm text-muted-foreground leading-[1.8]">
+              Enter your email address and we will send you a link to reset your password.
+            </p>
+
+            {error && (
+              <div className="text-sm text-destructive border-l-2 border-destructive pl-4 py-2">{error}</div>
+            )}
+
+            <div>
+              <label className="editorial-label text-muted-foreground mb-2 block">Email address</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={fieldClass} placeholder="you@example.com" />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <p className="text-sm text-muted-foreground leading-[1.7]">
-                Enter your email address and we will send you a link to reset
-                your password.
-              </p>
 
-              {error && (
-                <div className="text-sm text-destructive bg-destructive/10 px-4 py-3">
-                  {error}
-                </div>
-              )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-foreground text-background font-medium py-4 transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.01] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Send Reset Link
+            </button>
 
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full border border-input text-sm px-3 py-2.5 bg-background text-foreground focus:outline-none focus:border-ring transition-colors"
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full text-primary-foreground bg-primary font-semibold py-3 flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
-              >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Send Reset Link
-              </button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                <Link to="/login" className="text-primary hover:underline">
-                  Back to login
-                </Link>
-              </p>
-            </form>
-          )}
-        </div>
+            <p className="text-center text-sm text-muted-foreground">
+              <Link to="/login" className="text-foreground hover:text-primary transition-colors">Back to login</Link>
+            </p>
+          </form>
+        )}
       </div>
     </div>
   );
@@ -111,10 +81,5 @@ export default function ResetPassword() {
 
 // ── Builder.io registration ───────────────────────────────────────────────────
 import("@builder.io/react")
-  .then(({ Builder }) => {
-    Builder.registerComponent(ResetPassword, {
-      name: "ResetPassword",
-      inputs: [],
-    });
-  })
+  .then(({ Builder }) => { Builder.registerComponent(ResetPassword, { name: "ResetPassword", inputs: [] }); })
   .catch(() => {});

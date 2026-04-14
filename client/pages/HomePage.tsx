@@ -299,7 +299,7 @@ export default function HomePage() {
           autoPlay + muted + loop + playsInline: plays silently on all devices. */}
       <video
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover"
+        className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-contain"
         style={{ filter: "contrast(1.15) saturate(1.1)" }}
         autoPlay
         muted

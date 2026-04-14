@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
+
 export default function LoginPage() {
   useEffect(() => { document.title = "Log In | PaintBookCo"; }, []);
 
@@ -13,20 +15,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState("");
+  const [emailUnconfirmed, setEmailUnconfirmed] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setEmailUnconfirmed(false);
     setLoading(true);
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError) {
       setLoading(false);
-      setError("Incorrect email or password. Please try again.");
+      // Supabase returns "Email not confirmed" when the user hasn't clicked the link yet
+      if (signInError.message.toLowerCase().includes("email not confirmed")) {
+        setEmailUnconfirmed(true);
+        setError("Please confirm your email first. Check your inbox for a confirmation link.");
+      } else {
+        setError("Incorrect email or password. Please try again.");
+      }
       return;
     }
+
     if (!data.user) {
       setLoading(false);
       setError("Login failed. Please try again.");
@@ -40,21 +53,45 @@ export default function LoginPage() {
     navigate(painterRecord ? "/dashboard/painter" : "/dashboard/customer");
   }
 
+  async function handleResend() {
+    setResendLoading(true);
+    await supabase.auth.resend({ type: "signup", email });
+    setResendLoading(false);
+    setResendSent(true);
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
       <div className="w-full max-w-sm animate-editorial-up" style={{ animationFillMode: "both" }}>
-        {/* Wordmark */}
+        {/* Logo */}
         <div className="text-center mb-12">
           <Link to="/" aria-label="PaintBookCo home" className="inline-block">
-            <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800" alt="PaintBookCo" className="h-8 w-auto" />
+            <img src={LOGO} alt="PaintBookCo" className="h-8 w-auto" />
           </Link>
-          <p className="text-sm text-muted-foreground mt-2">Sign in to your account</p>
+          <p className="text-sm text-muted-foreground mt-4">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {error && (
-            <div className="text-sm text-destructive border-l-2 border-destructive pl-4 py-2">
-              {error}
+            <div className="text-sm text-destructive border-l-2 border-destructive pl-4 py-2 space-y-3">
+              <p>{error}</p>
+              {emailUnconfirmed && (
+                <div>
+                  {resendSent ? (
+                    <p className="text-xs text-muted-foreground">Confirmation email sent — check your inbox.</p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={resendLoading}
+                      className="text-xs font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {resendLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                      Resend confirmation email
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

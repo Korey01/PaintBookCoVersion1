@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
@@ -49,6 +49,14 @@ export default function RegisterCustomer() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+
+  // Redirect to /login 3 seconds after showing the confirmation prompt
+  useEffect(() => {
+    if (!confirmed) return;
+    const t = setTimeout(() => navigate("/login"), 3000);
+    return () => clearTimeout(t);
+  }, [confirmed, navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,7 +78,31 @@ export default function RegisterCustomer() {
     setLoading(false);
 
     if (signUpError) { setError(signUpError.message); return; }
-    navigate("/dashboard/customer");
+
+    // Do NOT navigate to dashboard — user must confirm email first
+    setConfirmed(true);
+  }
+
+  if (confirmed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
+        <div className="w-full max-w-sm text-center animate-editorial-up" style={{ animationFillMode: "both" }}>
+          <Link to="/" aria-label="PaintBookCo home" className="inline-block mb-12">
+            <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800" alt="PaintBookCo" className="h-8 w-auto" />
+          </Link>
+          <Mail className="h-12 w-12 text-primary mx-auto mb-6" />
+          <h2 className="font-display text-xl text-foreground mb-4">Check your email</h2>
+          <p className="text-sm text-muted-foreground leading-[1.8] mb-6">
+            Please check your email to confirm your account before logging in.
+            <br />
+            Redirecting to login…
+          </p>
+          <Link to="/login" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            Go to login now →
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -80,7 +112,7 @@ export default function RegisterCustomer() {
           <Link to="/" aria-label="PaintBookCo home" className="inline-block">
             <img src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800" alt="PaintBookCo" className="h-8 w-auto" />
           </Link>
-          <p className="text-sm text-muted-foreground mt-2">Create your account</p>
+          <p className="text-sm text-muted-foreground mt-4">Create your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">

@@ -135,6 +135,26 @@
     --coral-muted:   18 88% 94%;
     --section-dark-bg:  220 18% 9%;
     --section-dark-fg:  36 20% 93%;
+
+    /* CUSTOMER DASHBOARD THEME (Orange/Amber) */
+    --dashboard-customer-bg:        10 10% 6%;      /* #0A0A0A - almost black */
+    --dashboard-customer-card:      26 15% 10%;     /* #1A1A1A - dark card */
+    --dashboard-customer-accent:    28 100% 50%;    /* #F97316 - orange */
+    --dashboard-customer-text-primary:   0 0% 100%;    /* #FFFFFF */
+    --dashboard-customer-text-secondary: 220 13% 68%;  /* #9CA3AF - gray */
+    --dashboard-customer-success:   142 71% 45%;    /* green */
+    --dashboard-customer-warning:   43 96% 56%;     /* amber */
+    --dashboard-customer-danger:    4 90% 58%;      /* red */
+
+    /* PAINTER DASHBOARD THEME (Blue/Navy) */
+    --dashboard-painter-bg:         220 30% 8%;     /* #0C0F1A - deep navy-black */
+    --dashboard-painter-card:       220 35% 9%;     /* #141824 - navy card */
+    --dashboard-painter-accent:     217 91% 60%;    /* #3B82F6 - blue */
+    --dashboard-painter-text-primary:   0 0% 100%;    /* #FFFFFF */
+    --dashboard-painter-text-secondary: 220 13% 72%;  /* #94A3B8 - slate */
+    --dashboard-painter-success:    142 71% 45%;    /* green */
+    --dashboard-painter-warning:    217 91% 60%;    /* blue (matches accent) */
+    --dashboard-painter-danger:     4 90% 58%;      /* red */
   }
 
   .dark {
@@ -174,6 +194,19 @@
     --sidebar-accent-foreground: 36 20% 93%;
     --sidebar-border: 220 14% 14%;
     --sidebar-ring: 18 88% 56%;
+
+    /* DASHBOARD DARK MODE — inherits from light (both are dark) */
+    --dashboard-customer-bg:        10 10% 6%;
+    --dashboard-customer-card:      26 15% 10%;
+    --dashboard-customer-accent:    28 100% 50%;
+    --dashboard-customer-text-primary:   0 0% 100%;
+    --dashboard-customer-text-secondary: 220 13% 68%;
+
+    --dashboard-painter-bg:         220 30% 8%;
+    --dashboard-painter-card:       220 35% 9%;
+    --dashboard-painter-accent:     217 91% 60%;
+    --dashboard-painter-text-primary:   0 0% 100%;
+    --dashboard-painter-text-secondary: 220 13% 72%;
   }
 }
 
@@ -276,6 +309,94 @@
   .transition-smooth    { @apply transition-all duration-400 ease-out; }
   .transition-smooth-lg { @apply transition-all duration-600 ease-out; }
   .link-smooth          { @apply transition-colors duration-300 hover:text-primary; }
+
+  /* ── DASHBOARD THEMES ── */
+
+  /* Customer Dashboard (Orange Theme) */
+  .dashboard-customer {
+    background: hsl(var(--dashboard-customer-bg));
+    color: hsl(var(--dashboard-customer-text-primary));
+  }
+
+  .dashboard-customer-card {
+    background: hsl(var(--dashboard-customer-card));
+    border-color: hsl(var(--dashboard-customer-accent) / 0.1);
+    @apply rounded-lg border transition-all duration-300 p-6;
+  }
+
+  .dashboard-customer-accent {
+    color: hsl(var(--dashboard-customer-accent));
+  }
+
+  .dashboard-customer-accent-bg {
+    background: hsl(var(--dashboard-customer-accent) / 0.1);
+    color: hsl(var(--dashboard-customer-accent));
+  }
+
+  .dashboard-customer-success {
+    background: hsl(var(--dashboard-customer-success) / 0.1);
+    color: hsl(var(--dashboard-customer-success));
+  }
+
+  .dashboard-customer-warning {
+    background: hsl(var(--dashboard-customer-warning) / 0.1);
+    color: hsl(var(--dashboard-customer-warning));
+  }
+
+  .dashboard-customer-danger {
+    background: hsl(var(--dashboard-customer-danger) / 0.1);
+    color: hsl(var(--dashboard-customer-danger));
+  }
+
+  /* Painter Dashboard (Blue Theme) */
+  .dashboard-painter {
+    background: hsl(var(--dashboard-painter-bg));
+    color: hsl(var(--dashboard-painter-text-primary));
+  }
+
+  .dashboard-painter-card {
+    background: hsl(var(--dashboard-painter-card));
+    border-color: hsl(var(--dashboard-painter-accent) / 0.1);
+    @apply rounded-lg border transition-all duration-300 p-6;
+  }
+
+  .dashboard-painter-accent {
+    color: hsl(var(--dashboard-painter-accent));
+  }
+
+  .dashboard-painter-accent-bg {
+    background: hsl(var(--dashboard-painter-accent) / 0.1);
+    color: hsl(var(--dashboard-painter-accent));
+  }
+
+  .dashboard-painter-success {
+    background: hsl(var(--dashboard-painter-success) / 0.1);
+    color: hsl(var(--dashboard-painter-success));
+  }
+
+  .dashboard-painter-warning {
+    background: hsl(var(--dashboard-painter-warning) / 0.1);
+    color: hsl(var(--dashboard-painter-warning));
+  }
+
+  .dashboard-painter-danger {
+    background: hsl(var(--dashboard-painter-danger) / 0.1);
+    color: hsl(var(--dashboard-painter-danger));
+  }
+
+  /* Status Badge Animations */
+  .status-pulse {
+    @apply animate-pulse;
+  }
+
+  .status-pulse-fast {
+    animation: statusPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
 }
 
 /* ============================================================
@@ -416,5 +537,72 @@
     background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--background)) 50%, hsl(var(--muted)) 100%);
     background-size: 200% 100%;
     animation: shimmer 1.8s ease infinite;
+  }
+
+  /* ── Status Badges ── */
+  .badge-pending {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(220 14% 16% / 0.5);
+    color: hsl(220 10% 58%);
+  }
+
+  .badge-matching {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium animate-pulse;
+    background-color: hsl(217 91% 60% / 0.1);
+    color: hsl(217 91% 60%);
+  }
+
+  .badge-accepted {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(280 85% 44% / 0.1);
+    color: hsl(280 85% 44%);
+  }
+
+  .badge-awaiting-payment {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(43 96% 56% / 0.1);
+    color: hsl(43 96% 56%);
+  }
+
+  .badge-escrow-funded {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(168 84% 78% / 0.1);
+    color: hsl(168 84% 78%);
+  }
+
+  .badge-in-progress {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(217 91% 60% / 0.1);
+    color: hsl(217 91% 60%);
+  }
+
+  .badge-milestone-review {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(28 100% 50% / 0.1);
+    color: hsl(28 100% 50%);
+  }
+
+  .badge-pending-completion {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(142 71% 45% / 0.1);
+    color: hsl(142 71% 45%);
+  }
+
+  .badge-completed {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(142 71% 45% / 0.2);
+    color: hsl(142 71% 45%);
+  }
+
+  .badge-disputed {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+    background-color: hsl(4 90% 58% / 0.1);
+    color: hsl(4 90% 58%);
+  }
+
+  .badge-cancelled {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium line-through;
+    background-color: hsl(220 14% 16% / 0.5);
+    color: hsl(220 10% 58%);
   }
 }

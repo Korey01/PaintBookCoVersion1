@@ -1,103 +1,119 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Link } from "react-router-dom";
+import { CheckCircle2, Loader2, ArrowRight, Mail } from "lucide-react";
+import { toast } from "sonner";
 
-const SPECIALISMS = [
-  "Kitchens",
-  "Cabinets",
-  "Wallpaper",
-  "Interior Walls",
-  "Exterior Walls",
-  "Doors",
-  "Trim",
-  "Ceilings",
-  "Bathrooms",
-  "Feature Walls",
+const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
+
+export const SPECIALISMS = [
+  "Interior walls & ceilings",
+  "Exterior / facade",
+  "Commercial / office",
+  "New build decoration",
+  "Period property restoration",
+  "Kitchen & bathroom",
+  "Wallpapering",
+  "Coving & specialist finishes",
 ];
 
-export default function JoinPainter() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
 
-  // Form state
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+// Completion screen component
+export function JoinPainterComplete() {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <Link to="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+        </Link>
+      </header>
+      <main className="flex-1 flex items-center justify-center px-6">
+        <div className="max-w-md text-center space-y-4">
+          <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+            <Mail className="h-7 w-7 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-semibold">Registration Complete</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Your application has been submitted successfully.<br />
+            Check your email for next steps and verification instructions.
+          </p>
+          <Link
+            to="/login"
+            className="inline-block mt-4 text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground"
+          >
+            Back to login
+          </Link>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function JoinPainter() {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+
+  // Step 1 — personal details
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+
+  // Step 2 — account + location
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [postcode, setPostcode] = useState("");
+
+  // Step 3 — specialisms
   const [selectedSpecialisms, setSelectedSpecialisms] = useState<string[]>([]);
-  const [serviceRadius, setServiceRadius] = useState("15");
 
-  // Validation schema
-  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
-  const ukPhone = /^(?:\+44\s?7\d{3}|(?:0)7\d{3})\s?\d{3}\s?\d{3}$/;
-  const schema = z
-    .object({
-      email: z.string().email("Enter a valid email"),
-      password: z.string().min(6, "Password must be at least 6 characters"),
-      confirmPassword: z.string().min(6, "Confirm your password"),
-      firstName: z.string().min(2, "First name is required"),
-      lastName: z.string().min(2, "Last name is required"),
-      phone: z.string().regex(ukPhone, "Enter a valid UK phone number"),
-      postcode: z.string().regex(ukPostcode, "Use UK format e.g. M1 1AE"),
-      selectedSpecialisms: z.array(z.string()).min(1, "Select at least one specialism"),
-      serviceRadius: z.string().min(1, "Service radius is required"),
-    })
-    .refine((v) => v.password === v.confirmPassword, {
-      message: "Passwords must match",
-      path: ["confirmPassword"],
-    });
+  function toggleSpecialism(s: string) {
+    setSelectedSpecialisms((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function handleStep1(e: React.FormEvent) {
     e.preventDefault();
-    setErrors({});
-
-    // Validate form
-    const result = schema.safeParse({
-      email,
-      password,
-      confirmPassword,
-      firstName,
-      lastName,
-      phone,
-      postcode,
-      selectedSpecialisms,
-      serviceRadius,
-    });
-    if (!result.success) {
-      const newErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        newErrors[issue.path[0] as string] = issue.message;
-      });
-      setErrors(newErrors);
+    setError("");
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) {
+      setError("Please fill in all fields.");
       return;
     }
+    setStep(2);
+  }
 
+  function handleStep2(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!ukPostcode.test(postcode.trim())) {
+      setError("Please enter a valid UK postcode (e.g. SW1A 1AA).");
+      return;
+    }
+    setStep(3);
+  }
+
+  async function handleStep3(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (selectedSpecialisms.length === 0) {
+      setError("Please select at least one specialism.");
+      return;
+    }
     setIsLoading(true);
+
     try {
       // Call the Supabase Edge Function for painter registration
       const response = await fetch(
@@ -109,14 +125,14 @@ export default function JoinPainter() {
             apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            email,
+            email: email.trim(),
             password,
-            first_name: firstName,
-            last_name: lastName,
-            phone,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            phone: phone.trim(),
             specialisms: selectedSpecialisms,
-            service_radius_km: parseInt(serviceRadius),
-            postcode,
+            service_radius_km: 15,
+            postcode: postcode.trim().toUpperCase(),
           }),
         }
       );
@@ -124,358 +140,181 @@ export default function JoinPainter() {
       const data = await response.json();
 
       if (data.success) {
-        toast({
-          title: "Registration successful!",
-          description:
-            "Please check your email to confirm your account before logging in.",
-        });
-        navigate("/login");
+        setIsLoading(false);
+        setConfirmed(true);
       } else {
-        toast({
-          title: "Registration failed",
-          description: data.error || "Registration failed. Please try again.",
-          variant: "destructive",
-        });
+        setIsLoading(false);
+        setError(data.error || "Registration failed. Please try again.");
       }
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create account. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
+    } catch (err) {
       setIsLoading(false);
+      console.error("Registration error:", err);
+      setError("Failed to create account. Please try again.");
     }
-  };
+  }
+
+  // ── Email confirmation screen ──────────────────────────────────────────────
+  if (confirmed) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="px-6 py-5 border-b border-border">
+          <Link to="/">
+            <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+          </Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-md text-center space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+              <Mail className="h-7 w-7 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-semibold">Check your inbox</h2>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              We've sent a confirmation link to <strong>{email}</strong>.<br />
+              Please confirm your email before logging in.
+            </p>
+            <Link
+              to="/login"
+              className="inline-block mt-4 text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground"
+            >
+              Back to login
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      className="min-h-screen bg-background py-12"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-      <div className="mx-auto max-w-md px-4">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="font-display text-3xl font-normal text-foreground">
-            Join as a Painter
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <Link to="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+        </Link>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-8">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`h-1 flex-1 rounded-full transition-colors ${step >= s ? "bg-foreground" : "bg-border"}`}
+              />
+            ))}
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight mb-1">
+            {step === 1 && "Join as a Painter"}
+            {step === 2 && "Set up your account"}
+            {step === 3 && "Your specialisms"}
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Get access to nearby painting jobs in your area
+          <p className="text-sm text-muted-foreground mb-8">
+            {step === 1 && "Tell us about yourself"}
+            {step === 2 && "Choose a password and your location"}
+            {step === 3 && "Select the services you offer"}
           </p>
-        </div>
 
-        {/* Registration Card */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Create your account</CardTitle>
-            <CardDescription>
-              Registration is free. No subscription required.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
+          {error && (
+            <div className="mb-6 rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          {/* Step 1 */}
+          {step === 1 && (
+            <form onSubmit={handleStep1} className="space-y-6">
               <div>
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  disabled={isLoading}
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.email}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">First name</label>
+                <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={fieldClass} placeholder="John" />
               </div>
-
-              {/* Password */}
               <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••"
-                  disabled={isLoading}
-                  className={errors.password ? "border-red-500" : ""}
-                />
-                {errors.password && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.password}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Last name</label>
+                <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={fieldClass} placeholder="Smith" />
               </div>
-
-              {/* Confirm Password */}
               <div>
-                <Label htmlFor="confirmPassword">Confirm password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••"
-                  disabled={isLoading}
-                  className={errors.confirmPassword ? "border-red-500" : ""}
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.confirmPassword}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClass} placeholder="you@example.com" />
               </div>
-
-              {/* First Name */}
               <div>
-                <Label htmlFor="firstName">First name</Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="John"
-                  disabled={isLoading}
-                  className={errors.firstName ? "border-red-500" : ""}
-                />
-                {errors.firstName && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.firstName}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone</label>
+                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className={fieldClass} placeholder="+44 7700 000000" />
               </div>
+              <button type="submit" className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                Continue <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          )}
 
-              {/* Last Name */}
+          {/* Step 2 */}
+          {step === 2 && (
+            <form onSubmit={handleStep2} className="space-y-6">
               <div>
-                <Label htmlFor="lastName">Last name</Label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Smith"
-                  disabled={isLoading}
-                  className={errors.lastName ? "border-red-500" : ""}
-                />
-                {errors.lastName && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.lastName}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Password</label>
+                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} placeholder="Min. 8 characters" />
               </div>
-
-              {/* Phone */}
               <div>
-                <Label htmlFor="phone">Phone number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="07700 900000"
-                  disabled={isLoading}
-                  className={errors.phone ? "border-red-500" : ""}
-                />
-                {errors.phone && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.phone}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Confirm password</label>
+                <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} placeholder="Repeat password" />
               </div>
-
-              {/* Postcode */}
               <div>
-                <Label htmlFor="postcode">Work postcode</Label>
-                <Input
-                  id="postcode"
-                  value={postcode}
-                  onChange={(e) => setPostcode(e.target.value)}
-                  placeholder="e.g. M1 1AE"
-                  disabled={isLoading}
-                  className={errors.postcode ? "border-red-500" : ""}
-                />
-                {errors.postcode && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.postcode}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  We'll use this to match you with nearby jobs
-                </p>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Postcode</label>
+                <input type="text" required value={postcode} onChange={(e) => setPostcode(e.target.value)} className={fieldClass} placeholder="SW1A 1AA" />
               </div>
-
-              {/* Specialisms */}
-              <div>
-                <Label>Specialisms</Label>
-                <p className="mt-1 text-xs text-muted-foreground mb-2">
-                  Select the areas you specialize in
-                </p>
-                <div className="space-y-2 border rounded-md p-3 bg-muted/30">
-                  {SPECIALISMS.map((spec) => (
-                    <label
-                      key={spec}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedSpecialisms.includes(spec)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedSpecialisms([
-                              ...selectedSpecialisms,
-                              spec,
-                            ]);
-                          } else {
-                            setSelectedSpecialisms(
-                              selectedSpecialisms.filter((s) => s !== spec)
-                            );
-                          }
-                        }}
-                        disabled={isLoading}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">{spec}</span>
-                    </label>
-                  ))}
-                </div>
-                {errors.selectedSpecialisms && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.selectedSpecialisms}
-                  </p>
-                )}
-              </div>
-
-              {/* Service Radius */}
-              <div>
-                <Label htmlFor="serviceRadius">Service radius (km)</Label>
-                <Select value={serviceRadius} onValueChange={setServiceRadius}>
-                  <SelectTrigger
-                    id="serviceRadius"
-                    disabled={isLoading}
-                    className={errors.serviceRadius ? "border-red-500" : ""}
-                  >
-                    <SelectValue placeholder="Select radius" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5 km</SelectItem>
-                    <SelectItem value="10">10 km</SelectItem>
-                    <SelectItem value="15">15 km</SelectItem>
-                    <SelectItem value="20">20 km</SelectItem>
-                    <SelectItem value="25">25 km</SelectItem>
-                    <SelectItem value="30">30 km</SelectItem>
-                    <SelectItem value="40">40 km</SelectItem>
-                    <SelectItem value="50">50 km</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.serviceRadius && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.serviceRadius}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  How far are you willing to travel for jobs?
-                </p>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  <>
-                    Continue to verification
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-
-              {/* Login Link */}
-              <div className="text-center text-sm">
-                Already have an account?{" "}
-                <a
-                  href="/auth?type=login"
-                  className="font-semibold text-primary hover:underline"
-                >
-                  Sign in
-                </a>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(1)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
+                  Back
+                </button>
+                <button type="submit" className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             </form>
+          )}
 
-            {/* Info Box */}
-            <div className="mt-6 border border-primary/15 bg-primary/5 p-4">
-              <div className="flex gap-3">
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
-                <div className="text-sm text-foreground">
-                  <p className="font-semibold">What happens next?</p>
-                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                    <li>• Complete your KYC verification</li>
-                    <li>• Upload required documents (ID, insurance)</li>
-                    <li>• Get approved to access jobs</li>
-                    <li>• Earn money with every completed job</li>
-                  </ul>
-                </div>
+          {/* Step 3 */}
+          {step === 3 && (
+            <form onSubmit={handleStep3} className="space-y-6">
+              <div className="flex flex-wrap gap-2">
+                {SPECIALISMS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => toggleSpecialism(s)}
+                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                      selectedSpecialisms.includes(s)
+                        ? "bg-foreground text-background border-foreground"
+                        : "border-border text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(2)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  {isLoading ? "Creating account…" : "Create account"}
+                </button>
+              </div>
+            </form>
+          )}
 
-        {/* Trust Footer */}
-        <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>No credit card required · Free to join · Secure registration</p>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/login" className="text-foreground font-medium hover:underline underline-offset-4">
+              Sign in
+            </Link>
+          </p>
         </div>
-      </div>
-    </motion.div>
-  );
-}
-
-export function JoinPainterComplete() {
-  const navigate = useNavigate();
-  return (
-    <div className="min-h-screen bg-background py-16">
-      <div className="mx-auto max-w-md px-4 text-center">
-        <CheckCircle2 className="mx-auto h-16 w-16 text-primary" />
-        <h1 className="mt-6 font-display text-3xl font-normal text-foreground">
-          Profile complete!
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Your account is verified and ready. Start browsing nearby jobs.
-        </p>
-        <div className="mt-8 flex flex-col gap-3">
-          <Button onClick={() => navigate("/dashboard")} size="lg">
-            Go to Dashboard
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/find-painters")}
-            size="lg"
-          >
-            Browse Jobs
-          </Button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

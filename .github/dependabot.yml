@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # Frontend npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    reviewers:
+      - "Korey01"
+    labels:
+      - "dependencies"
+      - "security"
+    ignore:
+      # Ignore patch-only updates (focus on minor/major for security signal)
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-patch"
+
+  # Supabase Edge Functions (Deno modules tracked via package.json if present)
+  - package-ecosystem: "npm"
+    directory: "/supabase/functions"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    reviewers:
+      - "Korey01"
+    labels:
+      - "dependencies"
+      - "security"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-patch"

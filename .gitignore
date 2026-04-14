@@ -24,4 +24,11 @@ dist-ssr
 *.sw?
 
 .config/
-!.env
+.env
+.env.local
+.env.production
+.env.staging
+*.pem
+*.key
+.supabase/
+/Main PaintBookCo Logo.png

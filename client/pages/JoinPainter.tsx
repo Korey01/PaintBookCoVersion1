@@ -1,315 +1,297 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
+import { CheckCircle2, Loader2, ArrowRight, Mail } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
+
+export const SPECIALISMS = [
+  "Interior walls & ceilings",
+  "Exterior / facade",
+  "Commercial / office",
+  "New build decoration",
+  "Period property restoration",
+  "Kitchen & bathroom",
+  "Wallpapering",
+  "Coving & specialist finishes",
+];
+
+const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
 
 export default function JoinPainter() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
 
-  // Form state
+  // Step 1 — personal details
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // Step 2 — account + location
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [postcode, setPostcode] = useState("");
 
-  // Validation schema
-  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
-  const schema = z
-    .object({
-      email: z.string().email("Enter a valid email"),
-      password: z.string().min(6, "Password must be at least 6 characters"),
-      confirmPassword: z.string().min(6, "Confirm your password"),
-      postcode: z.string().regex(ukPostcode, "Use UK format e.g. M1 1AE"),
-    })
-    .refine((v) => v.password === v.confirmPassword, {
-      message: "Passwords must match",
-      path: ["confirmPassword"],
-    });
+  // Step 3 — specialisms
+  const [selectedSpecialisms, setSelectedSpecialisms] = useState<string[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function toggleSpecialism(s: string) {
+    setSelectedSpecialisms((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+  }
+
+  function handleStep1(e: React.FormEvent) {
     e.preventDefault();
-    setErrors({});
+    setError("");
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    setStep(2);
+  }
 
-    // Validate form
-    const result = schema.safeParse({
-      email,
+  function handleStep2(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!ukPostcode.test(postcode.trim())) {
+      setError("Please enter a valid UK postcode (e.g. SW1A 1AA).");
+      return;
+    }
+    setStep(3);
+  }
+
+  async function handleStep3(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (selectedSpecialisms.length === 0) {
+      setError("Please select at least one specialism.");
+      return;
+    }
+    setIsLoading(true);
+
+    // 1. Create Supabase auth user
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
-      confirmPassword,
-      postcode,
+      options: {
+        data: {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+        },
+      },
     });
-    if (!result.success) {
-      const newErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        newErrors[issue.path[0] as string] = issue.message;
-      });
-      setErrors(newErrors);
+
+    if (signUpError) {
+      setIsLoading(false);
+      setError(signUpError.message);
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Call the new API endpoint for painter registration
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          userType: "painter",
-          postcode,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.error === "Email already in use") {
-          setErrors({ email: "This email is already registered" });
-        } else {
-          toast({
-            title: "Registration failed",
-            description: data.error || "Something went wrong",
-            variant: "destructive",
-          });
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // Store token
-      if (data.token) {
-        localStorage.setItem("paintbook:token", data.token);
-        localStorage.setItem("paintbook:user", JSON.stringify(data.user));
-
-        toast({
-          title: "Account created",
-          description: "Welcome to PaintBookco! Let's complete your profile.",
-        });
-
-        // Redirect to painter onboarding (KYC)
-        navigate("/painter-onboarding");
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create account. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
+    const userId = authData.user?.id;
+    if (!userId) {
       setIsLoading(false);
+      setError("Registration failed. Please try again.");
+      return;
     }
-  };
+
+    // 2. Insert painter record into painters table
+    const { error: insertError } = await supabase.from("painters").insert({
+      user_id: userId,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      postcode: postcode.trim().toUpperCase(),
+      specialisms: selectedSpecialisms,
+    });
+
+    if (insertError) {
+      setIsLoading(false);
+      setError("Account created but profile setup failed: " + insertError.message);
+      return;
+    }
+
+    setIsLoading(false);
+    // 3. Show email confirmation message — never redirect to dashboard
+    setConfirmed(true);
+  }
+
+  // ── Email confirmation screen ──────────────────────────────────────────────
+  if (confirmed) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="px-6 py-5 border-b border-border">
+          <Link to="/">
+            <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+          </Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-md text-center space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+              <Mail className="h-7 w-7 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-semibold">Check your inbox</h2>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              We've sent a confirmation link to <strong>{email}</strong>.<br />
+              Please confirm your email before logging in.
+            </p>
+            <Link
+              to="/login"
+              className="inline-block mt-4 text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground"
+            >
+              Back to login
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      className="min-h-screen bg-background py-12"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-      <div className="mx-auto max-w-md px-4">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="font-display text-3xl font-normal text-foreground">
-            Join as a Painter
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <Link to="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+        </Link>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-8">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`h-1 flex-1 rounded-full transition-colors ${step >= s ? "bg-foreground" : "bg-border"}`}
+              />
+            ))}
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight mb-1">
+            {step === 1 && "Join as a Painter"}
+            {step === 2 && "Set up your account"}
+            {step === 3 && "Your specialisms"}
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Get access to nearby painting jobs in your area
+          <p className="text-sm text-muted-foreground mb-8">
+            {step === 1 && "Tell us about yourself"}
+            {step === 2 && "Choose a password and your location"}
+            {step === 3 && "Select the services you offer"}
           </p>
-        </div>
 
-        {/* Registration Card */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Create your account</CardTitle>
-            <CardDescription>
-              Registration is free. No subscription required.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
+          {error && (
+            <div className="mb-6 rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          {/* Step 1 */}
+          {step === 1 && (
+            <form onSubmit={handleStep1} className="space-y-6">
               <div>
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  disabled={isLoading}
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.email}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">First name</label>
+                <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={fieldClass} placeholder="John" />
               </div>
-
-              {/* Password */}
               <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••"
-                  disabled={isLoading}
-                  className={errors.password ? "border-red-500" : ""}
-                />
-                {errors.password && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.password}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Last name</label>
+                <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={fieldClass} placeholder="Smith" />
               </div>
-
-              {/* Confirm Password */}
               <div>
-                <Label htmlFor="confirmPassword">Confirm password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••"
-                  disabled={isLoading}
-                  className={errors.confirmPassword ? "border-red-500" : ""}
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.confirmPassword}
-                  </p>
-                )}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClass} placeholder="you@example.com" />
               </div>
-
-              {/* Postcode */}
               <div>
-                <Label htmlFor="postcode">Work postcode</Label>
-                <Input
-                  id="postcode"
-                  value={postcode}
-                  onChange={(e) => setPostcode(e.target.value)}
-                  placeholder="e.g. M1 1AE"
-                  disabled={isLoading}
-                  className={errors.postcode ? "border-red-500" : ""}
-                />
-                {errors.postcode && (
-                  <p className="mt-1 flex items-center text-sm text-red-500">
-                    <AlertCircle className="mr-1 h-4 w-4" />
-                    {errors.postcode}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  We'll use this to match you with nearby jobs
-                </p>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone</label>
+                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className={fieldClass} placeholder="+44 7700 000000" />
               </div>
+              <button type="submit" className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                Continue <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          )}
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full"
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  <>
-                    Continue to verification
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-
-              {/* Login Link */}
-              <div className="text-center text-sm">
-                Already have an account?{" "}
-                <a
-                  href="/auth?type=login"
-                  className="font-semibold text-primary hover:underline"
-                >
-                  Sign in
-                </a>
+          {/* Step 2 */}
+          {step === 2 && (
+            <form onSubmit={handleStep2} className="space-y-6">
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Password</label>
+                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} placeholder="Min. 8 characters" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Confirm password</label>
+                <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} placeholder="Repeat password" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Postcode</label>
+                <input type="text" required value={postcode} onChange={(e) => setPostcode(e.target.value)} className={fieldClass} placeholder="SW1A 1AA" />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(1)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
+                  Back
+                </button>
+                <button type="submit" className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             </form>
+          )}
 
-            {/* Info Box */}
-            <div className="mt-6 border border-primary/15 bg-primary/5 p-4">
-              <div className="flex gap-3">
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
-                <div className="text-sm text-foreground">
-                  <p className="font-semibold">What happens next?</p>
-                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                    <li>• Complete your KYC verification</li>
-                    <li>• Upload required documents (ID, insurance)</li>
-                    <li>• Get approved to access jobs</li>
-                    <li>• Earn money with every completed job</li>
-                  </ul>
-                </div>
+          {/* Step 3 */}
+          {step === 3 && (
+            <form onSubmit={handleStep3} className="space-y-6">
+              <div className="flex flex-wrap gap-2">
+                {SPECIALISMS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => toggleSpecialism(s)}
+                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                      selectedSpecialisms.includes(s)
+                        ? "bg-foreground text-background border-foreground"
+                        : "border-border text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setStep(2)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  {isLoading ? "Creating account…" : "Create account"}
+                </button>
+              </div>
+            </form>
+          )}
 
-        {/* Trust Footer */}
-        <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>No credit card required · Free to join · Secure registration</p>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/login" className="text-foreground font-medium hover:underline underline-offset-4">
+              Sign in
+            </Link>
+          </p>
         </div>
-      </div>
-    </motion.div>
-  );
-}
-
-export function JoinPainterComplete() {
-  const navigate = useNavigate();
-  return (
-    <div className="min-h-screen bg-background py-16">
-      <div className="mx-auto max-w-md px-4 text-center">
-        <CheckCircle2 className="mx-auto h-16 w-16 text-primary" />
-        <h1 className="mt-6 font-display text-3xl font-normal text-foreground">
-          Profile complete!
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Your account is verified and ready. Start browsing nearby jobs.
-        </p>
-        <div className="mt-8 flex flex-col gap-3">
-          <Button onClick={() => navigate("/dashboard")} size="lg">
-            Go to Dashboard
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/find-painters")}
-            size="lg"
-          >
-            Browse Jobs
-          </Button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

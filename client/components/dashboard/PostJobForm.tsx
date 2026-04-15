@@ -142,6 +142,40 @@ export default function PostJobForm({ onSuccess }: PostJobFormProps) {
 
       if (insertError) throw new Error(insertError.message);
 
+      // Geocode the job postcode for matching engine
+      const postcodeMatch = address.trim().match(/[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}/i);
+      if (postcodeMatch) {
+        const { data: newJob } = await supabase
+          .from("jobs")
+          .select("id")
+          .eq("customer_id", session.user.id)
+          .eq("status", "pending_match")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (newJob) {
+          try {
+            await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/geocode-postcode`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${session.access_token}`,
+                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({
+                  postcode: postcodeMatch[0],
+                  job_id: newJob.id,
+                }),
+              }
+            );
+          } catch (geoErr) {
+            console.error("Geocoding failed:", geoErr);
+          }
+        }
+      }
+
       setSubmitted(true);
       setTimeout(() => {
         onSuccess();

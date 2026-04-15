@@ -128,7 +128,7 @@ export default function JoinPainter() {
           last_name: lastName.trim(),
           phone: phone.trim(),
           specialisms: selectedSpecialisms,
-          service_radius_km: parseInt(serviceRadius),
+          service_radius_km: 15,
           postcode: postcode.trim().toUpperCase(),
         }),
       });

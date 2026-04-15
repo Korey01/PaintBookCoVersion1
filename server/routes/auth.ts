@@ -146,6 +146,16 @@ router.post(
         postcode,
       } = req.body;
 
+      console.log("Register painter request:", {
+        email,
+        first_name,
+        last_name,
+        phone,
+        postcode,
+        specialisms,
+        service_radius_km,
+      });
+
       // Validation
       if (
         !email ||
@@ -154,6 +164,13 @@ router.post(
         !last_name ||
         !postcode
       ) {
+        console.log("Missing required fields:", {
+          email: !!email,
+          password: !!password,
+          first_name: !!first_name,
+          last_name: !!last_name,
+          postcode: !!postcode,
+        });
         res.status(400).json({
           success: false,
           error: "Missing required fields",
@@ -216,6 +233,8 @@ router.post(
         },
       });
 
+      console.log("Painter created successfully:", user.id);
+
       // Generate token
       const token = generateToken({
         id: user.id,
@@ -236,9 +255,12 @@ router.post(
       res.status(201).json(response);
     } catch (error) {
       console.error("Register painter error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("Error details:", errorMessage);
       res.status(500).json({
         success: false,
-        error: "Failed to create account. Please try again.",
+        error: `Failed to create account: ${errorMessage}`,
       });
     }
   },

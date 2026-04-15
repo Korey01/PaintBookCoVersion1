@@ -97,13 +97,17 @@ Deno.serve(async (req) => {
       return json({ error: "Failed to create painter profile. Please try again." }, 500);
     }
 
-    await serviceClient.from("audit_log").insert({
-      action: "painter_registered",
-      actor_id: authData.user.id,
-      actor_role: "painter",
-      entity_type: "painter",
-      details: { email, first_name, last_name, kyc_status: "pending" },
-    }).catch(console.error);
+    try {
+      await serviceClient.from("audit_log").insert({
+        action: "painter_registered",
+        actor_id: authData.user.id,
+        actor_role: "painter",
+        entity_type: "painter",
+        details: { email, first_name, last_name, kyc_status: "pending" },
+      });
+    } catch (auditErr) {
+      console.error("Audit log error:", auditErr);
+    }
 
     return json({
       success: true,

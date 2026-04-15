@@ -101,7 +101,6 @@ export default function JobCard({
   onConfirmComplete,
   onLeaveReview,
   onRaiseDispute,
-  onRaiseDispute,
 }: JobCardProps) {
   const cfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.pending_match;
 

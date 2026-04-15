@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRealtime } from "@/contexts/RealtimeContext";
 import JobCard from "./JobCard";
 import MilestoneTracker from "./MilestoneTracker";
+import { PaintBookChat } from "../chat/PaintBookChat";
 import PostJobForm from "./PostJobForm";
 import PaymentHistory from "./PaymentHistory";
 import ReviewsSection from "./ReviewsSection";
@@ -459,6 +460,21 @@ export default function CustomerDashboard() {
                   onBack={() => setActiveJob(null)}
                   onRefresh={refreshMilestones}
                 />
+                {(activeJob.status === "escrow_funded" ||
+                  activeJob.status === "in_progress" ||
+                  activeJob.status === "milestone_review" ||
+                  activeJob.status === "pending_completion") && (
+                  <div className="mt-6">
+                    <h3 className="text-white font-medium mb-3">
+                      Chat with Painter
+                    </h3>
+                    <PaintBookChat
+                      jobId={activeJob.id}
+                      userId={activeJob.customer_id ?? ""}
+                      userRole="customer"
+                    />
+                  </div>
+                )}
               )
             ) : (
               <>

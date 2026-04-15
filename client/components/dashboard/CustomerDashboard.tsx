@@ -215,6 +215,44 @@ export default function CustomerDashboard() {
     (j) => j.status === "completed" && !reviewedIds.has(j.id),
   ).length;
 
+  // ── Raise Dispute ────────────────────────────────────────────────────────────
+
+  async function handleRaiseDispute(job: Job) {
+    const reason = prompt("Please describe the reason for raising a dispute:");
+    if (!reason) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase
+      .from("jobs")
+      .update({ status: "disputed" })
+      .eq("id", job.id);
+    if (!error) {
+      try {
+        const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-job-completed`;
+        const { data: painterData } = await supabase
+          .from("painters")
+          .select("email, first_name, last_name")
+          .eq("id", job.painter_id)
+          .single();
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transpact-webhook-receiver`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              transactionEventID: "11",
+              transactionID: job.transpact_transaction_id || "0",
+              description: reason,
+            }),
+          }
+        );
+      } catch (err) {
+        console.error("Dispute webhook error:", err);
+      }
+      refresh();
+      alert("Dispute raised. Our team will be in touch within 2 working days.");
+    }
+  }
+
   // ── Sign out ──────────────────────────────────────────────────────────────
 
   async function handleSignOut() {
@@ -385,6 +423,7 @@ export default function CustomerDashboard() {
                       onViewProgress={openMilestoneTracker}
                       onConfirmComplete={confirmComplete}
                       onLeaveReview={() => setTab("reviews")}
+                      onRaiseDispute={handleRaiseDispute}
                     />
                   ))}
                 </div>
@@ -462,6 +501,7 @@ export default function CustomerDashboard() {
                         onViewProgress={openMilestoneTracker}
                         onConfirmComplete={confirmComplete}
                         onLeaveReview={() => setTab("reviews")}
+                        onRaiseDispute={handleRaiseDispute}
                       />
                     ))}
                   </div>

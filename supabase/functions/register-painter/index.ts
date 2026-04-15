@@ -97,6 +97,19 @@ Deno.serve(async (req) => {
       return json({ error: "Failed to create painter profile. Please try again." }, 500);
     }
 
+    // Send confirmation email
+    try {
+      await serviceClient.auth.admin.generateLink({
+        type: "signup",
+        email: email.toLowerCase().trim(),
+        options: {
+          redirectTo: "https://paintbook-app.netlify.app/confirm"
+        }
+      });
+    } catch (emailErr) {
+      console.error("Confirmation email error:", emailErr);
+    }
+
     try {
       await serviceClient.from("audit_log").insert({
         action: "painter_registered",

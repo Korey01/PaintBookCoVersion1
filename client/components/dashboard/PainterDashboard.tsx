@@ -1,614 +1,642 @@
-/**
- * PainterDashboard — Supabase-backed painter dashboard for PaintBookCo.
- *
- * Auth flow:
- *  - No Supabase session           → redirect /login
- *  - No painters record            → redirect /register/painter
- *  - kyc_status pending/submitted  → KYC pending screen
- *  - kyc_status rejected           → rejection screen
- *  - kyc_status approved           → full dashboard
- *
- * Tabs: Overview · Available Jobs · My Jobs · Earnings · Availability · Profile
- */
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { GalleryTab } from './tabs/GalleryTab'
+import { AvailabilityTab } from './tabs/AvailabilityTab'
+import { NotificationsTab } from './tabs/NotificationsTab'
 
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase, Job, JobMilestone } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
-import { useRealtime } from "@/contexts/RealtimeContext";
-import AvailableJobs from "./AvailableJobs";
-import MilestoneSubmission from "./MilestoneSubmission";
-import EarningsTracker from "./EarningsTracker";
-import AvailabilityCalendar from "./AvailabilityCalendar";
-import PainterProfile from "./PainterProfile";
-import JobCard from "./JobCard";
-import NotificationBell from "@/components/notifications/NotificationBell";
-import {
-  LayoutDashboard, Briefcase, Bell, CreditCard,
-  Calendar, Settings, LogOut, Loader2, Star,
-  TrendingDown, ChevronRight,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+const TABS = [
+  'Overview', 'Available Jobs', 'My Jobs',
+  'Earnings', 'Gallery', 'Availability',
+  'Profile', 'Notifications'
+]
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface PainterRecord {
-  id: string;
-  user_id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-  phone: string | null;
-  bio: string | null;
-  kyc_status: "pending" | "submitted" | "approved" | "rejected";
-  kyc_rejection_reason: string | null;
-  avg_rating: number;
-  completed_jobs: number;
-  specialisms: string[];
-  service_radius_km: number;
-  available_from: string | null;
-  available_to: string | null;
-  transpact_seller_id: string | null;
-  insurance_expiry: string | null;
-  insurance_insurer: string | null;
-  insurance_policy_no: string | null;
-  bank_account_holder: string | null;
-  bank_sort_code: string | null;
-  bank_account_number: string | null;
-  is_active: boolean;
-}
-
-type Tab = "overview" | "available" | "jobs" | "earnings" | "availability" | "profile";
-
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "overview",     label: "Overview",        icon: <LayoutDashboard className="h-4 w-4" /> },
-  { id: "available",    label: "Available Jobs",   icon: <Bell className="h-4 w-4" /> },
-  { id: "jobs",         label: "My Jobs",          icon: <Briefcase className="h-4 w-4" /> },
-  { id: "earnings",     label: "Earnings",         icon: <CreditCard className="h-4 w-4" /> },
-  { id: "availability", label: "Availability",     icon: <Calendar className="h-4 w-4" /> },
-  { id: "profile",      label: "Profile & Settings", icon: <Settings className="h-4 w-4" /> },
-];
-
-function commissionRate(n: number) {
-  if (n < 5) return 0.12;
-  if (n < 10) return 0.10;
-  return 0.08;
-}
-
-// ── Component ─────────────────────────────────────────────────────────────────
-
-export default function PainterDashboard() {
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { subscribeToJobUpdates, subscribeToMilestoneUpdates } = useRealtime();
-
-  const [loading,  setLoading]  = useState(true);
-  const [painter,  setPainter]  = useState<PainterRecord | null>(null);
-  const [jobs,     setJobs]     = useState<Job[]>([]);
-  const [notifiedCount, setNotifiedCount] = useState(0);
-
-  // Milestone viewer
-  const [activeJob,        setActiveJob]        = useState<Job | null>(null);
-  const [milestones,       setMilestones]       = useState<JobMilestone[]>([]);
-  const [milestonesLoading, setMilestonesLoading] = useState(false);
-
-  const [tab, setTab] = useState<Tab>("overview");
-
-  // ── Data load (uses auth from AuthContext) ─────────────────────────────────
+export function PainterDashboard() {
+  const [activeTab, setActiveTab] = useState(0)
+  const [painter, setPainter] = useState<any>(null)
+  const [jobs, setJobs] = useState<any[]>([])
+  const [availableJobs, setAvailableJobs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [profileForm, setProfileForm] = useState<any>({})
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ current: '', newPass: '', confirm: '' })
+  const [passwordMsg, setPasswordMsg] = useState('')
+  const [insuranceForm, setInsuranceForm] = useState<any>({})
+  const [insuranceFile, setInsuranceFile] = useState<File | null>(null)
+  const [submittingInsurance, setSubmittingInsurance] = useState(false)
 
   useEffect(() => {
-    if (user) {
-      fetchData(user.id);
-    }
-  }, [user]);
+    loadPainter()
+  }, [])
 
-  // ── Subscribe to job and milestone updates ─────────────────────────────────
-
-  useEffect(() => {
-    if (jobs.length === 0) return;
-
-    jobs.forEach((job) => {
-      subscribeToJobUpdates(job.id);
-      subscribeToMilestoneUpdates(job.id);
-    });
-  }, [jobs, subscribeToJobUpdates, subscribeToMilestoneUpdates]);
-
-  const fetchData = useCallback(async (userId: string) => {
-    setLoading(true);
-    try {
-      // Fetch painter record
-      const { data: painterData, error: pErr } = await supabase
-        .from("painters")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (pErr || !painterData) {
-        navigate("/register/painter");
-        return;
-      }
-
-      setPainter(painterData as PainterRecord);
-
-      if (painterData.kyc_status !== "approved") {
-        setLoading(false);
-        return;
-      }
-
-      // Fetch jobs
-      const { data: jobsData } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("assigned_painter_id", painterData.id)
-        .order("created_at", { ascending: false });
-
-      setJobs((jobsData as Job[]) ?? []);
-
-      // Fetch notified match count
-      const { count } = await supabase
-        .from("job_matches")
-        .select("id", { count: "exact" })
-        .eq("painter_id", painterData.id)
-        .eq("status", "notified");
-
-      setNotifiedCount(count ?? 0);
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate]);
-
-  const refresh = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) fetchData(session.user.id);
-  }, [fetchData]);
-
-  // ── Milestone panel ────────────────────────────────────────────────────────
-
-  async function openMilestones(job: Job) {
-    setActiveJob(job);
-    setMilestonesLoading(true);
+  const loadPainter = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
     const { data } = await supabase
-      .from("job_milestones")
-      .select("*")
-      .eq("job_id", job.id)
-      .order("milestone_number");
-    setMilestones((data as JobMilestone[]) ?? []);
-    setMilestonesLoading(false);
-    setTab("jobs");
+      .from('painters')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+    if (data) {
+      setPainter(data)
+      setProfileForm({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone || '',
+        bio: data.bio || '',
+        city: data.city || '',
+        postcode: data.postcode || '',
+      })
+      loadJobs(data.id)
+      loadAvailableJobs()
+    }
+    setLoading(false)
   }
 
-  async function refreshMilestones() {
-    if (!activeJob) return;
+  const loadJobs = async (painterId: string) => {
     const { data } = await supabase
-      .from("job_milestones")
-      .select("*")
-      .eq("job_id", activeJob.id)
-      .order("milestone_number");
-    setMilestones((data as JobMilestone[]) ?? []);
-    refresh();
+      .from('jobs')
+      .select('*')
+      .eq('assigned_painter_id', painterId)
+      .order('created_at', { ascending: false })
+    if (data) setJobs(data)
   }
 
-  // ── Mark job started ───────────────────────────────────────────────────────
-
-  async function markStarted(job: Job) {
-    await supabase.from("jobs").update({ status: "in_progress" }).eq("id", job.id);
-    refresh();
+  const loadAvailableJobs = async () => {
+    const { data } = await supabase
+      .from('jobs')
+      .select('id, title, type, postcode, budget, start_date, end_date, created_at')
+      .in('status', ['pending_match', 'matching_in_progress'])
+      .is('assigned_painter_id', null)
+      .order('created_at', { ascending: false })
+    if (data) setAvailableJobs(data)
   }
 
-  async function handleSignOut() {
-    await signOut();
-    navigate("/login");
+  const acceptJob = async (jobId: string) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/accept-job`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ job_id: jobId })
+      }
+    )
+    const result = await res.json()
+    if (result.success) {
+      setAvailableJobs(prev => prev.filter(j => j.id !== jobId))
+      await loadJobs(painter.id)
+    } else {
+      alert(result.error || 'Failed to accept job')
+    }
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────────
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ fontFamily: "Arial, system-ui, sans-serif" }}>
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#2E75B6" }} />
-      </div>
-    );
+  const saveProfile = async () => {
+    setSavingProfile(true)
+    await supabase.from('painters').update(profileForm).eq('id', painter.id)
+    if (profileForm.postcode !== painter.postcode) {
+      const { data: { session } } = await supabase.auth.getSession()
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/geocode-postcode`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ postcode: profileForm.postcode, painter_id: painter.id })
+        }
+      )
+    }
+    await loadPainter()
+    setSavingProfile(false)
   }
 
-  // ── KYC gates ─────────────────────────────────────────────────────────────
-
-  if (painter && (painter.kyc_status === "pending" || painter.kyc_status === "submitted")) {
-    return <KycGate status={painter.kyc_status} reason={null} onSignOut={signOut} />;
+  const changePassword = async () => {
+    setPasswordMsg('')
+    if (passwordForm.newPass !== passwordForm.confirm) {
+      setPasswordMsg('Passwords do not match')
+      return
+    }
+    if (passwordForm.newPass.length < 8) {
+      setPasswordMsg('Password must be at least 8 characters')
+      return
+    }
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: painter.email,
+      password: passwordForm.current
+    })
+    if (signInError) {
+      setPasswordMsg('Current password is incorrect')
+      return
+    }
+    const { error } = await supabase.auth.updateUser({ password: passwordForm.newPass })
+    if (error) {
+      setPasswordMsg(error.message)
+    } else {
+      setPasswordMsg('Password updated successfully')
+      setPasswordForm({ current: '', newPass: '', confirm: '' })
+    }
   }
 
-  if (painter && painter.kyc_status === "rejected") {
-    return <KycGate status="rejected" reason={painter.kyc_rejection_reason} onSignOut={signOut} />;
+  const submitInsurance = async () => {
+    if (!insuranceFile) return
+    setSubmittingInsurance(true)
+    const path = `${painter.id}/${Date.now()}_${insuranceFile.name}`
+    await supabase.storage.from('painter-insurance').upload(path, insuranceFile)
+    const { data: { publicUrl } } = supabase.storage
+      .from('painter-insurance').getPublicUrl(path)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-insurance`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          ...insuranceForm,
+          insurance_certificate_url: publicUrl,
+          certificate_size_bytes: insuranceFile.size,
+        })
+      }
+    )
+    const result = await res.json()
+    if (result.success) {
+      await loadPainter()
+    } else {
+      alert(result.error)
+    }
+    setSubmittingInsurance(false)
   }
 
-  if (!painter) return null;
+  const commissionRate = (jobs: number) => {
+    if (jobs <= 5) return { rate: '12%', next: 6, label: 'amber' }
+    if (jobs <= 10) return { rate: '10%', next: 11, label: 'blue' }
+    return { rate: '8%', next: null, label: 'green' }
+  }
 
-  // ── Derived stats ──────────────────────────────────────────────────────────
+  const getStatusBadge = (status: string) => {
+    const map: Record<string, string> = {
+      pending_match: 'bg-gray-700 text-gray-300',
+      matching_in_progress: 'bg-blue-900 text-blue-300',
+      painter_accepted: 'bg-purple-900 text-purple-300',
+      awaiting_payment: 'bg-amber-900 text-amber-300',
+      escrow_funded: 'bg-teal-900 text-teal-300',
+      in_progress: 'bg-blue-900 text-blue-300',
+      milestone_review: 'bg-orange-900 text-orange-300',
+      pending_completion: 'bg-green-900 text-green-300',
+      completed: 'bg-green-700 text-green-100',
+      disputed: 'bg-red-900 text-red-300',
+      cancelled: 'bg-gray-800 text-gray-500',
+    }
+    return map[status] || 'bg-gray-700 text-gray-300'
+  }
 
-  const activeJobsCount    = jobs.filter((j) => j.status !== "completed" && j.status !== "cancelled").length;
-  const completedJobsCount = jobs.filter((j) => j.status === "completed").length;
-  const totalEarned        = jobs
-    .filter((j) => j.status === "completed")
-    .reduce((s, j) => s + (j.total_price ?? j.budget ?? 0) * (1 - commissionRate(painter.completed_jobs - completedJobsCount)), 0);
+  const passwordStrength = (pwd: string) => {
+    const score = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/, /.{8,}/]
+      .filter(r => r.test(pwd)).length
+    if (score <= 2) return { label: 'Weak', color: 'bg-red-500', width: '25%' }
+    if (score === 3) return { label: 'Fair', color: 'bg-amber-500', width: '50%' }
+    if (score === 4) return { label: 'Good', color: 'bg-blue-500', width: '75%' }
+    return { label: 'Strong', color: 'bg-green-500', width: '100%' }
+  }
 
-  const rate = commissionRate(painter.completed_jobs);
-  const nextTierAt = painter.completed_jobs < 5 ? 5 : painter.completed_jobs < 10 ? 10 : null;
-  const tierPct = nextTierAt
-    ? Math.round((painter.completed_jobs / nextTierAt) * 100)
-    : 100;
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-white">Loading dashboard...</div>
+    </div>
+  )
 
-  const tierLabel   = painter.completed_jobs < 5 ? "12% — Jobs 1–5" : painter.completed_jobs < 10 ? "10% — Jobs 6–10" : "8% — Jobs 11+";
-  const tierColor   = painter.completed_jobs < 5 ? "text-amber-600 bg-amber-50 border-amber-200" : painter.completed_jobs < 10 ? "text-blue-600 bg-blue-50 border-blue-200" : "text-green-600 bg-green-50 border-green-200";
+  if (!painter) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-white">Painter profile not found.</div>
+    </div>
+  )
+
+  const commission = commissionRate(painter.completed_jobs)
+
+  const completionSteps = [
+    { label: 'Account created', done: true },
+    { label: 'Email confirmed', done: !!painter.user_id },
+    { label: 'KYC submitted', done: painter.kyc_status !== 'pending' },
+    { label: 'KYC approved', done: painter.kyc_status === 'approved' },
+    { label: 'Insurance submitted', done: !!painter.insurance_submitted_at },
+    { label: 'Profile complete', done: painter.is_active },
+  ]
+  const completedSteps = completionSteps.filter(s => s.done).length
+  const completionPct = Math.round((completedSteps / completionSteps.length) * 100)
 
   return (
-    <div className="dashboard-painter min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-white/10 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-lg font-bold text-white">PaintBookCo</h1>
-            <p className="text-xs text-dashboard-painter-text-secondary mt-0.5">
-              {painter.first_name ? `${painter.first_name}'s Dashboard` : "Painter Dashboard"}
+            <h1 className="text-2xl font-bold">
+              Welcome, {painter.first_name}
+            </h1>
+            <p className="text-gray-400 text-sm mt-1">
+              Painter Dashboard
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            <span className="text-xs text-dashboard-painter-text-secondary hidden sm:block">
-              {painter.email}
-            </span>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-1.5 text-xs text-dashboard-painter-text-secondary hover:text-dashboard-painter-text-primary transition-colors"
-            >
-              <LogOut className="h-3.5 w-3.5" /> Sign out
-            </button>
-          </div>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium
+            ${commission.label === 'amber' ? 'bg-amber-900 text-amber-300' :
+              commission.label === 'blue' ? 'bg-blue-900 text-blue-300' :
+              'bg-green-900 text-green-300'}`}>
+            {commission.rate} Commission
+          </span>
         </div>
-      </header>
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
         {/* Tab navigation */}
-        <nav className="flex items-center gap-1 mb-6 dashboard-painter-card border-white/10 rounded-xl p-1 shadow-sm overflow-x-auto">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => { setTab(t.id); setActiveJob(null); }}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors relative ${
-                tab === t.id
-                  ? "dashboard-painter-accent-bg text-white shadow-sm"
-                  : "text-dashboard-painter-text-secondary hover:text-dashboard-painter-text-primary"
-              }`}
-            >
-              {t.icon}
-              <span className="hidden sm:inline">{t.label}</span>
-              {t.id === "available" && notifiedCount > 0 && (
-                <span className="ml-0.5 bg-dashboard-painter-danger text-white text-xs rounded-full h-4 w-4 flex items-center justify-center leading-none">
-                  {notifiedCount}
-                </span>
-              )}
+        <div className="flex gap-1 overflow-x-auto mb-8 border-b border-gray-800 pb-0">
+          {TABS.map((tab, i) => (
+            <button key={tab} onClick={() => setActiveTab(i)}
+              className={`px-4 py-2 text-sm whitespace-nowrap transition-colors border-b-2 -mb-px
+                ${activeTab === i
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'}`}>
+              {tab}
             </button>
           ))}
-        </nav>
+        </div>
 
-        {/* ── OVERVIEW ───────────────────────────────────────────── */}
-        {tab === "overview" && (
-          <div>
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <StatCard label="Total Earnings" value={`£${totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })}`} sub="net, all time" />
-              <StatCard label="Active Jobs" value={activeJobsCount} sub="not completed/cancelled" />
-              <StatCard label="Completed Jobs" value={painter.completed_jobs} sub="all time" />
-              <StatCard label="Avg Rating" value={painter.avg_rating > 0 ? painter.avg_rating.toFixed(1) : "—"} sub="from verified reviews" icon={<Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />} />
-            </div>
-
-            {/* Commission tier */}
-            <div className="dashboard-painter-card border-white/10 rounded-xl p-5 mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-white">Commission Tier</h3>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${tierColor}`}>
-                  {tierLabel}
-                </span>
-              </div>
-              {nextTierAt ? (
-                <>
-                  <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-2">
-                    <div
-                      className="h-full rounded-full transition-all bg-dashboard-painter-accent"
-                      style={{ width: `${tierPct}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-dashboard-painter-text-secondary flex items-center gap-1">
-                    <TrendingDown className="h-3 w-3 text-dashboard-painter-accent" />
-                    {nextTierAt - painter.completed_jobs} more job{nextTierAt - painter.completed_jobs !== 1 ? "s" : ""} until your commission drops to{" "}
-                    <strong>{painter.completed_jobs < 5 ? "10%" : "8%"}</strong>
-                  </p>
-                </>
-              ) : (
-                <p className="text-xs text-dashboard-painter-success font-medium">You're at the lowest commission tier — 8%!</p>
-              )}
-            </div>
-
-            {/* Available jobs nudge */}
-            {notifiedCount > 0 && (
-              <button
-                onClick={() => setTab("available")}
-                className="w-full flex items-center justify-between dashboard-painter-card border-dashboard-painter-accent/30 rounded-xl p-4 mb-6 hover:border-dashboard-painter-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="bg-dashboard-painter-danger text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-                    {notifiedCount}
-                  </span>
-                  <div className="text-left">
-                    <p className="text-sm font-semibold text-white">
-                      Job{notifiedCount !== 1 ? "s" : ""} awaiting your response
-                    </p>
-                    <p className="text-xs text-dashboard-painter-text-secondary">
-                      Accept before the 48-hour window closes
-                    </p>
-                  </div>
+        {/* TAB 1 — OVERVIEW */}
+        {activeTab === 0 && (
+          <div className="space-y-6">
+            {completionPct < 100 && (
+              <div className="bg-gray-900 border border-gray-700 rounded-lg p-5">
+                <div className="flex justify-between mb-2">
+                  <span className="text-white font-medium">Profile completion</span>
+                  <span className="text-blue-400">{completionPct}%</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-dashboard-painter-text-secondary" />
-              </button>
-            )}
-
-            {/* Recent jobs */}
-            {jobs.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold mb-3 text-white">Recent Jobs</h3>
-                <div className="flex flex-col gap-3">
-                  {jobs.slice(0, 3).map((job) => (
-                    <PainterJobCard key={job.id} job={job} onViewMilestones={openMilestones} onMarkStarted={markStarted} />
+                <div className="w-full bg-gray-800 rounded-full h-2 mb-4">
+                  <div className="bg-blue-500 h-2 rounded-full transition-all"
+                    style={{ width: `${completionPct}%` }} />
+                </div>
+                <div className="space-y-2">
+                  {completionSteps.map(step => (
+                    <div key={step.label} className="flex items-center gap-2 text-sm">
+                      <span className={step.done ? 'text-green-400' : 'text-gray-600'}>
+                        {step.done ? '✓' : '○'}
+                      </span>
+                      <span className={step.done ? 'text-gray-300' : 'text-gray-600'}>
+                        {step.label}
+                      </span>
+                    </div>
                   ))}
                 </div>
-                {jobs.length > 3 && (
-                  <button
-                    className="mt-3 text-sm font-medium flex items-center gap-1 text-dashboard-painter-accent hover:opacity-80"
-                    onClick={() => setTab("jobs")}
-                  >
-                    View all {jobs.length} jobs <ChevronRight className="h-3.5 w-3.5" />
+                {!painter.insurance_submitted_at && painter.kyc_status === 'approved' && (
+                  <button onClick={() => setActiveTab(6)}
+                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                    Submit Insurance →
                   </button>
                 )}
               </div>
             )}
-          </div>
-        )}
-
-        {/* ── AVAILABLE JOBS ─────────────────────────────────────── */}
-        {tab === "available" && (
-          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
-            <AvailableJobs
-              painterId={painter.id}
-              onJobAccepted={() => { refresh(); setTab("jobs"); }}
-            />
-          </div>
-        )}
-
-        {/* ── MY JOBS ────────────────────────────────────────────── */}
-        {tab === "jobs" && (
-          <div>
-            {activeJob ? (
-              milestonesLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <Loader2 className="h-6 w-6 animate-spin text-dashboard-painter-accent" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: 'Completed Jobs', value: painter.completed_jobs },
+                { label: 'Average Rating', value: `${painter.avg_rating} ★` },
+                { label: 'Active Jobs', value: jobs.filter(j => j.status === 'in_progress').length },
+                { label: 'Commission Rate', value: commission.rate },
+              ].map(stat => (
+                <div key={stat.label} className="bg-gray-900 rounded-lg p-4">
+                  <p className="text-gray-500 text-xs mb-1">{stat.label}</p>
+                  <p className="text-white text-xl font-bold">{stat.value}</p>
                 </div>
-              ) : (
-                <MilestoneSubmission
-                  job={activeJob}
-                  milestones={milestones}
-                  completedJobsBefore={Math.max(0, painter.completed_jobs - jobs.filter((j) => j.status === "completed").length)}
-                  onBack={() => setActiveJob(null)}
-                  onRefresh={refreshMilestones}
-                />
-              )
-            ) : (
-              <>
-                <h2 className="text-base font-semibold mb-4 text-white">My Jobs ({jobs.length})</h2>
-                {jobs.length === 0 ? (
-                  <div className="text-center py-20 text-dashboard-painter-text-secondary">
-                    <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm">No jobs yet.</p>
-                    <p className="text-xs mt-1">Accept an available job to get started.</p>
-                    <Button
-                      className="mt-4 dashboard-painter-accent text-black text-sm hover:opacity-90"
-                      onClick={() => setTab("available")}
-                    >
-                      View Available Jobs
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {jobs.map((job) => (
-                      <PainterJobCard key={job.id} job={job} onViewMilestones={openMilestones} onMarkStarted={markStarted} />
-                    ))}
-                  </div>
-                )}
-              </>
+              ))}
+            </div>
+            {commission.next && (
+              <div className="bg-gray-900 rounded-lg p-4">
+                <p className="text-gray-400 text-sm mb-2">
+                  {commission.next - painter.completed_jobs} more jobs until your commission 
+                  drops to {painter.completed_jobs <= 5 ? '10%' : '8%'}
+                </p>
+                <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full"
+                    style={{ width: `${(painter.completed_jobs / commission.next) * 100}%` }} />
+                </div>
+              </div>
             )}
           </div>
         )}
 
-        {/* ── EARNINGS ───────────────────────────────────────────── */}
-        {tab === "earnings" && (
-          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
-            <h2 className="text-base font-semibold mb-5 text-white">Earnings</h2>
-            <EarningsTracker jobs={jobs} completedJobs={painter.completed_jobs} />
+        {/* TAB 2 — AVAILABLE JOBS */}
+        {activeTab === 1 && (
+          <div className="space-y-4">
+            {!painter.is_active || painter.kyc_status !== 'approved' || !painter.insurance_verified ? (
+              <div className="text-center py-12">
+                <p className="text-gray-400 mb-4">
+                  Complete your profile to start receiving jobs
+                </p>
+                <button onClick={() => setActiveTab(6)}
+                  className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                  Complete Profile
+                </button>
+              </div>
+            ) : availableJobs.length === 0 ? (
+              <p className="text-gray-500 text-center py-12">
+                No available jobs in your area right now
+              </p>
+            ) : (
+              availableJobs.map(job => {
+                const postcodeArea = job.postcode?.split(' ')[0] || 'Unknown area'
+                const hoursLeft = Math.max(0,
+                  48 - (Date.now() - new Date(job.created_at).getTime()) / 3600000
+                )
+                return (
+                  <div key={job.id} className="bg-gray-900 border border-gray-700 rounded-lg p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-white font-medium">{job.title}</h3>
+                        <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded mt-1 inline-block">
+                          {job.type}
+                        </span>
+                      </div>
+                      <span className={`text-xs font-mono px-2 py-1 rounded
+                        ${hoursLeft < 4 ? 'bg-red-900 text-red-300' : 'bg-gray-800 text-gray-400'}`}>
+                        {hoursLeft.toFixed(0)}h left
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-sm text-gray-400 mb-4">
+                      <div><span className="text-gray-600 text-xs">Area</span><br/>{postcodeArea}</div>
+                      <div><span className="text-gray-600 text-xs">Budget</span><br/>£{job.budget}</div>
+                      <div><span className="text-gray-600 text-xs">Start</span><br/>
+                        {job.start_date ? new Date(job.start_date).toLocaleDateString() : 'Flexible'}
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button onClick={() => acceptJob(job.id)}
+                        className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm">
+                        Accept Job
+                      </button>
+                      <button onClick={() => setAvailableJobs(prev => prev.filter(j => j.id !== job.id))}
+                        className="px-4 py-2 border border-gray-700 text-gray-400 rounded hover:border-gray-500 text-sm">
+                        Pass
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
+            )}
           </div>
         )}
 
-        {/* ── AVAILABILITY ───────────────────────────────────────── */}
-        {tab === "availability" && (
-          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
-            <AvailabilityCalendar
-              painter={painter}
-              jobs={jobs}
-              onSaved={(from, to) => setPainter((p) => p ? { ...p, available_from: from, available_to: to } : p)}
-            />
+        {/* TAB 3 — MY JOBS */}
+        {activeTab === 2 && (
+          <div className="space-y-4">
+            {jobs.length === 0 ? (
+              <p className="text-gray-500 text-center py-12">No jobs yet</p>
+            ) : jobs.map(job => (
+              <div key={job.id} className="bg-gray-900 border border-gray-700 rounded-lg p-5">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-white font-medium">{job.title}</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded ${getStatusBadge(job.status)}`}>
+                    {job.status.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <p className="text-gray-500 text-sm">
+                  {job.start_date ? new Date(job.start_date).toLocaleDateString() : 'No date set'}
+                  {job.total_price && ` · £${job.total_price}`}
+                </p>
+                {job.status === 'escrow_funded' && (
+                  <div className="mt-3 p-3 bg-teal-900/30 rounded border border-teal-800">
+                    <p className="text-teal-300 text-sm font-medium">Payment confirmed</p>
+                    <p className="text-teal-400 text-xs">Customer contact details available in your email</p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
-        {/* ── PROFILE ────────────────────────────────────────────── */}
-        {tab === "profile" && (
-          <div className="dashboard-painter-card border-white/10 rounded-xl p-6">
-            <h2 className="text-base font-semibold mb-5 text-white">Profile &amp; Settings</h2>
-            <PainterProfile
-              painter={painter}
-              onSaved={(updates) => setPainter((p) => p ? { ...p, ...updates } : p)}
-            />
+        {/* TAB 4 — EARNINGS */}
+        {activeTab === 3 && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: 'All Time', value: '£0' },
+                { label: 'This Month', value: '£0' },
+                { label: 'This Week', value: '£0' },
+              ].map(s => (
+                <div key={s.label} className="bg-gray-900 rounded-lg p-4">
+                  <p className="text-gray-500 text-xs mb-1">{s.label}</p>
+                  <p className="text-white text-xl font-bold">{s.value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-gray-900 rounded-lg p-4">
+              <p className="text-gray-400 text-sm">
+                Commission savings tracker will populate as you complete jobs.
+              </p>
+            </div>
           </div>
         )}
+
+        {/* TAB 5 — GALLERY */}
+        {activeTab === 4 && <GalleryTab painter={painter} />}
+
+        {/* TAB 6 — AVAILABILITY */}
+        {activeTab === 5 && <AvailabilityTab painter={painter} />}
+
+        {/* TAB 7 — PROFILE AND SETTINGS */}
+        {activeTab === 6 && (
+          <div className="space-y-8 max-w-2xl">
+
+            {/* Personal details */}
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h3 className="text-white font-medium mb-4">Personal Details</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { key: 'first_name', label: 'First Name' },
+                  { key: 'last_name', label: 'Last Name' },
+                  { key: 'phone', label: 'Phone' },
+                  { key: 'city', label: 'City' },
+                  { key: 'postcode', label: 'Postcode' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label className="text-gray-400 text-xs block mb-1">{f.label}</label>
+                    <input value={profileForm[f.key] || ''}
+                      onChange={e => setProfileForm((p: any) => ({ ...p, [f.key]: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm" />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
+                <label className="text-gray-400 text-xs block mb-1">Bio</label>
+                <textarea value={profileForm.bio || ''}
+                  onChange={e => setProfileForm((p: any) => ({ ...p, bio: e.target.value }))}
+                  maxLength={500}
+                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm h-24" />
+                <p className="text-gray-600 text-xs text-right">
+                  {(profileForm.bio || '').length}/500
+                </p>
+              </div>
+              <div className="mt-2 p-3 bg-gray-800 rounded">
+                <p className="text-gray-500 text-xs">
+                  Email: {painter.email} (cannot be changed)
+                </p>
+              </div>
+              <button onClick={saveProfile} disabled={savingProfile}
+                className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 text-sm disabled:opacity-50">
+                {savingProfile ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+
+            {/* Insurance */}
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h3 className="text-white font-medium mb-4">Insurance Details</h3>
+              {painter.insurance_verified ? (
+                <div className="p-3 bg-green-900/30 border border-green-800 rounded">
+                  <p className="text-green-400 font-medium">✓ Insurance Verified</p>
+                  <p className="text-green-300 text-sm mt-1">
+                    {painter.insurance_company} — {painter.insurance_policy_number}
+                  </p>
+                  <p className="text-green-400 text-xs">
+                    Expires: {painter.insurance_expiry_date}
+                  </p>
+                </div>
+              ) : painter.insurance_submitted_at ? (
+                <div className="p-3 bg-amber-900/30 border border-amber-800 rounded">
+                  <p className="text-amber-400 font-medium">Under Review</p>
+                  <p className="text-amber-300 text-sm">
+                    Submitted {new Date(painter.insurance_submitted_at).toLocaleDateString()}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {[
+                    { key: 'insurance_company', label: 'Insurance Company', required: true },
+                    { key: 'insurance_policy_number', label: 'Policy Number', required: true },
+                    { key: 'insurance_expiry_date', label: 'Expiry Date', type: 'date', required: true },
+                  ].map(f => (
+                    <div key={f.key}>
+                      <label className="text-gray-400 text-xs block mb-1">{f.label}</label>
+                      <input type={f.type || 'text'}
+                        value={insuranceForm[f.key] || ''}
+                        onChange={e => setInsuranceForm((p: any) => ({ ...p, [f.key]: e.target.value }))}
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm" />
+                    </div>
+                  ))}
+                  <div>
+                    <label className="text-gray-400 text-xs block mb-1">Policy Details</label>
+                    <textarea value={insuranceForm.insurance_policy_details || ''}
+                      onChange={e => setInsuranceForm((p: any) => ({ ...p, insurance_policy_details: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm h-20" />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs block mb-1">
+                      Certificate (PDF/JPG/PNG — max 5MB)
+                    </label>
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={e => setInsuranceFile(e.target.files?.[0] || null)}
+                      className="text-gray-400 text-sm" />
+                    {insuranceFile && (
+                      <p className={`text-xs mt-1 ${insuranceFile.size > 5242880 ? 'text-red-400' : 'text-gray-500'}`}>
+                        {(insuranceFile.size / 1048576).toFixed(2)} MB / 5 MB max
+                      </p>
+                    )}
+                  </div>
+                  <button onClick={submitInsurance}
+                    disabled={submittingInsurance || !insuranceFile}
+                    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 text-sm disabled:opacity-50">
+                    {submittingInsurance ? 'Submitting...' : 'Submit Insurance'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Change Password */}
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h3 className="text-white font-medium mb-4">Change Password</h3>
+              <div className="space-y-4">
+                {[
+                  { key: 'current', label: 'Current Password' },
+                  { key: 'newPass', label: 'New Password' },
+                  { key: 'confirm', label: 'Confirm New Password' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label className="text-gray-400 text-xs block mb-1">{f.label}</label>
+                    <input type="password"
+                      value={(passwordForm as any)[f.key]}
+                      onChange={e => setPasswordForm(p => ({ ...p, [f.key]: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm" />
+                  </div>
+                ))}
+                {passwordForm.newPass && (() => {
+                  const s = passwordStrength(passwordForm.newPass)
+                  return (
+                    <div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5 mb-1">
+                        <div className={`h-1.5 rounded-full transition-all ${s.color}`}
+                          style={{ width: s.width }} />
+                      </div>
+                      <p className="text-xs text-gray-500">{s.label}</p>
+                    </div>
+                  )
+                })()}
+                {passwordMsg && (
+                  <p className={`text-sm ${passwordMsg.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
+                    {passwordMsg}
+                  </p>
+                )}
+                <button onClick={changePassword}
+                  className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 text-sm">
+                  Update Password
+                </button>
+              </div>
+            </div>
+
+            {/* Account Actions */}
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h3 className="text-white font-medium mb-4">Account</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession()
+                    const res = await fetch(
+                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-my-data`,
+                      { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY } }
+                    )
+                    const blob = await res.blob()
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url; a.download = 'paintbookco-data.json'; a.click()
+                  }}
+                  className="w-full text-left px-4 py-3 border border-gray-700 rounded text-gray-300 hover:border-gray-500 text-sm">
+                  Download My Data
+                </button>
+                <button
+                  onClick={async () => {
+                    const input = prompt('Type DELETE to confirm account deletion:')
+                    if (input !== 'DELETE') return
+                    const { data: { session } } = await supabase.auth.getSession()
+                    await fetch(
+                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-my-account`,
+                      { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY } }
+                    )
+                    await supabase.auth.signOut()
+                    window.location.href = '/'
+                  }}
+                  className="w-full text-left px-4 py-3 border border-red-900 rounded text-red-400 hover:border-red-700 text-sm">
+                  Delete My Account
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 8 — NOTIFICATIONS */}
+        {activeTab === 7 && <NotificationsTab painter={painter} />}
       </div>
     </div>
-  );
+  )
 }
 
-// ── KYC Gate Screen ───────────────────────────────────────────────────────────
-
-function KycGate({ status, reason, onSignOut }: { status: string; reason: string | null; onSignOut: () => void }) {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4" style={{ fontFamily: "Arial, system-ui, sans-serif" }}>
-      <div className="max-w-md w-full bg-white border border-gray-200 rounded-2xl p-8 shadow-sm text-center">
-        <div className="w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: status === "rejected" ? "#fee2e2" : "#dbeafe" }}>
-          {status === "rejected"
-            ? <span className="text-2xl">✗</span>
-            : <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#2E75B6" }} />
-          }
-        </div>
-        <h2 className="text-xl font-bold mb-2" style={{ color: "#1B3A5C" }}>
-          {status === "rejected" ? "Application Not Approved" : "Application Under Review"}
-        </h2>
-        <p className="text-sm text-gray-500 mb-4">
-          {status === "rejected"
-            ? reason ?? "Your application was not approved at this time."
-            : "Your application is under review. We will notify you by email when approved."}
-        </p>
-        {status === "rejected" && (
-          <Button className="text-white mb-4" style={{ backgroundColor: "#1B3A5C" }} onClick={() => window.location.href = "/register/painter"}>
-            Resubmit Application
-          </Button>
-        )}
-        <br />
-        <button onClick={onSignOut} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-          Sign out
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Stat card ─────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, sub, icon }: { label: string; value: string | number; sub: string; icon?: React.ReactNode }) {
-  return (
-    <div className="dashboard-painter-card border-white/10 rounded-xl p-5">
-      <p className="text-xs text-dashboard-painter-text-secondary mb-1">{label}</p>
-      <p className="text-2xl font-bold flex items-center gap-1.5 text-dashboard-painter-accent">
-        {value} {icon}
-      </p>
-      <p className="text-xs text-dashboard-painter-text-secondary mt-1">{sub}</p>
-    </div>
-  );
-}
-
-// ── Painter Job Card (with painter-specific actions) ──────────────────────────
-
-function PainterJobCard({ job, onViewMilestones, onMarkStarted }: {
-  job: Job;
-  onViewMilestones: (job: Job) => void;
-  onMarkStarted: (job: Job) => void;
-}) {
-  const STATUS_LABELS: Record<string, string> = {
-    pending_match: "Job Posted", matching_in_progress: "Matching",
-    painter_accepted: "Accepted", awaiting_payment: "Awaiting Payment",
-    escrow_funded: "Escrow Funded", in_progress: "In Progress",
-    milestone_review: "Milestone Review", pending_completion: "Pending Completion",
-    completed: "Completed", disputed: "Disputed", cancelled: "Cancelled",
-  };
-
-  const STATUS_COLORS: Record<string, string> = {
-    escrow_funded: "bg-teal-100 text-teal-700",
-    in_progress: "bg-blue-100 text-blue-700",
-    completed: "bg-green-600 text-white",
-    disputed: "bg-red-100 text-red-700",
-    awaiting_payment: "bg-amber-100 text-amber-700",
-    painter_accepted: "bg-purple-100 text-purple-700",
-    milestone_review: "bg-orange-100 text-orange-700",
-    pending_completion: "bg-green-100 text-green-700",
-  };
-
-  const colorCls = STATUS_COLORS[job.status] ?? "bg-gray-100 text-gray-600";
-
-  return (
-    <div className="dashboard-painter-card border-white/10 rounded-xl p-5">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <h3 className="font-semibold text-sm text-white">{job.title}</h3>
-          <p className="text-xs text-dashboard-painter-text-secondary mt-0.5">{job.type}</p>
-        </div>
-        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${colorCls}`}>
-          {STATUS_LABELS[job.status] ?? job.status}
-        </span>
-      </div>
-
-      {(job.total_price ?? job.budget) != null && (
-        <p className="text-xs text-dashboard-painter-text-secondary mb-3">
-          Value:{" "}
-          <strong className="text-white">
-            £{(job.total_price ?? job.budget)!.toLocaleString("en-GB", { minimumFractionDigits: 2 })}
-          </strong>
-        </p>
-      )}
-
-      {/* Escrow funded → show contact + Mark Started */}
-      {job.status === "escrow_funded" && (
-        <div className="mb-3 bg-dashboard-painter-accent/10 border border-dashboard-painter-accent/30 rounded-lg px-3 py-2 text-xs text-dashboard-painter-accent">
-          <p className="font-semibold mb-0.5">Customer contact details (escrow funded)</p>
-          <p>Contact has been sent to your registered email address.</p>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {job.status === "escrow_funded" && (
-          <Button
-            size="sm"
-            onClick={() => onMarkStarted(job)}
-            className="dashboard-painter-accent text-black text-xs hover:opacity-90"
-          >
-            Mark Job Started
-          </Button>
-        )}
-        {(job.status === "in_progress" || job.status === "milestone_review") && (
-          <Button
-            size="sm"
-            onClick={() => onViewMilestones(job)}
-            className="dashboard-painter-accent text-black text-xs gap-1 hover:opacity-90"
-          >
-            Submit Milestone
-          </Button>
-        )}
-        {(job.status === "escrow_funded" || job.status === "in_progress" || job.status === "milestone_review") && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onViewMilestones(job)}
-            className="text-xs border-white/20 text-white hover:bg-white/5"
-          >
-            View Milestones
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Builder.io registration ───────────────────────────────────────────────────
-
-(async () => {
-  try {
-    const { Builder } = await import("@builder.io/react");
-    Builder.registerComponent(PainterDashboard, {
-      name: "PainterDashboard",
-      inputs: [],
-    });
-  } catch {
-    // @builder.io/react not installed — skip silently
-  }
-})();
+export default PainterDashboard

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { GalleryTab } from './tabs/GalleryTab'
+import { PaintBookChat } from '../chat/PaintBookChat'
 import { AvailabilityTab } from './tabs/AvailabilityTab'
 import { NotificationsTab } from './tabs/NotificationsTab'
 
@@ -409,6 +410,19 @@ export function PainterDashboard() {
                   <div className="mt-3 p-3 bg-teal-900/30 rounded border border-teal-800">
                     <p className="text-teal-300 text-sm font-medium">Payment confirmed</p>
                     <p className="text-teal-400 text-xs">Customer contact details available in your email</p>
+                  </div>
+                )}
+                {(job.status === 'escrow_funded' ||
+                  job.status === 'in_progress' ||
+                  job.status === 'milestone_review' ||
+                  job.status === 'pending_completion') && (
+                  <div className="mt-3">
+                    <p className="text-gray-400 text-xs mb-2 font-medium">Chat with Customer</p>
+                    <PaintBookChat
+                      jobId={job.id}
+                      userId={painter?.user_id ?? ""}
+                      userRole="painter"
+                    />
                   </div>
                 )}
               </div>

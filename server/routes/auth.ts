@@ -128,6 +128,123 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
+ * POST /api/auth/register-painter
+ * Register a new painter with full profile details
+ */
+router.post(
+  "/register-painter",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const {
+        email,
+        password,
+        first_name,
+        last_name,
+        phone,
+        specialisms,
+        service_radius_km,
+        postcode,
+      } = req.body;
+
+      // Validation
+      if (
+        !email ||
+        !password ||
+        !first_name ||
+        !last_name ||
+        !postcode
+      ) {
+        res.status(400).json({
+          success: false,
+          error: "Missing required fields",
+        });
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid email format",
+        });
+        return;
+      }
+
+      if (!isValidPassword(password)) {
+        res.status(400).json({
+          success: false,
+          error: "Password must be at least 6 characters",
+        });
+        return;
+      }
+
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser) {
+        res.status(409).json({
+          success: false,
+          error: "Email already in use",
+        });
+        return;
+      }
+
+      // Hash password
+      const hashedPassword = await hashPassword(password);
+
+      // Create user and painter profile in a transaction
+      const user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          userType: "painter",
+          painterProfile: {
+            create: {
+              firstName: first_name,
+              lastName: last_name,
+              phone: phone || null,
+              postcode: postcode.toUpperCase(),
+              skills: specialisms || [],
+              serviceRadius: service_radius_km || 15,
+              verificationStatus: "pending",
+            },
+          },
+        },
+        include: {
+          painterProfile: true,
+        },
+      });
+
+      // Generate token
+      const token = generateToken({
+        id: user.id,
+        email: user.email,
+        userType: "painter",
+      });
+
+      const response: AuthResponse = {
+        success: true,
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          userType: "painter",
+        },
+      };
+
+      res.status(201).json(response);
+    } catch (error) {
+      console.error("Register painter error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create account. Please try again.",
+      });
+    }
+  },
+);
+
+/**
  * POST /api/auth/login
  * Login user
  */

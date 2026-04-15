@@ -115,27 +115,23 @@ export default function JoinPainter() {
     setIsLoading(true);
 
     try {
-      // Call the Supabase Edge Function for painter registration
-      const response = await fetch(
-        "https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1/register-painter",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            password,
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            phone: phone.trim(),
-            specialisms: selectedSpecialisms,
-            service_radius_km: 15,
-            postcode: postcode.trim().toUpperCase(),
-          }),
-        }
-      );
+      // Call the backend API endpoint for painter registration
+      const response = await fetch("/api/auth/register-painter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone.trim(),
+          specialisms: selectedSpecialisms,
+          service_radius_km: parseInt(serviceRadius),
+          postcode: postcode.trim().toUpperCase(),
+        }),
+      });
 
       const data = await response.json();
       console.log("Registration response:", { status: response.status, data });

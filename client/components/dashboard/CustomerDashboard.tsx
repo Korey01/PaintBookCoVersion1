@@ -155,11 +155,45 @@ export default function CustomerDashboard() {
   // ── Confirm complete ──────────────────────────────────────────────────────
 
   async function confirmComplete(job: Job) {
+    const { data: { session } } = await supabase.auth.getSession();
     const { error } = await supabase
       .from("jobs")
       .update({ status: "completed" })
       .eq("id", job.id);
-    if (!error) refresh();
+    if (!error) {
+      // Fire job completed notification via Edge Function
+      try {
+        const { data: painterData } = await supabase
+          .from("painters")
+          .select("email, first_name, last_name, completed_jobs")
+          .eq("id", job.painter_id)
+          .single();
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-job-completed`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session?.access_token}`,
+              "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              job_id: job.id,
+              job_title: job.title,
+              job_value: job.total_price ?? job.budget ?? 0,
+              customer_email: session?.user?.email,
+              customer_name: session?.user?.user_metadata?.full_name ?? "",
+              painter_email: painterData?.email,
+              painter_name: `${painterData?.first_name ?? ""} ${painterData?.last_name ?? ""}`.trim(),
+              painter_payout: ((job.total_price ?? job.budget ?? 0) * 0.88).toFixed(2),
+            }),
+          }
+        );
+      } catch (webhookErr) {
+        console.error("Completion webhook failed:", webhookErr);
+      }
+      refresh();
+    }
   }
 
   // ── Derived stats ─────────────────────────────────────────────────────────

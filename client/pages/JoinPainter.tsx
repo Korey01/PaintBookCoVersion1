@@ -116,10 +116,11 @@ export default function JoinPainter() {
 
     try {
       // Call the backend API endpoint for painter registration
-      const response = await fetch("/api/auth/register-painter", {
+      const response = await fetch("https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1/register-painter", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
           email: email.trim(),
@@ -130,6 +131,9 @@ export default function JoinPainter() {
           specialisms: selectedSpecialisms,
           service_radius_km: 70,
           postcode: postcode.trim().toUpperCase(),
+          city: "",
+          terms_accepted: true,
+          privacy_accepted: true,
         }),
       });
 

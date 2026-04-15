@@ -56,6 +56,9 @@ export default function JoinPainter() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [insuranceConfirmed, setInsuranceConfirmed] = useState(false);
 
   // Step 1 — personal details
   const [firstName, setFirstName] = useState("");
@@ -255,10 +258,44 @@ export default function JoinPainter() {
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Password</label>
                 <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} placeholder="Min. 8 characters" />
+                {password && (() => {
+                  const score = [/[A-Z]/.test(password), /[a-z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password), password.length >= 8].filter(Boolean).length;
+                  const label = score <= 2 ? "Weak" : score === 3 ? "Fair" : score === 4 ? "Good" : "Strong";
+                  const color = score <= 2 ? "bg-red-500" : score === 3 ? "bg-amber-500" : score === 4 ? "bg-blue-500" : "bg-green-500";
+                  const width = score <= 2 ? "25%" : score === 3 ? "50%" : score === 4 ? "75%" : "100%";
+                  return (
+                    <div className="mt-2">
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+                        <div className={`h-1.5 rounded-full transition-all ${color}`} style={{ width }} />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-muted-foreground">Strength: <span className={score <= 2 ? "text-red-500" : score === 3 ? "text-amber-500" : score === 4 ? "text-blue-500" : "text-green-500"}>{label}</span></p>
+                      </div>
+                      <ul className="mt-1 space-y-0.5">
+                        {[
+                          { label: "8+ characters", met: password.length >= 8 },
+                          { label: "Uppercase letter", met: /[A-Z]/.test(password) },
+                          { label: "Lowercase letter", met: /[a-z]/.test(password) },
+                          { label: "Number", met: /[0-9]/.test(password) },
+                          { label: "Special character", met: /[^A-Za-z0-9]/.test(password) },
+                        ].map(c => (
+                          <li key={c.label} className={`text-xs flex items-center gap-1 ${c.met ? "text-green-600" : "text-muted-foreground"}`}>
+                            <span>{c.met ? "✓" : "○"}</span> {c.label}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Confirm password</label>
                 <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} placeholder="Repeat password" />
+                {confirmPassword && (
+                  <p className={`text-xs mt-1 ${password === confirmPassword ? "text-green-600" : "text-red-500"}`}>
+                    {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Postcode</label>
@@ -294,13 +331,29 @@ export default function JoinPainter() {
                   </button>
                 ))}
               </div>
+              {/* Terms and conditions */}
+              <div className="space-y-3 border border-border rounded-lg p-4 bg-accent/20">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Terms & Conditions</p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border" />
+                  <span className="text-sm text-foreground">I have read and agree to the <a href="/terms" target="_blank" className="underline hover:no-underline">Terms of Service</a></span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={privacyAccepted} onChange={e => setPrivacyAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border" />
+                  <span className="text-sm text-foreground">I have read and agree to the <a href="/privacy" target="_blank" className="underline hover:no-underline">Privacy Policy</a></span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={insuranceConfirmed} onChange={e => setInsuranceConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border" />
+                  <span className="text-sm text-foreground">I confirm I hold valid public liability insurance of at least <strong>£2,000,000</strong></span>
+                </label>
+              </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep(2)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
                   Back
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !termsAccepted || !privacyAccepted || !insuranceConfirmed}
                   className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}

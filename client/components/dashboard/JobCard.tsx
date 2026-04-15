@@ -87,6 +87,8 @@ interface JobCardProps {
   onViewProgress?: (job: Job) => void;
   onConfirmComplete?: (job: Job) => void;
   onLeaveReview?: (job: Job) => void;
+  onRaiseDispute?: (job: Job) => void;
+  onRaiseDispute?: (job: Job) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -98,6 +100,8 @@ export default function JobCard({
   onViewProgress,
   onConfirmComplete,
   onLeaveReview,
+  onRaiseDispute,
+  onRaiseDispute,
 }: JobCardProps) {
   const cfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.pending_match;
 
@@ -193,6 +197,16 @@ export default function JobCard({
             style={{ color: "#2E75B6", borderColor: "#2E75B6" }}
           >
             Leave Review
+          </Button>
+        )}
+        {(job.status === "in_progress" || job.status === "milestone_review" || job.status === "escrow_funded") && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onRaiseDispute?.(job)}
+            className="text-xs border-red-500 text-red-400 hover:bg-red-950"
+          >
+            Raise Dispute
           </Button>
         )}
       </div>

@@ -347,12 +347,7 @@ export default function CustomerDashboard() {
                       key={job.id}
                       job={job}
                       hasReview={reviewedIds.has(job.id)}
-                      onPayNow={() => {
-                        /* Transpact stub — wired in later sprint */
-                        alert(
-                          "Payment via Transpact will be enabled in the next sprint.",
-                        );
-                      }}
+                      onPayNow={handlePayNow}
                       onViewProgress={openMilestoneTracker}
                       onConfirmComplete={confirmComplete}
                       onLeaveReview={() => setTab("reviews")}
@@ -429,11 +424,7 @@ export default function CustomerDashboard() {
                         key={job.id}
                         job={job}
                         hasReview={reviewedIds.has(job.id)}
-                        onPayNow={() => {
-                          alert(
-                            "Payment via Transpact will be enabled in the next sprint.",
-                          );
-                        }}
+                        onPayNow={handlePayNow}
                         onViewProgress={openMilestoneTracker}
                         onConfirmComplete={confirmComplete}
                         onLeaveReview={() => setTab("reviews")}

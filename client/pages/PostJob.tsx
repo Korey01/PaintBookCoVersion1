@@ -360,7 +360,7 @@ export default function PostJob() {
           // Email might already exist
           const { toast } = await import("sonner");
           toast.error("Please sign in to post a job");
-          navigate("/auth?type=login");
+          navigate("/login");
           return;
         }
 

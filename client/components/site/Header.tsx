@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Header() {
   const [scrolled, setScrolled]     = useState(false);
@@ -20,13 +21,18 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    const u = JSON.parse(localStorage.getItem("paintbook:user") || "null");
-    setLoggedIn(!!u);
-  }, [loc.pathname, loc.search, loc.hash]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setLoggedIn(!!session?.user);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => { setLoggedIn(!!session?.user); }
+    );
+    return () => subscription.unsubscribe();
+  }, []);
 
-  function handleLogout() {
-    localStorage.removeItem("paintbook:user");
-    navigate("/auth");
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    navigate("/login");
   }
 
   const navLinks = [

@@ -36,7 +36,7 @@ export default function CheckoutConfirmation(){
       <div className="flex justify-center gap-3">
         {isSub ? (
           <>
-            <Button onClick={()=>navigate('/dashboard')}>Go to Dashboard</Button>
+            <Button onClick={()=>navigate('/dashboard/customer')}>Go to Dashboard</Button>
             <Button variant="secondary" onClick={()=>navigate('/find-painter')}>Browse jobs</Button>
           </>
         ) : (

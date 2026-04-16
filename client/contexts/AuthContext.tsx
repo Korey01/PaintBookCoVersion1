@@ -159,32 +159,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser);
 
       if (currentUser) {
-        // Re-detect role when auth changes
-        const { data: painterData } = await supabase
-          .from("painters")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .maybeSingle();
-
-        if (painterData) {
-          setRole("painter");
-          setPainterProfile(painterData);
-          setCustomerProfile(null);
-        } else {
-          setRole("customer");
-          const { data: customerData } = await supabase
-            .from("customers")
+        try {
+          // Re-detect role when auth changes
+          const { data: painterData } = await supabase
+            .from("painters")
             .select("*")
             .eq("user_id", currentUser.id)
             .maybeSingle();
-          setCustomerProfile(customerData);
-          setPainterProfile(null);
+
+          if (painterData) {
+            setRole("painter");
+            setPainterProfile(painterData);
+            setCustomerProfile(null);
+          } else {
+            setRole("customer");
+            setPainterProfile(null);
+            setCustomerProfile(null);
+          }
+        } catch (err) {
+          console.error("Role detection error:", err);
+          setRole("customer");
         }
       } else {
         setRole(null);
         setCustomerProfile(null);
         setPainterProfile(null);
       }
+      setLoading(false);
     });
 
     return () => subscription?.unsubscribe();

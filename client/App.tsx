@@ -91,7 +91,6 @@ function LegacyLayout() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <RealtimeProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -181,7 +180,6 @@ const App = () => (
           </Routes>
         </BrowserRouter>
         </TooltipProvider>
-      </RealtimeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

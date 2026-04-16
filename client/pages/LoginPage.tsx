@@ -48,16 +48,23 @@ export default function LoginPage() {
     }
 
     // Role-based redirect: check painters table
-    const { data: painterRecord } = await supabase
-      .from("painters")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    try {
+      const { data: painterRecord } = await supabase
+        .from("painters")
+        .select("id, kyc_status, is_active")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-    if (painterRecord) {
-      navigate("/dashboard/painter");
-    } else {
-      navigate("/dashboard/customer");
+      setLoading(false);
+
+      if (painterRecord) {
+        navigate("/dashboard/painter");
+      } else {
+        navigate("/dashboard/customer");
+      }
+    } catch (err) {
+      setLoading(false);
+      setError("Login failed. Please try again.");
     }
   }
 

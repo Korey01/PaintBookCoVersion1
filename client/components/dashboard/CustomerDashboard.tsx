@@ -81,6 +81,15 @@ export default function CustomerDashboard() {
   useEffect(() => {
     if (user) {
       fetchData(user.id);
+    } else {
+      // Fallback: get session directly if user not yet in context
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          fetchData(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      });
     }
   }, [user]);
 

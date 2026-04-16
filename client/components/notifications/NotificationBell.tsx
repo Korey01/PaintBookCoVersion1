@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell, X } from "lucide-react";
-import { useRealtime } from "@/contexts/RealtimeContext";
 import NotificationDropdown from "./NotificationDropdown";
 
 export default function NotificationBell() {
-  const { unreadCount, notifications, markAsRead, clearNotification } =
-    useRealtime();
+  const unreadCount = 0;
+  const notifications: any[] = [];
+  const markAsRead = (_id: string) => {};
+  const clearNotification = (_id: string) => {};
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);

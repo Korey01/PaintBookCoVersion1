@@ -198,12 +198,23 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
             <p className="text-gray-400 text-sm mt-1">PaintBookCo Operations</p>
           </div>
-          <button
-            onClick={loadData}
-            className="flex items-center gap-2 text-gray-400 hover:text-white text-sm"
-          >
-            <RefreshCw className="h-4 w-4" /> Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={loadData}
+              className="flex items-center gap-2 text-gray-400 hover:text-white text-sm"
+            >
+              <RefreshCw className="h-4 w-4" /> Refresh
+            </button>
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = "/login";
+              }}
+              className="flex items-center gap-2 bg-gray-800 text-gray-300 hover:text-white px-4 py-2 rounded text-sm border border-gray-700 hover:border-gray-500"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Message */}

@@ -292,6 +292,46 @@ export function PainterDashboard() {
                     </div>
                   ))}
                 </div>
+                {(painter.kyc_status === 'pending' || painter.kyc_status === 'rejected') && (
+                  <button
+                    onClick={async () => {
+                      const { data: { session } } = await supabase.auth.getSession()
+                      const res = await fetch(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-kyc`,
+                        {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session?.access_token}`,
+                            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                          },
+                          body: JSON.stringify({})
+                        }
+                      )
+                      const result = await res.json()
+                      if (result.verification_url) {
+                        window.open(result.verification_url, '_blank')
+                        alert('Complete your verification in the new tab. Return here when done and refresh your dashboard.')
+                      } else {
+                        alert(result.error || 'Failed to start KYC. Please try again.')
+                      }
+                    }}
+                    className="mt-4 bg-orange-600 text-white px-4 py-2 rounded text-sm hover:bg-orange-700">
+                    {painter.kyc_status === 'rejected' ? 'Resubmit KYC Verification →' : 'Start KYC Verification →'}
+                  </button>
+                )}
+                {painter.kyc_status === 'submitted' && (
+                  <div className="mt-4 p-3 bg-amber-900/30 border border-amber-800 rounded">
+                    <p className="text-amber-400 text-sm font-medium">⏳ KYC Under Review</p>
+                    <p className="text-amber-300 text-xs mt-1">We will notify you by email when your verification is complete.</p>
+                  </div>
+                )}
+                {painter.kyc_status === 'rejected' && painter.kyc_rejection_reason && (
+                  <div className="mt-2 p-3 bg-red-900/30 border border-red-800 rounded">
+                    <p className="text-red-400 text-sm font-medium">✗ KYC Rejected</p>
+                    <p className="text-red-300 text-xs mt-1">{painter.kyc_rejection_reason}</p>
+                  </div>
+                )}
                 {!painter.insurance_submitted_at && painter.kyc_status === 'approved' && (
                   <button onClick={() => setActiveTab(6)}
                     className="mt-4 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">

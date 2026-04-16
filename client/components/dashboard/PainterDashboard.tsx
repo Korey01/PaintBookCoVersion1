@@ -530,6 +530,7 @@ export function PainterDashboard() {
         {/* TAB 7 — PROFILE AND SETTINGS */}
         {activeTab === 6 && (
           <ProfileSettingsTab painter={painter} onRefresh={loadPainter} />
+        )}
         {/* TAB 8 — NOTIFICATIONS */}
         {activeTab === 7 && <NotificationsTab painter={painter} />}
       </div>

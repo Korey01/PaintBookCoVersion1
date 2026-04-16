@@ -149,7 +149,7 @@ const App = () => (
             <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
             <Route path="/painter-onboarding" element={<PainterOnboarding />} />
 
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth" element={<Navigate to="/login" replace />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<DashboardRouter />} />
             <Route path="/disputes" element={<Disputes />} />
@@ -165,8 +165,8 @@ const App = () => (
             <Route path="/painter/:id" element={<PainterProfile />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/auth-new" element={<AuthPage />} />
-            <Route path="/painter-dashboard" element={<PainterDashboard />} />
-            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+            <Route path="/painter-dashboard" element={<Navigate to="/dashboard/painter" replace />} />
+            <Route path="/customer-dashboard" element={<Navigate to="/dashboard/customer" replace />} />
             {/* B2B routes */}
             <Route path="/b2b/find-painter" element={<B2BFindPainter />} />
             <Route path="/b2b/consultation" element={<B2BConsultation />} />

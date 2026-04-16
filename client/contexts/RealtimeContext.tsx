@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "./AuthContext";
 
@@ -48,9 +48,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isConnected, setIsConnected] = useState(true);
-  const [activeSubscriptions, setActiveSubscriptions] = useState<
-    Set<string>
-  >(new Set());
+  const activeSubscriptions = useRef<Set<string>>(new Set());
 
   // ── Helper: Add or update notification ────────────────────────────────────
   const addNotification = useCallback(
@@ -71,9 +69,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     if (!user || role !== "painter") return;
 
     const subscriptionKey = "job_matches";
-    if (activeSubscriptions.has(subscriptionKey)) return;
+    if (activeSubscriptions.current.has(subscriptionKey)) return;
 
-    const subscription = supabase
+    supabase
       .channel(`job-matches-${user.id}`)
       .on(
         "postgres_changes",
@@ -84,7 +82,6 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           filter: `painter_id=eq.${user.id}`,
         },
         (payload: any) => {
-          // Fetch the job details to create a richer notification
           supabase
             .from("jobs")
             .select("*")
@@ -108,8 +105,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         setIsConnected(status === "SUBSCRIBED");
       });
 
-    setActiveSubscriptions((prev) => new Set([...prev, subscriptionKey]));
-  }, [user, role, addNotification, activeSubscriptions]);
+    activeSubscriptions.current.add(subscriptionKey);
+  }, [user, role, addNotification]);
 
   // ── Subscribe to job updates ─────────────────────────────────────────────
 
@@ -118,9 +115,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       if (!user) return;
 
       const subscriptionKey = `job-${jobId}`;
-      if (activeSubscriptions.has(subscriptionKey)) return;
+      if (activeSubscriptions.current.has(subscriptionKey)) return;
 
-      const subscription = supabase
+      supabase
         .channel(`job-updates-${jobId}`)
         .on(
           "postgres_changes",
@@ -164,9 +161,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           setIsConnected(status === "SUBSCRIBED");
         });
 
-      setActiveSubscriptions((prev) => new Set([...prev, subscriptionKey]));
+      activeSubscriptions.current.add(subscriptionKey);
     },
-    [user, addNotification, activeSubscriptions]
+    [user, addNotification]
   );
 
   // ── Subscribe to milestone updates ─────────────────────────────────────────
@@ -176,9 +173,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       if (!user) return;
 
       const subscriptionKey = `milestone-${jobId}`;
-      if (activeSubscriptions.has(subscriptionKey)) return;
+      if (activeSubscriptions.current.has(subscriptionKey)) return;
 
-      const subscription = supabase
+      supabase
         .channel(`milestone-updates-${jobId}`)
         .on(
           "postgres_changes",
@@ -217,9 +214,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           setIsConnected(status === "SUBSCRIBED");
         });
 
-      setActiveSubscriptions((prev) => new Set([...prev, subscriptionKey]));
+      activeSubscriptions.current.add(subscriptionKey);
     },
-    [user, addNotification, activeSubscriptions]
+    [user, addNotification]
   );
 
   // ── Subscribe to reviews ──────────────────────────────────────────────────
@@ -228,9 +225,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     const subscriptionKey = "reviews";
-    if (activeSubscriptions.has(subscriptionKey)) return;
+    if (activeSubscriptions.current.has(subscriptionKey)) return;
 
-    const subscription = supabase
+    supabase
       .channel(`reviews-${user.id}`)
       .on(
         "postgres_changes",
@@ -255,8 +252,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         setIsConnected(status === "SUBSCRIBED");
       });
 
-    setActiveSubscriptions((prev) => new Set([...prev, subscriptionKey]));
-  }, [user, addNotification, activeSubscriptions]);
+    activeSubscriptions.current.add(subscriptionKey);
+  }, [user, addNotification]);
 
   // ── Mark notification as read ────────────────────────────────────────────
 
@@ -287,7 +284,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const unsubscribeFromAll = useCallback(() => {
     supabase.removeAllChannels().then((status) => {
       if (status === "ok") {
-        setActiveSubscriptions(new Set());
+        activeSubscriptions.current.clear();
       }
     });
   }, []);
@@ -297,18 +294,14 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
-    // All users get review notifications
     subscribeToReviews();
 
-    // Painters get job match notifications
     if (role === "painter") {
       subscribeToJobMatches();
     }
 
-    // Cleanup function
     return () => {
       // Don't unsubscribe on dependency change; keep subscriptions active
-      // Only unsubscribe when user logs out
     };
   }, [user, role, subscribeToReviews, subscribeToJobMatches]);
 

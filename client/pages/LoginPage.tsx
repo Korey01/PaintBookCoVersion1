@@ -47,6 +47,9 @@ export default function LoginPage() {
       return;
     }
 
+    // Small delay to allow session to fully establish
+    await new Promise(resolve => setTimeout(resolve, 500))
+
     // Admin check first
     if (user.email === "o.a.alashe@paintbookco.co.uk") {
       setLoading(false);

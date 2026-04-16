@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 
@@ -120,6 +120,7 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/confirm" element={<ConfirmPage />} />
           <Route path="/kyc/painter" element={<KYCPainter />} />
+          <Route path="/confirm-kyc" element={<Navigate to="/dashboard/painter" replace />} />
           <Route path="/kyc/customer" element={<KYCCustomer />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin-fallback" element={<AdminFallback />} />

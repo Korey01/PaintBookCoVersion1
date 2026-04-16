@@ -107,6 +107,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     null
   );
 
+  // ── Timeout safety net — force loading false after 5 seconds ──────────────
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLoading(false)
+    }, 5000)
+    return () => clearTimeout(timeout)
+  }, [])
+
   // ── Subscribe to auth changes ─────────────────────────────────────────────
   useEffect(() => {
     const {

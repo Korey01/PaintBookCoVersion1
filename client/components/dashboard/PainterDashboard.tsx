@@ -29,6 +29,16 @@ export function PainterDashboard() {
     loadPainter()
   }, [])
 
+  // Poll for KYC status when submitted
+  useEffect(() => {
+    if (painter?.kyc_status === 'submitted') {
+      const interval = setInterval(async () => {
+        await loadPainter()
+      }, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [painter?.kyc_status])
+
   const loadPainter = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -246,12 +256,23 @@ export function PainterDashboard() {
               Painter Dashboard
             </p>
           </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium
-            ${commission.label === 'amber' ? 'bg-amber-900 text-amber-300' :
-              commission.label === 'blue' ? 'bg-blue-900 text-blue-300' :
-              'bg-green-900 text-green-300'}`}>
-            {commission.rate} Commission
-          </span>
+          <div className="flex items-center gap-3">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium
+              ${commission.label === 'amber' ? 'bg-amber-900 text-amber-300' :
+                commission.label === 'blue' ? 'bg-blue-900 text-blue-300' :
+                'bg-green-900 text-green-300'}`}>
+              {commission.rate} Commission
+            </span>
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut()
+                window.location.href = '/login'
+              }}
+              className="text-sm text-gray-400 hover:text-white border border-gray-700 px-4 py-2 rounded hover:border-gray-500 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Tab navigation */}
@@ -324,6 +345,12 @@ export function PainterDashboard() {
                   <div className="mt-4 p-3 bg-amber-900/30 border border-amber-800 rounded">
                     <p className="text-amber-400 text-sm font-medium">⏳ KYC Under Review</p>
                     <p className="text-amber-300 text-xs mt-1">We will notify you by email when your verification is complete.</p>
+                    <button
+                      onClick={() => loadPainter()}
+                      className="mt-2 text-blue-400 text-xs underline hover:text-blue-300"
+                    >
+                      Refresh my status
+                    </button>
                   </div>
                 )}
                 {painter.kyc_status === 'rejected' && painter.kyc_rejection_reason && (

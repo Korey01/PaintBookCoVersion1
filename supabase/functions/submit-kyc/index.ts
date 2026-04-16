@@ -60,8 +60,13 @@ Deno.serve(async (req) => {
 
     if (!sessionRes.ok) {
       const err = await sessionRes.text();
-      console.error("Didit session error:", err);
-      return json({ error: "Failed to create verification session." }, 502);
+      console.error("Didit session error status:", sessionRes.status);
+      console.error("Didit session error body:", err);
+      return json({ 
+        error: "Failed to create verification session.", 
+        didit_status: sessionRes.status,
+        didit_error: err 
+      }, 502);
     }
 
     const session = await sessionRes.json();

@@ -121,6 +121,8 @@ const App = () => (
           <Route path="/confirm" element={<ConfirmPage />} />
           <Route path="/kyc/painter" element={<KYCPainter />} />
           <Route path="/kyc/customer" element={<KYCCustomer />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin-fallback" element={<AdminFallback />} />
           <Route path="/vestimator" element={<PaintVestimator />} />
 
           {/* ── Dashboard pages — role-protected ── */}
@@ -146,8 +148,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
             <Route path="/painter-onboarding" element={<PainterOnboarding />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/admin-fallback" element={<AdminFallback />} />
+
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<DashboardRouter />} />

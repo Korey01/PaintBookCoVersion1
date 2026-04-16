@@ -56,7 +56,11 @@ export default function AdminDashboard() {
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (user.email !== ADMIN_EMAIL) {
       navigate("/login");
       return;
     }

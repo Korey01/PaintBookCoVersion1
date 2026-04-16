@@ -107,63 +107,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     null
   );
 
-  // ── Initialize auth state on mount ────────────────────────────────────────
-  useEffect(() => {
-    initializeAuth();
-  }, []);
-
-  async function initializeAuth() {
-    try {
-      // Get current session
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUser = sessionData?.session?.user ?? null;
-
-      setUser(currentUser);
-
-      if (currentUser) {
-        // Detect role by checking painters table
-        const { data: painterData } = await supabase
-          .from("painters")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .maybeSingle();
-
-        if (painterData) {
-          setRole("painter");
-          setPainterProfile(painterData);
-        } else {
-          setRole("customer");
-          // Load customer profile
-          const { data: customerData } = await supabase
-            .from("customers")
-            .select("*")
-            .eq("user_id", currentUser.id)
-            .maybeSingle();
-          if (customerData) setCustomerProfile(customerData);
-        }
-      }
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Auth initialization error:", error);
-      setLoading(false);
-    }
-  }
-
   // ── Subscribe to auth changes ─────────────────────────────────────────────
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Only process relevant auth events
+      if (event === "TOKEN_REFRESHED") return;
+
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
         try {
-          // Re-detect role when auth changes
           const { data: painterData } = await supabase
             .from("painters")
-            .select("*")
+            .select("id, kyc_status, is_active, insurance_verified, first_name, last_name, email, phone, postcode, city, bio, specialisms, service_radius_km, avg_rating, completed_jobs, gallery_size_bytes, insurance_submitted_at, insurance_company, insurance_policy_number, insurance_expiry_date, insurance_certificate_url, terms_accepted, profile_complete, transpact_registered, kyc_rejection_reason")
             .eq("user_id", currentUser.id)
             .maybeSingle();
 

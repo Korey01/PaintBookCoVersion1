@@ -47,6 +47,13 @@ export default function LoginPage() {
       return;
     }
 
+    // Admin check first
+    if (user.email === "o.a.alashe@paintbookco.co.uk") {
+      setLoading(false);
+      navigate("/admin-dashboard");
+      return;
+    }
+
     // Role-based redirect: check painters table
     try {
       const { data: painterRecord } = await supabase

@@ -4,6 +4,7 @@ import { GalleryTab } from './tabs/GalleryTab'
 import { PaintBookChat } from '../chat/PaintBookChat'
 import { AvailabilityTab } from './tabs/AvailabilityTab'
 import { NotificationsTab } from './tabs/NotificationsTab'
+import { ProfileSettingsTab } from './tabs/ProfileSettingsTab'
 
 const TABS = [
   'Overview', 'Available Jobs', 'My Jobs',
@@ -528,7 +529,7 @@ export function PainterDashboard() {
 
         {/* TAB 7 — PROFILE AND SETTINGS */}
         {activeTab === 6 && (
-          <div className="space-y-8 max-w-2xl">
+          <ProfileSettingsTab painter={painter} onRefresh={loadPainter} />
 
             {/* Personal details */}
             <div className="bg-gray-900 rounded-lg p-6">

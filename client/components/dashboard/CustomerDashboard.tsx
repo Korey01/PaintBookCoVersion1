@@ -15,7 +15,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, Job, JobMilestone, Review } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRealtime } from "@/contexts/RealtimeContext";
 import JobCard from "./JobCard";
 import MilestoneTracker from "./MilestoneTracker";
 import { PaintBookChat } from "../chat/PaintBookChat";
@@ -67,7 +66,6 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 export default function CustomerDashboard() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { subscribeToJobUpdates, subscribeToMilestoneUpdates } = useRealtime();
 
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("overview");
@@ -92,8 +90,6 @@ export default function CustomerDashboard() {
     if (jobs.length === 0) return;
 
     jobs.forEach((job) => {
-      subscribeToJobUpdates(job.id);
-      subscribeToMilestoneUpdates(job.id);
     });
   }, [jobs, subscribeToJobUpdates, subscribeToMilestoneUpdates]);
 

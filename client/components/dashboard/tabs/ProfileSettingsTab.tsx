@@ -32,7 +32,7 @@ export function ProfileSettingsTab({ painter, onRefresh }: { painter: any, onRef
   const [submittingInsurance, setSubmittingInsurance] = useState(false)
   const [insuranceSuccess, setInsuranceSuccess] = useState(false)
 
-  const [passwordForm, setPasswordForm] = useState({ current: '', newPass: '', confirm: '' })
+  const [passwordForm, setPasswordForm] = useState({ newPass: '', confirm: '' })
   const [passwordMsg, setPasswordMsg] = useState('')
   const [savingPassword, setSavingPassword] = useState(false)
 
@@ -131,15 +131,10 @@ export function ProfileSettingsTab({ painter, onRefresh }: { painter: any, onRef
     if (passwordForm.newPass !== passwordForm.confirm) { setPasswordMsg('Passwords do not match'); return }
     if (passwordForm.newPass.length < 8) { setPasswordMsg('Password must be at least 8 characters'); return }
     setSavingPassword(true)
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: painter.email,
-      password: passwordForm.current
-    })
-    if (signInError) { setPasswordMsg('Current password is incorrect'); setSavingPassword(false); return }
     const { error } = await supabase.auth.updateUser({ password: passwordForm.newPass })
     setSavingPassword(false)
     if (error) { setPasswordMsg(error.message) }
-    else { setPasswordMsg('Password updated successfully'); setPasswordForm({ current: '', newPass: '', confirm: '' }) }
+    else { setPasswordMsg('Password updated successfully'); setPasswordForm({ newPass: '', confirm: '' }) }
   }
 
   const fieldClass = "w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-blue-500 focus:outline-none"
@@ -283,8 +278,8 @@ export function ProfileSettingsTab({ painter, onRefresh }: { painter: any, onRef
       <div className="bg-gray-900 rounded-lg p-6">
         <h3 className="text-white font-medium mb-4">Change Password</h3>
         <div className="space-y-4">
+          <p className="text-gray-500 text-xs mb-2">You must be logged in to change your password.</p>
           {[
-            { key: 'current', label: 'Current Password' },
             { key: 'newPass', label: 'New Password' },
             { key: 'confirm', label: 'Confirm New Password' },
           ].map(f => (

@@ -137,12 +137,16 @@ const App = () => (
           {/* ── Dashboard pages — role-protected ── */}
           <Route path="/dashboard/customer" element={
             <ProtectedRoute requiredRole="customer">
-              <CustomerDashboardPage />
+              <RealtimeProvider>
+                <CustomerDashboardPage />
+              </RealtimeProvider>
             </ProtectedRoute>
           } />
           <Route path="/dashboard/painter" element={
             <ProtectedRoute requiredRole="painter">
-              <PainterDashboardPage />
+              <RealtimeProvider>
+                <PainterDashboardPage />
+              </RealtimeProvider>
             </ProtectedRoute>
           } />
 

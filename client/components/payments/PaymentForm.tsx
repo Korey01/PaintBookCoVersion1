@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
 import { createTranspactAccount, getTranspactStatus } from "@/lib/api";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 interface PaymentFormProps {
   jobId: string;
@@ -18,14 +18,12 @@ export default function PaymentForm({
   onSuccess,
   onCancel,
 }: PaymentFormProps) {
-  const { customerProfile } = useAuth();
   const [step, setStep] = useState<"amount" | "card" | "processing" | "success">(
     "amount"
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Stripe fields state
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvc, setCvc] = useState("");
@@ -34,13 +32,6 @@ export default function PaymentForm({
   async function handleCreatePayment() {
     setLoading(true);
     setError("");
-
-    if (!customerProfile) {
-      setError("Unable to load customer profile");
-      setLoading(false);
-      return;
-    }
-
     setStep("card");
     setLoading(false);
   }
@@ -50,15 +41,15 @@ export default function PaymentForm({
     setLoading(true);
     setError("");
 
-    // Validate card details
     if (!cardNumber || !expiry || !cvc || !cardName) {
       setError("Please fill in all card details");
       setLoading(false);
       return;
     }
 
-    if (!customerProfile) {
-      setError("Customer profile not loaded");
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setError("User session not found");
       setLoading(false);
       return;
     }
@@ -66,13 +57,10 @@ export default function PaymentForm({
     try {
       setStep("processing");
 
-      // Get painter email from job data (would be loaded from database)
-      // For now, we'll need to pass this from the parent component
-      // Create Transpact escrow account
       const { accountId, error: transpactError } = await createTranspactAccount(
         jobId,
         amount,
-        customerProfile.email,
+        session.user.email ?? "",
         "" // Painter email would need to be fetched from job data
       );
 
@@ -83,7 +71,6 @@ export default function PaymentForm({
         return;
       }
 
-      // Verify escrow status
       const { status, error: statusError } = await getTranspactStatus(accountId);
 
       if (!status || statusError) {

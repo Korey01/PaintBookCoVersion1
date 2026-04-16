@@ -9,7 +9,6 @@ interface AuthContextType {
   role: UserRole;
   loading: boolean;
   painterProfile: any | null;
-  customerProfile: any | null;
   signOut: () => Promise<void>;
 }
 
@@ -18,7 +17,6 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   loading: true,
   painterProfile: null,
-  customerProfile: null,
   signOut: async () => {},
 });
 
@@ -53,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
   const [painterProfile, setPainterProfile] = useState<any | null>(null);
-  const [customerProfile] = useState<any | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -116,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, role, loading, painterProfile, customerProfile, signOut
+      user, role, loading, painterProfile, signOut
     }}>
       {children}
     </AuthContext.Provider>

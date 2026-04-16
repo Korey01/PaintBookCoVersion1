@@ -1,27 +1,28 @@
-import Dashboard from "./Dashboard";
-import CustomerDashboard from "./CustomerDashboard";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
-export default function DashboardRouter(){
+export default function DashboardRouter() {
   const navigate = useNavigate();
-  const [ready, setReady] = useState(false);
-  const [role, setRole] = useState<'painter'|'customer'|'none'>('none');
 
-  useEffect(()=>{
-    const u = JSON.parse(localStorage.getItem('paintbook:user')||'null');
-    if(!u){ navigate('/auth'); return; }
-    const active = u.activeRole || (u.roles?.includes('painter') ? 'painter' : 'customer');
-    setRole(active);
-    setReady(true);
-  },[]);
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) {
+        navigate("/login", { replace: true });
+        return;
+      }
+      const { data: painter } = await supabase
+        .from("painters")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (painter) {
+        navigate("/dashboard/painter", { replace: true });
+      } else {
+        navigate("/dashboard/customer", { replace: true });
+      }
+    });
+  }, []);
 
-  if(!ready) return null;
-
-  return (
-    <div>
-      {role === 'painter' ? <Dashboard /> : <CustomerDashboard />}
-    </div>
-  );
+  return null;
 }

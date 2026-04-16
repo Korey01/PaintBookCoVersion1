@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
@@ -11,6 +12,7 @@ export default function LoginPage() {
   useEffect(() => { document.title = "Log In | PaintBookCo"; }, []);
 
   const navigate = useNavigate();
+  const { user, role, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +21,21 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [emailUnconfirmed, setEmailUnconfirmed] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+
+  // Navigate once AuthContext has resolved the user after a successful sign-in
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (user.email === "o.a.alashe@paintbookco.co.uk") {
+        navigate("/admin-dashboard", { replace: true });
+        return;
+      }
+      if (role === "painter") {
+        navigate("/dashboard/painter", { replace: true });
+      } else if (role === "customer") {
+        navigate("/dashboard/customer", { replace: true });
+      }
+    }
+  }, [user, role, authLoading, navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,43 +56,9 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      setLoading(false);
-      setError("Could not retrieve user. Please try again.");
-      return;
-    }
-
-    // Small delay to allow session to fully establish
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // Admin check first
-    if (user.email === "o.a.alashe@paintbookco.co.uk") {
-      setLoading(false);
-      navigate("/admin-dashboard");
-      return;
-    }
-
-    // Role-based redirect: check painters table
-    try {
-      const { data: painterRecord } = await supabase
-        .from("painters")
-        .select("id, kyc_status, is_active")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      setLoading(false);
-
-      if (painterRecord) {
-        navigate("/dashboard/painter");
-      } else {
-        navigate("/dashboard/customer");
-      }
-    } catch (err) {
-      setLoading(false);
-      setError("Login failed. Please try again.");
-    }
+    setLoading(false);
+    // AuthContext onAuthStateChange fires SIGNED_IN, sets user + role,
+    // then the useEffect above navigates to the correct dashboard.
   }
 
   async function handleResend() {

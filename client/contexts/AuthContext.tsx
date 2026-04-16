@@ -58,23 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      if (session?.user) {
-        const { role: r, painterProfile: p } =
-          await detectRole(session.user.id, session.user.email ?? "");
-        if (!mounted) return;
-        setUser(session.user);
-        setRole(r);
-        setPainterProfile(p);
-      } else {
-        setUser(null);
-        setRole(null);
-        setPainterProfile(null);
-      }
-      setLoading(false);
-    });
-
+    // onAuthStateChange fires INITIAL_SESSION on mount for returning users,
+    // covering the getSession() case without a second painters table query.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -96,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     const timeout = setTimeout(() => {
-      if (mounted) setLoading(false);
+      if (mounted) setLoading(() => false);
     }, 6000);
 
     return () => {

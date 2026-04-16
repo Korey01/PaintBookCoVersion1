@@ -93,15 +93,6 @@ export default function CustomerDashboard() {
     }
   }, [user]);
 
-  // ── Subscribe to job and milestone updates ─────────────────────────────────
-
-  useEffect(() => {
-    if (jobs.length === 0) return;
-
-    jobs.forEach((job) => {
-    });
-  }, [jobs, subscribeToJobUpdates, subscribeToMilestoneUpdates]);
-
   // ── Data fetching ─────────────────────────────────────────────────────────
 
   const fetchData = useCallback(async (userId: string) => {
@@ -264,6 +255,46 @@ export default function CustomerDashboard() {
   async function handleSignOut() {
     await signOut();
     navigate("/login");
+  }
+
+  // ── Handle payment ────────────────────────────────────────────────────────
+
+  async function handlePayNow(job: Job) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { alert("Please log in again."); return; }
+      const { data: painter } = await supabase
+        .from("painters")
+        .select("email")
+        .eq("id", job.painter_id)
+        .single();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-transpact`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            job_id: job.id,
+            customer_email: session.user.email,
+            painter_email: painter?.email,
+            amount: job.total_price ?? job.budget ?? 0,
+            job_title: job.title,
+          }),
+        }
+      );
+      const result = await res.json();
+      if (result.payment_url) {
+        window.open(result.payment_url, "_blank");
+      } else {
+        alert(result.error || "Payment failed. Please try again.");
+      }
+    } catch (err) {
+      alert("Payment failed. Please try again.");
+    }
   }
 
   // ── Loading state ─────────────────────────────────────────────────────────

@@ -73,6 +73,7 @@ import ConfirmPage from "./pages/ConfirmPage";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import PainterDashboardPage from "./pages/PainterDashboardPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminRoute from "@/components/auth/AdminRoute";
 import KYCPainter from "./pages/KYCPainter";
 import KYCCustomer from "./pages/KYCCustomer";
 import PaintVestimator from "./pages/PaintVestimator";
@@ -118,11 +119,19 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/confirm" element={<ConfirmPage />} />
-          <Route path="/kyc/painter" element={<KYCPainter />} />
+          <Route path="/kyc/painter" element={
+            <ProtectedRoute><KYCPainter /></ProtectedRoute>
+          } />
           <Route path="/confirm-kyc" element={<Navigate to="/dashboard/painter" replace />} />
-          <Route path="/kyc/customer" element={<KYCCustomer />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-fallback" element={<AdminFallback />} />
+          <Route path="/kyc/customer" element={
+            <ProtectedRoute><KYCCustomer /></ProtectedRoute>
+          } />
+          <Route path="/admin-dashboard" element={
+            <AdminRoute><AdminDashboard /></AdminRoute>
+          } />
+          <Route path="/admin-fallback" element={
+            <AdminRoute><AdminFallback /></AdminRoute>
+          } />
           <Route path="/vestimator" element={<PaintVestimator />} />
 
           {/* ── Dashboard pages — role-protected ── */}
@@ -143,7 +152,6 @@ const App = () => (
             <Route path="/find-painter" element={<FindPainters />} />
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/post-job/confirmation" element={<PostJobConfirmation />} />
-            <Route path="/vestimator" element={<Vestimator />} />
             <Route path="/estimator" element={<Estimator />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />

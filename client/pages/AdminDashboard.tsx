@@ -354,7 +354,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 {painter.insurance_certificate_url && (
-                  
+                  <a
                     href={painter.insurance_certificate_url}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -43,6 +43,7 @@ import Estimates from "./pages/Estimates";
 import Admin from "./pages/Admin";
 import { PainterOnboarding } from "./pages/PainterOnboarding";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminFallback from "./pages/AdminFallback";
 import AuthPage from "./pages/AuthPage";
 import PainterDashboard from "./pages/PainterDashboard";
 import B2BFindPainter from "./pages/B2BFindPainter";
@@ -146,6 +147,7 @@ const App = () => (
             <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
             <Route path="/painter-onboarding" element={<PainterOnboarding />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-fallback" element={<AdminFallback />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<DashboardRouter />} />

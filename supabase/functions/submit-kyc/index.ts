@@ -41,44 +41,20 @@ Deno.serve(async (req) => {
       return json({ error: "KYC already approved." }, 400);
     }
 
-    // Get Didit access token
-    const tokenRes = await fetch(
-      "https://apx.didit.me/auth/v2/token/",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: Deno.env.get("DIDIT_CLIENT_ID")!,
-          client_secret: Deno.env.get("DIDIT_CLIENT_SECRET")!,
-          grant_type: "client_credentials",
-        }).toString(),
-      }
-    );
-
-    if (!tokenRes.ok) {
-      const err = await tokenRes.text();
-      console.error("Didit token error:", err);
-      return json({ error: "Failed to connect to KYC provider." }, 502);
-    }
-
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
-
-    // Create Didit verification session
+    // Create Didit verification session using API key directly
     const sessionRes = await fetch(
-      "https://verification.didit.me/v1/session/",
+      "https://verification.didit.me/v3/session/",
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          "x-api-key": Deno.env.get("DIDIT_API_KEY")!,
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
           vendor_data: painter.id,
           callback: "https://paintbook-app.netlify.app/confirm-kyc",
-          features: "OCR + FACE",
-          workflow_id: Deno.env.get("DIDIT_WORKFLOW_ID") || "",
-        }).toString(),
+          workflow_id: Deno.env.get("DIDIT_WORKFLOW_ID"),
+        }),
       }
     );
 
@@ -111,7 +87,7 @@ Deno.serve(async (req) => {
 
     return json({
       success: true,
-      verification_url: session.url,
+      verification_url: session.verification_url || session.url,
       session_id: session.session_id,
     });
 

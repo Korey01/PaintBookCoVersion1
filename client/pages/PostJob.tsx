@@ -30,7 +30,6 @@ import {
   useEstimate,
   BRAND_INFO,
 } from "@/lib/paint-estimator";
-import { findAccount, upsertAccount, setActiveUser } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { RoomDimensions, type Room } from "@/components/site/RoomDimensions";
 import { z } from "zod";
@@ -1140,16 +1139,6 @@ export function PostJobConfirmation() {
       setShowSignupPrompt(false);
       return;
     }
-    const account = findAccount(pending.email);
-    if (account && account.roles.includes("customer")) {
-      try {
-        localStorage.removeItem("paintbook:pendingCustomerSignup");
-      } catch {}
-      setPending(null);
-      setShowSignupPrompt(false);
-      setSignupCompleted(false);
-      return;
-    }
     if (pending.status === "completed") {
       setSignupCompleted(true);
       setShowSignupPrompt(false);
@@ -1199,13 +1188,7 @@ export function PostJobConfirmation() {
       return;
     }
 
-    const account = upsertAccount({
-      email: pending.email,
-      password,
-      roles: ["customer"],
-      verifiedEmail: true,
-    });
-    setActiveUser(account, "customer");
+    supabase.auth.signUp({ email: pending.email, password });
 
     const profile = {
       name: fullName.trim(),

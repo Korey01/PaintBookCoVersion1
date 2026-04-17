@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Loader2, CheckCircle2, XCircle, Shield, Users, Briefcase, AlertTriangle, RefreshCw } from "lucide-react";
-
-const ADMIN_EMAIL = "o.a.alashe@paintbookco.co.uk";
+import { ADMIN_EMAIL } from "@/lib/config";
 
 type Painter = {
   id: string;

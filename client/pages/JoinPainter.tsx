@@ -119,7 +119,7 @@ export default function JoinPainter() {
 
     try {
       // Call the backend API endpoint for painter registration
-      const response = await fetch("https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1/register-painter", {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-painter`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,7 +141,6 @@ export default function JoinPainter() {
       });
 
       const data = await response.json();
-      console.log("Registration response:", { status: response.status, data });
 
       if (response.ok && data.success) {
         setIsLoading(false);

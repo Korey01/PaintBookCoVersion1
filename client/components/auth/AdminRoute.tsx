@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
-
-const ADMIN_EMAIL = "o.a.alashe@paintbookco.co.uk";
+import { ADMIN_EMAIL } from "@/lib/config";
 
 export default function AdminRoute({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();

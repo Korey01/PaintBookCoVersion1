@@ -108,6 +108,7 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/confirm" element={<ConfirmPage />} />
+          <Route path="/auth/callback" element={<Navigate to="/confirm" replace />} />
           <Route path="/kyc/painter" element={
             <ProtectedRoute><KYCPainter /></ProtectedRoute>
           } />
@@ -153,18 +154,18 @@ const App = () => (
             <Route path="/auth" element={<Navigate to="/login" replace />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<DashboardRouter />} />
-            <Route path="/disputes" element={<Disputes />} />
-            <Route path="/payment-history" element={<PaymentHistory />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/estimates/saved" element={<Estimates />} />
+            <Route path="/disputes" element={<ProtectedRoute><Disputes /></ProtectedRoute>} />
+            <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+            <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+            <Route path="/estimates/saved" element={<ProtectedRoute><Estimates /></ProtectedRoute>} />
             <Route path="/trust-safety" element={<TrustSafety />} />
             <Route path="/visualizer" element={<PaintVisualizer />} />
             <Route path="/escrow-demo/customer" element={<EscrowCustomerDemo />} />
             <Route path="/escrow-demo/painter" element={<EscrowPainterDemo />} />
             <Route path="/painter/:id" element={<PainterProfile />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
             <Route path="/auth-new" element={<AuthPage />} />
             <Route path="/painter-dashboard" element={<Navigate to="/dashboard/painter" replace />} />
             <Route path="/customer-dashboard" element={<Navigate to="/dashboard/customer" replace />} />

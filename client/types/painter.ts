@@ -1,0 +1,30 @@
+export interface PainterProfile {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  postcode: string | null;
+  city: string | null;
+  bio: string | null;
+  kyc_status: "pending" | "submitted" | "approved" | "rejected";
+  kyc_rejection_reason: string | null;
+  insurance_verified: boolean;
+  insurance_company: string | null;
+  insurance_policy_number: string | null;
+  insurance_expiry_date: string | null;
+  insurance_certificate_url: string | null;
+  insurance_submitted_at: string | null;
+  profile_complete: boolean;
+  gallery_size_bytes: number;
+  is_active: boolean;
+  avg_rating: number;
+  completed_jobs: number;
+  specialisms: string[];
+  service_radius_km: number;
+  terms_accepted: boolean;
+  transpact_registered: boolean;
+  created_at: string;
+  updated_at: string;
+}

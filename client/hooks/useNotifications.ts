@@ -1,9 +1,14 @@
+import { useRealtime } from "@/contexts/RealtimeContext";
+
 export function useNotifications() {
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification } = useRealtime();
   return {
-    notifications: [] as { type: string; title: string; body: string; data?: any; timestamp?: Date }[],
-    unreadCount: 0,
-    markAsRead: (_id: string) => {},
-    clearAll: () => {},
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    clearNotification,
+    clearAll: markAllAsRead,
   };
 }
 

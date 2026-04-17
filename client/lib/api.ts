@@ -11,7 +11,7 @@
 
 import { supabase } from "./supabase";
 
-const FUNCTIONS_BASE = "https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1";
+const FUNCTIONS_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 // ── Helper: Call Edge Function ────────────────────────────────────────────
 
@@ -200,7 +200,7 @@ export async function filterMessage(message: string): Promise<{ filtered: boolea
 export async function handleTranspactWebhook(payload: Record<string, any>): Promise<void> {
   // This is called automatically by Transpact webhook
   // No need to call from frontend
-  console.log("Transpact webhook received:", payload);
+  // Transpact webhooks are handled server-side; no client-side action needed
 }
 
 // ── Helper: Direct Supabase Queries ───────────────────────────────────────

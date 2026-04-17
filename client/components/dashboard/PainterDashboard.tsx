@@ -25,6 +25,12 @@ export function PainterDashboard() {
   const [insuranceForm, setInsuranceForm] = useState<any>({})
   const [insuranceFile, setInsuranceFile] = useState<File | null>(null)
   const [submittingInsurance, setSubmittingInsurance] = useState(false)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [invoiceJob, setInvoiceJob] = useState<any>(null)
+  const [agreedPrice, setAgreedPrice] = useState('')
+  const [jobSummary, setJobSummary] = useState('')
+  const [generatingInvoice, setGeneratingInvoice] = useState(false)
+  const [invoiceSuccess, setInvoiceSuccess] = useState('')
 
   useEffect(() => {
     loadPainter()
@@ -107,6 +113,77 @@ export function PainterDashboard() {
     } else {
       alert(result.error || 'Failed to accept job')
     }
+  }
+
+  const startChat = async (job: any) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    // Store session_id for chat
+    const sessionId = job.id
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ job_id: sessionId })
+        }
+      )
+      const result = await res.json()
+      if (result.token) {
+        alert('Chat initiated! The customer has been notified by email to join the conversation.')
+        await loadJobs(painter.id)
+      } else {
+        alert(result.error || 'Failed to start chat. Please try again.')
+      }
+    } catch (err) {
+      alert('Failed to start chat. Please try again.')
+    }
+  }
+
+  const handleGenerateInvoice = async () => {
+    if (!agreedPrice || isNaN(parseFloat(agreedPrice))) {
+      alert('Please enter a valid agreed price')
+      return
+    }
+    setGeneratingInvoice(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-invoice`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            session_id: invoiceJob?.id,
+            agreed_price: parseFloat(agreedPrice),
+            job_summary: jobSummary || invoiceJob?.title,
+            chat_channel_id: invoiceJob?.id,
+          })
+        }
+      )
+      const result = await res.json()
+      if (result.success) {
+        setInvoiceSuccess(`Invoice sent! Payment link: ${result.payment_url}`)
+        setShowInvoiceModal(false)
+        setAgreedPrice('')
+        setJobSummary('')
+        await loadJobs(painter.id)
+      } else {
+        alert(result.error || 'Failed to generate invoice')
+      }
+    } catch (err) {
+      alert('Failed to generate invoice. Please try again.')
+    }
+    setGeneratingInvoice(false)
   }
 
   const saveProfile = async () => {
@@ -444,9 +521,9 @@ export function PainterDashboard() {
                       </div>
                     </div>
                     <div className="flex gap-3">
-                      <button onClick={() => acceptJob(job.id)}
+                      <button onClick={() => startChat(job)}
                         className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm">
-                        Accept Job
+                        💬 Chat with Customer
                       </button>
                       <button onClick={() => setAvailableJobs(prev => prev.filter(j => j.id !== job.id))}
                         className="px-4 py-2 border border-gray-700 text-gray-400 rounded hover:border-gray-500 text-sm">
@@ -496,6 +573,19 @@ export function PainterDashboard() {
                     />
                   </div>
                 )}
+                {(job.status === 'pending_match' ||
+                  job.status === 'matching_in_progress' ||
+                  job.status === 'painter_accepted') && (
+                  <button
+                    onClick={() => {
+                      setInvoiceJob(job)
+                      setShowInvoiceModal(true)
+                    }}
+                    className="mt-3 w-full bg-orange-600 text-white py-2 rounded-lg text-sm hover:bg-orange-700 transition-colors"
+                  >
+                    📄 Generate Invoice
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -537,6 +627,80 @@ export function PainterDashboard() {
         {/* TAB 8 — NOTIFICATIONS */}
         {activeTab === 7 && <NotificationsTab painter={painter} />}
       </div>
+
+      {/* Invoice success message */}
+      {invoiceSuccess && (
+        <div className="fixed bottom-6 right-6 bg-green-900 border border-green-700 rounded-xl p-4 max-w-sm z-50 shadow-xl">
+          <p className="text-green-300 text-sm font-medium">✓ Invoice Generated</p>
+          <p className="text-green-400 text-xs mt-1">{invoiceSuccess}</p>
+          <button
+            onClick={() => setInvoiceSuccess('')}
+            className="mt-2 text-green-500 text-xs underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Generate Invoice Modal */}
+      {showInvoiceModal && invoiceJob && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md w-full space-y-5">
+            <div>
+              <h2 className="text-white font-bold text-lg">Generate Invoice</h2>
+              <p className="text-gray-400 text-sm mt-1">
+                Claude AI will create a professional invoice based on your job details
+              </p>
+            </div>
+            <div>
+              <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">
+                Agreed Price (£) *
+              </label>
+              <input
+                type="number"
+                value={agreedPrice}
+                onChange={e => setAgreedPrice(e.target.value)}
+                placeholder="e.g. 850"
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">
+                Job Summary
+              </label>
+              <textarea
+                value={jobSummary}
+                onChange={e => setJobSummary(e.target.value)}
+                placeholder="Brief summary of the agreed work..."
+                rows={3}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none text-sm"
+              />
+            </div>
+            <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
+              <p className="text-blue-300 text-xs">
+                ℹ️ Claude AI will generate a professional invoice. 
+                Customer personal details are never shared with AI.
+                Only job description and price are used.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowInvoiceModal(false); setAgreedPrice(''); setJobSummary('') }}
+                className="flex-1 border border-gray-700 text-gray-300 py-3 rounded-xl hover:border-gray-500 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGenerateInvoice}
+                disabled={generatingInvoice || !agreedPrice}
+                className="flex-1 bg-orange-600 text-white py-3 rounded-xl hover:bg-orange-700 disabled:opacity-50 text-sm font-medium"
+              >
+                {generatingInvoice ? 'Generating...' : 'Generate & Send Invoice'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

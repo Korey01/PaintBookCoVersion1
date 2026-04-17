@@ -166,7 +166,7 @@ export default function LoginPage() {
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             New customer?{" "}
-            <Link to="/register" className="text-foreground font-medium hover:underline underline-offset-4">
+            <Link to="/register/customer" className="text-foreground font-medium hover:underline underline-offset-4">
               Create an account
             </Link>
           </p>

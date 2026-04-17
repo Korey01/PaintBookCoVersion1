@@ -13,29 +13,19 @@ import { RealtimeProvider } from "@/contexts/RealtimeContext";
 import Layout from "@/components/site/Layout";
 import Index from "./pages/Index";
 import FindPainters from "./pages/FindPainters";
-import Placeholder from "./pages/Placeholder";
 import Estimator from "./pages/Estimator";
 import PostJob, { PostJobConfirmation } from "./pages/PostJob";
 import PainterProfile from "./pages/PainterProfile";
 import Checkout from "./pages/Checkout";
 import CheckoutConfirmation from "./pages/CheckoutConfirmation";
-import Dashboard from "./pages/Dashboard";
 import TrustSafety from "./pages/TrustSafety";
 import EscrowCustomerDemo from "./pages/EscrowCustomerDemo";
 import EscrowPainterDemo from "./pages/EscrowPainterDemo";
 import PaintVisualizer from "./pages/PaintVisualizer";
-import Vestimator from "./pages/Vestimator";
-import Auth from "./pages/Auth";
 import VerifyEmail from "./pages/VerifyEmail";
-import CustomerDashboard from "./pages/CustomerDashboard";
 import DashboardRouter from "./pages/DashboardRouter";
 import Disputes from "./pages/Disputes";
 import PaymentHistory from "./pages/PaymentHistory";
-import About from "./pages/About";
-import Support from "./pages/Support";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Cookies from "./pages/Cookies";
 import Account from "./pages/Account";
 import Messages from "./pages/Messages";
 import Favorites from "./pages/Favorites";
@@ -45,7 +35,6 @@ import { PainterOnboarding } from "./pages/PainterOnboarding";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminFallback from "./pages/AdminFallback";
 import AuthPage from "./pages/AuthPage";
-import PainterDashboard from "./pages/PainterDashboard";
 import B2BFindPainter from "./pages/B2BFindPainter";
 import B2BConsultation from "./pages/B2BConsultation";
 import B2BConfirmation from "./pages/B2BConfirmation";
@@ -119,6 +108,7 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/confirm" element={<ConfirmPage />} />
+          <Route path="/auth/callback" element={<Navigate to="/confirm" replace />} />
           <Route path="/kyc/painter" element={
             <ProtectedRoute><KYCPainter /></ProtectedRoute>
           } />
@@ -164,18 +154,18 @@ const App = () => (
             <Route path="/auth" element={<Navigate to="/login" replace />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<DashboardRouter />} />
-            <Route path="/disputes" element={<Disputes />} />
-            <Route path="/payment-history" element={<PaymentHistory />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/estimates/saved" element={<Estimates />} />
+            <Route path="/disputes" element={<ProtectedRoute><Disputes /></ProtectedRoute>} />
+            <Route path="/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+            <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+            <Route path="/estimates/saved" element={<ProtectedRoute><Estimates /></ProtectedRoute>} />
             <Route path="/trust-safety" element={<TrustSafety />} />
             <Route path="/visualizer" element={<PaintVisualizer />} />
             <Route path="/escrow-demo/customer" element={<EscrowCustomerDemo />} />
             <Route path="/escrow-demo/painter" element={<EscrowPainterDemo />} />
             <Route path="/painter/:id" element={<PainterProfile />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
             <Route path="/auth-new" element={<AuthPage />} />
             <Route path="/painter-dashboard" element={<Navigate to="/dashboard/painter" replace />} />
             <Route path="/customer-dashboard" element={<Navigate to="/dashboard/customer" replace />} />

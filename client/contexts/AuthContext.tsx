@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { ADMIN_EMAIL } from "@/lib/config";
+import type { PainterProfile } from "@/types/painter";
 
 type UserRole = "painter" | "customer" | "admin" | null;
 
@@ -8,7 +10,7 @@ interface AuthContextType {
   user: User | null;
   role: UserRole;
   loading: boolean;
-  painterProfile: any | null;
+  painterProfile: PainterProfile | null;
   signOut: () => Promise<void>;
 }
 
@@ -24,11 +26,9 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-const ADMIN_EMAIL = "o.a.alashe@paintbookco.co.uk";
-
 async function detectRole(userId: string, email: string): Promise<{
   role: UserRole;
-  painterProfile: any | null;
+  painterProfile: PainterProfile | null;
 }> {
   if (email === ADMIN_EMAIL) {
     return { role: "admin", painterProfile: null };
@@ -36,10 +36,10 @@ async function detectRole(userId: string, email: string): Promise<{
   try {
     const { data } = await supabase
       .from("painters")
-      .select("id, kyc_status, is_active, insurance_verified, first_name, last_name, email, phone, postcode, city, bio, specialisms, service_radius_km, avg_rating, completed_jobs, gallery_size_bytes, insurance_submitted_at, insurance_company, insurance_policy_number, insurance_expiry_date, insurance_certificate_url, terms_accepted, profile_complete, transpact_registered, kyc_rejection_reason")
+      .select("id, user_id, kyc_status, is_active, insurance_verified, first_name, last_name, email, phone, postcode, city, bio, specialisms, service_radius_km, avg_rating, completed_jobs, gallery_size_bytes, insurance_submitted_at, insurance_company, insurance_policy_number, insurance_expiry_date, insurance_certificate_url, terms_accepted, profile_complete, transpact_registered, kyc_rejection_reason, created_at, updated_at")
       .eq("user_id", userId)
       .maybeSingle();
-    if (data) return { role: "painter", painterProfile: data };
+    if (data) return { role: "painter", painterProfile: data as PainterProfile };
   } catch (err) {
     console.error("Role detection error:", err);
   }
@@ -50,27 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
-  const [painterProfile, setPainterProfile] = useState<any | null>(null);
+  const [painterProfile, setPainterProfile] = useState<PainterProfile | null>(null);
 
   useEffect(() => {
     let mounted = true;
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      if (session?.user) {
-        const { role: r, painterProfile: p } =
-          await detectRole(session.user.id, session.user.email ?? "");
-        if (!mounted) return;
-        setUser(session.user);
-        setRole(r);
-        setPainterProfile(p);
-      } else {
-        setUser(null);
-        setRole(null);
-        setPainterProfile(null);
-      }
-      setLoading(false);
-    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {

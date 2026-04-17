@@ -47,8 +47,24 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const { user, role } = useAuth();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [painterId, setPainterId] = useState<string | null>(null);
   const activeSubscriptions = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (user && role === "painter") {
+      supabase
+        .from("painters")
+        .select("id")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setPainterId(data.id);
+        });
+    } else {
+      setPainterId(null);
+    }
+  }, [user, role]);
 
   // ── Helper: Add or update notification ────────────────────────────────────
   const addNotification = useCallback(
@@ -66,7 +82,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   // ── Subscribe to job matches (for painters) ───────────────────────────────
 
   const subscribeToJobMatches = useCallback(() => {
-    if (!user || role !== "painter") return;
+    if (!user || role !== "painter" || !painterId) return;
 
     const subscriptionKey = "job_matches";
     if (activeSubscriptions.current.has(subscriptionKey)) return;
@@ -79,7 +95,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           event: "INSERT",
           schema: "public",
           table: "job_matches",
-          filter: `painter_id=eq.${user.id}`,
+          filter: `painter_id=eq.${painterId}`,
         },
         (payload: any) => {
           supabase
@@ -106,7 +122,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       });
 
     activeSubscriptions.current.add(subscriptionKey);
-  }, [user, role, addNotification]);
+  }, [user, role, painterId, addNotification]);
 
   // ── Subscribe to job updates ─────────────────────────────────────────────
 
@@ -222,7 +238,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   // ── Subscribe to reviews ──────────────────────────────────────────────────
 
   const subscribeToReviews = useCallback(() => {
-    if (!user) return;
+    if (!user || !painterId) return;
 
     const subscriptionKey = "reviews";
     if (activeSubscriptions.current.has(subscriptionKey)) return;
@@ -235,7 +251,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           event: "INSERT",
           schema: "public",
           table: "reviews",
-          filter: `painter_id=eq.${user.id}`,
+          filter: `painter_id=eq.${painterId}`,
         },
         (payload: any) => {
           addNotification({
@@ -253,7 +269,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       });
 
     activeSubscriptions.current.add(subscriptionKey);
-  }, [user, addNotification]);
+  }, [user, painterId, addNotification]);
 
   // ── Mark notification as read ────────────────────────────────────────────
 
@@ -293,6 +309,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
+    if (role === "painter" && !painterId) return;
 
     subscribeToReviews();
 
@@ -303,7 +320,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     return () => {
       // Don't unsubscribe on dependency change; keep subscriptions active
     };
-  }, [user, role, subscribeToReviews, subscribeToJobMatches]);
+  }, [user, role, painterId, subscribeToReviews, subscribeToJobMatches]);
 
   // ── Cleanup on unmount ───────────────────────────────────────────────────
 

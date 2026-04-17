@@ -95,8 +95,6 @@ export default function B2BFindPainter() {
         email,
       };
 
-      console.log("B2B Inquiry submitted:", formData);
-
       // Store in localStorage for demo
       localStorage.setItem("paintbook:b2b-inquiry", JSON.stringify(formData));
 

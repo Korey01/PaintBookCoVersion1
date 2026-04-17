@@ -222,7 +222,7 @@ export default function TrustSafety() {
               Whether you're a customer or painter, our platform protects you from start to finish.
             </p>
             <div className="flex justify-center gap-4 flex-wrap">
-              <Button asChild size="lg"><Link to="/auth">Join PaintBook Safely</Link></Button>
+              <Button asChild size="lg"><Link to="/login">Join PaintBook Safely</Link></Button>
               <Button asChild variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10"><Link to="/find-painter">Explore Verified Painters</Link></Button>
             </div>
           </AnimatedSection>

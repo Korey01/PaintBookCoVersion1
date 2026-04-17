@@ -13,6 +13,7 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface EscrowTransaction {
   id: string;
@@ -54,18 +55,14 @@ export default function PaymentHistory() {
     null,
   );
 
-  const token = localStorage.getItem("paintbook:token");
-
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
     fetchPayments();
-  }, [token, navigate]);
+  }, [navigate]);
 
   const fetchPayments = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate("/login"); return; }
+    const token = session.access_token;
     try {
       setLoading(true);
       // In production, you'd have a dedicated endpoint for payment history

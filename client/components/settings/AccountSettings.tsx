@@ -40,7 +40,7 @@ export function AccountSettings() {
       }
 
       const res = await fetch(
-        "https://kvuidnkmxqftbmlyvlyl.supabase.co/functions/v1/download-my-data",
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-my-data`,
         {
           method: "POST",
           headers: {

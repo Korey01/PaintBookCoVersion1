@@ -243,7 +243,11 @@ export default function CustomerDashboard() {
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transpact-webhook-receiver`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session?.access_token}`,
+              "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
             body: JSON.stringify({
               transactionEventID: "11",
               transactionID: job.transpact_transaction_id || "0",

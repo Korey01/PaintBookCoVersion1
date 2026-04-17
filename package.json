@@ -108,7 +108,7 @@
     "serverless-http": "^3.2.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4.2.2",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.176.0",
     "tsx": "^4.20.3",

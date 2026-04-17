@@ -1,12 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, CheckCircle2, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Loader2, Plus, Trash2, MapPin, Paintbrush, FileText, Home, Palette, Mail } from "lucide-react";
 
 const JOB_TYPES = [
-  "Interior Painting", "Exterior Painting", "Wallpapering",
-  "Feature Wall", "TV/Media Wall", "Commercial Painting",
-  "Full Interior Refurb", "Full Exterior Refurb",
-  "New Build Decoration", "Landlord Refresh", "Specialist/Other"
+  { label: "Interior Painting", icon: "🏠" },
+  { label: "Exterior Painting", icon: "🏡" },
+  { label: "Wallpapering", icon: "📋" },
+  { label: "Feature Wall", icon: "✨" },
+  { label: "TV/Media Wall", icon: "📺" },
+  { label: "Commercial Painting", icon: "🏢" },
+  { label: "Full Interior Refurb", icon: "🔨" },
+  { label: "Full Exterior Refurb", icon: "🔧" },
+  { label: "New Build Decoration", icon: "🏗️" },
+  { label: "Landlord Refresh", icon: "🔑" },
+  { label: "Specialist/Other", icon: "🎨" },
 ];
 
 const ROOM_TYPES = [
@@ -25,15 +32,22 @@ type Room = {
   windows?: number;
 };
 
+const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+const labelClass = "block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider";
+
+const TOTAL_STEPS = 6;
+
 export default function PostJobPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
+  const [animating, setAnimating] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [jobRef, setJobRef] = useState("");
   const [error, setError] = useState("");
 
-  // Form state
   const [postcode, setPostcode] = useState("");
   const [city, setCity] = useState("");
   const [jobType, setJobType] = useState("");
@@ -44,28 +58,41 @@ export default function PostJobPage() {
   const [paintChoice, setPaintChoice] = useState("");
   const [email, setEmail] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
-
-  // Analytics
   const [startTime] = useState(Date.now());
 
+  const goTo = (nextStep: number) => {
+    if (animating) return;
+    setError("");
+    setDirection(nextStep > step ? "forward" : "backward");
+    setAnimating(true);
+    setVisible(false);
+    setTimeout(() => {
+      setStep(nextStep);
+      setVisible(true);
+      setAnimating(false);
+    }, 220);
+  };
+
+  const next = (nextStep: number) => {
+    setError("");
+    goTo(nextStep);
+  };
+
   const addRoom = () => {
-    setRooms(prev => [...prev, {
-      type: "Living Room", custom_name: "", height: 2.4
-    }]);
+    setRooms(prev => [...prev, { type: "Living Room", custom_name: "", height: 2.4 }]);
   };
 
-  const updateRoom = (index: number, field: keyof Room, value: any) => {
-    setRooms(prev => prev.map((r, i) => i === index ? { ...r, [field]: value } : r));
+  const updateRoom = (i: number, field: keyof Room, value: any) => {
+    setRooms(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
   };
 
-  const removeRoom = (index: number) => {
-    setRooms(prev => prev.filter((_, i) => i !== index));
+  const removeRoom = (i: number) => {
+    setRooms(prev => prev.filter((_, idx) => idx !== i));
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
     setError("");
-
     try {
       const timeSpent = Math.floor((Date.now() - startTime) / 1000);
       const deviceType = /Mobi|Android/i.test(navigator.userAgent) ? "mobile" : "desktop";
@@ -81,14 +108,11 @@ export default function PostJobPage() {
           },
           body: JSON.stringify({
             email: email || null,
-            postcode,
-            city,
-            job_type: jobType,
+            postcode, city, job_type: jobType,
             job_description: description,
             has_structural_defects: hasDefects,
             structural_defect_details: defectDetails || null,
-            rooms,
-            paint_choice: paintChoice || null,
+            rooms, paint_choice: paintChoice || null,
             utm_source: urlParams.get("utm_source"),
             utm_medium: urlParams.get("utm_medium"),
             utm_campaign: urlParams.get("utm_campaign"),
@@ -102,9 +126,7 @@ export default function PostJobPage() {
           })
         }
       );
-
       const data = await res.json();
-
       if (data.success) {
         localStorage.setItem("pbc_session_id", data.session_id);
         localStorage.setItem("pbc_session_token", data.session_token);
@@ -114,453 +136,497 @@ export default function PostJobPage() {
       } else {
         setError(data.error || "Failed to post job. Please try again.");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     }
-
     setSubmitting(false);
   };
 
-  const fieldClass = "w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none text-sm";
+  const stepTitles = [
+    "Your location",
+    "Type of work",
+    "Job details",
+    "Rooms",
+    "Paint details",
+    "Almost done",
+  ];
+
+  const stepIcons = [MapPin, Paintbrush, FileText, Home, Palette, Mail];
+  const StepIcon = stepIcons[step - 1];
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
-        <div className="max-w-lg w-full text-center space-y-6">
-          <div className="w-20 h-20 bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="h-10 w-10 text-green-400" />
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="px-6 py-5 border-b border-border">
+          <a href="/">
+            <img src="/logo.png" alt="PaintBookCo" className="h-8 object-contain" />
+          </a>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-md w-full text-center space-y-8">
+            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold mb-2">Job Posted!</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Verified painters near <strong>{postcode}</strong> have been notified.
+                A painter will reach out to discuss your job.
+              </p>
+              <p className="text-xs text-muted-foreground/60 mt-3 font-mono">
+                Job ref: {jobRef}
+              </p>
+            </div>
+            <div className="text-left space-y-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                What happens next
+              </p>
+              {[
+                "A verified painter contacts you to chat about your job",
+                "You agree the details and price",
+                "We send you an invoice — pay securely via escrow",
+                "Painter completes the work",
+                "You confirm completion and funds are released",
+              ].map((s, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm text-muted-foreground">{s}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate("/")}
+              className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
+            >
+              Return to homepage
+            </button>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Job Posted!</h1>
-            <p className="text-gray-400">
-              Verified painters near {postcode} have been notified.
-            </p>
-            <p className="text-orange-400 font-mono text-sm mt-2">
-              Job Ref: {jobRef}
-            </p>
-          </div>
-          <div className="bg-gray-900 rounded-xl p-6 text-left space-y-4">
-            <h3 className="font-semibold text-white">What happens next?</h3>
-            {[
-              "A verified painter will reach out to discuss your job",
-              "You'll agree the details and price via our secure chat",
-              "We'll send you a professional invoice to review",
-              "Pay securely — funds held in escrow until completion",
-              "Confirm completion and funds are released to your painter",
-            ].map((step, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                  {i + 1}
-                </span>
-                <p className="text-gray-300 text-sm">{step}</p>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => navigate("/")}
-            className="text-gray-400 hover:text-white text-sm underline"
-          >
-            Return to homepage
-          </button>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-2xl mx-auto px-6 py-12">
-
-        {/* Header */}
-        <div className="mb-8">
-          <a href="/" className="text-gray-500 hover:text-white text-sm">
-            ← Back to PaintBookCo
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <div className="flex items-center justify-between max-w-md mx-auto">
+          <a href="/">
+            <img src="/logo.png" alt="PaintBookCo" className="h-8 object-contain" />
           </a>
+          <span className="text-xs text-muted-foreground">
+            Step {step} of {TOTAL_STEPS}
+          </span>
         </div>
+      </header>
 
-        {/* Progress */}
-        <div className="flex gap-1.5 mb-8">
-          {[1,2,3,4,5,6].map(s => (
-            <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${
-              step >= s ? "bg-orange-500" : "bg-gray-800"
-            }`} />
-          ))}
-        </div>
-
-        {error && (
-          <div className="mb-6 bg-red-900/30 border border-red-800 rounded-lg px-4 py-3 text-red-300 text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* STEP 1 — Location */}
-        {step === 1 && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Find a Painter Near You</h1>
-              <p className="text-gray-400">Enter your location to get started</p>
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">
-                Postcode *
-              </label>
-              <input
-                type="text"
-                value={postcode}
-                onChange={e => setPostcode(e.target.value.toUpperCase())}
-                placeholder="e.g. M1 1AB"
-                className={fieldClass}
-              />
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">
-                City / Area
-              </label>
-              <input
-                type="text"
-                value={city}
-                onChange={e => setCity(e.target.value)}
-                placeholder="e.g. Manchester"
-                className={fieldClass}
-              />
-            </div>
-            <button
-              onClick={() => postcode.trim() ? setStep(2) : setError("Please enter your postcode")}
-              className="w-full bg-orange-600 text-white py-4 rounded-xl font-medium hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
-            >
-              Continue <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {/* STEP 2 — Job Type */}
-        {step === 2 && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">What needs painting?</h1>
-              <p className="text-gray-400">Select the type of work needed</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {JOB_TYPES.map(type => (
-                <button
-                  key={type}
-                  onClick={() => setJobType(type)}
-                  className={`p-4 rounded-xl border text-sm font-medium text-left transition-colors ${
-                    jobType === type
-                      ? "border-orange-500 bg-orange-900/20 text-orange-400"
-                      : "border-gray-700 text-gray-300 hover:border-gray-500"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setStep(1)}
-                className="flex-1 border border-gray-700 text-gray-300 py-4 rounded-xl hover:border-gray-500 flex items-center justify-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </button>
-              <button
-                onClick={() => jobType ? setStep(3) : setError("Please select a job type")}
-                className="flex-1 bg-orange-600 text-white py-4 rounded-xl font-medium hover:bg-orange-700 flex items-center justify-center gap-2">
-                Continue <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3 — Description */}
-        {step === 3 && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Describe your job</h1>
-              <p className="text-gray-400">Tell us what you need done</p>
-            </div>
-            <div className="bg-amber-900/20 border border-amber-800 rounded-lg p-4">
-              <p className="text-amber-300 text-sm">
-                🔒 Please do not include your phone number, email address or
-                social media handles. Our platform will connect you with
-                painters safely and securely.
-              </p>
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">
-                Job Description *
-              </label>
-              <textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Describe what you need painted, any specific requirements, preferred colours, etc."
-                rows={5}
-                className={fieldClass}
-              />
-            </div>
-            <div>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasDefects}
-                  onChange={e => setHasDefects(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-600"
-                />
-                <span className="text-gray-300 text-sm">
-                  Are there any structural issues? (e.g. plastering, screeding needed)
-                </span>
-              </label>
-              {hasDefects && (
-                <textarea
-                  value={defectDetails}
-                  onChange={e => setDefectDetails(e.target.value)}
-                  placeholder="Describe the structural issues..."
-                  rows={3}
-                  className={`${fieldClass} mt-3`}
-                />
-              )}
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setStep(2)}
-                className="flex-1 border border-gray-700 text-gray-300 py-4 rounded-xl hover:border-gray-500 flex items-center justify-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </button>
-              <button
-                onClick={() => description.trim() ? setStep(4) : setError("Please describe your job")}
-                className="flex-1 bg-orange-600 text-white py-4 rounded-xl font-medium hover:bg-orange-700 flex items-center justify-center gap-2">
-                Continue <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 4 — Rooms */}
-        {step === 4 && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">How many rooms?</h1>
-              <p className="text-gray-400">Add each room that needs painting</p>
-            </div>
-            <div className="space-y-3">
-              {rooms.map((room, i) => (
-                <div key={i} className="bg-gray-900 border border-gray-700 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-white font-medium text-sm">Room {i + 1}</span>
-                    <button onClick={() => removeRoom(i)}
-                      className="text-red-400 hover:text-red-300">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-gray-500 text-xs block mb-1">Room Type</label>
-                      <select
-                        value={room.type}
-                        onChange={e => updateRoom(i, "type", e.target.value)}
-                        className={fieldClass}
-                      >
-                        {ROOM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-gray-500 text-xs block mb-1">Custom Name (optional)</label>
-                      <input
-                        value={room.custom_name}
-                        onChange={e => updateRoom(i, "custom_name", e.target.value)}
-                        placeholder="e.g. Main bedroom"
-                        className={fieldClass}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={addRoom}
-              className="w-full border border-dashed border-gray-600 text-gray-400 py-3 rounded-xl hover:border-orange-500 hover:text-orange-400 flex items-center justify-center gap-2 text-sm transition-colors"
-            >
-              <Plus className="h-4 w-4" /> Add Room
-            </button>
-            {rooms.length > 0 && (
-              <p className="text-gray-500 text-sm text-center">
-                {rooms.length} room{rooms.length > 1 ? "s" : ""} added
-              </p>
-            )}
-            <div className="flex gap-3">
-              <button onClick={() => setStep(3)}
-                className="flex-1 border border-gray-700 text-gray-300 py-4 rounded-xl hover:border-gray-500 flex items-center justify-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </button>
-              <button
-                onClick={() => rooms.length > 0 ? setStep(5) : setError("Please add at least one room")}
-                className="flex-1 bg-orange-600 text-white py-4 rounded-xl font-medium hover:bg-orange-700 flex items-center justify-center gap-2">
-                Continue <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 5 — Paint & Dimensions (optional) */}
-        {step === 5 && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Paint details</h1>
-              <p className="text-gray-400">Optional — helps painters quote accurately</p>
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">
-                Paint Choice
-              </label>
-              <input
-                type="text"
-                value={paintChoice}
-                onChange={e => setPaintChoice(e.target.value)}
-                placeholder="e.g. Dulux Brilliant White Matt"
-                className={fieldClass}
-              />
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-white font-medium text-sm">Room Dimensions (optional)</h3>
-              {rooms.map((room, i) => (
-                <div key={i} className="bg-gray-900 border border-gray-700 rounded-xl p-4">
-                  <p className="text-white text-sm font-medium mb-3">
-                    {room.custom_name || room.type}
-                  </p>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { key: "length", label: "Length (m)" },
-                      { key: "width", label: "Width (m)" },
-                      { key: "height", label: "Height (m)" },
-                    ].map(f => (
-                      <div key={f.key}>
-                        <label className="text-gray-500 text-xs block mb-1">{f.label}</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={(room as any)[f.key] || ""}
-                          onChange={e => updateRoom(i, f.key as keyof Room, parseFloat(e.target.value))}
-                          className={fieldClass}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 mt-3">
-                    {[
-                      { key: "doors", label: "Doors" },
-                      { key: "windows", label: "Windows" },
-                    ].map(f => (
-                      <div key={f.key}>
-                        <label className="text-gray-500 text-xs block mb-1">{f.label}</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={(room as any)[f.key] || ""}
-                          onChange={e => updateRoom(i, f.key as keyof Room, parseInt(e.target.value))}
-                          className={fieldClass}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setStep(4)}
-                className="flex-1 border border-gray-700 text-gray-300 py-4 rounded-xl hover:border-gray-500 flex items-center justify-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </button>
-              <button
-                onClick={() => setStep(6)}
-                className="flex-1 bg-orange-600 text-white py-4 rounded-xl font-medium hover:bg-orange-700 flex items-center justify-center gap-2">
-                Continue <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-            <button onClick={() => setStep(6)}
-              className="w-full text-gray-500 hover:text-gray-300 text-sm">
-              Skip this step
-            </button>
-          </div>
-        )}
-
-        {/* STEP 6 — Email & Submit */}
-        {step === 6 && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Stay updated</h1>
-              <p className="text-gray-400">
-                We'll send you painter responses and your invoice
-              </p>
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs uppercase tracking-wider block mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className={fieldClass}
-              />
-              <p className="text-gray-600 text-xs mt-2">
-                Used to send you painter quotes and your invoice. No account needed.
-              </p>
-            </div>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={marketingConsent}
-                onChange={e => setMarketingConsent(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-600 mt-0.5"
-              />
-              <span className="text-gray-400 text-sm">
-                I'd like to receive painting tips and special offers from PaintBookCo
-              </span>
-            </label>
-
-            <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-white font-medium text-sm mb-3">Your job summary</h3>
-              <div className="space-y-2 text-sm text-gray-400">
-                <div className="flex justify-between">
-                  <span>Location</span>
-                  <span className="text-white">{postcode} {city && `· ${city}`}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Job type</span>
-                  <span className="text-white">{jobType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Rooms</span>
-                  <span className="text-white">{rooms.length} room{rooms.length !== 1 ? "s" : ""}</span>
-                </div>
-                {paintChoice && (
-                  <div className="flex justify-between">
-                    <span>Paint</span>
-                    <span className="text-white">{paintChoice}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setStep(5)}
-                className="flex-1 border border-gray-700 text-gray-300 py-4 rounded-xl hover:border-gray-500 flex items-center justify-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="flex-1 bg-orange-600 text-white py-4 rounded-xl font-medium hover:bg-orange-700 disabled:opacity-50 flex items-center justify-center gap-2">
-                {submitting ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Posting job...</>
-                ) : (
-                  <><CheckCircle2 className="h-4 w-4" /> Post Job</>
-                )}
-              </button>
-            </div>
-            <p className="text-center text-gray-600 text-xs">
-              No account needed · Free to post
-            </p>
-          </div>
-        )}
+      {/* Progress bar */}
+      <div className="w-full bg-border h-0.5">
+        <div
+          className="h-0.5 bg-foreground transition-all duration-500 ease-out"
+          style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+        />
       </div>
+
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="max-w-md w-full">
+
+          {/* Step indicator */}
+          <div
+            className="transition-all duration-200"
+            style={{
+              opacity: visible ? 1 : 0,
+              transform: visible
+                ? "translateX(0)"
+                : direction === "forward"
+                  ? "translateX(-24px)"
+                  : "translateX(24px)",
+            }}
+          >
+            {/* Icon */}
+            <div className="mb-8">
+              <StepIcon className="h-6 w-6 text-muted-foreground" />
+            </div>
+
+            {/* Step label */}
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              {stepTitles[step - 1]}
+            </p>
+
+            {error && (
+              <div className="mb-6 text-sm text-destructive border-b border-destructive pb-2">
+                {error}
+              </div>
+            )}
+
+            {/* STEP 1 — Location */}
+            {step === 1 && (
+              <div className="space-y-8">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  Where is the job?
+                </h1>
+                <div className="space-y-6">
+                  <div>
+                    <label className={labelClass}>Postcode *</label>
+                    <input
+                      type="text"
+                      value={postcode}
+                      onChange={e => setPostcode(e.target.value.toUpperCase())}
+                      placeholder="e.g. M1 1AB"
+                      autoFocus
+                      className={fieldClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>City / Area</label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={e => setCity(e.target.value)}
+                      placeholder="e.g. Manchester"
+                      className={fieldClass}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => postcode.trim() ? next(2) : setError("Please enter your postcode")}
+                  className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
+                >
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* STEP 2 — Job Type */}
+            {step === 2 && (
+              <div className="space-y-8">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  What needs painting?
+                </h1>
+                <div className="grid grid-cols-2 gap-2">
+                  {JOB_TYPES.map(type => (
+                    <button
+                      key={type.label}
+                      onClick={() => setJobType(type.label)}
+                      className={`p-3 rounded-md border text-left text-sm transition-all duration-150 ${
+                        jobType === type.label
+                          ? "border-foreground bg-foreground/5 text-foreground"
+                          : "border-border text-muted-foreground hover:border-foreground/40"
+                      }`}
+                    >
+                      <span className="text-base mr-2">{type.icon}</span>
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => goTo(1)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm hover:bg-accent transition-colors flex items-center justify-center gap-2">
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={() => jobType ? next(3) : setError("Please select a job type")}
+                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                    Continue <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 — Description */}
+            {step === 3 && (
+              <div className="space-y-8">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  Describe the job
+                </h1>
+                <div className="text-xs text-muted-foreground border-l-2 border-border pl-3 leading-relaxed">
+                  Please do not include your phone number, email or social media handles.
+                  Our platform connects you with painters safely.
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <label className={labelClass}>Description *</label>
+                    <textarea
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      placeholder="Describe what needs to be painted, any specific requirements..."
+                      rows={4}
+                      className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${hasDefects ? "bg-foreground border-foreground" : "border-border group-hover:border-foreground/40"}`}
+                        onClick={() => setHasDefects(!hasDefects)}>
+                        {hasDefects && <span className="text-background text-xs">✓</span>}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        Are there any structural issues? (plastering, screeding etc.)
+                      </span>
+                    </label>
+                    {hasDefects && (
+                      <div className="mt-4">
+                        <label className={labelClass}>Describe the issues</label>
+                        <textarea
+                          value={defectDetails}
+                          onChange={e => setDefectDetails(e.target.value)}
+                          placeholder="e.g. One wall needs re-plastering before painting..."
+                          rows={2}
+                          className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => goTo(2)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm hover:bg-accent transition-colors flex items-center justify-center gap-2">
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={() => description.trim() ? next(4) : setError("Please describe your job")}
+                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                    Continue <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4 — Rooms */}
+            {step === 4 && (
+              <div className="space-y-8">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  How many rooms?
+                </h1>
+                <div className="space-y-3">
+                  {rooms.map((room, i) => (
+                    <div key={i} className="border border-border rounded-md p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Room {i + 1}
+                        </span>
+                        <button onClick={() => removeRoom(i)}
+                          className="text-muted-foreground hover:text-foreground transition-colors">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className={labelClass}>Type</label>
+                          <select
+                            value={room.type}
+                            onChange={e => updateRoom(i, "type", e.target.value)}
+                            className="w-full border-b border-border bg-transparent text-sm text-foreground py-2 focus:outline-none focus:border-foreground transition-colors"
+                          >
+                            {ROOM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={labelClass}>Custom name</label>
+                          <input
+                            value={room.custom_name}
+                            onChange={e => updateRoom(i, "custom_name", e.target.value)}
+                            placeholder="Optional"
+                            className={fieldClass}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={addRoom}
+                    className="w-full border border-dashed border-border py-3 rounded-md text-sm text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Add a room
+                  </button>
+                  {rooms.length > 0 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      {rooms.length} room{rooms.length > 1 ? "s" : ""} added
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => goTo(3)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm hover:bg-accent transition-colors flex items-center justify-center gap-2">
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={() => rooms.length > 0 ? next(5) : setError("Please add at least one room")}
+                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                    Continue <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5 — Paint details (optional) */}
+            {step === 5 && (
+              <div className="space-y-8">
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    Paint details
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Optional — helps painters quote more accurately
+                  </p>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <label className={labelClass}>Paint choice</label>
+                    <input
+                      type="text"
+                      value={paintChoice}
+                      onChange={e => setPaintChoice(e.target.value)}
+                      placeholder="e.g. Dulux Brilliant White Matt"
+                      className={fieldClass}
+                    />
+                  </div>
+                  {rooms.length > 0 && (
+                    <div className="space-y-4">
+                      <p className={labelClass}>Room dimensions (optional)</p>
+                      {rooms.map((room, i) => (
+                        <div key={i} className="border border-border rounded-md p-4">
+                          <p className="text-sm font-medium mb-3">
+                            {room.custom_name || room.type}
+                          </p>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[
+                              { key: "length", label: "Length (m)" },
+                              { key: "width", label: "Width (m)" },
+                              { key: "height", label: "Height (m)" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label className={labelClass}>{f.label}</label>
+                                <input
+                                  type="number" step="0.1"
+                                  value={(room as any)[f.key] || ""}
+                                  onChange={e => updateRoom(i, f.key as keyof Room, parseFloat(e.target.value))}
+                                  className={fieldClass}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 mt-3">
+                            {[
+                              { key: "doors", label: "Doors" },
+                              { key: "windows", label: "Windows" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label className={labelClass}>{f.label}</label>
+                                <input
+                                  type="number" min="0"
+                                  value={(room as any)[f.key] || ""}
+                                  onChange={e => updateRoom(i, f.key as keyof Room, parseInt(e.target.value))}
+                                  className={fieldClass}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => goTo(4)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm hover:bg-accent transition-colors flex items-center justify-center gap-2">
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button onClick={() => next(6)}
+                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                    Continue <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+                <button onClick={() => next(6)}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Skip this step →
+                </button>
+              </div>
+            )}
+
+            {/* STEP 6 — Email */}
+            {step === 6 && (
+              <div className="space-y-8">
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    Stay updated on your job
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    We'll send you painter responses and your invoice
+                  </p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <label className={labelClass}>Email address</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className={fieldClass}
+                    />
+                    <p className="text-xs text-muted-foreground/60 mt-2">
+                      No account needed. Used only to send painter quotes and your invoice.
+                    </p>
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${marketingConsent ? "bg-foreground border-foreground" : "border-border group-hover:border-foreground/40"}`}
+                      onClick={() => setMarketingConsent(!marketingConsent)}
+                    >
+                      {marketingConsent && <span className="text-background text-xs">✓</span>}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      I'd like to receive painting tips and offers from PaintBookCo
+                    </span>
+                  </label>
+                </div>
+
+                {/* Summary */}
+                <div className="border border-border rounded-md p-4 space-y-2">
+                  <p className={labelClass}>Your job summary</p>
+                  {[
+                    { label: "Location", value: `${postcode}${city ? ` · ${city}` : ""}` },
+                    { label: "Job type", value: jobType },
+                    { label: "Rooms", value: `${rooms.length} room${rooms.length !== 1 ? "s" : ""}` },
+                    ...(paintChoice ? [{ label: "Paint", value: paintChoice }] : []),
+                  ].map(item => (
+                    <div key={item.label} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="text-foreground font-medium">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <button onClick={() => goTo(5)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm hover:bg-accent transition-colors flex items-center justify-center gap-2">
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Posting...</>
+                    ) : (
+                      <><CheckCircle2 className="h-4 w-4" /> Post Job</>
+                    )}
+                  </button>
+                </div>
+                <p className="text-center text-xs text-muted-foreground/60">
+                  Free to post · No account needed
+                </p>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface KYCStatusData {
   verificationStatus: "pending" | "under_review" | "approved" | "denied";
@@ -36,11 +37,9 @@ export function PainterOnboarding() {
   useEffect(() => {
     const fetchKYCStatus = async () => {
       try {
-        const token = localStorage.getItem("paintbook:token");
-        if (!token) {
-          navigate("/join-painter");
-          return;
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) { navigate("/join-painter"); return; }
+        const token = session.access_token;
 
         const response = await fetch("/api/kyc/status", {
           headers: {
@@ -69,8 +68,9 @@ export function PainterOnboarding() {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const token = localStorage.getItem("paintbook:token");
-        if (!token) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
+        const token = session.access_token;
 
         const response = await fetch("/api/kyc/documents", {
           headers: {
@@ -119,11 +119,9 @@ export function PainterOnboarding() {
   const handleKYCSubmit = async (formData: any) => {
     setSubmitting(true);
     try {
-      const token = localStorage.getItem("paintbook:token");
-      if (!token) {
-        navigate("/join-painter");
-        return;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) { navigate("/join-painter"); return; }
+      const token = session.access_token;
 
       const response = await fetch("/api/kyc/submit", {
         method: "POST",
@@ -157,11 +155,9 @@ export function PainterOnboarding() {
     documentUrl: string,
     expiry?: string,
   ) => {
-    const token = localStorage.getItem("paintbook:token");
-    if (!token) {
-      navigate("/join-painter");
-      return;
-    }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) { navigate("/join-painter"); return; }
+    const token = session.access_token;
 
     const response = await fetch("/api/kyc/documents/upload", {
       method: "POST",

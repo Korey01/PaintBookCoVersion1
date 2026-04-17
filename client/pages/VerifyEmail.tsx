@@ -11,8 +11,6 @@ export default function VerifyEmail(){
   const next = params.get('next') || '/dashboard';
 
   function verify(){
-    const u = JSON.parse(localStorage.getItem('paintbook:user')||'null');
-    if(u){ u.verifiedEmail = true; localStorage.setItem('paintbook:user', JSON.stringify(u)); }
     navigate(next);
   }
 

@@ -10,6 +10,7 @@ import {
   Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface Dispute {
   id: string;
@@ -51,18 +52,14 @@ export default function Disputes() {
   const [evidenceText, setEvidenceText] = useState("");
   const [submittingEvidence, setSubmittingEvidence] = useState(false);
 
-  const token = localStorage.getItem("paintbook:token");
-
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
     fetchDisputes();
-  }, [token, navigate, filter]);
+  }, [navigate, filter]);
 
   const fetchDisputes = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate("/login"); return; }
+    const token = session.access_token;
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -101,6 +98,9 @@ export default function Disputes() {
       return;
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate("/login"); return; }
+    const token = session.access_token;
     setSubmittingEvidence(true);
 
     try {

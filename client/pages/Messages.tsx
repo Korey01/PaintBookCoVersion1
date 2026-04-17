@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Send, ArrowLeft, Loader } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface Message {
   id: string;
@@ -45,15 +46,12 @@ export default function Messages() {
   const [recipientId, setRecipientId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const token = localStorage.getItem("paintbook:token");
-
   useEffect(() => {
     // Get current user ID from token decode (simplified)
     const fetchUserData = async () => {
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { navigate("/login"); return; }
+      const token = session.access_token;
 
       // Fetch job and messages
       if (jobId) {
@@ -98,7 +96,7 @@ export default function Messages() {
     };
 
     fetchUserData();
-  }, [jobId, token, navigate]);
+  }, [jobId, navigate]);
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -119,6 +117,10 @@ export default function Messages() {
     }
 
     setSendingMessage(true);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate("/login"); return; }
+    const token = session.access_token;
 
     try {
       const response = await fetch("/api/messages", {

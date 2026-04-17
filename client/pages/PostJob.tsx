@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -341,39 +342,14 @@ export default function PostJob() {
     }
 
     try {
-      // Get authentication token (check if customer is already logged in)
-      let token = localStorage.getItem("paintbook:token");
-
-      // If not logged in, create a temporary customer account
-      if (!token) {
-        const registerResponse = await fetch("/api/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            password: `customer_${Date.now()}`, // Generate temporary password
-            userType: "customer",
-          }),
-        });
-
-        if (!registerResponse.ok) {
-          // Email might already exist
-          const { toast } = await import("sonner");
-          toast.error("Please sign in to post a job");
-          navigate("/login");
-          return;
-        }
-
-        const registerData = await registerResponse.json();
-        token = registerData.token;
-
-        // Store token for future use
-        localStorage.setItem("paintbook:token", token);
-        localStorage.setItem(
-          "paintbook:user",
-          JSON.stringify(registerData.user),
-        );
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        const { toast } = await import("sonner");
+        toast.error("Please sign in to post a job");
+        navigate("/login");
+        return;
       }
+      const token = session.access_token;
 
       // Prepare estimate payload
       const estimatePayload = attachedEstimate

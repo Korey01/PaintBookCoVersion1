@@ -61,7 +61,11 @@ import ResetPassword from "./pages/ResetPassword";
 import ConfirmPage from "./pages/ConfirmPage";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import PainterDashboardPage from "./pages/PainterDashboardPage";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ProtectedRoute from "@/components/auth/ProtectedRoute"
+import PostJobPage from "./pages/PostJobPage";
+import PaymentPage from "./pages/PaymentPage";
+import ConfirmCompletionPage from "./pages/ConfirmCompletionPage";
+;
 import AdminRoute from "@/components/auth/AdminRoute";
 import KYCPainter from "./pages/KYCPainter";
 import KYCCustomer from "./pages/KYCCustomer";

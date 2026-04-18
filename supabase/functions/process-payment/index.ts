@@ -84,25 +84,47 @@ Deno.serve(async (req) => {
 
     const painter = transaction.painters;
 
-    // Share customer contact details with painter
+    // Share customer contact details with painter + terms
     const contactWebhook = Deno.env.get("MAKE_CONTACT_SHARED_WEBHOOK");
+    const confirmationUrl = `https://paintbook-app.netlify.app/confirm-completion/${transaction_id}?token=${customerToken}`;
+    const commissionRate = transaction.commission_rate || 12;
+    const painterPayout = transaction.painter_payout || (transaction.amount * 0.88);
+
     if (contactWebhook && painter) {
       try {
         await fetch(contactWebhook, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            // Painter details
+            painter_name: `${painter.first_name} ${painter.last_name}`,
             painter_email: painter.email,
+            painter_phone: painter.phone,
+            painter_payout: painterPayout,
+            commission_rate: commissionRate,
+            // Customer details
             customer_first_name: customer_first_name.trim(),
             customer_last_name: customer_last_name.trim(),
             customer_phone: customer_phone.trim(),
             customer_address: customer_address.trim(),
             customer_postcode: customer_postcode.trim().toUpperCase(),
             customer_email: customer_email.toLowerCase().trim(),
+            // Job details
             job_summary: transaction.job_summary,
+            invoice_id: transaction.invoice_id,
             transaction_id,
             amount: transaction.amount,
-            confirmation_url: `https://paintbook-app.netlify.app/confirm-completion/${transaction_id}?token=${customerToken}`,
+            // Links
+            confirmation_url: confirmationUrl,
+            // Terms of job (included in both emails)
+            terms_of_job: [
+              "Payment is held securely in Transpact escrow",
+              "Funds are released ONLY when the customer confirms completion",
+              "If unsatisfied, customer must raise a dispute BEFORE confirming",
+              "No off-platform contact details should be exchanged",
+              "PaintBookCo commission of " + commissionRate + "% applies to this job",
+              "Painter payout on completion: £" + painterPayout.toFixed(2),
+            ].join(" | "),
           }),
         });
       } catch (err) {

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,30 +12,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, ArrowRight, CheckCircle2, Calculator } from "lucide-react";
+import { Upload, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  PAINT_TYPES,
-  DEFAULT_ESTIMATOR_INPUT,
-  useEstimate,
-  BRAND_INFO,
-} from "@/lib/paint-estimator";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BRAND_INFO, DEFAULT_ESTIMATOR_INPUT, useEstimate, PAINT_TYPES } from "@/lib/paint-estimator";
 import { useToast } from "@/hooks/use-toast";
 import { RoomDimensions, type Room } from "@/components/site/RoomDimensions";
 import { z } from "zod";
 
+const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
+
 export default function PostJob() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   type Step = 1 | 2 | 3 | 4;
   const [step, setStep] = useState<Step>(1);
@@ -51,13 +41,13 @@ export default function PostJob() {
   const [images, setImages] = useState<string[]>([]);
   const [useEscrow, setUseEscrow] = useState(true);
   const [attachedEstimate, setAttachedEstimate] = useState<any>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [rooms, setRooms] = useState<Room[]>(() => {
     try {
       const saved = localStorage.getItem("paintbook:rooms");
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Normalize rooms to ensure all properties exist with defaults
         return Array.isArray(parsed)
           ? parsed.map((room: any) => ({
               id: room.id || `room_${Date.now()}`,
@@ -80,28 +70,19 @@ export default function PostJob() {
   }, [rooms]);
 
   const brandNames = Object.keys(BRAND_INFO) as Array<keyof typeof BRAND_INFO>;
-  const [selectedBrand, setSelectedBrand] = useState<keyof typeof BRAND_INFO>(
-    () => {
-      try {
-        const stored = JSON.parse(
-          localStorage.getItem("paintbook:lastEstimate") || "null",
-        );
-        if (
-          stored &&
-          typeof stored.selectedBrand === "string" &&
-          stored.selectedBrand in BRAND_INFO
-        ) {
-          return stored.selectedBrand as keyof typeof BRAND_INFO;
-        }
-      } catch {}
-      return brandNames[0];
-    },
-  );
+  const [selectedBrand, setSelectedBrand] = useState<keyof typeof BRAND_INFO>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("paintbook:lastEstimate") || "null");
+      if (stored && typeof stored.selectedBrand === "string" && stored.selectedBrand in BRAND_INFO) {
+        return stored.selectedBrand as keyof typeof BRAND_INFO;
+      }
+    } catch {}
+    return brandNames[0];
+  });
+
   const [estimatorInput, setEstimatorInput] = useState(() => {
     try {
-      const stored = JSON.parse(
-        localStorage.getItem("paintbook:lastEstimate") || "null",
-      );
+      const stored = JSON.parse(localStorage.getItem("paintbook:lastEstimate") || "null");
       if (stored && typeof stored === "object") {
         const { selectedBrand: _selectedBrand, ...rest } = stored;
         return { ...DEFAULT_ESTIMATOR_INPUT, ...rest };
@@ -110,31 +91,20 @@ export default function PostJob() {
     return DEFAULT_ESTIMATOR_INPUT;
   });
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const prePainter = params.get("painter") || undefined;
 
   useEffect(() => {
-    localStorage.setItem(
-      "paintbook:lastEstimate",
-      JSON.stringify({ ...estimatorInput, selectedBrand }),
-    );
+    localStorage.setItem("paintbook:lastEstimate", JSON.stringify({ ...estimatorInput, selectedBrand }));
   }, [estimatorInput, selectedBrand]);
 
   useEffect(() => {
     const info = BRAND_INFO[selectedBrand]?.[estimatorInput.paintType];
     if (!info) return;
     setEstimatorInput((prev) => {
-      if (
-        prev.coverage === info.coverage &&
-        prev.pricePerLitre === info.pricePerLitre
-      ) {
+      if (prev.coverage === info.coverage && prev.pricePerLitre === info.pricePerLitre) {
         return prev;
       }
-      return {
-        ...prev,
-        coverage: info.coverage,
-        pricePerLitre: info.pricePerLitre,
-      };
+      return { ...prev, coverage: info.coverage, pricePerLitre: info.pricePerLitre };
     });
   }, [selectedBrand, estimatorInput.paintType]);
 
@@ -145,15 +115,9 @@ export default function PostJob() {
         const parsed = JSON.parse(est);
         setAttachedEstimate(parsed);
         if (parsed && typeof parsed === "object") {
-          if (
-            typeof parsed.selectedBrand === "string" &&
-            parsed.selectedBrand in BRAND_INFO
-          ) {
+          if (typeof parsed.selectedBrand === "string" && parsed.selectedBrand in BRAND_INFO) {
             setSelectedBrand(parsed.selectedBrand as keyof typeof BRAND_INFO);
-          } else if (
-            typeof parsed.brand === "string" &&
-            parsed.brand in BRAND_INFO
-          ) {
+          } else if (typeof parsed.brand === "string" && parsed.brand in BRAND_INFO) {
             setSelectedBrand(parsed.brand as keyof typeof BRAND_INFO);
           }
           const { selectedBrand: parsedBrand, brand, ...rest } = parsed;
@@ -167,24 +131,17 @@ export default function PostJob() {
     const files = Array.from(e.target.files || []);
     files.forEach((f) => {
       const reader = new FileReader();
-      reader.onload = () =>
-        setImages((prev) => [...prev, String(reader.result)]);
+      reader.onload = () => setImages((prev) => [...prev, String(reader.result)]);
       reader.readAsDataURL(f);
     });
   }
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Fallback estimate from estimatorInput when no rooms
   const estimatorEstimate = useEstimate(estimatorInput);
-
-  // Calculate estimate based on rooms if available, otherwise use estimatorInput
   const estimate = useMemo(() => {
     if (rooms.length === 0) {
       return estimatorEstimate;
     }
 
-    // Calculate from rooms
     const totalWallArea = rooms.reduce((sum, room) => {
       const l = room.length ?? 4;
       const w = room.width ?? 3.5;
@@ -209,18 +166,11 @@ export default function PostJob() {
     const materialCost = Math.round(litres * pricePerLitre);
 
     const brandEstimates = Object.entries(BRAND_INFO).map(([name, info]) => {
-      const { coverage: brandCoverage, pricePerLitre: brandPrice } =
-        info[paintType];
+      const { coverage: brandCoverage, pricePerLitre: brandPrice } = info[paintType];
       const perCoatBrand = netWallArea / brandCoverage;
       const litresBrand = Math.round(perCoatBrand * totalCoats * 10) / 10;
       const costBrand = Math.round(litresBrand * brandPrice);
-      return {
-        name,
-        coverage: brandCoverage,
-        pricePerLitre: brandPrice,
-        litres: litresBrand,
-        cost: costBrand,
-      };
+      return { name, coverage: brandCoverage, pricePerLitre: brandPrice, litres: litresBrand, cost: costBrand };
     });
 
     return { wallArea: netWallArea, litres, materialCost, brandEstimates };
@@ -230,16 +180,9 @@ export default function PostJob() {
     if (typeof budgetMax === "number" && budgetMax > 0) return budgetMax;
     if (typeof budgetMin === "number" && budgetMin > 0) return budgetMin;
     if (attachedEstimate?.materialCost) {
-      return Math.round(
-        Math.max(
-          attachedEstimate.materialCost * 2.2,
-          attachedEstimate.materialCost + 200,
-        ),
-      );
+      return Math.round(Math.max(attachedEstimate.materialCost * 2.2, attachedEstimate.materialCost + 200));
     }
-    return Math.round(
-      Math.max(estimate.materialCost * 2.2, estimate.materialCost + 200),
-    );
+    return Math.round(Math.max(estimate.materialCost * 2.2, estimate.materialCost + 200));
   }, [budgetMin, budgetMax, attachedEstimate, estimate.materialCost]);
 
   const escrowFeeEstimate = useMemo(() => {
@@ -247,91 +190,59 @@ export default function PostJob() {
     return Math.max(10, Math.round(estimatedBudget * 0.025));
   }, [useEscrow, estimatedBudget]);
 
-  const estimatorSummary = useMemo(() => {
-    if (attachedEstimate) {
-      const litres =
-        typeof attachedEstimate.litres === "number"
-          ? attachedEstimate.litres
-          : estimate.litres;
-      const cost =
-        typeof attachedEstimate.materialCost === "number"
-          ? attachedEstimate.materialCost
-          : estimate.materialCost;
-      const wallArea =
-        typeof attachedEstimate.wallArea === "number"
-          ? attachedEstimate.wallArea
-          : estimate.wallArea;
-      const brand =
-        typeof attachedEstimate.brand === "string"
-          ? attachedEstimate.brand
-          : selectedBrand;
-      return { litres, cost, wallArea, brand };
-    }
-    return {
-      litres: estimate.litres,
-      cost: estimate.materialCost,
-      wallArea: estimate.wallArea,
-      brand: selectedBrand,
-    };
-  }, [attachedEstimate, estimate, selectedBrand]);
-
+  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
   const schemaStep1 = z.object({
     jobType: z.string().min(1, "Select a job type"),
     desc: z.string().min(10, "Add at least 10 characters"),
   });
-  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
   const schemaStep2 = z
     .object({
       budgetMin: z.number().min(0),
       budgetMax: z.number().min(0),
-      postcode: z
-        .string()
-        .regex(ukPostcode, "Enter a valid UK postcode (e.g. SW1A 1AA)"),
+      postcode: z.string().regex(ukPostcode, "Enter a valid UK postcode (e.g. SW1A 1AA)"),
     })
     .refine(
-      (v) =>
-        typeof v.budgetMin === "number" && typeof v.budgetMax === "number"
-          ? v.budgetMax >= v.budgetMin
-          : false,
-      { message: "Max must be greater than min", path: ["budgetMax"] },
+      (v) => (typeof v.budgetMin === "number" && typeof v.budgetMax === "number" ? v.budgetMax >= v.budgetMin : false),
+      { message: "Max must be greater than min", path: ["budgetMax"] }
     );
   const schemaStep3 = z.object({
     email: z.string().email("Enter a valid email"),
     phone: z.string().min(7, "Enter a valid phone"),
   });
 
-  function next() {
-    if (step === 1) {
-      const r = schemaStep1.safeParse({ jobType, desc });
-      if (!r.success) {
-        const e: Record<string, string> = {};
-        r.error.issues.forEach((i) => (e[i.path[0] as string] = i.message));
-        setErrors(e);
-        return;
-      }
-      setErrors({});
+  function handleStep1(e: React.FormEvent) {
+    e.preventDefault();
+    const r = schemaStep1.safeParse({ jobType, desc });
+    if (!r.success) {
+      const e: Record<string, string> = {};
+      r.error.issues.forEach((i) => (e[i.path[0] as string] = i.message));
+      setErrors(e);
+      return;
     }
-    if (step === 2) {
-      const r = schemaStep2.safeParse({
-        budgetMin: budgetMin || 0,
-        budgetMax: budgetMax || 0,
-        postcode,
-      });
-      if (!r.success) {
-        const e: Record<string, string> = {};
-        r.error.issues.forEach((i) => (e[i.path[0] as string] = i.message));
-        setErrors(e);
-        return;
-      }
-      setErrors({});
-    }
-    setStep((s) => Math.min(4, (s + 1) as Step));
-  }
-  function back() {
-    setStep((s) => Math.max(1, (s - 1) as Step));
+    setErrors({});
+    setStep(2);
   }
 
-  async function submit() {
+  function handleStep2(e: React.FormEvent) {
+    e.preventDefault();
+    const r = schemaStep2.safeParse({ budgetMin: budgetMin || 0, budgetMax: budgetMax || 0, postcode });
+    if (!r.success) {
+      const e: Record<string, string> = {};
+      r.error.issues.forEach((i) => (e[i.path[0] as string] = i.message));
+      setErrors(e);
+      return;
+    }
+    setErrors({});
+    setStep(3);
+  }
+
+  function handleStep3(e: React.FormEvent) {
+    e.preventDefault();
+    setStep(4);
+  }
+
+  async function handleStep4(e: React.FormEvent) {
+    e.preventDefault();
     const r = schemaStep3.safeParse({ email, phone });
     if (!r.success) {
       const e: Record<string, string> = {};
@@ -350,15 +261,10 @@ export default function PostJob() {
       }
       const token = session.access_token;
 
-      // Prepare estimate payload
       const estimatePayload = attachedEstimate
-        ? {
-            ...attachedEstimate,
-            brand: attachedEstimate.brand ?? selectedBrand,
-          }
+        ? { ...attachedEstimate, brand: attachedEstimate.brand ?? selectedBrand }
         : { ...estimatorInput, ...estimate, brand: selectedBrand };
 
-      // Create job via API
       const jobResponse = await fetch("/api/jobs", {
         method: "POST",
         headers: {
@@ -372,7 +278,7 @@ export default function PostJob() {
           postcode,
           budgetMin: budgetMin || undefined,
           budgetMax: budgetMax || undefined,
-          images: images.slice(0, 5), // Limit to 5 images
+          images: images.slice(0, 5),
           paintBrand: estimatePayload.brand,
           rooms: rooms.length > 0 ? rooms : undefined,
           estimatedMaterialCost: estimatePayload.materialCost,
@@ -394,10 +300,7 @@ export default function PostJob() {
       const { toast } = await import("sonner");
       toast.success("Job posted successfully!");
 
-      // Navigate to confirmation
-      const qs = prePainter
-        ? `?mode=quote&painter=${encodeURIComponent(prePainter)}`
-        : "";
+      const qs = prePainter ? `?mode=quote&painter=${encodeURIComponent(prePainter)}` : "";
       navigate(`/post-job/confirmation${qs}`);
     } catch (error) {
       console.error("Error posting job:", error);
@@ -407,52 +310,48 @@ export default function PostJob() {
   }
 
   return (
-    <div className="relative">
-      <img
-        src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F34c4db7fb3704fbfb3c455e1f62cecd4?format=webp&width=1600"
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
-      />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-background/65 backdrop-blur-[2px]" />
-      <div className="container mx-auto px-4 py-10">
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Post a Job</h1>
-            <p className="text-sm text-muted-foreground">
-              Start your job in a few steps. We'll notify nearby verified
-              painters.
-            </p>
-          </div>
-          <div className="text-sm text-muted-foreground whitespace-nowrap">
-            Already have an account?{" "}
-            <a
-              href="/auth?type=login"
-              className="font-semibold text-primary hover:text-primary/80 transition-colors"
-            >
-              Sign in
-            </a>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <a href="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+        </a>
+      </header>
 
-        <div className="mb-6 flex gap-2 text-sm">
-          {[1, 2, 3].map((n) => (
-            <div
-              key={n}
-              className={`flex-1 rounded-full border px-3 py-1 text-center ${step >= n ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-foreground"}`}
-            >
-              Step {n}
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-8">
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${step >= s ? "bg-foreground" : "bg-border"}`} />
+            ))}
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight mb-1">
+            {step === 1 && "Post a Job"}
+            {step === 2 && "Set your budget"}
+            {step === 3 && "Payment & escrow"}
+            {step === 4 && "Your details"}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-8">
+            {step === 1 && "Tell us about the painting work"}
+            {step === 2 && "Set budget and location"}
+            {step === 3 && "Choose how you'd like to pay"}
+            {step === 4 && "Let's finalize your job"}
+          </p>
+
+          {Object.keys(errors).length > 0 && (
+            <div className="mb-6 rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {Object.values(errors)[0]}
             </div>
-          ))}
-        </div>
+          )}
 
-        {step === 1 && (
-          <Card>
-            <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Label>Job type</Label>
+          {/* Step 1 */}
+          {step === 1 && (
+            <form onSubmit={handleStep1} className="space-y-6">
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Job type</label>
                 <Select value={jobType} onValueChange={setJobType}>
-                  <SelectTrigger aria-invalid={!!errors.jobType}>
+                  <SelectTrigger className={fieldClass}>
                     <SelectValue placeholder="Select job type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -462,625 +361,200 @@ export default function PostJob() {
                     <SelectItem value="wallpaper">Wallpaper</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.jobType && (
-                  <p className="text-xs text-red-500 mt-1">{errors.jobType}</p>
-                )}
               </div>
-              <div className="sm:col-span-2">
-                <Label>Short description</Label>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Description</label>
                 <Textarea
-                  aria-invalid={!!errors.desc}
-                  className={errors.desc ? "border-destructive" : ""}
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                   placeholder="Share details for accurate quotes"
-                  rows={5}
+                  className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200"
+                  rows={4}
                 />
-                {errors.desc && (
-                  <p className="text-xs text-red-500 mt-1">{errors.desc}</p>
-                )}
               </div>
-              <div className="sm:col-span-2">
-                <Label className="mb-2 block">Upload area photos</Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={onFiles}
-                  />
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="mr-2 h-4 w-4" /> Add
-                  </Button>
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Accepted formats: JPG, PNG
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {images.map((src, i) => (
-                    <img
-                      key={i}
-                      src={src}
-                      className="h-24 w-full rounded object-cover"
-                    />
-                  ))}
-                </div>
-              </div>
-              {attachedEstimate && (
-                <div className="sm:col-span-2 rounded-lg bg-secondary p-4 text-sm">
-                  <div className="font-medium">Attached Estimation</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-muted-foreground">
-                    <span>
-                      {(typeof attachedEstimate.litres === "number"
-                        ? attachedEstimate.litres
-                        : estimate.litres
-                      ).toFixed(1)}{" "}
-                      L
-                    </span>
-                    <span>
-                      £
-                      {(typeof attachedEstimate.materialCost === "number"
-                        ? attachedEstimate.materialCost
-                        : estimate.materialCost
-                      ).toLocaleString("en-GB")}{" "}
-                      materials
-                    </span>
-                    <span>
-                      {(typeof attachedEstimate.wallArea === "number"
-                        ? attachedEstimate.wallArea
-                        : estimate.wallArea
-                      ).toFixed(1)}{" "}
-                      m² surface
-                    </span>
-                    {attachedEstimate.brand && (
-                      <span>Brand: {attachedEstimate.brand}</span>
-                    )}
-                  </div>
-                </div>
-              )}
-              <div className="sm:col-span-2 flex justify-end">
-                <Button onClick={next}>
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {step === 2 && (
-          <Card>
-            <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
               <div>
-                <Label>Budget min (£)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  aria-invalid={!!errors.budgetMin}
-                  className={errors.budgetMin ? "border-destructive" : ""}
-                  value={budgetMin}
-                  onChange={(e) =>
-                    setBudgetMin(e.target.value ? Number(e.target.value) : "")
-                  }
+                <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Upload photos</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={onFiles}
+                  className="hidden"
                 />
-              </div>
-              <div>
-                <Label>Budget max (£)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  aria-invalid={!!errors.budgetMax}
-                  className={errors.budgetMax ? "border-destructive" : ""}
-                  value={budgetMax}
-                  onChange={(e) =>
-                    setBudgetMax(e.target.value ? Number(e.target.value) : "")
-                  }
-                />
-                {errors.budgetMax && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.budgetMax}
-                  </p>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors flex items-center justify-center gap-2"
+                >
+                  <Upload className="h-4 w-4" /> Add Photos
+                </button>
+                {images.length > 0 && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {images.map((src, i) => (
+                      <img key={i} src={src} className="h-24 w-full rounded object-cover" />
+                    ))}
+                  </div>
                 )}
               </div>
+
+              <button type="submit" className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                Continue <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <form onSubmit={handleStep2} className="space-y-6">
               <div>
-                <Label>Postcode / address</Label>
-                <Input
-                  aria-invalid={!!errors.postcode}
-                  className={errors.postcode ? "border-destructive" : ""}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Budget min (£)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={budgetMin}
+                  onChange={(e) => setBudgetMin(e.target.value ? Number(e.target.value) : "")}
+                  className={fieldClass}
+                  placeholder="e.g. £500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Budget max (£)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={budgetMax}
+                  onChange={(e) => setBudgetMax(e.target.value ? Number(e.target.value) : "")}
+                  className={fieldClass}
+                  placeholder="e.g. £2,000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Postcode</label>
+                <input
+                  type="text"
                   value={postcode}
                   onChange={(e) => setPostcode(e.target.value)}
+                  className={fieldClass}
                   placeholder="e.g. SW1A 1AA"
                 />
-                {errors.postcode && (
-                  <p className="text-xs text-red-500 mt-1">{errors.postcode}</p>
-                )}
               </div>
-              <div className="sm:col-span-2 flex justify-between">
-                <Button variant="secondary" onClick={back}>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                >
                   Back
-                </Button>
-                <Button onClick={next}>
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                </button>
+                <button type="submit" className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
-              <div className="sm:col-span-2 rounded-lg border border-dashed border-muted-foreground/30 p-4">
-                <Tabs defaultValue="estimate" className="w-full">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-start gap-2">
-                      <div className="rounded-md bg-primary/10 p-2 text-primary">
-                        <Calculator className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold">
-                          Paint Vestimator & Visualizer
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Use our full estimator and Floori visualizer to plan
-                          materials, compare brands, and share accurate details
-                          with painters.
-                        </p>
-                      </div>
-                    </div>
-                    <TabsList>
-                      <TabsTrigger value="estimate">Estimate</TabsTrigger>
-                      <TabsTrigger value="visualize">Visualize</TabsTrigger>
-                    </TabsList>
-                  </div>
+            </form>
+          )}
 
-                  <TabsContent value="visualize" className="mt-4">
-                    <div className="grid gap-4">
-                      <p className="text-xs text-muted-foreground">
-                        Preview colours and finishes with the Floori Studio.
-                        Upload your room, mask the walls, and explore options
-                        before you post.
-                      </p>
-                      <div
-                        className="relative h-[60vh] w-full overflow-hidden rounded-lg border"
-                        aria-label="Interactive paint visualizer"
-                      >
-                        <iframe
-                          src="https://appdemo.floori.io/"
-                          title="Floori Studio Visualizer"
-                          className="absolute inset-0 h-full w-full"
-                          loading="lazy"
-                          scrolling="auto"
-                          style={{ border: 0 }}
-                          allow="clipboard-read; clipboard-write; fullscreen; camera; microphone; display-capture"
-                          allowFullScreen
-                        />
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() =>
-                            window.open("https://appdemo.floori.io/", "_blank")
-                          }
-                        >
-                          Open Floori Studio in new tab
-                        </Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="estimate" className="mt-4">
-                    <div className="grid gap-4">
-                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                        <RoomDimensions
-                          rooms={rooms}
-                          onRoomsChange={setRooms}
-                        />
-                      </div>
-
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="sm:col-span-2">
-                          <Label>Brand</Label>
-                          <Select
-                            value={selectedBrand}
-                            onValueChange={(value) =>
-                              setSelectedBrand(value as keyof typeof BRAND_INFO)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select brand" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {brandNames.map((name) => (
-                                <SelectItem key={name} value={name}>
-                                  {name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="sm:col-span-2">
-                          <Label>Paint type</Label>
-                          <Select
-                            value={estimatorInput.paintType}
-                            onValueChange={(v) =>
-                              setEstimatorInput((prev) => ({
-                                ...prev,
-                                paintType: v as typeof estimatorInput.paintType,
-                              }))
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PAINT_TYPES.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Openings (doors/windows)</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            step="1"
-                            value={estimatorInput.openings}
-                            onChange={(e) =>
-                              setEstimatorInput((prev) => ({
-                                ...prev,
-                                openings: Math.max(
-                                  0,
-                                  Number(e.target.value) || 0,
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Avg opening area (m²)</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            step="0.1"
-                            value={estimatorInput.openingArea}
-                            onChange={(e) =>
-                              setEstimatorInput((prev) => ({
-                                ...prev,
-                                openingArea: Math.max(
-                                  0,
-                                  Number(e.target.value) || 0,
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Coverage (m² per litre)</Label>
-                          <Input
-                            type="number"
-                            min={1}
-                            step="0.1"
-                            value={estimatorInput.coverage}
-                            onChange={(e) =>
-                              setEstimatorInput((prev) => ({
-                                ...prev,
-                                coverage: Math.max(
-                                  1,
-                                  Number(e.target.value) || 0,
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Price per litre (£)</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            step="0.1"
-                            value={estimatorInput.pricePerLitre}
-                            onChange={(e) =>
-                              setEstimatorInput((prev) => ({
-                                ...prev,
-                                pricePerLitre: Math.max(
-                                  0,
-                                  Number(e.target.value) || 0,
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-3 rounded-lg bg-secondary/60 p-4 text-sm">
-                        <div className="flex flex-wrap gap-2">
-                          <div className="rounded bg-background px-3 py-2">
-                            <span className="text-muted-foreground">
-                              Wall area
-                            </span>{" "}
-                            <span className="font-semibold">
-                              {estimate.wallArea.toFixed(1)} m²
-                            </span>
-                          </div>
-                          <div className="rounded bg-background px-3 py-2">
-                            <span className="text-muted-foreground">
-                              Litres
-                            </span>{" "}
-                            <span className="font-semibold">
-                              {estimate.litres.toFixed(1)} L
-                            </span>
-                          </div>
-                          <div className="rounded bg-background px-3 py-2">
-                            <span className="text-muted-foreground">
-                              Material cost
-                            </span>{" "}
-                            <span className="font-semibold">
-                              £{estimate.materialCost.toLocaleString("en-GB")}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              const payload = {
-                                ...estimatorInput,
-                                ...estimate,
-                                brand: selectedBrand,
-                              };
-                              setAttachedEstimate(payload);
-                              localStorage.setItem(
-                                "paintbook:lastEstimate",
-                                JSON.stringify({
-                                  ...estimatorInput,
-                                  selectedBrand,
-                                }),
-                              );
-                            }}
-                          >
-                            Attach estimate to job
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const base = Math.max(
-                                estimate.materialCost * 2.2,
-                                estimate.materialCost + 200,
-                              );
-                              const min = Math.round(base * 0.85);
-                              const max = Math.round(base * 1.15);
-                              setBudgetMin(min);
-                              setBudgetMax(max);
-                            }}
-                          >
-                            Use to set budget
-                          </Button>
-                        </div>
-                        {attachedEstimate && (
-                          <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
-                            {(() => {
-                              const litres =
-                                typeof estimatorSummary?.litres === "number"
-                                  ? estimatorSummary.litres.toFixed(1)
-                                  : estimate.litres.toFixed(1);
-                              const cost =
-                                typeof estimatorSummary?.cost === "number"
-                                  ? estimatorSummary.cost.toLocaleString(
-                                      "en-GB",
-                                    )
-                                  : estimate.materialCost.toLocaleString(
-                                      "en-GB",
-                                    );
-                              const brand =
-                                estimatorSummary?.brand || selectedBrand;
-                              return `Estimate attached: ${brand} · ${litres} L · £${cost} materials`;
-                            })()}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid gap-3 rounded-lg border border-muted-foreground/30 p-4">
-                        <div className="text-sm font-semibold">
-                          Brand comparisons
-                        </div>
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                          {estimate.brandEstimates.map((info) => (
-                            <div
-                              key={info.name}
-                              className="rounded-lg bg-secondary/60 p-3 text-xs"
-                            >
-                              <div className="text-sm font-semibold">
-                                {info.name}
-                              </div>
-                              <div className="mt-2 space-y-1">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Coverage
-                                  </span>
-                                  <span>{info.coverage} m²/L</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Price/L
-                                  </span>
-                                  <span>£{info.pricePerLitre}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">
-                                    Litres
-                                  </span>
-                                  <span>{info.litres.toFixed(1)} L</span>
-                                </div>
-                                <div className="flex justify-between font-semibold">
-                                  <span>Total cost</span>
-                                  <span>
-                                    £{info.cost.toLocaleString("en-GB")}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {step === 3 && (
-          <Card>
-            <CardContent className="grid gap-5 p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-primary/15 p-2 text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="11" width="18" height="10" rx="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                  </div>
+          {/* Step 3 */}
+          {step === 3 && (
+            <form onSubmit={handleStep3} className="space-y-6">
+              <div className="border border-border rounded-lg p-4 bg-accent/20 space-y-4">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <div className="text-lg font-semibold">
-                      Payment security — escrow protection
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Hold the agreed funds with Stripe until you sign off the
-                      work. Toggle escrow on if you want PaintBook to safeguard
-                      this job.
-                    </p>
+                    <h3 className="text-sm font-semibold">Escrow protection</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Your funds are held securely by Stripe until you approve the work.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Enabled</span>
+                    <Switch checked={useEscrow} onCheckedChange={setUseEscrow} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2 self-end sm:self-start">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Use escrow
-                  </span>
-                  <Switch
-                    checked={useEscrow}
-                    onCheckedChange={setUseEscrow}
-                    aria-label="Toggle escrow protection"
-                  />
-                </div>
-              </div>
 
-              <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                <li>
-                  Your full payment is held safely until you approve release.
-                </li>
-                <li>
-                  Stripe (FCA-regulated partner) acts as the neutral escrow
-                  provider.
-                </li>
-                <li>Support available if you need to raise a dispute.</li>
-              </ul>
-
-              <div className="rounded-lg bg-secondary p-3 text-sm text-muted-foreground">
-                <div className="font-medium text-foreground">
-                  Cost covered by you
-                </div>
-                <p className="mt-1">
-                  Estimated escrow fee{" "}
-                  <span className="font-semibold text-foreground">
-                    £{escrowFeeEstimate.toLocaleString("en-GB")}
-                  </span>{" "}
-                  (approx. 2.5% with £10 minimum) payable alongside your job
-                  total.
-                </p>
-                {!useEscrow && (
-                  <p className="mt-2 text-xs">
-                    If you opt out, payment is arranged directly with the
-                    painter outside of Stripe escrow.
-                  </p>
+                {useEscrow && (
+                  <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded">
+                    Escrow fee: £{escrowFeeEstimate.toLocaleString("en-GB")} (approx. 2.5%)
+                  </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  Learn more on our{" "}
-                  <a className="underline" href="/trust-safety" target="_self">
-                    Trust &amp; Safety
-                  </a>{" "}
-                  page.
-                </span>
-                <Button onClick={next}>Continue</Button>
+              <div className="bg-accent/10 border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">
+                  {useEscrow
+                    ? `Your job total will be approx. £${Math.round(estimatedBudget).toLocaleString("en-GB")} + £${escrowFeeEstimate.toLocaleString("en-GB")} escrow fee.`
+                    : "Payment will be arranged directly with the painter."}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {step === 4 && (
-          <Card>
-            <CardContent className="grid gap-4 p-6 sm:grid-cols-2">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                >
+                  Back
+                </button>
+                <button type="submit" className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Step 4 */}
+          {step === 4 && (
+            <form onSubmit={handleStep4} className="space-y-6">
               <div>
-                <Label>Email</Label>
-                <Input
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
+                <input
                   type="email"
-                  aria-invalid={!!errors.email}
-                  className={errors.email ? "border-destructive" : ""}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className={fieldClass}
                   placeholder="you@example.com"
                 />
-                {errors.email && (
-                  <p className="text-xs text-red-500 mt-1">{errors.email}</p>
-                )}
               </div>
+
               <div>
-                <Label>Phone</Label>
-                <Input
-                  aria-invalid={!!errors.phone}
-                  className={errors.phone ? "border-destructive" : ""}
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone</label>
+                <input
+                  type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="07..."
+                  className={fieldClass}
+                  placeholder="+44 7700 000000"
                 />
-                {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
-                )}
               </div>
-              <div className="sm:col-span-2 rounded-lg bg-secondary p-4 text-sm">
-                {useEscrow ? (
-                  <>
-                    We'll notify nearby verified painters. Once a painter
-                    accepts, you'll be prompted to pay the agreed total (approx.
-                    £{Math.round(estimatedBudget).toLocaleString("en-GB")}) plus
-                    the escrow fee of £
-                    {escrowFeeEstimate.toLocaleString("en-GB")}. Stripe will
-                    hold the funds securely until you release them.
-                  </>
-                ) : (
-                  <>
-                    We'll notify nearby verified painters. Coordinate payment
-                    directly with your chosen painter. You can enable escrow
-                    later from your dashboard if you change your mind.
-                  </>
-                )}
-              </div>
-              <div className="sm:col-span-2 flex justify-between">
-                <Button variant="secondary" onClick={back}>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
+                  className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                >
                   Back
-                </Button>
-                <Button onClick={submit} className="bg-primary">
-                  Submit Job
-                </Button>
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" /> Post Job
+                </button>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </form>
+          )}
+
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Need a painter?{" "}
+            <a href="/find-painter" className="text-foreground font-medium hover:underline underline-offset-4">
+              Browse painters
+            </a>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
@@ -1162,10 +636,7 @@ export function PostJobConfirmation() {
       dismissedAt: new Date().toISOString(),
     } as PendingSignup;
     try {
-      localStorage.setItem(
-        "paintbook:pendingCustomerSignup",
-        JSON.stringify(next),
-      );
+      localStorage.setItem("paintbook:pendingCustomerSignup", JSON.stringify(next));
     } catch {}
     setPending(next);
     setShowSignupPrompt(false);
@@ -1196,10 +667,7 @@ export function PostJobConfirmation() {
       location: customerLocation.trim() || pending.postcode || "",
     };
     try {
-      localStorage.setItem(
-        "paintbook:customerProfile",
-        JSON.stringify(profile),
-      );
+      localStorage.setItem("paintbook:customerProfile", JSON.stringify(profile));
     } catch {}
     try {
       localStorage.setItem(
@@ -1208,7 +676,7 @@ export function PostJobConfirmation() {
           plan: "Free",
           status: "active",
           updatedAt: new Date().toISOString(),
-        }),
+        })
       );
     } catch {}
 
@@ -1218,10 +686,7 @@ export function PostJobConfirmation() {
       completedAt: new Date().toISOString(),
     } as PendingSignup;
     try {
-      localStorage.setItem(
-        "paintbook:pendingCustomerSignup",
-        JSON.stringify(completed),
-      );
+      localStorage.setItem("paintbook:pendingCustomerSignup", JSON.stringify(completed));
     } catch {}
     sessionStorage.setItem("paintbook:lastSignUpNotice", "customer");
 
@@ -1232,124 +697,140 @@ export function PostJobConfirmation() {
 
     toast({
       title: "Customer sign-up complete",
-      description:
-        "Your free dashboard is ready. Manage jobs, quotes, and payments in one place.",
+      description: "Your free dashboard is ready. Manage jobs, quotes, and payments in one place.",
     });
     navigate("/dashboard/customer");
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 text-center">
-      <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
-      <h1 className="mt-4 text-2xl font-bold">
-        {isQuote ? "Request sent" : "Your job is live"}
-      </h1>
-      <p className="mt-2 text-muted-foreground">
-        {isQuote
-          ? "We've sent your job details to the painter you selected. We'll notify you as soon as they respond."
-          : "We sent it to nearby painters. You'll receive messages and quotes shortly."}
-      </p>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="px-6 py-5 border-b border-border">
+        <a href="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+        </a>
+      </header>
 
-      {signupCompleted && (
-        <div className="mx-auto mt-6 max-w-xl rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
-          Your PaintBook customer account is ready. Head to your dashboard
-          anytime to follow progress and manage payments.
-        </div>
-      )}
-
-      <div className="mt-6 flex justify-center gap-3">
-        <Button onClick={() => navigate("/find-painter")}>
-          Find A Painter/Decorator
-        </Button>
-        <Button variant="outline" onClick={() => navigate("/estimator")}>
-          Open Estimator
-        </Button>
-      </div>
-
-      {showSignupPrompt && pending && (
-        <div className="mx-auto mt-10 max-w-2xl rounded-lg border border-muted/50 bg-card p-6 text-left shadow-sm">
-          <h2 className="text-lg font-semibold">
-            Create your free customer account
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            We saved your {jobSummary || "job"}. Set a password to manage
-            quotes, messages, and escrow in one dashboard.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button onClick={() => setDialogOpen(true)}>
-              Create my free account
-            </Button>
-            <Button variant="ghost" onClick={handleDismissSignup}>
-              Not now
-            </Button>
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm text-center space-y-4">
+          <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+            <CheckCircle2 className="h-7 w-7 text-green-600" />
           </div>
+          <h1 className="text-2xl font-semibold">
+            {isQuote ? "Request sent" : "Your job is live"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isQuote
+              ? "We've sent your job details to the painter. We'll notify you as soon as they respond."
+              : "We've notified nearby painters. You'll receive messages and quotes shortly."}
+          </p>
+
+          {signupCompleted && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+              Your customer account is ready. Head to your dashboard to manage your job.
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2 pt-4">
+            <button onClick={() => navigate("/find-painter")} className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors">
+              Find A Painter
+            </button>
+            <button onClick={() => navigate("/estimator")} className="w-full border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
+              View Estimator
+            </button>
+          </div>
+
+          {showSignupPrompt && pending && (
+            <div className="mt-8 rounded-lg border border-border p-4 text-left space-y-4">
+              <h2 className="text-sm font-semibold">Create a free account</h2>
+              <p className="text-xs text-muted-foreground">Set a password to manage your job, quotes, and messages in one dashboard.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDialogOpen(true)}
+                  className="flex-1 bg-foreground text-background py-2 rounded text-xs font-medium hover:bg-foreground/90 transition-colors"
+                >
+                  Create account
+                </button>
+                <button
+                  onClick={handleDismissSignup}
+                  className="flex-1 border border-border py-2 rounded text-xs font-medium hover:bg-accent transition-colors"
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Finish sign-up</DialogTitle>
-            <DialogDescription>
-              Add any missing details so we can create your PaintBook customer
-              account and dashboard.
-            </DialogDescription>
+            <DialogTitle>Create your account</DialogTitle>
+            <DialogDescription>Set up your free customer dashboard</DialogDescription>
           </DialogHeader>
-          <form className="grid gap-4" onSubmit={handleCreateAccount}>
+          <form className="space-y-4" onSubmit={handleCreateAccount}>
             <div>
-              <Label>Full name</Label>
-              <Input
+              <Label className="text-xs uppercase tracking-wider">Full name</Label>
+              <input
+                type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Your name"
+                className={`${fieldClass} mt-1`}
+                placeholder="John Smith"
               />
             </div>
             <div>
-              <Label>Phone</Label>
-              <Input
+              <Label className="text-xs uppercase tracking-wider">Phone</Label>
+              <input
+                type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
+                className={`${fieldClass} mt-1`}
                 placeholder="Optional"
               />
             </div>
             <div>
-              <Label>Location / postcode</Label>
-              <Input
+              <Label className="text-xs uppercase tracking-wider">Location</Label>
+              <input
+                type="text"
                 value={customerLocation}
                 onChange={(e) => setCustomerLocation(e.target.value)}
+                className={`${fieldClass} mt-1`}
                 placeholder="e.g. SW1A 1AA"
               />
             </div>
             <div>
-              <Label>Create password</Label>
-              <Input
+              <Label className="text-xs uppercase tracking-wider">Password</Label>
+              <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                className={`${fieldClass} mt-1`}
+                placeholder="Min. 6 characters"
               />
             </div>
             <div>
-              <Label>Confirm password</Label>
-              <Input
+              <Label className="text-xs uppercase tracking-wider">Confirm password</Label>
+              <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`${fieldClass} mt-1`}
                 placeholder="Repeat password"
               />
             </div>
-            {formError && (
-              <p className="text-sm text-destructive">{formError}</p>
-            )}
-            <DialogFooter className="mt-2 flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button
+            {formError && <p className="text-xs text-destructive">{formError}</p>}
+            <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
                 type="button"
-                variant="secondary"
                 onClick={() => setDialogOpen(false)}
+                className="flex-1 border border-border py-2 rounded text-sm font-medium hover:bg-accent transition-colors"
               >
                 Cancel
-              </Button>
-              <Button type="submit">Create account</Button>
+              </button>
+              <button type="submit" className="flex-1 bg-foreground text-background py-2 rounded text-sm font-medium hover:bg-foreground/90 transition-colors">
+                Create account
+              </button>
             </DialogFooter>
           </form>
         </DialogContent>

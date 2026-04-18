@@ -46,7 +46,7 @@ export default function Header() {
             <img
               src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200"
               alt="PaintBookCo"
-              className={`h-7 w-auto transition-all duration-300 ${transparent ? "brightness-[10]" : ""}`}
+              className={`h-20 w-auto transition-all duration-300 ${transparent ? "brightness-[10]" : ""}`}
             />
           </Link>
 
@@ -119,7 +119,7 @@ export default function Header() {
             <img
               src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200"
               alt="PaintBookCo"
-              className="h-7 w-auto"
+              className="h-20 w-auto"
             />
           </Link>
           <button

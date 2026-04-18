@@ -136,6 +136,27 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Send job submission confirmation to customer
+    const jobSubmittedWebhook = Deno.env.get("MAKE_JOB_SUBMITTED_WEBHOOK");
+    if (jobSubmittedWebhook && email) {
+      try {
+        await fetch(jobSubmittedWebhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer_email: email.toLowerCase().trim(),
+            job_ref: `PBC-${session.id.slice(-6).toUpperCase()}`,
+            job_type: job_type,
+            postcode: postcode.trim().toUpperCase(),
+            room_count: (rooms || []).length,
+            job_description: cleanDescription,
+          }),
+        });
+      } catch (err) {
+        console.error("Job submitted webhook error:", err);
+      }
+    }
+
     return json({
       success: true,
       session_id: session.id,

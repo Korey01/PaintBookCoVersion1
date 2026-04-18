@@ -118,11 +118,9 @@ export function PainterDashboard() {
   const startChat = async (job: any) => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    // Store session_id for chat
-    const sessionId = job.id
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/initiate-chat`,
         {
           method: 'POST',
           headers: {
@@ -130,13 +128,14 @@ export function PainterDashboard() {
             'Authorization': `Bearer ${session.access_token}`,
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ job_id: sessionId })
+          body: JSON.stringify({ session_id: job.id })
         }
       )
       const result = await res.json()
-      if (result.token) {
-        alert('Chat initiated! The customer has been notified by email to join the conversation.')
-        await loadJobs(painter.id)
+      if (result.success) {
+        // Open chat in new tab for painter
+        window.open(result.painter_chat_link, '_blank')
+        setAvailableJobs(prev => prev.filter(j => j.id !== job.id))
       } else {
         alert(result.error || 'Failed to start chat. Please try again.')
       }

@@ -63,6 +63,7 @@ import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import PainterDashboardPage from "./pages/PainterDashboardPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import PostJobPage from "./pages/PostJobPage";
+import ChatPage from "./pages/ChatPage";
 import PaymentPage from "./pages/PaymentPage";
 import ConfirmCompletionPage from "./pages/ConfirmCompletionPage";
 ;

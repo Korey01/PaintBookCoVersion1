@@ -1,83 +1,63 @@
 import { Link } from "react-router-dom";
 
-const COL1 = [
-  { to: "/about", label: "About" },
-  { to: "/pricing", label: "Pricing" },
-  { to: "/how-it-works/customers", label: "How It Works" },
-  { to: "/contact", label: "Contact" },
-  { to: "/help", label: "Help & FAQ" },
-];
-
-const COL2 = [
-  { to: "/privacy", label: "Privacy Policy" },
-  { to: "/terms", label: "Terms of Service" },
-  { to: "/cookies", label: "Cookie Policy" },
-];
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
 
 export default function Footer() {
   return (
-    <footer className="section-dark">
-      <div className="mx-auto max-w-7xl px-6 lg:px-10 py-20">
-        <div className="grid gap-12 md:grid-cols-[2fr_1fr_1fr]">
-          {/* Brand column */}
+    <footer className="border-t border-border bg-card/30 mt-20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12 lg:py-16">
+        {/* Top section */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+          {/* Brand */}
           <div>
-            <Link to="/" aria-label="PaintBookCo home" className="inline-block mb-5 hover:opacity-75 transition-opacity duration-200">
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
-                alt="PaintBookCo"
-                className="h-7 w-auto brightness-[10]"
-              />
+            <Link to="/" className="inline-block mb-4">
+              <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
             </Link>
-            <p className="text-sm text-white/45 leading-[1.8] max-w-xs mb-8">
-              The UK's dedicated marketplace connecting homeowners and businesses
-              with KYC-verified professional painters and decorators.
-            </p>
-            <div className="text-xs text-white/30 leading-[1.8]">
-              <p>The PaintBook Company Ltd</p>
-              <p>Company Number: 16690724</p>
-              <p>Registered in England and Wales</p>
-            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">Paint. Book. Done.</p>
           </div>
 
           {/* Company */}
           <div>
-            <p className="editorial-label text-white/30 mb-6">Company</p>
-            <ul className="space-y-4">
-              {COL1.map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to} className="text-sm text-white/50 hover:text-white transition-colors duration-200">
-                    {label}
-                  </Link>
-                </li>
-              ))}
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Company</p>
+            <ul className="space-y-2">
+              <li><Link to="/about" className="text-sm text-foreground hover:text-muted-foreground transition-colors">About</Link></li>
+              <li><Link to="/how-it-works/customers" className="text-sm text-foreground hover:text-muted-foreground transition-colors">How It Works</Link></li>
+              <li><Link to="/pricing" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Pricing</Link></li>
+              <li><Link to="/contact" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Contact</Link></li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <p className="editorial-label text-white/30 mb-6">Legal</p>
-            <ul className="space-y-4">
-              {COL2.map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to} className="text-sm text-white/50 hover:text-white transition-colors duration-200">
-                    {label}
-                  </Link>
-                </li>
-              ))}
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Legal</p>
+            <ul className="space-y-2">
+              <li><Link to="/privacy" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Terms of Service</Link></li>
+              <li><Link to="/cookies" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Cookie Policy</Link></li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Support</p>
+            <ul className="space-y-2">
+              <li><Link to="/help" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Help & FAQ</Link></li>
+              <li><a href="mailto:hello@paintbookco.co.uk" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Email Support</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/25">
-          <p>© 2026 The PaintBook Company Ltd. All rights reserved.</p>
-          <p>FCA Authorised Escrow Partner: Transpact (Ref: 546279)</p>
+        {/* Divider */}
+        <div className="border-t border-border my-8" />
+
+        {/* Bottom section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <div className="space-y-1 text-center md:text-left">
+            <p><strong>The PaintBook Company Ltd</strong></p>
+            <p>Company No. 16690724 | © 2026 PaintBookCo. All rights reserved.</p>
+          </div>
         </div>
       </div>
     </footer>
   );
 }
-
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(Footer, { name: "PublicFooter", inputs: [] }); })
-  .catch(() => {});

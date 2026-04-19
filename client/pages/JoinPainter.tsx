@@ -1,50 +1,84 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle2, Loader2, ArrowRight, Mail } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { User, Briefcase, Shield, FileCheck, Fingerprint, CheckCircle2, Mail, Upload, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
-
-export const SPECIALISMS = [
-  "Interior walls & ceilings",
-  "Exterior / facade",
-  "Commercial / office",
-  "New build decoration",
-  "Period property restoration",
-  "Kitchen & bathroom",
+const SPECIALISMS = [
+  "Interior Painting",
+  "Exterior Painting",
   "Wallpapering",
-  "Coving & specialist finishes",
+  "Feature Wall",
+  "TV/Media Wall",
+  "Commercial Painting",
+  "Full Interior Refurb",
+  "Full Exterior Refurb",
+  "New Build Decoration",
+  "Landlord Refresh",
+  "Specialist/Other",
 ];
 
-const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
+const EXPERIENCE_OPTIONS = [
+  { value: "0-1", label: "Less than 1 year" },
+  { value: "1-2", label: "1-2 years" },
+  { value: "3-5", label: "3-5 years" },
+  { value: "5-10", label: "5-10 years" },
+  { value: "10+", label: "10+ years" },
+];
 
-// Completion screen component
+type Step = 1 | 2 | 3 | 4 | 5;
+
+interface PasswordRequirement {
+  label: string;
+  met: boolean;
+}
+
+function getPasswordStrength(password: string): number {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  return score;
+}
+
+function getPasswordLabel(score: number): string {
+  if (score <= 1) return "Weak";
+  if (score === 2) return "Fair";
+  if (score === 3) return "Good";
+  return "Strong";
+}
+
+function getPasswordColor(score: number): string {
+  if (score <= 1) return "bg-red-500";
+  if (score === 2) return "bg-amber-500";
+  if (score === 3) return "bg-blue-500";
+  return "bg-green-500";
+}
+
 export function JoinPainterComplete() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="px-6 py-5 border-b border-border">
-        <Link to="/">
+        <a href="/">
           <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
-        </Link>
+        </a>
       </header>
-      <main className="flex-1 flex items-center justify-center px-6">
-        <div className="max-w-md text-center space-y-4">
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm text-center space-y-6">
           <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
             <Mail className="h-7 w-7 text-green-600" />
           </div>
-          <h2 className="text-2xl font-semibold">Registration Complete</h2>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Your application has been submitted successfully.<br />
-            Check your email for next steps and verification instructions.
-          </p>
-          <Link
-            to="/login"
-            className="inline-block mt-4 text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground"
-          >
+          <div>
+            <h1 className="text-2xl font-semibold mb-2">Registration Complete</h1>
+            <p className="text-sm text-muted-foreground">Your application has been submitted successfully. Check your email for verification instructions.</p>
+          </div>
+          <a href="/login" className="inline-block text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground">
             Back to login
-          </Link>
+          </a>
         </div>
       </main>
     </div>
@@ -52,321 +86,599 @@ export function JoinPainterComplete() {
 }
 
 export default function JoinPainter() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
-  const [insuranceConfirmed, setInsuranceConfirmed] = useState(false);
+  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Step 1 — personal details
+  const [step, setStep] = useState<Step>(1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Step 1 - Personal Details
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-
-  // Step 2 — account + location
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [postcode, setPostcode] = useState("");
 
-  // Step 3 — specialisms
-  const [selectedSpecialisms, setSelectedSpecialisms] = useState<string[]>([]);
+  // Step 2 - Professional Details
+  const [specialisms, setSpecialisms] = useState<string[]>([]);
+  const [servicePostcode, setServicePostcode] = useState("");
+  const [serviceCity, setServiceCity] = useState("");
+  const [serviceRadius, setServiceRadius] = useState(10);
+  const [experience, setExperience] = useState("");
+
+  // Step 3 - Insurance
+  const [insuranceCompany, setInsuranceCompany] = useState("");
+  const [policyNumber, setPolicyNumber] = useState("");
+  const [policyDetails, setPolicyDetails] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [certificateFile, setCertificateFile] = useState<{ name: string; size: number } | null>(null);
+
+  // Step 4 - Terms
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [insuranceConfirmed, setInsuranceConfirmed] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
+
+  // Step 5 - KYC
+  const [kycStarted, setKycStarted] = useState(false);
+
+  const ukPostcode = /^(?:[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i;
+  const passwordStrength = getPasswordStrength(password);
+  const passwordLabel = getPasswordLabel(passwordStrength);
+  const passwordColor = getPasswordColor(passwordStrength);
+
+  const passwordRequirements: PasswordRequirement[] = [
+    { label: "8+ characters", met: password.length >= 8 },
+    { label: "Uppercase letter", met: /[A-Z]/.test(password) },
+    { label: "Lowercase letter", met: /[a-z]/.test(password) },
+    { label: "Number", met: /[0-9]/.test(password) },
+    { label: "Special character", met: /[^A-Za-z0-9]/.test(password) },
+  ];
 
   function toggleSpecialism(s: string) {
-    setSelectedSpecialisms((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
+    setSpecialisms((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   }
 
-  function handleStep1(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) {
-      setError("Please fill in all fields.");
+  function handleCertificateUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ certificate: "File must be less than 5MB" });
+        return;
+      }
+      setCertificateFile({ name: file.name, size: file.size });
+      setErrors((prev) => {
+        const { certificate, ...rest } = prev;
+        return rest;
+      });
+    }
+  }
+
+  function handleStep1() {
+    const errors: Record<string, string> = {};
+    if (!firstName.trim()) errors.firstName = "First name required";
+    if (!lastName.trim()) errors.lastName = "Last name required";
+    if (!email.trim()) errors.email = "Email required";
+    else if (!email.includes("@")) errors.email = "Invalid email";
+    if (!phone.trim()) errors.phone = "Phone required";
+    if (password.length < 8) errors.password = "Password must be at least 8 characters";
+    if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match";
+    if (passwordStrength <= 1) errors.password = "Password is too weak";
+
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors);
       return;
     }
+    setErrors({});
     setStep(2);
   }
 
-  function handleStep2(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!password || password.length < 8) {
-      setError("Password must be at least 8 characters.");
+  function handleStep2() {
+    const errors: Record<string, string> = {};
+    if (specialisms.length === 0) errors.specialisms = "Select at least one specialism";
+    if (!servicePostcode.trim()) errors.servicePostcode = "Postcode required";
+    else if (!ukPostcode.test(servicePostcode.trim())) errors.servicePostcode = "Invalid UK postcode";
+    if (!serviceCity.trim()) errors.serviceCity = "City required";
+    if (!experience) errors.experience = "Select experience level";
+
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors);
       return;
     }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (!ukPostcode.test(postcode.trim())) {
-      setError("Please enter a valid UK postcode (e.g. SW1A 1AA).");
-      return;
-    }
+    setErrors({});
     setStep(3);
   }
 
-  async function handleStep3(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (selectedSpecialisms.length === 0) {
-      setError("Please select at least one specialism.");
+  function handleStep3() {
+    const errors: Record<string, string> = {};
+    if (!insuranceCompany.trim()) errors.insuranceCompany = "Insurance company required";
+    if (!policyNumber.trim()) errors.policyNumber = "Policy number required";
+    if (!policyDetails.trim()) errors.policyDetails = "Policy details required";
+    if (!expiryDate) errors.expiryDate = "Expiry date required";
+    else if (new Date(expiryDate) < new Date()) errors.expiryDate = "Policy has expired";
+    if (!certificateFile) errors.certificate = "Certificate upload required";
+
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors);
       return;
     }
-    setIsLoading(true);
-
-    try {
-      // Call the backend API endpoint for painter registration
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-painter`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          phone: phone.trim(),
-          specialisms: selectedSpecialisms,
-          service_radius_km: 70,
-          postcode: postcode.trim().toUpperCase(),
-          city: "",
-          terms_accepted: true,
-          privacy_accepted: true,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setIsLoading(false);
-        setConfirmed(true);
-      } else {
-        setIsLoading(false);
-        const errorMsg = data.error || data.message || "Registration failed. Please try again.";
-        console.error("Registration failed:", errorMsg);
-        setError(errorMsg);
-      }
-    } catch (err) {
-      setIsLoading(false);
-      console.error("Registration error:", err);
-      setError("Failed to create account. Please try again.");
-    }
+    setErrors({});
+    setStep(4);
   }
 
-  // ── Email confirmation screen ──────────────────────────────────────────────
-  if (confirmed) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <header className="px-6 py-5 border-b border-border">
-          <Link to="/">
-            <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
-          </Link>
-        </header>
-        <main className="flex-1 flex items-center justify-center px-6">
-          <div className="max-w-md text-center space-y-4">
-            <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-              <Mail className="h-7 w-7 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-semibold">Check your inbox</h2>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              We've sent a confirmation link to <strong>{email}</strong>.<br />
-              Please confirm your email before logging in.
-            </p>
-            <Link
-              to="/login"
-              className="inline-block mt-4 text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground"
-            >
-              Back to login
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
+  async function handleStep4() {
+    const errors: Record<string, string> = {};
+    if (!termsAccepted) errors.terms = "You must accept the Terms of Service";
+    if (!privacyAccepted) errors.privacy = "You must accept the Privacy Policy";
+    if (!insuranceConfirmed) errors.insurance = "You must confirm your insurance coverage";
+
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors);
+      return;
+    }
+    setErrors({});
+    setIsSubmitting(true);
+
+    try {
+      // Register painter account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            phone,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      // After signup, move to Step 5
+      setIsSubmitting(false);
+      setStep(5);
+    } catch (error: any) {
+      setIsSubmitting(false);
+      setErrors({ submit: error.message || "Registration failed" });
+    }
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="px-6 py-5 border-b border-border">
-        <Link to="/">
+        <a href="/">
           <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
-        </Link>
+        </a>
       </header>
+
+      {/* Progress bar */}
+      <div className="h-0.5 bg-border">
+        <div
+          className="h-full bg-foreground transition-all duration-500"
+          style={{ width: `${(step / 5) * 100}%` }}
+        />
+      </div>
 
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 mb-8">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`h-1 flex-1 rounded-full transition-colors ${step >= s ? "bg-foreground" : "bg-border"}`}
-              />
-            ))}
-          </div>
-
-          <h1 className="text-2xl font-semibold tracking-tight mb-1">
-            {step === 1 && "Join as a Painter"}
-            {step === 2 && "Set up your account"}
-            {step === 3 && "Your specialisms"}
-          </h1>
-          <p className="text-sm text-muted-foreground mb-8">
-            {step === 1 && "Tell us about yourself"}
-            {step === 2 && "Choose a password and your location"}
-            {step === 3 && "Select the services you offer"}
-          </p>
-
-          {error && (
-            <div className="mb-6 rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          {/* Step 1 */}
+          {/* Step 1 - Personal Details */}
           {step === 1 && (
-            <form onSubmit={handleStep1} className="space-y-6">
+            <div className="space-y-8 animate-in fade-in duration-300">
               <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">First name</label>
-                <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={fieldClass} placeholder="John" />
+                <div className="flex items-center gap-3 mb-6">
+                  <User className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Your details</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">Join as a Painter</h1>
+                    <p className="text-xs text-muted-foreground mt-1">Tell us about yourself</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Last name</label>
-                <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={fieldClass} placeholder="Smith" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClass} placeholder="you@example.com" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone</label>
-                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className={fieldClass} placeholder="+44 7700 000000" />
-              </div>
-              <button type="submit" className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
-                Continue <ArrowRight className="h-4 w-4" />
-              </button>
-            </form>
-          )}
 
-          {/* Step 2 */}
-          {step === 2 && (
-            <form onSubmit={handleStep2} className="space-y-6">
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Password</label>
-                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} placeholder="Min. 8 characters" />
-                {password && (() => {
-                  const score = [/[A-Z]/.test(password), /[a-z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password), password.length >= 8].filter(Boolean).length;
-                  const label = score <= 2 ? "Weak" : score === 3 ? "Fair" : score === 4 ? "Good" : "Strong";
-                  const color = score <= 2 ? "bg-red-500" : score === 3 ? "bg-amber-500" : score === 4 ? "bg-blue-500" : "bg-green-500";
-                  const width = score <= 2 ? "25%" : score === 3 ? "50%" : score === 4 ? "75%" : "100%";
-                  return (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleStep1();
+                }}
+                className="space-y-6"
+              >
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">First name *</label>
+                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={fieldClass} placeholder="John" />
+                  {errors.firstName && <p className="text-xs text-destructive mt-1">{errors.firstName}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Last name *</label>
+                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={fieldClass} placeholder="Smith" />
+                  {errors.lastName && <p className="text-xs text-destructive mt-1">{errors.lastName}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email *</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={fieldClass} placeholder="you@example.com" />
+                  {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone *</label>
+                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={fieldClass} placeholder="+44 7700 000000" />
+                  {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Password *</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={fieldClass} placeholder="Min. 8 characters" />
+                  {password && (
                     <div className="mt-2">
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
-                        <div className={`h-1.5 rounded-full transition-all ${color}`} style={{ width }} />
+                      <div className="w-full bg-gray-800 rounded-full h-1.5 mb-2">
+                        <div className={`h-1.5 rounded-full transition-all ${passwordColor}`} style={{ width: `${(passwordStrength / 5) * 100}%` }} />
                       </div>
-                      <div className="flex justify-between items-center">
-                        <p className="text-xs text-muted-foreground">Strength: <span className={score <= 2 ? "text-red-500" : score === 3 ? "text-amber-500" : score === 4 ? "text-blue-500" : "text-green-500"}>{label}</span></p>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-xs text-muted-foreground">
+                          Strength: <span className={passwordStrength <= 1 ? "text-red-500" : passwordStrength === 2 ? "text-amber-500" : passwordStrength === 3 ? "text-blue-500" : "text-green-500"}>{passwordLabel}</span>
+                        </span>
                       </div>
-                      <ul className="mt-1 space-y-0.5">
-                        {[
-                          { label: "8+ characters", met: password.length >= 8 },
-                          { label: "Uppercase letter", met: /[A-Z]/.test(password) },
-                          { label: "Lowercase letter", met: /[a-z]/.test(password) },
-                          { label: "Number", met: /[0-9]/.test(password) },
-                          { label: "Special character", met: /[^A-Za-z0-9]/.test(password) },
-                        ].map(c => (
-                          <li key={c.label} className={`text-xs flex items-center gap-1 ${c.met ? "text-green-600" : "text-muted-foreground"}`}>
-                            <span>{c.met ? "✓" : "○"}</span> {c.label}
+                      <ul className="space-y-1">
+                        {passwordRequirements.map((req) => (
+                          <li key={req.label} className={`text-xs flex items-center gap-1 ${req.met ? "text-green-600" : "text-muted-foreground"}`}>
+                            <span>{req.met ? "✓" : "○"}</span> {req.label}
                           </li>
                         ))}
                       </ul>
                     </div>
-                  );
-                })()}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Confirm password</label>
-                <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} placeholder="Repeat password" />
-                {confirmPassword && (
-                  <p className={`text-xs mt-1 ${password === confirmPassword ? "text-green-600" : "text-red-500"}`}>
-                    {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Postcode</label>
-                <input type="text" required value={postcode} onChange={(e) => setPostcode(e.target.value)} className={fieldClass} placeholder="SW1A 1AA" />
-              </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(1)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
-                  Back
-                </button>
-                <button type="submit" className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                  )}
+                  {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Confirm password *</label>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={fieldClass} placeholder="Repeat password" />
+                  {confirmPassword && (
+                    <p className={`text-xs mt-1 ${password === confirmPassword ? "text-green-600" : "text-red-500"}`}>
+                      {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
+                    </p>
+                  )}
+                  {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>}
+                </div>
+
+                <button type="submit" className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
                   Continue <ArrowRight className="h-4 w-4" />
                 </button>
-              </div>
-            </form>
+              </form>
+            </div>
           )}
 
-          {/* Step 3 */}
-          {step === 3 && (
-            <form onSubmit={handleStep3} className="space-y-6">
-              <div className="flex flex-wrap gap-2">
-                {SPECIALISMS.map((s) => (
+          {/* Step 2 - Professional Details */}
+          {step === 2 && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <Briefcase className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Your expertise</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">What do you specialise in?</h1>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Specialisms *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {SPECIALISMS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => toggleSpecialism(s)}
+                        className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                          specialisms.includes(s)
+                            ? "bg-foreground text-background border-foreground"
+                            : "border-border text-foreground hover:border-foreground/40"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.specialisms && <p className="text-xs text-destructive mt-1">{errors.specialisms}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Service postcode *</label>
+                  <input type="text" value={servicePostcode} onChange={(e) => setServicePostcode(e.target.value.toUpperCase())} className={fieldClass} placeholder="SW1A 1AA" />
+                  {errors.servicePostcode && <p className="text-xs text-destructive mt-1">{errors.servicePostcode}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">City/Town *</label>
+                  <input type="text" value={serviceCity} onChange={(e) => setServiceCity(e.target.value)} className={fieldClass} placeholder="London" />
+                  {errors.serviceCity && <p className="text-xs text-destructive mt-1">{errors.serviceCity}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Service radius</label>
+                  <div className="space-y-2">
+                    <input
+                      type="range"
+                      min="5"
+                      max="50"
+                      value={serviceRadius}
+                      onChange={(e) => setServiceRadius(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">Jobs within {serviceRadius}km of {servicePostcode || "your postcode"}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Years experience *</label>
+                  <select value={experience} onChange={(e) => setExperience(e.target.value)} className={fieldClass}>
+                    <option value="">Select experience level</option>
+                    {EXPERIENCE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.experience && <p className="text-xs text-destructive mt-1">{errors.experience}</p>}
+                </div>
+
+                <div className="flex gap-3 pt-4">
                   <button
-                    key={s}
-                    type="button"
-                    onClick={() => toggleSpecialism(s)}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                      selectedSpecialisms.includes(s)
-                        ? "bg-foreground text-background border-foreground"
-                        : "border-border text-foreground hover:bg-accent"
-                    }`}
+                    onClick={() => setStep(1)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
                   >
-                    {s}
+                    Back
                   </button>
-                ))}
+                  <button onClick={() => handleStep2()} className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                    Continue <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              {/* Terms and conditions */}
-              <div className="space-y-3 border border-border rounded-lg p-4 bg-accent/20">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Terms & Conditions</p>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border" />
-                  <span className="text-sm text-foreground">I have read and agree to the <a href="/terms" target="_blank" className="underline hover:no-underline">Terms of Service</a></span>
-                </label>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={privacyAccepted} onChange={e => setPrivacyAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border" />
-                  <span className="text-sm text-foreground">I have read and agree to the <a href="/privacy" target="_blank" className="underline hover:no-underline">Privacy Policy</a></span>
-                </label>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={insuranceConfirmed} onChange={e => setInsuranceConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border" />
-                  <span className="text-sm text-foreground">I confirm I hold valid public liability insurance of at least <strong>£2,000,000</strong></span>
-                </label>
+            </div>
+          )}
+
+          {/* Step 3 - Insurance */}
+          {step === 3 && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <Shield className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Insurance</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">Insurance details</h1>
+                    <p className="text-xs text-muted-foreground mt-1">Required to work on PaintBookCo</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(2)} className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors">
-                  Back
-                </button>
+
+              <div className="space-y-6">
+                {/* Amber notice */}
+                <div className="border-l-2 border-amber-500 pl-3 py-2">
+                  <p className="text-xs text-muted-foreground">You must hold public liability insurance of at least £2,000,000. Your certificate will be verified by our team before activation.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Insurance company *</label>
+                  <input type="text" value={insuranceCompany} onChange={(e) => setInsuranceCompany(e.target.value)} className={fieldClass} placeholder="e.g. AXA" />
+                  {errors.insuranceCompany && <p className="text-xs text-destructive mt-1">{errors.insuranceCompany}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Policy number *</label>
+                  <input type="text" value={policyNumber} onChange={(e) => setPolicyNumber(e.target.value)} className={fieldClass} placeholder="e.g. POL-12345" />
+                  {errors.policyNumber && <p className="text-xs text-destructive mt-1">{errors.policyNumber}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Policy details *</label>
+                  <textarea
+                    value={policyDetails}
+                    onChange={(e) => setPolicyDetails(e.target.value)}
+                    className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
+                    rows={3}
+                    placeholder="Coverage details..."
+                  />
+                  {errors.policyDetails && <p className="text-xs text-destructive mt-1">{errors.policyDetails}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Expiry date *</label>
+                  <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className={fieldClass} />
+                  {errors.expiryDate && <p className="text-xs text-destructive mt-1">{errors.expiryDate}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Upload certificate *</label>
+                  <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.png" onChange={handleCertificateUpload} className="hidden" />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full border border-dashed border-border hover:border-foreground/40 py-6 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center gap-2"
+                  >
+                    <Upload className="h-5 w-5" />
+                    Upload certificate
+                    <span className="text-xs">PDF, JPG or PNG — max 5MB</span>
+                  </button>
+                  {certificateFile && <p className="text-xs text-green-600 mt-2">✓ {certificateFile.name}</p>}
+                  {errors.certificate && <p className="text-xs text-destructive mt-2">{errors.certificate}</p>}
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setStep(2)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button onClick={() => handleStep3()} className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2">
+                    Continue <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4 - Terms */}
+          {step === 4 && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <FileCheck className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Terms</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">Almost there</h1>
+                    <p className="text-xs text-muted-foreground mt-1">Review and accept our terms</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Summary card */}
+                <div className="border border-border rounded-md p-4 space-y-3 text-sm">
+                  <div>
+                    <p className="font-medium mb-2">Commission Structure</p>
+                    <p className="text-xs text-muted-foreground">Jobs 1-5: 12% | Jobs 6-10: 10% | Jobs 11+: 8%</p>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-2">How it works</p>
+                    <p className="text-xs text-muted-foreground">Customer pays escrow → Job completed → Customer confirms → You get paid</p>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-2">Requirements</p>
+                    <p className="text-xs text-muted-foreground">KYC verification + Insurance required. No off-platform contact details.</p>
+                  </div>
+                </div>
+
+                {/* Checkboxes */}
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-border"
+                    />
+                    <span className="text-sm text-foreground">
+                      I agree to the <a href="/terms" target="_blank" className="underline hover:no-underline">Terms of Service</a>
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-border" />
+                    <span className="text-sm text-foreground">
+                      I agree to the <a href="/privacy" target="_blank" className="underline hover:no-underline">Privacy Policy</a>
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={insuranceConfirmed}
+                      onChange={(e) => setInsuranceConfirmed(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-border"
+                    />
+                    <span className="text-sm text-foreground">I confirm I hold valid public liability insurance of at least <strong>£2,000,000</strong></span>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer pt-2">
+                    <input type="checkbox" checked={marketingConsent} onChange={(e) => setMarketingConsent(e.target.checked)} className="mt-1 h-4 w-4 rounded border-border" />
+                    <span className="text-sm text-foreground">I'd like marketing communications (optional)</span>
+                  </label>
+                </div>
+
+                {errors.submit && <p className="text-sm text-destructive">{errors.submit}</p>}
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setStep(3)}
+                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleStep4}
+                    disabled={isSubmitting || !termsAccepted || !privacyAccepted || !insuranceConfirmed}
+                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5 - KYC Verification */}
+          {step === 5 && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <Fingerprint className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Identity verification</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">Verify your identity</h1>
+                    <p className="text-xs text-muted-foreground mt-1">Required before receiving jobs</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="border border-border rounded-md p-4 space-y-3">
+                  <p className="font-medium text-sm">What you'll need</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>✓ Valid photo ID (passport or driving licence)</li>
+                    <li>✓ Smartphone or webcam for face scan</li>
+                    <li>✓ Good lighting</li>
+                    <li>✓ 3-5 minutes</li>
+                  </ul>
+                </div>
+
+                <p className="text-xs text-muted-foreground italic">Powered by Didit — GDPR compliant. Documents are encrypted and never stored by PaintBookCo.</p>
+
                 <button
-                  type="submit"
-                  disabled={isLoading || !termsAccepted || !privacyAccepted || !insuranceConfirmed}
-                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  onClick={() => setKycStarted(true)}
+                  className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
                 >
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                  {isLoading ? "Creating account…" : "Create account"}
+                  Start Identity Verification
                 </button>
+
+                {kycStarted && (
+                  <div className="border border-amber-500/30 bg-amber-500/5 rounded-md p-4 text-center space-y-3">
+                    <div className="flex justify-center">
+                      <div className="w-3 h-3 rounded-full bg-amber-500 animate-pulse" />
+                    </div>
+                    <p className="text-sm font-medium">Verification in progress</p>
+                    <p className="text-xs text-muted-foreground">Complete the verification in the tab that opened. Return here when done.</p>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={() => navigate("/join-painter/completed")}
+                        className="flex-1 text-sm font-medium text-foreground hover:text-muted-foreground"
+                      >
+                        Check My Status
+                      </button>
+                      <button
+                        onClick={() => navigate("/dashboard/painter")}
+                        className="flex-1 text-sm font-medium text-foreground hover:text-muted-foreground"
+                      >
+                        Go to Dashboard
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            </form>
+            </div>
           )}
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="text-foreground font-medium hover:underline underline-offset-4">
+            <a href="/login" className="text-foreground font-medium hover:underline underline-offset-4">
               Sign in
-            </Link>
+            </a>
           </p>
         </div>
       </main>

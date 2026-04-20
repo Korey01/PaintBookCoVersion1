@@ -8,7 +8,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storageKey: "paintbookco-auth",
     storage: typeof window !== "undefined" ? window.localStorage : undefined,
   },
 });

@@ -74,12 +74,43 @@ export function JoinPainterComplete() {
             <Mail className="h-7 w-7 text-green-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold mb-2">Registration Complete</h1>
-            <p className="text-sm text-muted-foreground">Your application has been submitted successfully. Check your email for verification instructions.</p>
+            <h1 className="text-2xl font-semibold mb-2">Check your inbox</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              We've sent a confirmation link to your email address.
+              Click the link to confirm your account, then come back
+              here to sign in and complete your identity verification.
+            </p>
           </div>
-          <a href="/login" className="inline-block text-sm font-medium underline underline-offset-4 text-foreground hover:text-muted-foreground">
-            Back to login
+          <div className="space-y-2 text-left border border-border rounded-xl p-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">What happens next</p>
+            {[
+              "Click the confirmation link in your email",
+              "Sign in to your PaintBookCo account",
+              "Complete identity verification (KYC)",
+              "Submit your insurance certificate",
+              "Our team activates your account",
+              "Start receiving job notifications",
+            ].map((step, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <p className="text-sm text-muted-foreground">{step}</p>
+              </div>
+            ))}
+          </div>
+          
+            href="/login"
+            className="inline-block w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors text-center"
+          >
+            Go to Login
           </a>
+          <p className="text-xs text-muted-foreground">
+            Didn't receive the email? Check your spam folder or{" "}
+            <a href="/join-painter" className="underline hover:text-foreground">
+              register again
+            </a>
+          </p>
         </div>
       </main>
     </div>

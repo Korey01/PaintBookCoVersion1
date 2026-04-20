@@ -57,10 +57,7 @@ export default function LoginPage() {
     // Role-based redirect: check painters table
     try {
       // Wait for session to fully propagate
-      await new Promise(r => setTimeout(r, 1000));
-
-      // Refresh session to ensure it is active
-      await supabase.auth.refreshSession();
+      await new Promise(r => setTimeout(r, 800));
 
       const { data: painterRecord, error: painterError } = await supabase
         .from("painters")

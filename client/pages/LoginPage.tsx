@@ -55,18 +55,19 @@ export default function LoginPage() {
     }
 
     // Role-based redirect: check painters table
-    // Use service-role-free approach: set session first then query
     try {
-      await supabase.auth.setSession({
-        access_token: signInData.session!.access_token,
-        refresh_token: signInData.session!.refresh_token,
-      });
+      // Small wait for session to propagate
+      await new Promise(r => setTimeout(r, 300));
 
-      const { data: painterRecord } = await supabase
+      const { data: painterRecord, error: painterError } = await supabase
         .from("painters")
         .select("id, kyc_status, is_active, insurance_submitted_at")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      if (painterError) {
+        console.error("Painter query error:", painterError);
+      }
 
       setLoading(false);
 
@@ -82,9 +83,10 @@ export default function LoginPage() {
         navigate("/login");
         setError("No painter account found. Please register at /join-painter");
       }
-    } catch (err) {
+    } catch (err: any) {
       setLoading(false);
-      setError("Login failed. Please try again.");
+      setError(`Login failed: ${err?.message || "Please try again."}`);
+      console.error("Login error:", err);
     }
   }
 

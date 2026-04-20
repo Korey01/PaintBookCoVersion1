@@ -99,7 +99,7 @@ export function JoinPainterComplete() {
               </div>
             ))}
           </div>
-          
+          <a
             href="/login"
             className="inline-block w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors text-center"
           >

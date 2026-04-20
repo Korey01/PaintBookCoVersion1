@@ -97,14 +97,14 @@ export default function Header() {
               <Menu className="h-5 w-5" />
             </button>
 
-            {/* Join as Painter */}
+            {/* Join as a Decorator */}
             <Button
               asChild
               variant="ghost"
               size="sm"
               className="hidden lg:inline-flex text-foreground/70 hover:text-foreground"
             >
-              <Link to="/join-painter">Join as Painter</Link>
+              <Link to="/join-decorator">Join as a Decorator</Link>
             </Button>
 
             {/* Post a Job — primary CTA */}
@@ -171,8 +171,8 @@ export default function Header() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full">
-              <Link to="/join-painter" onClick={() => setMobileOpen(false)}>
-                Join as Painter
+              <Link to="/join-decorator" onClick={() => setMobileOpen(false)}>
+                Join as a Decorator
               </Link>
             </Button>
             {loggedIn && (

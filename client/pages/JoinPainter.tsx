@@ -29,6 +29,7 @@ const EXPERIENCE_OPTIONS = [
 ];
 
 type Step = 1 | 2 | 3 | 4 | 5;
+type InsuranceOption = "now" | "later" | "not-required";
 
 interface PasswordRequirement {
   label: string;
@@ -109,6 +110,7 @@ export default function JoinPainter() {
   const [experience, setExperience] = useState("");
 
   // Step 3 - Insurance
+  const [insuranceOption, setInsuranceOption] = useState<InsuranceOption>("now");
   const [insuranceCompany, setInsuranceCompany] = useState("");
   const [policyNumber, setPolicyNumber] = useState("");
   const [policyDetails, setPolicyDetails] = useState("");
@@ -193,12 +195,16 @@ export default function JoinPainter() {
 
   function handleStep3() {
     const errors: Record<string, string> = {};
-    if (!insuranceCompany.trim()) errors.insuranceCompany = "Insurance company required";
-    if (!policyNumber.trim()) errors.policyNumber = "Policy number required";
-    if (!policyDetails.trim()) errors.policyDetails = "Policy details required";
-    if (!expiryDate) errors.expiryDate = "Expiry date required";
-    else if (new Date(expiryDate) < new Date()) errors.expiryDate = "Policy has expired";
-    if (!certificateFile) errors.certificate = "Certificate upload required";
+
+    // Only validate insurance fields if user chose to upload now
+    if (insuranceOption === "now") {
+      if (!insuranceCompany.trim()) errors.insuranceCompany = "Insurance company required";
+      if (!policyNumber.trim()) errors.policyNumber = "Policy number required";
+      if (!policyDetails.trim()) errors.policyDetails = "Policy details required";
+      if (!expiryDate) errors.expiryDate = "Expiry date required";
+      else if (new Date(expiryDate) < new Date()) errors.expiryDate = "Policy has expired";
+      if (!certificateFile) errors.certificate = "Certificate upload required";
+    }
 
     if (Object.keys(errors).length > 0) {
       setErrors(errors);
@@ -212,7 +218,8 @@ export default function JoinPainter() {
     const errors: Record<string, string> = {};
     if (!termsAccepted) errors.terms = "You must accept the Terms of Service";
     if (!privacyAccepted) errors.privacy = "You must accept the Privacy Policy";
-    if (!insuranceConfirmed) errors.insurance = "You must confirm your insurance coverage";
+    // Only require insurance confirmation if user uploaded insurance now
+    if (insuranceOption === "now" && !insuranceConfirmed) errors.insurance = "You must confirm your insurance coverage";
 
     if (Object.keys(errors).length > 0) {
       setErrors(errors);
@@ -272,7 +279,7 @@ export default function JoinPainter() {
                   <User className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Your details</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">Join as a Painter</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">Join as a Decorator</h1>
                     <p className="text-xs text-muted-foreground mt-1">Tell us about yourself</p>
                   </div>
                 </div>
@@ -451,62 +458,100 @@ export default function JoinPainter() {
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Insurance</p>
                     <h1 className="text-2xl font-semibold tracking-tight">Insurance details</h1>
-                    <p className="text-xs text-muted-foreground mt-1">Required to work on PaintBookCo</p>
+                    <p className="text-xs text-muted-foreground mt-1">Add your public liability insurance</p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-6">
-                {/* Amber notice */}
-                <div className="border-l-2 border-amber-500 pl-3 py-2">
-                  <p className="text-xs text-muted-foreground">You must hold public liability insurance of at least £2,000,000. Your certificate will be verified by our team before activation.</p>
+                {/* Info notice */}
+                <div className="border-l-2 border-blue-500 pl-3 py-2">
+                  <p className="text-xs text-muted-foreground">You must hold public liability insurance of at least £2,000,000 to work on jobs. You can add this now or later from your dashboard.</p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Insurance company *</label>
-                  <input type="text" value={insuranceCompany} onChange={(e) => setInsuranceCompany(e.target.value)} className={fieldClass} placeholder="e.g. AXA" />
-                  {errors.insuranceCompany && <p className="text-xs text-destructive mt-1">{errors.insuranceCompany}</p>}
+                {/* Insurance Options */}
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 p-3 border border-border rounded-md cursor-pointer hover:bg-accent transition-colors" style={{backgroundColor: insuranceOption === "now" ? "rgba(0,0,0,0.05)" : "transparent"}}>
+                    <input
+                      type="radio"
+                      name="insurance"
+                      value="now"
+                      checked={insuranceOption === "now"}
+                      onChange={(e) => setInsuranceOption(e.target.value as InsuranceOption)}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Add insurance now</p>
+                      <p className="text-xs text-muted-foreground">Upload your policy details and certificate immediately</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 p-3 border border-border rounded-md cursor-pointer hover:bg-accent transition-colors" style={{backgroundColor: insuranceOption === "later" ? "rgba(0,0,0,0.05)" : "transparent"}}>
+                    <input
+                      type="radio"
+                      name="insurance"
+                      value="later"
+                      checked={insuranceOption === "later"}
+                      onChange={(e) => setInsuranceOption(e.target.value as InsuranceOption)}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Add insurance later</p>
+                      <p className="text-xs text-muted-foreground">Upload from your dashboard within 7 days of account creation</p>
+                    </div>
+                  </label>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Policy number *</label>
-                  <input type="text" value={policyNumber} onChange={(e) => setPolicyNumber(e.target.value)} className={fieldClass} placeholder="e.g. POL-12345" />
-                  {errors.policyNumber && <p className="text-xs text-destructive mt-1">{errors.policyNumber}</p>}
-                </div>
+                {/* Insurance Form - Show only if "now" is selected */}
+                {insuranceOption === "now" && (
+                  <div className="space-y-6 pt-4 border-t border-border">
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Insurance company *</label>
+                      <input type="text" value={insuranceCompany} onChange={(e) => setInsuranceCompany(e.target.value)} className={fieldClass} placeholder="e.g. AXA" />
+                      {errors.insuranceCompany && <p className="text-xs text-destructive mt-1">{errors.insuranceCompany}</p>}
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Policy details *</label>
-                  <textarea
-                    value={policyDetails}
-                    onChange={(e) => setPolicyDetails(e.target.value)}
-                    className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
-                    rows={3}
-                    placeholder="Coverage details..."
-                  />
-                  {errors.policyDetails && <p className="text-xs text-destructive mt-1">{errors.policyDetails}</p>}
-                </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Policy number *</label>
+                      <input type="text" value={policyNumber} onChange={(e) => setPolicyNumber(e.target.value)} className={fieldClass} placeholder="e.g. POL-12345" />
+                      {errors.policyNumber && <p className="text-xs text-destructive mt-1">{errors.policyNumber}</p>}
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Expiry date *</label>
-                  <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className={fieldClass} />
-                  {errors.expiryDate && <p className="text-xs text-destructive mt-1">{errors.expiryDate}</p>}
-                </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Policy details *</label>
+                      <textarea
+                        value={policyDetails}
+                        onChange={(e) => setPolicyDetails(e.target.value)}
+                        className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
+                        rows={3}
+                        placeholder="Coverage details..."
+                      />
+                      {errors.policyDetails && <p className="text-xs text-destructive mt-1">{errors.policyDetails}</p>}
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Upload certificate *</label>
-                  <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.png" onChange={handleCertificateUpload} className="hidden" />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full border border-dashed border-border hover:border-foreground/40 py-6 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center gap-2"
-                  >
-                    <Upload className="h-5 w-5" />
-                    Upload certificate
-                    <span className="text-xs">PDF, JPG or PNG — max 5MB</span>
-                  </button>
-                  {certificateFile && <p className="text-xs text-green-600 mt-2">✓ {certificateFile.name}</p>}
-                  {errors.certificate && <p className="text-xs text-destructive mt-2">{errors.certificate}</p>}
-                </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Expiry date *</label>
+                      <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className={fieldClass} />
+                      {errors.expiryDate && <p className="text-xs text-destructive mt-1">{errors.expiryDate}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Upload certificate *</label>
+                      <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.png" onChange={handleCertificateUpload} className="hidden" />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full border border-dashed border-border hover:border-foreground/40 py-6 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center gap-2"
+                      >
+                        <Upload className="h-5 w-5" />
+                        Upload certificate
+                        <span className="text-xs">PDF, JPG or PNG — max 5MB</span>
+                      </button>
+                      {certificateFile && <p className="text-xs text-green-600 mt-2">✓ {certificateFile.name}</p>}
+                      {errors.certificate && <p className="text-xs text-destructive mt-2">{errors.certificate}</p>}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-4">
                   <button
@@ -575,15 +620,17 @@ export default function JoinPainter() {
                     </span>
                   </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={insuranceConfirmed}
-                      onChange={(e) => setInsuranceConfirmed(e.target.checked)}
-                      className="mt-1 h-4 w-4 rounded border-border"
-                    />
-                    <span className="text-sm text-foreground">I confirm I hold valid public liability insurance of at least <strong>£2,000,000</strong></span>
-                  </label>
+                  {insuranceOption === "now" && (
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={insuranceConfirmed}
+                        onChange={(e) => setInsuranceConfirmed(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-border"
+                      />
+                      <span className="text-sm text-foreground">I confirm I hold valid public liability insurance of at least <strong>£2,000,000</strong></span>
+                    </label>
+                  )}
 
                   <label className="flex items-start gap-3 cursor-pointer pt-2">
                     <input type="checkbox" checked={marketingConsent} onChange={(e) => setMarketingConsent(e.target.checked)} className="mt-1 h-4 w-4 rounded border-border" />
@@ -602,7 +649,7 @@ export default function JoinPainter() {
                   </button>
                   <button
                     onClick={handleStep4}
-                    disabled={isSubmitting || !termsAccepted || !privacyAccepted || !insuranceConfirmed}
+                    disabled={isSubmitting || !termsAccepted || !privacyAccepted || (insuranceOption === "now" && !insuranceConfirmed)}
                     className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}

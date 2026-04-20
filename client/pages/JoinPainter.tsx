@@ -275,10 +275,10 @@ export default function JoinPainter() {
             first_name: firstName,
             last_name: lastName,
             phone,
-            specialisms: selectedSpecialisms,
+            specialisms: specialisms,
             service_radius_km: serviceRadius,
-            postcode,
-            city,
+            postcode: servicePostcode,
+            city: servicePostcode,
             terms_accepted: true,
             privacy_accepted: true,
           })

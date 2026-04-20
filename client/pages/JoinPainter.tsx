@@ -260,20 +260,36 @@ export default function JoinPainter() {
     setIsSubmitting(true);
 
     try {
-      // Register painter account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
+      // Register painter via Edge Function (creates auth user + painter record atomically)
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-painter`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            email,
+            password,
             first_name: firstName,
             last_name: lastName,
             phone,
-          },
-        },
-      });
+            specialisms: selectedSpecialisms,
+            service_radius_km: serviceRadius,
+            postcode,
+            city,
+            terms_accepted: true,
+            privacy_accepted: true,
+          })
+        }
+      );
 
-      if (authError) throw authError;
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "Registration failed");
+      }
 
       // After signup, go to completed page
       setIsSubmitting(false);

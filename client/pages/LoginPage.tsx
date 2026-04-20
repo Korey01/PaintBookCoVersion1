@@ -54,40 +54,45 @@ export default function LoginPage() {
       return;
     }
 
-    // Role-based redirect: check painters table
+    // Use direct fetch to avoid Supabase client lock conflict
     try {
-      // Wait for session to fully propagate
-      await new Promise(r => setTimeout(r, 800));
-
-      const { data: painterRecord, error: painterError } = await supabase
-        .from("painters")
-        .select("id, kyc_status, is_active, insurance_submitted_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (painterError) {
-        console.error("Painter query error:", painterError);
+      const accessToken = signInData.session?.access_token;
+      if (!accessToken) {
+        setLoading(false);
+        setError("Session error. Please try again.");
+        return;
       }
-      console.log("Painter record found:", painterRecord);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/painters?user_id=eq.${user.id}&select=id,kyc_status,is_active,insurance_submitted_at&limit=1`,
+        {
+          headers: {
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          }
+        }
+      );
+
+      const painters = await res.json();
+      const painter = painters?.[0];
 
       setLoading(false);
 
-      if (painterRecord) {
-        if (painterRecord.kyc_status !== "approved") {
-          navigate("/kyc/painter");
-        } else if (!painterRecord.insurance_submitted_at) {
-          navigate("/dashboard/painter");
-        } else {
-          navigate("/dashboard/painter");
-        }
-      } else {
-        navigate("/login");
+      if (!painter) {
         setError("No painter account found. Please register at /join-painter");
+        return;
       }
+
+      if (painter.kyc_status !== "approved") {
+        navigate("/kyc/painter");
+      } else {
+        navigate("/dashboard/painter");
+      }
+
     } catch (err: any) {
       setLoading(false);
-      setError(`Login failed: ${err?.message || "Please try again."}`);
-      console.error("Login error:", err);
+      setError("Login failed. Please try again.");
     }
   }
 

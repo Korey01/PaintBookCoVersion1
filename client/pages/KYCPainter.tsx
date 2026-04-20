@@ -32,6 +32,11 @@ export default function KYCPainter() {
     setRejectionReason(painter.kyc_rejection_reason || "");
     setPainterId(painter.id);
     setPageLoading(false);
+
+    // Auto-navigate if KYC already approved
+    if (painter.kyc_status === "approved") {
+      navigate("/dashboard/painter", { replace: true });
+    }
   };
 
   const handleStartKYC = async () => {

@@ -66,6 +66,7 @@ import PostJobPage from "./pages/PostJobPage";
 import ChatPage from "./pages/ChatPage";
 import PaymentPage from "./pages/PaymentPage";
 import ConfirmCompletionPage from "./pages/ConfirmCompletionPage";
+import ChooseRole from "./pages/ChooseRole";
 ;
 import AdminRoute from "@/components/auth/AdminRoute";
 import KYCPainter from "./pages/KYCPainter";
@@ -104,8 +105,11 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/cookies" element={<CookiePolicyPage />} />
-            <Route path="/join-painter" element={<JoinPainter />} />
-            <Route path="/join-painter/completed" element={<JoinPainterComplete />} />
+            <Route path="/choose-role" element={<ChooseRole />} />
+            <Route path="/join-decorator" element={<JoinPainter />} />
+            <Route path="/join-decorator/completed" element={<JoinPainterComplete />} />
+            <Route path="/join-painter" element={<Navigate to="/join-decorator" replace />} />
+            <Route path="/join-painter/completed" element={<Navigate to="/join-decorator/completed" replace />} />
           </Route>
 
           {/* ── Auth pages (no shared layout — self-contained) ── */}

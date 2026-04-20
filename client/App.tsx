@@ -121,7 +121,7 @@ const App = () => (
           <Route path="/kyc/painter" element={
             <ProtectedRoute><KYCPainter /></ProtectedRoute>
           } />
-          <Route path="/confirm-kyc" element={<Navigate to="/dashboard/painter" replace />} />
+          <Route path="/confirm-kyc" element={<Navigate to="/dashboard/painter?tab=insurance" replace />} />
           <Route path="/kyc/customer" element={
             <ProtectedRoute><KYCCustomer /></ProtectedRoute>
           } />

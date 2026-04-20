@@ -129,8 +129,7 @@ export default function KYCPainter() {
                 )}
               </button>
               <p className="text-xs text-muted-foreground">
-                Powered by Didit — your data is encrypted and handled in 
-                accordance with GDPR.
+                Identity verification is powered by Didit. Your ID documents are processed directly by Didit and are not stored by PaintBookCo. See Didit's Privacy Policy at didit.me/privacy
               </p>
             </div>
           )}
@@ -156,7 +155,7 @@ export default function KYCPainter() {
                 </p>
               </div>
               <button
-                onClick={() => navigate("/dashboard/painter")}
+                onClick={() => navigate("/dashboard/painter?tab=insurance")}
                 className="w-full border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
               >
                 Return to Dashboard
@@ -177,7 +176,7 @@ export default function KYCPainter() {
                 </p>
               </div>
               <button
-                onClick={() => navigate("/dashboard/painter")}
+                onClick={() => navigate("/dashboard/painter?tab=insurance")}
                 className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
               >
                 Go to Dashboard

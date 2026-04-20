@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import {
   BarChart3,
@@ -41,7 +41,16 @@ const REGISTRATION_STEPS = [
 
 export function PainterDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabParam = searchParams.get("tab")
+    // Map convenience aliases to real tab IDs
+    if (tabParam === "insurance") return "profile"
+    if (tabParam === "progress") return "registration"
+    const validTabs = ["overview","registration","available-jobs","my-jobs","gallery","availability","profile","notifications"]
+    if (tabParam && validTabs.includes(tabParam)) return tabParam
+    return "overview"
+  });
   const [user, setUser] = useState<any>(null);
   const [painter, setPainter] = useState<any>(null);
   const [loading, setLoading] = useState(true);

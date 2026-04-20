@@ -177,6 +177,44 @@ export function PainterDashboard() {
                   <p className="text-muted-foreground">Welcome back, {painter.first_name}</p>
                 </div>
 
+                {/* Insurance required banner */}
+                {painter.kyc_status === "approved" && !painter.insurance_submitted_at && (
+                  <div className="border border-amber-800/40 bg-amber-900/20 rounded-xl p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-amber-400 mb-1">
+                          ✓ Identity Verified — Submit Insurance to Go Live
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Your KYC has been approved. The next step is to submit 
+                          your public liability insurance certificate. Once verified 
+                          by our team, your account will be activated.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("profile")}
+                        className="flex-shrink-0 bg-amber-500 text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-amber-400 transition-colors whitespace-nowrap"
+                      >
+                        Submit Insurance →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Insurance under review banner */}
+                {painter.kyc_status === "approved" && painter.insurance_submitted_at && !painter.insurance_verified && !painter.is_active && (
+                  <div className="border border-blue-800/40 bg-blue-900/20 rounded-xl p-5">
+                    <p className="font-semibold text-blue-400 mb-1">
+                      ✓ Insurance Submitted — Under Review
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Our team is verifying your insurance certificate. 
+                      You will receive an email when your account is activated. 
+                      This typically takes 1-2 working days.
+                    </p>
+                  </div>
+                )}
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="border border-border rounded-lg p-4 bg-card/50">

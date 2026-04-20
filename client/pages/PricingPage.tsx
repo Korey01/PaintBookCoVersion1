@@ -120,10 +120,10 @@ export default function PricingPage() {
               ))}
             </ul>
             <Link
-              to="/join-painter"
+              to="/join-decorator"
               className="group inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium py-4 px-8 transition-all duration-200 hover:opacity-90 hover:scale-[1.01]"
             >
-              Join as a Painter
+              Join as a Decorator
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>

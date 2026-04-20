@@ -80,17 +80,17 @@ function Hero() {
           style={{ animationDelay: "0.65s", animationFillMode: "both" }}
         >
           <Link
-            to="/post-job"
+            to="/choose-role"
             className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium text-base px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_hsl(18_88%_52%_/_0.4)]"
           >
-            Find a Painter
+            Get Started
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
           <Link
-            to="/join-painter"
+            to="/how-it-works/customers"
             className="inline-flex items-center gap-2 border border-white/40 text-white font-medium text-base px-8 py-4 w-full sm:w-auto justify-center hover:border-white/60 hover:bg-white/10 transition-all duration-200"
           >
-            Join as a Painter
+            Learn More
           </Link>
         </div>
 
@@ -208,10 +208,10 @@ function TrustSignals() {
   );
 }
 
-// ── For Painters ──────────────────────────────────────────────────────────────
+// ── For Decorators ──────────────────────────────────────────────────────────────
 const PAINTER_BENEFITS = [
   { title: "No subscription fees", description: "Zero upfront costs. Commission only on completed jobs — and it reduces as you grow." },
-  { title: "Matched jobs sent to you", description: "No bidding wars. The first verified painter to accept gets the job." },
+  { title: "Matched jobs sent to you", description: "No bidding wars. The first verified decorator to accept gets the job." },
   { title: "Secure, guaranteed payment", description: "Every job is backed by FCA-authorised escrow. You get paid when the job is done." },
 ];
 
@@ -226,19 +226,19 @@ function ForPainters() {
         <div className="grid md:grid-cols-2 gap-20 items-center">
           <div>
             <Label>
-              <span className="text-white/35">For painters</span>
+              <span className="text-white/35">For decorators</span>
             </Label>
-            <h2 className="font-display text-white mb-8">Grow your painting business</h2>
+            <h2 className="font-display text-white mb-8">Grow your decorating business</h2>
             <p className="text-white/50 leading-[1.8] mb-10 max-w-md">
-              Join thousands of professional painters who use PaintBookCo to
+              Join thousands of professional decorators who use PaintBookCo to
               fill their diary with matched, verified jobs — and get paid
               securely every time.
             </p>
             <Link
-              to="/join-painter"
+              to="/join-decorator"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-8 py-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_hsl(18_88%_52%_/_0.4)] group"
             >
-              Join as a Painter
+              Join as a Decorator
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>
@@ -282,10 +282,10 @@ function CTABand() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            to="/post-job"
+            to="/choose-role"
             className="group inline-flex items-center gap-2 bg-foreground text-background font-medium px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.02]"
           >
-            Post a Job Free
+            Get Started Now
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
           <Link

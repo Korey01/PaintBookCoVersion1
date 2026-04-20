@@ -55,7 +55,13 @@ export default function LoginPage() {
     }
 
     // Role-based redirect: check painters table
+    // Use service-role-free approach: set session first then query
     try {
+      await supabase.auth.setSession({
+        access_token: signInData.session!.access_token,
+        refresh_token: signInData.session!.refresh_token,
+      });
+
       const { data: painterRecord } = await supabase
         .from("painters")
         .select("id, kyc_status, is_active, insurance_submitted_at")

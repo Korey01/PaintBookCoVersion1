@@ -56,8 +56,11 @@ export default function LoginPage() {
 
     // Role-based redirect: check painters table
     try {
-      // Small wait for session to propagate
-      await new Promise(r => setTimeout(r, 300));
+      // Wait for session to fully propagate
+      await new Promise(r => setTimeout(r, 1000));
+
+      // Refresh session to ensure it is active
+      await supabase.auth.refreshSession();
 
       const { data: painterRecord, error: painterError } = await supabase
         .from("painters")
@@ -68,6 +71,7 @@ export default function LoginPage() {
       if (painterError) {
         console.error("Painter query error:", painterError);
       }
+      console.log("Painter record found:", painterRecord);
 
       setLoading(false);
 

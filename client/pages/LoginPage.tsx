@@ -61,14 +61,23 @@ export default function LoginPage() {
     try {
       const { data: painterRecord } = await supabase
         .from("painters")
-        .select("id, kyc_status, is_active")
+        .select("id, kyc_status, is_active, insurance_submitted_at")
         .eq("user_id", user.id)
         .maybeSingle();
 
       setLoading(false);
 
       if (painterRecord) {
-        navigate("/dashboard/painter");
+        // Check onboarding gates in order
+        if (painterRecord.kyc_status !== "approved") {
+          navigate("/kyc/painter");
+        } else if (!painterRecord.insurance_submitted_at) {
+          navigate("/dashboard/painter?tab=insurance");
+        } else if (!painterRecord.is_active) {
+          navigate("/dashboard/painter?tab=progress");
+        } else {
+          navigate("/dashboard/painter");
+        }
       } else {
         navigate("/dashboard/customer");
       }

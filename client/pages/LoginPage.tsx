@@ -26,7 +26,7 @@ export default function LoginPage() {
     setEmailUnconfirmed(false);
     setLoading(true);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError) {
       setLoading(false);
@@ -39,16 +39,13 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = signInData?.user;
 
     if (!user) {
       setLoading(false);
       setError("Could not retrieve user. Please try again.");
       return;
     }
-
-    // Small delay to allow session to fully establish
-    await new Promise(resolve => setTimeout(resolve, 500))
 
     // Admin check first
     if (user.email === "o.a.alashe@paintbookco.co.uk") {
@@ -68,18 +65,16 @@ export default function LoginPage() {
       setLoading(false);
 
       if (painterRecord) {
-        // Check onboarding gates in order
         if (painterRecord.kyc_status !== "approved") {
           navigate("/kyc/painter");
         } else if (!painterRecord.insurance_submitted_at) {
-          navigate("/dashboard/painter?tab=insurance");
-        } else if (!painterRecord.is_active) {
-          navigate("/dashboard/painter?tab=progress");
+          navigate("/dashboard/painter");
         } else {
           navigate("/dashboard/painter");
         }
       } else {
-        navigate("/dashboard/customer");
+        navigate("/login");
+        setError("No painter account found. Please register at /join-painter");
       }
     } catch (err) {
       setLoading(false);

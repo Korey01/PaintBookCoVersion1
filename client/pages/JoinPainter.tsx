@@ -275,9 +275,9 @@ export default function JoinPainter() {
 
       if (authError) throw authError;
 
-      // After signup, move to Step 5
+      // After signup, go to completed page
       setIsSubmitting(false);
-      setStep(5);
+      navigate("/join-painter/completed");
     } catch (error: any) {
       setIsSubmitting(false);
       setErrors({ submit: error.message || "Registration failed" });
@@ -738,12 +738,6 @@ export default function JoinPainter() {
                         className="flex-1 text-sm font-medium text-foreground hover:text-muted-foreground"
                       >
                         Check My Status
-                      </button>
-                      <button
-                        onClick={() => navigate("/dashboard/painter")}
-                        className="flex-1 text-sm font-medium text-foreground hover:text-muted-foreground"
-                      >
-                        Go to Dashboard
                       </button>
                     </div>
                   </div>

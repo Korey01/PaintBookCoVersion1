@@ -20,16 +20,11 @@ import { supabase } from "@/lib/supabase";
 
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
 
-async function redirectByRole(userId: string, navigate: ReturnType<typeof useNavigate>) {
-  const { data: painterRecord } = await supabase
-    .from("painters")
-    .select("id")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  // Redirect to KYC verification page instead of dashboard
-  // The KYC page will check status and redirect appropriately
-  navigate(painterRecord ? "/kyc/painter" : "/kyc/customer", { replace: true });
+async function redirectByRole(_userId: string, navigate: ReturnType<typeof useNavigate>) {
+  // Sign out so painter must log in fresh
+  // Login page handles all onboarding gates (KYC → Insurance → Dashboard)
+  await supabase.auth.signOut();
+  navigate("/login", { replace: true });
 }
 
 export default function ConfirmPage() {
@@ -89,7 +84,7 @@ export default function ConfirmPage() {
             <CheckCircle2 className="h-10 w-10 text-primary mx-auto mb-6" />
             <h1 className="font-display text-xl text-foreground mb-3">Email confirmed!</h1>
             <p className="text-sm text-muted-foreground leading-[1.8] mb-8">
-              Welcome to PaintBookCo. Taking you to your dashboard…
+              Your email has been confirmed. Taking you to sign in…
             </p>
           </>
         )}

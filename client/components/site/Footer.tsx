@@ -44,10 +44,10 @@ export default function Footer() {
             <p className="editorial-label text-white/30 mb-5">Product</p>
             <ul className="space-y-3">
               {[
-                { to: "/find-painter",  label: "Find a Painter" },
-                { to: "/post-job",      label: "Post a Job" },
-                { to: "/vestimator",    label: "Paint Vestimator" },
-                { to: "/join-painter",  label: "Join as a Painter" },
+                { to: "/post-job",        label: "Find a Decorator" },
+                { to: "/post-job",        label: "Post a Job" },
+                { to: "/vestimator",      label: "Paint Vestimator" },
+                { to: "/join-decorator",  label: "Join as a Decorator" },
                 { to: "/b2b/find-painter", label: "Commercial Projects" },
               ].map(({ to, label }) => (
                 <li key={to}>

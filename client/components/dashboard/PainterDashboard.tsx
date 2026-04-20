@@ -15,7 +15,172 @@ import {
   Lock,
   Download,
   Trash2,
+  Upload,
+  Shield,
 } from "lucide-react";
+
+function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    insurance_company: "",
+    insurance_policy_number: "",
+    insurance_policy_details: "",
+    insurance_expiry_date: "",
+  })
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [certificateUrl, setCertificateUrl] = useState("")
+  const [certificateSize, setCertificateSize] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState("")
+
+  const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200"
+  const labelClass = "block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1"
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0]
+    if (!selected) return
+    const allowed = ["application/pdf", "image/jpeg", "image/png"]
+    if (!allowed.includes(selected.type)) { setError("Only PDF, JPG and PNG files are accepted."); return }
+    if (selected.size > 5 * 1024 * 1024) { setError("File must be under 5MB."); return }
+    setError("")
+    setFile(selected)
+    setUploading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const fileExt = selected.name.split(".").pop()
+      const path = `${painter.id}/${Date.now()}_insurance.${fileExt}`
+      const { error: uploadError } = await supabase.storage
+        .from("painter-insurance")
+        .upload(path, selected, { upsert: true })
+      if (uploadError) { setError(`Upload failed: ${uploadError.message}`); setFile(null); setUploading(false); return }
+      const { data: { publicUrl } } = supabase.storage.from("painter-insurance").getPublicUrl(path)
+      setCertificateUrl(publicUrl)
+      setCertificateSize(selected.size)
+    } catch { setError("Upload failed. Please try again."); setFile(null) }
+    setUploading(false)
+  }
+
+  const handleSubmit = async () => {
+    if (!form.insurance_company) { setError("Insurance company is required."); return }
+    if (!form.insurance_policy_number) { setError("Policy number is required."); return }
+    if (!form.insurance_expiry_date) { setError("Expiry date is required."); return }
+    if (!certificateUrl) { setError("Please upload your insurance certificate."); return }
+    const expiry = new Date(form.insurance_expiry_date)
+    if (expiry <= new Date()) { setError("Your insurance has expired. Please renew before applying."); return }
+    setSubmitting(true)
+    setError("")
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-insurance`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            insurance_company: form.insurance_company,
+            insurance_policy_number: form.insurance_policy_number,
+            insurance_policy_details: form.insurance_policy_details || "Not provided",
+            insurance_expiry_date: form.insurance_expiry_date,
+            insurance_certificate_url: certificateUrl,
+            certificate_size_bytes: certificateSize,
+          })
+        }
+      )
+      const result = await res.json()
+      if (result.success) {
+        onSuccess()
+      } else {
+        setError(result.error || "Submission failed. Please try again.")
+      }
+    } catch { setError("An unexpected error occurred.") }
+    setSubmitting(false)
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="border-l-2 border-amber-500/50 pl-3">
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          You must hold valid public liability insurance of at least £2,000,000.
+          Your certificate will be verified by our team before your account is activated.
+        </p>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <div>
+        <label className={labelClass}>Insurance Company *</label>
+        <input type="text" value={form.insurance_company}
+          onChange={e => setForm(f => ({ ...f, insurance_company: e.target.value }))}
+          placeholder="e.g. Aviva, AXA" className={fieldClass} />
+      </div>
+      <div>
+        <label className={labelClass}>Policy Number *</label>
+        <input type="text" value={form.insurance_policy_number}
+          onChange={e => setForm(f => ({ ...f, insurance_policy_number: e.target.value }))}
+          placeholder="e.g. PLI-123456" className={fieldClass} />
+      </div>
+      <div>
+        <label className={labelClass}>Policy Details</label>
+        <textarea value={form.insurance_policy_details}
+          onChange={e => setForm(f => ({ ...f, insurance_policy_details: e.target.value }))}
+          placeholder="Coverage description (optional)" rows={2}
+          className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none" />
+      </div>
+      <div>
+        <label className={labelClass}>Expiry Date *</label>
+        <input type="date" value={form.insurance_expiry_date}
+          min={new Date().toISOString().split("T")[0]}
+          onChange={e => setForm(f => ({ ...f, insurance_expiry_date: e.target.value }))}
+          className={fieldClass} />
+      </div>
+      <div>
+        <label className={labelClass}>Certificate (PDF/JPG/PNG — max 5MB) *</label>
+        {!file ? (
+          <label className="block cursor-pointer mt-2">
+            <div className="border border-dashed border-border rounded-lg p-6 text-center hover:border-foreground/40 transition-colors">
+              <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Click to upload certificate</p>
+            </div>
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileSelect} className="hidden" />
+          </label>
+        ) : (
+          <div className="border border-border rounded-lg p-3 mt-2 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">{file.name}</p>
+              <p className={`text-xs mt-0.5 ${file.size > 5242880 ? "text-destructive" : "text-muted-foreground"}`}>
+                {(file.size / 1048576).toFixed(2)} MB / 5 MB max
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {uploading ? (
+                <div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+              ) : certificateUrl ? (
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+              ) : null}
+              <button onClick={() => { setFile(null); setCertificateUrl("") }}
+                className="text-muted-foreground hover:text-foreground text-xs">Remove</button>
+            </div>
+          </div>
+        )}
+        {certificateUrl && !uploading && (
+          <p className="text-xs text-green-400 mt-1">✓ Certificate uploaded successfully</p>
+        )}
+      </div>
+      <button onClick={handleSubmit} disabled={submitting || uploading || !certificateUrl}
+        className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+        {submitting ? (
+          <><div className="h-4 w-4 border-2 border-background/30 border-t-background rounded-full animate-spin" /> Submitting...</>
+        ) : (
+          <><Shield className="h-4 w-4" /> Submit Insurance</>
+        )}
+      </button>
+    </div>
+  )
+}
 
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
 
@@ -415,6 +580,26 @@ export function PainterDashboard() {
                         <p className="text-sm">{user?.email}</p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Insurance Section */}
+                  <div className="border border-border rounded-lg p-6">
+                    <h3 className="font-semibold mb-4">Insurance Details</h3>
+                    {painter.insurance_verified ? (
+                      <div className="border border-green-800/40 bg-green-900/20 rounded-lg p-4">
+                        <p className="text-green-400 font-medium">✓ Insurance Verified</p>
+                        <p className="text-sm text-muted-foreground mt-1">{painter.insurance_company} — {painter.insurance_policy_number}</p>
+                        <p className="text-sm text-muted-foreground">Expires: {painter.insurance_expiry_date}</p>
+                      </div>
+                    ) : painter.insurance_submitted_at ? (
+                      <div className="border border-amber-800/40 bg-amber-900/20 rounded-lg p-4">
+                        <p className="text-amber-400 font-medium">⏳ Insurance Under Review</p>
+                        <p className="text-sm text-muted-foreground mt-1">Submitted {new Date(painter.insurance_submitted_at).toLocaleDateString()}</p>
+                        <p className="text-sm text-muted-foreground">Our team will verify within 1-2 working days.</p>
+                      </div>
+                    ) : (
+                      <InsuranceUploadForm painter={painter} onSuccess={loadPainter} />
+                    )}
                   </div>
 
                   {/* Account Actions */}

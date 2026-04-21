@@ -84,14 +84,14 @@ export default function KYCPainter() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-6 py-5 border-b border-border">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+      <header className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border">
         <a href="/">
-          <img src="/logo.png" alt="PaintBookCo" className="h-8 object-contain" />
+          <img src="/logo.png" alt="PaintBookCo" className="h-8 object-contain max-w-[140px]" />
         </a>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <div className="max-w-md w-full space-y-8">
 
           {/* Status: Pending — show start button */}

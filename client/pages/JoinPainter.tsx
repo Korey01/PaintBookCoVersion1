@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { User, Briefcase, Shield, FileCheck, Fingerprint, CheckCircle2, Mail, Upload, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
-const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+// text-base (16px) prevents iOS Safari from auto-zooming on input focus
+const fieldClass = "w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
 const SPECIALISMS = [
   "Interior Painting",
@@ -301,10 +302,10 @@ export default function JoinPainter() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-6 py-5 border-b border-border">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+      <header className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border">
         <a href="/">
-          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain max-w-[140px]" />
         </a>
       </header>
 
@@ -316,7 +317,7 @@ export default function JoinPainter() {
         />
       </div>
 
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <div className="w-full max-w-sm">
           {/* Step 1 - Personal Details */}
           {step === 1 && (
@@ -569,7 +570,7 @@ export default function JoinPainter() {
                       <textarea
                         value={policyDetails}
                         onChange={(e) => setPolicyDetails(e.target.value)}
-                        className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
+                        className="w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
                         rows={3}
                         placeholder="Coverage details..."
                       />

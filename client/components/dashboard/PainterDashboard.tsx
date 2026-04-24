@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import {
@@ -11,8 +11,6 @@ import {
   Settings,
   Bell,
   LogOut,
-  MessageCircle,
-  Lock,
   Download,
   Trash2,
   Upload,
@@ -33,7 +31,8 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200"
+  // text-base (16px) prevents iOS Safari from auto-zooming on focus
+  const fieldClass = "w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200"
   const labelClass = "block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1"
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,7 +46,7 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
     setUploading(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      if (!session) { setError("Session expired. Please log in again."); setFile(null); setUploading(false); return }
       const fileExt = selected.name.split(".").pop()
       const path = `${painter.id}/${Date.now()}_insurance.${fileExt}`
       const { error: uploadError } = await supabase.storage
@@ -57,7 +56,7 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
       const { data: { publicUrl } } = supabase.storage.from("painter-insurance").getPublicUrl(path)
       setCertificateUrl(publicUrl)
       setCertificateSize(selected.size)
-    } catch { setError("Upload failed. Please try again."); setFile(null) }
+    } catch (err) { console.error("Insurance file upload error:", err); setError("Upload failed. Please try again."); setFile(null) }
     setUploading(false)
   }
 
@@ -72,7 +71,7 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
     setError("")
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      if (!session) { setError("Session expired. Please log in again."); setSubmitting(false); return }
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-insurance`,
         {
@@ -98,7 +97,7 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
       } else {
         setError(result.error || "Submission failed. Please try again.")
       }
-    } catch { setError("An unexpected error occurred.") }
+    } catch (err) { console.error("Insurance submit error:", err); setError("An unexpected error occurred.") }
     setSubmitting(false)
   }
 
@@ -128,7 +127,7 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
         <textarea value={form.insurance_policy_details}
           onChange={e => setForm(f => ({ ...f, insurance_policy_details: e.target.value }))}
           placeholder="Coverage description (optional)" rows={2}
-          className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none" />
+          className="w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none" />
       </div>
       <div>
         <label className={labelClass}>Expiry Date *</label>
@@ -148,21 +147,21 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
             <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileSelect} className="hidden" />
           </label>
         ) : (
-          <div className="border border-border rounded-lg p-3 mt-2 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">{file.name}</p>
+          <div className="border border-border rounded-lg p-3 mt-2 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">{file.name}</p>
               <p className={`text-xs mt-0.5 ${file.size > 5242880 ? "text-destructive" : "text-muted-foreground"}`}>
                 {(file.size / 1048576).toFixed(2)} MB / 5 MB max
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {uploading ? (
                 <div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
               ) : certificateUrl ? (
                 <CheckCircle2 className="h-4 w-4 text-green-400" />
               ) : null}
               <button onClick={() => { setFile(null); setCertificateUrl("") }}
-                className="text-muted-foreground hover:text-foreground text-xs">Remove</button>
+                className="text-muted-foreground hover:text-foreground text-xs min-h-[44px] px-2">Remove</button>
             </div>
           </div>
         )}
@@ -171,7 +170,7 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
         )}
       </div>
       <button onClick={handleSubmit} disabled={submitting || uploading || !certificateUrl}
-        className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+        className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 min-h-[44px]">
         {submitting ? (
           <><div className="h-4 w-4 border-2 border-background/30 border-t-background rounded-full animate-spin" /> Submitting...</>
         ) : (
@@ -180,6 +179,31 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
       </button>
     </div>
   )
+}
+
+class InsuranceBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="border border-destructive/40 rounded-lg p-4">
+          <p className="text-destructive text-sm">
+            Insurance form failed to load. Please refresh the page and try again.
+          </p>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
@@ -209,7 +233,6 @@ export function PainterDashboard() {
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(() => {
     const tabParam = searchParams.get("tab")
-    // Map convenience aliases to real tab IDs
     if (tabParam === "insurance") return "profile"
     if (tabParam === "progress") return "registration"
     const validTabs = ["overview","registration","available-jobs","my-jobs","gallery","availability","profile","notifications"]
@@ -232,15 +255,12 @@ export function PainterDashboard() {
         navigate("/login");
         return;
       }
-
       setUser(user);
-
       const { data: painterData } = await supabase
         .from("painters")
         .select("*")
         .eq("user_id", user.id)
         .single();
-
       if (painterData) {
         setPainter(painterData);
       }
@@ -284,35 +304,34 @@ export function PainterDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       {/* Header */}
-      <header className="border-b border-border px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/">
-            <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+      <header className="border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <a href="/" className="flex-shrink-0">
+            <img src={LOGO} alt="PaintBookCo" className="h-7 sm:h-8 object-contain max-w-[140px]" />
           </a>
-
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <button
               onClick={() => {}}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
             >
               Contact Us
             </button>
             <button
               onClick={handleSignOut}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 sm:gap-2 min-h-[44px] px-1"
             >
               <LogOut className="h-4 w-4" />
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex">
-        {/* Sidebar */}
-        <aside className="w-56 border-r border-border hidden lg:flex flex-col bg-card/30">
+      <div className="flex-1 flex overflow-x-hidden">
+        {/* Sidebar — desktop only */}
+        <aside className="w-56 border-r border-border hidden lg:flex flex-col bg-card/30 flex-shrink-0">
           <nav className="space-y-1 p-4">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
@@ -324,7 +343,7 @@ export function PainterDashboard() {
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4 flex-shrink-0" />
                 {label}
               </button>
             ))}
@@ -332,33 +351,35 @@ export function PainterDashboard() {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto">
-          <div className="max-w-6xl mx-auto p-6 lg:p-12">
+        <main className="flex-1 overflow-auto min-w-0">
+          {/* pb-20 reserves space above the mobile bottom tab bar */}
+          <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:p-12 pb-24 lg:pb-12">
+
             {/* TAB 1: Overview */}
             {activeTab === "overview" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">Overview</h1>
-                  <p className="text-muted-foreground">Welcome back, {painter.first_name}</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Overview</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {painter.first_name}</p>
                 </div>
 
                 {/* Insurance required banner */}
                 {painter.kyc_status === "approved" && !painter.insurance_submitted_at && (
-                  <div className="border border-amber-800/40 bg-amber-900/20 rounded-xl p-5">
-                    <div className="flex items-start justify-between gap-4">
+                  <div className="border border-amber-800/40 bg-amber-900/20 rounded-xl p-4 sm:p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                       <div>
-                        <p className="font-semibold text-amber-400 mb-1">
+                        <p className="font-semibold text-amber-400 mb-1 text-sm sm:text-base">
                           ✓ Identity Verified — Submit Insurance to Go Live
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Your KYC has been approved. The next step is to submit 
-                          your public liability insurance certificate. Once verified 
+                          Your KYC has been approved. The next step is to submit
+                          your public liability insurance certificate. Once verified
                           by our team, your account will be activated.
                         </p>
                       </div>
                       <button
                         onClick={() => setActiveTab("profile")}
-                        className="flex-shrink-0 bg-amber-500 text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-amber-400 transition-colors whitespace-nowrap"
+                        className="w-full sm:w-auto flex-shrink-0 bg-amber-500 text-black px-4 py-2.5 rounded-md text-sm font-medium hover:bg-amber-400 transition-colors whitespace-nowrap min-h-[44px]"
                       >
                         Submit Insurance →
                       </button>
@@ -368,44 +389,44 @@ export function PainterDashboard() {
 
                 {/* Insurance under review banner */}
                 {painter.kyc_status === "approved" && painter.insurance_submitted_at && !painter.insurance_verified && !painter.is_active && (
-                  <div className="border border-blue-800/40 bg-blue-900/20 rounded-xl p-5">
-                    <p className="font-semibold text-blue-400 mb-1">
+                  <div className="border border-blue-800/40 bg-blue-900/20 rounded-xl p-4 sm:p-5">
+                    <p className="font-semibold text-blue-400 mb-1 text-sm sm:text-base">
                       ✓ Insurance Submitted — Under Review
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Our team is verifying your insurance certificate. 
-                      You will receive an email when your account is activated. 
+                      Our team is verifying your insurance certificate.
+                      You will receive an email when your account is activated.
                       This typically takes 1-2 working days.
                     </p>
                   </div>
                 )}
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="border border-border rounded-lg p-4 bg-card/50">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Total Earnings</p>
-                    <p className="text-2xl font-bold">£{painter.total_earnings || 0}</p>
+                {/* Stats Grid — 2-col on mobile, 4-col on md+ */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="border border-border rounded-lg p-3 sm:p-4 bg-card/50">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1 sm:mb-2">Total Earnings</p>
+                    <p className="text-xl sm:text-2xl font-bold">£{painter.total_earnings || 0}</p>
                   </div>
-                  <div className="border border-border rounded-lg p-4 bg-card/50">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Completed Jobs</p>
-                    <p className="text-2xl font-bold">{painter.completed_jobs || 0}</p>
+                  <div className="border border-border rounded-lg p-3 sm:p-4 bg-card/50">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1 sm:mb-2">Completed Jobs</p>
+                    <p className="text-xl sm:text-2xl font-bold">{painter.completed_jobs || 0}</p>
                   </div>
-                  <div className="border border-border rounded-lg p-4 bg-card/50">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Active Jobs</p>
-                    <p className="text-2xl font-bold">{painter.active_jobs || 0}</p>
+                  <div className="border border-border rounded-lg p-3 sm:p-4 bg-card/50">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1 sm:mb-2">Active Jobs</p>
+                    <p className="text-xl sm:text-2xl font-bold">{painter.active_jobs || 0}</p>
                   </div>
-                  <div className="border border-border rounded-lg p-4 bg-card/50">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Average Rating</p>
-                    <p className="text-2xl font-bold">{painter.avg_rating || 0}/5</p>
+                  <div className="border border-border rounded-lg p-3 sm:p-4 bg-card/50">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1 sm:mb-2">Average Rating</p>
+                    <p className="text-xl sm:text-2xl font-bold">{painter.avg_rating || 0}/5</p>
                   </div>
                 </div>
 
                 {/* Commission tier */}
-                <div className="border border-border rounded-lg p-6">
-                  <h3 className="font-semibold mb-4">Commission Tier</h3>
-                  <div className="flex gap-4 items-center mb-4">
+                <div className="border border-border rounded-lg p-4 sm:p-6">
+                  <h3 className="font-semibold mb-3 sm:mb-4">Commission Tier</h3>
+                  <div className="flex gap-4 items-center mb-3 sm:mb-4">
                     <div
-                      className={`px-4 py-2 rounded text-sm font-medium ${
+                      className={`px-3 sm:px-4 py-2 rounded text-sm font-medium ${
                         (painter.completed_jobs || 0) < 5
                           ? "bg-amber-500/20 text-amber-400"
                           : (painter.completed_jobs || 0) < 10
@@ -434,14 +455,14 @@ export function PainterDashboard() {
 
             {/* TAB 2: Registration Progress */}
             {activeTab === "registration" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">Registration Progress</h1>
-                  <p className="text-muted-foreground">Complete your profile to start receiving jobs</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Registration Progress</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Complete your profile to start receiving jobs</p>
                 </div>
 
                 <div className="space-y-4">
-                  {REGISTRATION_STEPS.map((step, index) => {
+                  {REGISTRATION_STEPS.map((step) => {
                     let isComplete = false;
                     if (step.key === "account_created") isComplete = true;
                     else if (step.key === "email_confirmed") isComplete = user?.email_confirmed_at !== null;
@@ -451,9 +472,9 @@ export function PainterDashboard() {
                     else if (step.key === "is_active") isComplete = painter?.is_active === true;
 
                     return (
-                      <div key={step.number} className="flex gap-4 items-start">
+                      <div key={step.number} className="flex gap-3 sm:gap-4 items-start">
                         <div
-                          className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                          className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
                             isComplete
                               ? "bg-green-500/20 text-green-400 border border-green-500/30"
                               : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
@@ -461,8 +482,8 @@ export function PainterDashboard() {
                         >
                           {isComplete ? "✓" : step.number}
                         </div>
-                        <div className="flex-1 pt-2">
-                          <p className="font-medium">{step.label}</p>
+                        <div className="flex-1 pt-1.5 sm:pt-2">
+                          <p className="font-medium text-sm sm:text-base">{step.label}</p>
                           <p className="text-xs text-muted-foreground">
                             {isComplete ? "Completed ✓" : "Pending"}
                           </p>
@@ -490,12 +511,11 @@ export function PainterDashboard() {
 
             {/* TAB 3: Available Jobs */}
             {activeTab === "available-jobs" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">Available Jobs</h1>
-                  <p className="text-muted-foreground">Jobs near you looking for painters</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Available Jobs</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Jobs near you looking for painters</p>
                 </div>
-
                 <div className="bg-accent/10 border border-border rounded-lg p-4">
                   <p className="text-sm">
                     {!painter.is_active
@@ -508,12 +528,11 @@ export function PainterDashboard() {
 
             {/* TAB 4: My Jobs */}
             {activeTab === "my-jobs" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">My Jobs</h1>
-                  <p className="text-muted-foreground">Track your current and past jobs</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">My Jobs</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Track your current and past jobs</p>
                 </div>
-
                 <div className="bg-accent/10 border border-border rounded-lg p-4">
                   <p className="text-sm">No jobs yet</p>
                 </div>
@@ -522,12 +541,11 @@ export function PainterDashboard() {
 
             {/* TAB 5: Gallery */}
             {activeTab === "gallery" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">Gallery</h1>
-                  <p className="text-muted-foreground">Showcase your best work</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Gallery</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Showcase your best work</p>
                 </div>
-
                 <div className="bg-accent/10 border border-border rounded-lg p-4">
                   <p className="text-sm">Gallery feature coming soon</p>
                 </div>
@@ -536,12 +554,11 @@ export function PainterDashboard() {
 
             {/* TAB 6: Availability */}
             {activeTab === "availability" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">Availability</h1>
-                  <p className="text-muted-foreground">Set when you're available for jobs</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Availability</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Set when you're available for jobs</p>
                 </div>
-
                 <div className="bg-accent/10 border border-border rounded-lg p-4">
                   <p className="text-sm">Availability calendar coming soon</p>
                 </div>
@@ -550,16 +567,16 @@ export function PainterDashboard() {
 
             {/* TAB 7: Profile & Settings */}
             {activeTab === "profile" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">Profile & Settings</h1>
-                  <p className="text-muted-foreground">Manage your account and preferences</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Profile & Settings</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Manage your account and preferences</p>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Personal Details */}
-                  <div className="border border-border rounded-lg p-6">
-                    <h3 className="font-semibold mb-4">Personal Details</h3>
+                  <div className="border border-border rounded-lg p-4 sm:p-6">
+                    <h3 className="font-semibold mb-3 sm:mb-4">Personal Details</h3>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
@@ -583,8 +600,8 @@ export function PainterDashboard() {
                   </div>
 
                   {/* Insurance Section */}
-                  <div className="border border-border rounded-lg p-6">
-                    <h3 className="font-semibold mb-4">Insurance Details</h3>
+                  <div className="border border-border rounded-lg p-4 sm:p-6">
+                    <h3 className="font-semibold mb-3 sm:mb-4">Insurance Details</h3>
                     {painter.insurance_verified ? (
                       <div className="border border-green-800/40 bg-green-900/20 rounded-lg p-4">
                         <p className="text-green-400 font-medium">✓ Insurance Verified</p>
@@ -598,19 +615,21 @@ export function PainterDashboard() {
                         <p className="text-sm text-muted-foreground">Our team will verify within 1-2 working days.</p>
                       </div>
                     ) : (
-                      <InsuranceUploadForm painter={painter} onSuccess={loadPainter} />
+                      <InsuranceBoundary>
+                        <InsuranceUploadForm painter={painter} onSuccess={loadDashboard} />
+                      </InsuranceBoundary>
                     )}
                   </div>
 
                   {/* Account Actions */}
-                  <div className="border border-border rounded-lg p-6">
-                    <h3 className="font-semibold mb-4">Account Actions</h3>
+                  <div className="border border-border rounded-lg p-4 sm:p-6">
+                    <h3 className="font-semibold mb-3 sm:mb-4">Account Actions</h3>
                     <div className="space-y-2">
-                      <button className="w-full flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground p-3 rounded border border-border hover:bg-accent transition-colors">
+                      <button className="w-full flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground p-3 rounded border border-border hover:bg-accent transition-colors min-h-[44px]">
                         <Download className="h-4 w-4" />
                         Download My Data
                       </button>
-                      <button className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors">
+                      <button className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors min-h-[44px]">
                         <Trash2 className="h-4 w-4" />
                         Delete Account
                       </button>
@@ -622,12 +641,11 @@ export function PainterDashboard() {
 
             {/* TAB 8: Notifications */}
             {activeTab === "notifications" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-2">Notifications</h1>
-                  <p className="text-muted-foreground">Manage your notification preferences</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Notifications</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Manage your notification preferences</p>
                 </div>
-
                 <div className="bg-accent/10 border border-border rounded-lg p-4">
                   <p className="text-sm">No notifications yet</p>
                 </div>
@@ -636,6 +654,25 @@ export function PainterDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Mobile bottom tab bar — icons only, horizontal scroll */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
+        <div className="flex overflow-x-auto">
+          {TABS.map(({ id, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={`flex-shrink-0 flex items-center justify-center px-3 min-w-[56px] min-h-[56px] transition-colors ${
+                activeTab === id
+                  ? "text-foreground"
+                  : "text-muted-foreground"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

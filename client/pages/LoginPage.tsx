@@ -104,14 +104,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-6 py-5 border-b border-border">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+      <header className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border">
         <Link to="/">
-          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain max-w-[140px]" />
         </Link>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-semibold tracking-tight mb-1">Welcome back</h1>
           <p className="text-sm text-muted-foreground mb-8">Sign in to your PaintBookCo account</p>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

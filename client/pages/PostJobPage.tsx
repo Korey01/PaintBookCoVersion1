@@ -32,7 +32,8 @@ type Room = {
   windows?: number;
 };
 
-const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+// text-base (16px) prevents iOS Safari from auto-zooming on input focus
+const fieldClass = "w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 const labelClass = "block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider";
 
 const TOTAL_STEPS = 6;
@@ -162,7 +163,7 @@ export default function PostJobPage() {
             <img src="/logo.png" alt="PaintBookCo" className="h-8 object-contain" />
           </a>
         </header>
-        <main className="flex-1 flex items-center justify-center px-6">
+        <main className="flex-1 flex items-center justify-center px-4 sm:px-6">
           <div className="max-w-md w-full text-center space-y-8">
             <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
               <CheckCircle2 className="h-8 w-8 text-green-600" />
@@ -209,11 +210,11 @@ export default function PostJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-6 py-5 border-b border-border">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+      <header className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border">
         <div className="flex items-center justify-between max-w-md mx-auto">
           <a href="/">
-            <img src="/logo.png" alt="PaintBookCo" className="h-8 object-contain" />
+            <img src="/logo.png" alt="PaintBookCo" className="h-8 object-contain max-w-[140px]" />
           </a>
           <span className="text-xs text-muted-foreground">
             Step {step} of {TOTAL_STEPS}
@@ -229,7 +230,7 @@ export default function PostJobPage() {
         />
       </div>
 
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <div className="max-w-md w-full">
 
           {/* Step indicator */}
@@ -352,7 +353,7 @@ export default function PostJobPage() {
                       onChange={e => setDescription(e.target.value)}
                       placeholder="Describe what needs to be painted, any specific requirements..."
                       rows={4}
-                      className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
+                      className="w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
                     />
                   </div>
                   <div>
@@ -373,7 +374,7 @@ export default function PostJobPage() {
                           onChange={e => setDefectDetails(e.target.value)}
                           placeholder="e.g. One wall needs re-plastering before painting..."
                           rows={2}
-                          className="w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
+                          className="w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200 resize-none"
                         />
                       </div>
                     )}

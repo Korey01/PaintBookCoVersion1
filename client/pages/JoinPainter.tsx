@@ -148,6 +148,7 @@ export default function JoinPainter() {
   const [policyDetails, setPolicyDetails] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [certificateFile, setCertificateFile] = useState<{ name: string; size: number } | null>(null);
+  const [actualCertificateFile, setActualCertificateFile] = useState<File | null>(null);
 
   // Step 4 - Terms
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -183,6 +184,7 @@ export default function JoinPainter() {
         return;
       }
       setCertificateFile({ name: file.name, size: file.size });
+      setActualCertificateFile(file);
       setErrors((prev) => {
         const { certificate, ...rest } = prev;
         return rest;
@@ -290,6 +292,61 @@ export default function JoinPainter() {
 
       if (!data.success) {
         throw new Error(data.error || "Registration failed");
+      }
+
+      // If painter uploaded insurance at registration, submit it now
+      if (insuranceOption === "now" && actualCertificateFile) {
+        try {
+          // Sign in to get session
+          const { data: signInData } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (signInData?.session) {
+            // Upload certificate to storage
+            const fileExt = actualCertificateFile.name.split(".").pop();
+            const tempId = crypto.randomUUID();
+            const path = `${tempId}/${Date.now()}_insurance.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from("painter-insurance")
+              .upload(path, actualCertificateFile, { upsert: true });
+
+            if (!uploadError) {
+              const { data: { publicUrl } } = supabase.storage
+                .from("painter-insurance")
+                .getPublicUrl(path);
+
+              // Submit insurance details
+              await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-insurance`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${signInData.session.access_token}`,
+                    "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                  },
+                  body: JSON.stringify({
+                    insurance_company: insuranceCompany,
+                    insurance_policy_number: policyNumber,
+                    insurance_policy_details: policyDetails || "Not provided",
+                    insurance_expiry_date: expiryDate,
+                    insurance_certificate_url: publicUrl,
+                    certificate_size_bytes: actualCertificateFile.size,
+                  })
+                }
+              );
+
+              // Sign out so user goes through proper login flow
+              await supabase.auth.signOut();
+            }
+          }
+        } catch (insuranceErr) {
+          console.error("Insurance submission error:", insuranceErr);
+          // Don't block registration if insurance fails
+        }
       }
 
       // After signup, go to completed page

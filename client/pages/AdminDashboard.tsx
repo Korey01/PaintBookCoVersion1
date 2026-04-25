@@ -396,10 +396,30 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       {p.insurance_certificate_url && (
-                        <a href={p.insurance_certificate_url} target="_blank" rel="noopener noreferrer"
-                          className="text-sm text-blue-400 underline hover:text-blue-300">
+                        <button
+                          onClick={async () => {
+                            try {
+                              // Extract path from URL
+                              const url = p.insurance_certificate_url;
+                              const pathMatch = url.match(/painter-insurance\/(.+)$/);
+                              if (pathMatch) {
+                                const { data } = await supabase.storage
+                                  .from("painter-insurance")
+                                  .createSignedUrl(pathMatch[1], 300);
+                                if (data?.signedUrl) {
+                                  window.open(data.signedUrl, "_blank");
+                                }
+                              } else {
+                                window.open(url, "_blank");
+                              }
+                            } catch {
+                              window.open(p.insurance_certificate_url, "_blank");
+                            }
+                          }}
+                          className="text-sm text-blue-400 underline hover:text-blue-300"
+                        >
                           View Certificate →
-                        </a>
+                        </button>
                       )}
                       {rejectingId === `ins-${p.id}` ? (
                         <div className="space-y-2">

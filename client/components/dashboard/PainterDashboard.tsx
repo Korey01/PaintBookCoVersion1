@@ -206,6 +206,166 @@ class InsuranceBoundary extends React.Component<
   }
 }
 
+function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }) {
+  const [jobs, setJobs] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [passedJobs, setPassedJobs] = React.useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("pbc_passed_jobs") || "[]") } catch { return [] }
+  })
+  const [chatting, setChatting] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (painter?.is_active) loadJobs()
+    else setLoading(false)
+  }, [painter?.id])
+
+  const loadJobs = async () => {
+    setLoading(true)
+    try {
+      const { data } = await supabase
+        .from("sessions")
+        .select("id, job_type, postcode, rooms, job_description, has_structural_defects, created_at, status")
+        .eq("status", "job_posted")
+        .eq("converted_to_transaction", false)
+        .order("created_at", { ascending: false })
+        .limit(20)
+      setJobs((data || []).filter((j: any) => !passedJobs.includes(j.id)))
+    } catch (err) {
+      console.error("Failed to load jobs:", err)
+    }
+    setLoading(false)
+  }
+
+  const handlePass = (jobId: string) => {
+    const updated = [...passedJobs, jobId]
+    setPassedJobs(updated)
+    localStorage.setItem("pbc_passed_jobs", JSON.stringify(updated))
+    setJobs(prev => prev.filter(j => j.id !== jobId))
+  }
+
+  const handleChat = async (job: any) => {
+    setChatting(job.id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setChatting(null); return }
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/initiate-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ session_id: job.id })
+        }
+      )
+      const result = await res.json()
+      if (result.success) {
+        window.open(result.painter_chat_link, "_blank")
+        setJobs(prev => prev.filter(j => j.id !== job.id))
+      } else {
+        alert(result.error || "Failed to start chat")
+      }
+    } catch {
+      alert("Failed to start chat. Please try again.")
+    }
+    setChatting(null)
+  }
+
+  if (!painter?.is_active) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Available Jobs</h1>
+          <p className="text-muted-foreground text-sm">Jobs near you looking for painters</p>
+        </div>
+        <div className="border border-border rounded-xl p-8 text-center space-y-3">
+          <div className="text-4xl">🔒</div>
+          <p className="font-medium">Complete your profile to unlock jobs</p>
+          <p className="text-sm text-muted-foreground">
+            You need KYC approval, insurance verification and account activation.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Available Jobs</h1>
+          <p className="text-muted-foreground text-sm">Jobs near you looking for painters</p>
+        </div>
+        <button onClick={loadJobs}
+          className="text-sm border border-border px-3 py-1.5 rounded hover:bg-accent transition-colors">
+          Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+        </div>
+      ) : jobs.length === 0 ? (
+        <div className="border border-border rounded-xl p-8 text-center space-y-2">
+          <p className="font-medium">No jobs available right now</p>
+          <p className="text-sm text-muted-foreground">
+            New jobs near {painter.postcode} will appear here automatically.
+          </p>
+        </div>
+      ) : jobs.map(job => (
+        <div key={job.id} className="border border-border rounded-xl p-5 space-y-4 hover:border-foreground/30 transition-colors">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{job.job_type}</span>
+                {job.has_structural_defects && (
+                  <span className="text-xs bg-amber-900/30 text-amber-400 border border-amber-800/40 px-2 py-0.5 rounded">
+                    ⚠️ Structural issues
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                📍 {job.postcode?.split(" ")[0] || "Unknown area"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                🏠 {job.rooms?.length || 0} room{(job.rooms?.length || 0) !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {new Date(job.created_at).toLocaleDateString("en-GB")}
+            </span>
+          </div>
+          {job.job_description && (
+            <p className="text-sm text-muted-foreground border-t border-border pt-3 line-clamp-2">
+              {job.job_description.slice(0, 120)}{job.job_description.length > 120 ? "..." : ""}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleChat(job)}
+              disabled={chatting === job.id}
+              className="flex-1 bg-foreground text-background py-2.5 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {chatting === job.id ? (
+                <><div className="h-3.5 w-3.5 border-2 border-background/30 border-t-background rounded-full animate-spin" /> Connecting...</>
+              ) : "💬 Chat with Customer"}
+            </button>
+            <button
+              onClick={() => handlePass(job.id)}
+              className="px-4 py-2.5 border border-border text-muted-foreground rounded-md text-sm hover:bg-accent transition-colors"
+            >
+              Pass
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
 
 const TABS = [
@@ -273,7 +433,7 @@ export function PainterDashboard() {
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    navigate("/login");
+    window.location.href = "/login";
   }
 
   if (loading) {

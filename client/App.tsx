@@ -5,73 +5,76 @@ import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 
 // ── Legacy layout + pages ──────────────────────────────────────────────────────
 import Layout from "@/components/site/Layout";
-import Index from "./pages/Index";
-import FindPainters from "./pages/FindPainters";
-import Estimator from "./pages/Estimator";
-import PostJob, { PostJobConfirmation } from "./pages/PostJob";
-import PainterProfile from "./pages/PainterProfile";
-import Checkout from "./pages/Checkout";
-import CheckoutConfirmation from "./pages/CheckoutConfirmation";
-import TrustSafety from "./pages/TrustSafety";
-import EscrowCustomerDemo from "./pages/EscrowCustomerDemo";
-import EscrowPainterDemo from "./pages/EscrowPainterDemo";
-import PaintVisualizer from "./pages/PaintVisualizer";
-import VerifyEmail from "./pages/VerifyEmail";
-import DashboardRouter from "./pages/DashboardRouter";
-import Disputes from "./pages/Disputes";
-import PaymentHistory from "./pages/PaymentHistory";
-import Account from "./pages/Account";
-import Messages from "./pages/Messages";
-import Favorites from "./pages/Favorites";
-import Estimates from "./pages/Estimates";
-import Admin from "./pages/Admin";
-import { PainterOnboarding } from "./pages/PainterOnboarding";
+const Index = lazy(() => import("./pages/Index"));
+const FindPainters = lazy(() => import("./pages/FindPainters"));
+const Estimator = lazy(() => import("./pages/Estimator"));
+const PostJob = lazy(() => import("./pages/PostJob"));
+const PostJobConfirmation = lazy(() => import("./pages/PostJob").then(m => ({ default: m.PostJobConfirmation })));
+const PainterProfile = lazy(() => import("./pages/PainterProfile"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const CheckoutConfirmation = lazy(() => import("./pages/CheckoutConfirmation"));
+const TrustSafety = lazy(() => import("./pages/TrustSafety"));
+const EscrowCustomerDemo = lazy(() => import("./pages/EscrowCustomerDemo"));
+const EscrowPainterDemo = lazy(() => import("./pages/EscrowPainterDemo"));
+const PaintVisualizer = lazy(() => import("./pages/PaintVisualizer"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const DashboardRouter = lazy(() => import("./pages/DashboardRouter"));
+const Disputes = lazy(() => import("./pages/Disputes"));
+const PaymentHistory = lazy(() => import("./pages/PaymentHistory"));
+const Account = lazy(() => import("./pages/Account"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const Estimates = lazy(() => import("./pages/Estimates"));
+const Admin = lazy(() => import("./pages/Admin"));
+const PainterOnboarding = lazy(() => import("./pages/PainterOnboarding").then(m => ({ default: m.PainterOnboarding })));
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminFallback from "./pages/AdminFallback";
-import AuthPage from "./pages/AuthPage";
-import B2BFindPainter from "./pages/B2BFindPainter";
-import B2BConsultation from "./pages/B2BConsultation";
-import B2BConfirmation from "./pages/B2BConfirmation";
-import B2BConsultationConfirmation from "./pages/B2BConsultationConfirmation";
-import CommercialTestimonials from "./pages/CommercialTestimonials";
-import JoinPainter, { JoinPainterComplete } from "./pages/JoinPainter";
+const AdminFallback = lazy(() => import("./pages/AdminFallback"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const B2BFindPainter = lazy(() => import("./pages/B2BFindPainter"));
+const B2BConsultation = lazy(() => import("./pages/B2BConsultation"));
+const B2BConfirmation = lazy(() => import("./pages/B2BConfirmation"));
+const B2BConsultationConfirmation = lazy(() => import("./pages/B2BConsultationConfirmation"));
+const CommercialTestimonials = lazy(() => import("./pages/CommercialTestimonials"));
+const JoinPainter = lazy(() => import("./pages/JoinPainter"));
+const JoinPainterComplete = lazy(() => import("./pages/JoinPainter").then(m => ({ default: m.JoinPainterComplete })));
 
 // ── New public layout + pages ──────────────────────────────────────────────────
-import PublicLayout from "@/components/layout/PublicLayout";
+const PublicLayout = lazy(() => import("@/components/layout/PublicLayout"));
 import HomePage from "./pages/HomePage";
-import HowItWorksCustomers from "./pages/HowItWorksCustomers";
-import HowItWorksPainters from "./pages/HowItWorksPainters";
-import PricingPage from "./pages/PricingPage";
-import AboutPage from "./pages/AboutPage";
-import HelpPage from "./pages/HelpPage";
-import ContactPage from "./pages/ContactPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import TermsPage from "./pages/TermsPage";
-import CookiePolicyPage from "./pages/CookiePolicyPage";
-import NotFoundPage from "./pages/NotFoundPage";
-import RegisterCustomer from "./pages/RegisterCustomer";
+const HowItWorksCustomers = lazy(() => import("./pages/HowItWorksCustomers"));
+const HowItWorksPainters = lazy(() => import("./pages/HowItWorksPainters"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const HelpPage = lazy(() => import("./pages/HelpPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const CookiePolicyPage = lazy(() => import("./pages/CookiePolicyPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+const RegisterCustomer = lazy(() => import("./pages/RegisterCustomer"));
 import LoginPage from "./pages/LoginPage";
-import ResetPassword from "./pages/ResetPassword";
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 import ConfirmPage from "./pages/ConfirmPage";
-import CustomerDashboardPage from "./pages/CustomerDashboardPage";
-import PainterDashboardPage from "./pages/PainterDashboardPage";
+const CustomerDashboardPage = lazy(() => import("./pages/CustomerDashboardPage"));
+const PainterDashboardPage = lazy(() => import("./pages/PainterDashboardPage"));
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
-import PostJobPage from "./pages/PostJobPage";
-import ChatPage from "./pages/ChatPage";
-import PaymentPage from "./pages/PaymentPage";
-import ConfirmCompletionPage from "./pages/ConfirmCompletionPage";
-import ChooseRole from "./pages/ChooseRole";
+const PostJobPage = lazy(() => import("./pages/PostJobPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const PaymentPage = lazy(() => import("./pages/PaymentPage"));
+const ConfirmCompletionPage = lazy(() => import("./pages/ConfirmCompletionPage"));
+const ChooseRole = lazy(() => import("./pages/ChooseRole"));
 ;
 import AdminRoute from "@/components/auth/AdminRoute";
 import KYCPainter from "./pages/KYCPainter";
-import KYCCustomer from "./pages/KYCCustomer";
-import PaintVestimator from "./pages/PaintVestimator";
+const KYCCustomer = lazy(() => import("./pages/KYCCustomer"));
+const PaintVestimator = lazy(() => import("./pages/PaintVestimator"));
 
 const queryClient = new QueryClient();
 
@@ -90,7 +93,12 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+      </div>
+    }>
+    <BrowserRouter>
           <Routes>
 
           {/* ── New public pages (canonical brand Header + Footer) ── */}
@@ -190,6 +198,7 @@ const App = () => (
           <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
+    </Suspense>
         </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

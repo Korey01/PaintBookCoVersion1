@@ -366,6 +366,286 @@ function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }
   )
 }
 
+
+function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: any, onRefresh: () => void }) {
+  const [images, setImages] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [uploading, setUploading] = React.useState(false)
+  const [error, setError] = React.useState("")
+  const maxBytes = 104857600 // 100MB
+  const usedBytes = painter?.gallery_size_bytes || 0
+
+  React.useEffect(() => { loadImages() }, [painter?.id])
+
+  const loadImages = async () => {
+    if (!painter?.id) return
+    setLoading(true)
+    const { data } = await supabase
+      .from("painter_gallery")
+      .select("*")
+      .eq("painter_id", painter.id)
+      .order("uploaded_at", { ascending: false })
+    setImages(data || [])
+    setLoading(false)
+  }
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const allowed = ["image/jpeg","image/png","image/webp"]
+    if (!allowed.includes(file.type)) { setError("Only JPG, PNG and WebP images are accepted"); return }
+    if (usedBytes + file.size > maxBytes) { setError("Gallery full — delete some images first"); return }
+    setUploading(true)
+    setError("")
+    try {
+      // Compress image
+      const compressed = await compressImage(file)
+      const ext = file.name.split(".").pop()
+      const path = `${painter.id}/${Date.now()}_${file.name}`
+      const { error: uploadErr } = await supabase.storage
+        .from("painter-gallery")
+        .upload(path, compressed, { upsert: false })
+      if (uploadErr) { setError(`Upload failed: ${uploadErr.message}`); setUploading(false); return }
+      const { data: { publicUrl } } = supabase.storage.from("painter-gallery").getPublicUrl(path)
+      await supabase.from("painter_gallery").insert({
+        painter_id: painter.id,
+        image_url: publicUrl,
+        image_size_bytes: compressed.size,
+        caption: "",
+        job_type: "",
+        uploaded_at: new Date().toISOString()
+      })
+      await supabase.from("painters").update({
+        gallery_size_bytes: usedBytes + compressed.size
+      }).eq("id", painter.id)
+      await loadImages()
+      onRefresh()
+    } catch (err: any) { setError(err.message || "Upload failed") }
+    setUploading(false)
+  }
+
+  const handleDelete = async (img: any) => {
+    if (!confirm("Delete this image?")) return
+    try {
+      const path = img.image_url.split("/painter-gallery/")[1]
+      await supabase.storage.from("painter-gallery").remove([path])
+      await supabase.from("painter_gallery").delete().eq("id", img.id)
+      await supabase.from("painters").update({
+        gallery_size_bytes: Math.max(0, usedBytes - (img.image_size_bytes || 0))
+      }).eq("id", painter.id)
+      await loadImages()
+      onRefresh()
+    } catch (err: any) { setError(err.message) }
+  }
+
+  const handleCaption = async (id: string, caption: string) => {
+    await supabase.from("painter_gallery").update({ caption }).eq("id", id)
+  }
+
+  const usedMB = (usedBytes / 1048576).toFixed(1)
+  const usedPct = Math.min(100, (usedBytes / maxBytes) * 100)
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Gallery</h1>
+          <p className="text-muted-foreground text-sm">Showcase your best work</p>
+        </div>
+        <label className="cursor-pointer bg-foreground text-background px-4 py-2 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center gap-2">
+          {uploading ? <><div className="h-3.5 w-3.5 border-2 border-background/30 border-t-background rounded-full animate-spin" /> Uploading...</> : "Upload Image"}
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleUpload} className="hidden" disabled={uploading} />
+        </label>
+      </div>
+
+      {/* Storage bar */}
+      <div className="border border-border rounded-lg p-4 space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Storage used</span>
+          <span className={usedPct > 80 ? "text-amber-400" : "text-foreground"}>{usedMB} MB / 100 MB</span>
+        </div>
+        <div className="w-full bg-border rounded-full h-1.5">
+          <div className={`h-1.5 rounded-full transition-all ${usedPct > 80 ? "bg-amber-500" : "bg-foreground"}`}
+            style={{ width: `${usedPct}%` }} />
+        </div>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+        </div>
+      ) : images.length === 0 ? (
+        <div className="border border-dashed border-border rounded-xl p-12 text-center space-y-2">
+          <p className="font-medium">No portfolio images yet</p>
+          <p className="text-sm text-muted-foreground">Upload photos of your completed work to attract more customers</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {images.map(img => (
+            <div key={img.id} className="border border-border rounded-xl overflow-hidden">
+              <div className="aspect-square bg-accent/20 relative">
+                <img src={img.image_url} alt={img.caption || "Gallery"} className="w-full h-full object-cover" />
+              </div>
+              <div className="p-3 space-y-2">
+                <input
+                  defaultValue={img.caption || ""}
+                  onBlur={e => handleCaption(img.id, e.target.value)}
+                  placeholder="Add caption..."
+                  className="w-full bg-transparent text-xs border-b border-border focus:outline-none focus:border-foreground py-1"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {img.image_size_bytes ? `${(img.image_size_bytes / 1024).toFixed(0)} KB` : ""}
+                  </span>
+                  <button onClick={() => handleDelete(img)}
+                    className="text-xs text-destructive hover:text-destructive/70 transition-colors">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+async function compressImage(file: File): Promise<File> {
+  return new Promise(resolve => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const canvas = document.createElement("canvas")
+      const maxW = 1920
+      let w = img.width, h = img.height
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW }
+      canvas.width = w; canvas.height = h
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(img, 0, 0, w, h)
+      canvas.toBlob(blob => {
+        URL.revokeObjectURL(url)
+        resolve(new File([blob!], file.name, { type: "image/jpeg" }))
+      }, "image/jpeg", 0.82)
+    }
+    img.src = url
+  })
+}
+
+function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supabase: any, onRefresh: () => void }) {
+  const today = new Date()
+  const [year, setYear] = React.useState(today.getFullYear())
+  const [month, setMonth] = React.useState(today.getMonth())
+  const [available, setAvailable] = React.useState<Set<string>>(new Set())
+  const [saving, setSaving] = React.useState(false)
+  const [saved, setSaved] = React.useState(false)
+
+  React.useEffect(() => {
+    if (painter?.available_from && painter?.available_to) {
+      const dates = new Set<string>()
+      const start = new Date(painter.available_from)
+      const end = new Date(painter.available_to)
+      const cur = new Date(start)
+      while (cur <= end) {
+        dates.add(cur.toISOString().split("T")[0])
+        cur.setDate(cur.getDate() + 1)
+      }
+      setAvailable(dates)
+    }
+  }, [painter?.id])
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const firstDay = new Date(year, month, 1).getDay()
+  const monthName = new Date(year, month).toLocaleString("en-GB", { month: "long", year: "numeric" })
+
+  const toggleDay = (dateStr: string) => {
+    setAvailable(prev => {
+      const next = new Set(prev)
+      if (next.has(dateStr)) next.delete(dateStr)
+      else next.add(dateStr)
+      return next
+    })
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const sorted = Array.from(available).sort()
+    await supabase.from("painters").update({
+      available_from: sorted[0] || null,
+      available_to: sorted[sorted.length - 1] || null,
+    }).eq("id", painter.id)
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+    onRefresh()
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Availability</h1>
+        <p className="text-muted-foreground text-sm">Mark the days you are available for jobs</p>
+      </div>
+
+      {/* Month navigation */}
+      <div className="flex items-center justify-between border border-border rounded-lg px-4 py-3">
+        <button onClick={() => { if (month === 0) { setMonth(11); setYear(y => y-1) } else setMonth(m => m-1) }}
+          className="text-muted-foreground hover:text-foreground p-1">←</button>
+        <span className="font-medium">{monthName}</span>
+        <button onClick={() => { if (month === 11) { setMonth(0); setYear(y => y+1) } else setMonth(m => m+1) }}
+          className="text-muted-foreground hover:text-foreground p-1">→</button>
+      </div>
+
+      {/* Calendar grid */}
+      <div className="border border-border rounded-xl p-4">
+        <div className="grid grid-cols-7 mb-2">
+          {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
+            <div key={d} className="text-center text-xs text-muted-foreground py-1">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1
+            const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`
+            const isAvailable = available.has(dateStr)
+            const isToday = dateStr === today.toISOString().split("T")[0]
+            const isPast = new Date(dateStr) < new Date(today.toISOString().split("T")[0])
+            return (
+              <button key={day}
+                onClick={() => !isPast && toggleDay(dateStr)}
+                disabled={isPast}
+                className={`aspect-square rounded-md text-sm flex items-center justify-center transition-colors ${
+                  isPast ? "text-muted-foreground/30 cursor-not-allowed"
+                  : isAvailable ? "bg-green-600 text-white font-medium"
+                  : isToday ? "border-2 border-foreground text-foreground"
+                  : "hover:bg-accent text-foreground"
+                }`}>
+                {day}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-green-600" /> Available</div>
+        <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded border-2 border-foreground" /> Today</div>
+        <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-accent" /> Unavailable</div>
+      </div>
+
+      <button onClick={handleSave} disabled={saving}
+        className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50">
+        {saving ? "Saving..." : saved ? "✓ Saved" : "Save Availability"}
+      </button>
+    </div>
+  )
+}
+
+
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
 
 const TABS = [

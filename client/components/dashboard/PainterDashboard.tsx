@@ -982,26 +982,14 @@ export function PainterDashboard() {
             {/* TAB 5: Gallery */}
             {activeTab === "gallery" && (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Gallery</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Showcase your best work</p>
-                </div>
-                <div className="bg-accent/10 border border-border rounded-lg p-4">
-                  <p className="text-sm">Gallery feature coming soon</p>
-                </div>
+                <GalleryTab painter={painter} supabase={supabase} onRefresh={loadDashboard} />
               </div>
             )}
 
             {/* TAB 6: Availability */}
             {activeTab === "availability" && (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Availability</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Set when you're available for jobs</p>
-                </div>
-                <div className="bg-accent/10 border border-border rounded-lg p-4">
-                  <p className="text-sm">Availability calendar coming soon</p>
-                </div>
+                <AvailabilityTab painter={painter} supabase={supabase} onRefresh={loadDashboard} />
               </div>
             )}
 

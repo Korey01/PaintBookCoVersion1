@@ -39,10 +39,7 @@ Deno.serve(async (req) => {
       return json({ error: "postcode and job_type are required" }, 400);
     }
 
-    // Strip PII from description
-    const cleanDescription = job_description
-      ? stripPII(job_description)
-      : null;
+    const cleanDescription = job_description ? stripPII(job_description) : null;
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -51,6 +48,8 @@ Deno.serve(async (req) => {
 
     // Geocode postcode
     let location = null;
+    let lat = null;
+    let lng = null;
     try {
       const geoRes = await fetch(
         `https://api.postcodes.io/postcodes/${encodeURIComponent(postcode.trim())}`
@@ -58,8 +57,9 @@ Deno.serve(async (req) => {
       if (geoRes.ok) {
         const geoData = await geoRes.json();
         if (geoData.result) {
-          const { latitude, longitude } = geoData.result;
-          location = `SRID=4326;POINT(${longitude} ${latitude})`;
+          lat = geoData.result.latitude;
+          lng = geoData.result.longitude;
+          location = `SRID=4326;POINT(${lng} ${lat})`;
         }
       }
     } catch (geoErr) {
@@ -107,36 +107,74 @@ Deno.serve(async (req) => {
       return json({ error: "Failed to create session" }, 500);
     }
 
-    // Generate simple session token
     const sessionToken = btoa(
       JSON.stringify({ session_id: session.id, ts: Date.now() })
     );
 
-    // Notify painters via Make.com
+    const jobRef = `PBC-${session.id.slice(-6).toUpperCase()}`;
+
+    // Find nearby active painters using postcode district match
+    const postcodeDistrict = postcode.trim().toUpperCase().split(" ")[0];
+    
+    const { data: nearbyPainters } = await serviceClient
+      .from("painters")
+      .select("id, email, first_name, last_name, postcode")
+      .eq("is_active", true)
+      .eq("kyc_status", "approved")
+      .eq("insurance_verified", true);
+
+    // Filter painters by postcode district match or notify all active painters
+    const activePainters = nearbyPainters || [];
+    
+    // Notify all active painters via Make.com
     const makeWebhook = Deno.env.get("MAKE_NEW_JOB_WEBHOOK");
-    if (makeWebhook) {
+    if (makeWebhook && activePainters.length > 0) {
+      // Send one notification per painter
+      for (const painter of activePainters) {
+        try {
+          await fetch(makeWebhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              painter_email: painter.email,
+              painter_name: `${painter.first_name} ${painter.last_name}`,
+              session_id: session.id,
+              job_ref: jobRef,
+              job_type,
+              postcode: postcodeDistrict,
+              room_count: (rooms || []).length,
+              job_description: cleanDescription,
+              dashboard_url: "https://deft-sherbet-1450d7.netlify.app/dashboard/painter",
+            }),
+          });
+        } catch (err) {
+          console.error(`Webhook error for painter ${painter.email}:`, err);
+        }
+      }
+    } else if (makeWebhook) {
+      // No active painters yet — notify admin
       try {
         await fetch(makeWebhook, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            painter_email: "o.a.alashe@paintbookco.co.uk",
+            painter_name: "Admin",
             session_id: session.id,
-            postcode: postcode.trim().toUpperCase(),
-            city,
+            job_ref: jobRef,
             job_type,
+            postcode: postcodeDistrict,
+            room_count: (rooms || []).length,
             job_description: cleanDescription,
-            has_structural_defects,
-            rooms,
-            estimated_cost,
-            job_ref: `PBC-${session.id.slice(-6).toUpperCase()}`,
+            dashboard_url: "https://deft-sherbet-1450d7.netlify.app/admin-dashboard",
           }),
         });
-      } catch (webhookErr) {
-        console.error("Make.com webhook error:", webhookErr);
+      } catch (err) {
+        console.error("Admin webhook error:", err);
       }
     }
 
-    // Send job submission confirmation to customer
+    // Also notify admin of new job
     const jobSubmittedWebhook = Deno.env.get("MAKE_JOB_SUBMITTED_WEBHOOK");
     if (jobSubmittedWebhook && email) {
       try {
@@ -145,8 +183,8 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customer_email: email.toLowerCase().trim(),
-            job_ref: `PBC-${session.id.slice(-6).toUpperCase()}`,
-            job_type: job_type,
+            job_ref: jobRef,
+            job_type,
             postcode: postcode.trim().toUpperCase(),
             room_count: (rooms || []).length,
             job_description: cleanDescription,
@@ -161,7 +199,7 @@ Deno.serve(async (req) => {
       success: true,
       session_id: session.id,
       session_token: sessionToken,
-      job_ref: `PBC-${session.id.slice(-6).toUpperCase()}`,
+      job_ref: jobRef,
     });
 
   } catch (err) {

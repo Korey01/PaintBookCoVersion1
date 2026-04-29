@@ -58,6 +58,9 @@ export default function PostJobPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [paintChoice, setPaintChoice] = useState("");
   const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [startTime] = useState(Date.now());
 
@@ -108,7 +111,10 @@ export default function PostJobPage() {
             "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            email: email || null,
+            email: email.toLowerCase().trim() || null,
+            customer_first_name: firstName.trim() || null,
+            customer_last_name: lastName.trim() || null,
+            customer_phone: phone.trim() || null,
             postcode, city, job_type: jobType,
             job_description: description,
             has_structural_defects: hasDefects,

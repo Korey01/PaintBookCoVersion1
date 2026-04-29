@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
       landing_page, device_type, browser,
       screen_resolution, form_step_reached,
       colour_preferences, paint_brand_preferences,
-      finish_preferences
+      finish_preferences,
+      customer_first_name, customer_last_name, customer_phone
     } = body;
 
     if (!postcode || !job_type) {
@@ -98,6 +99,9 @@ Deno.serve(async (req) => {
         paint_brand_preferences: paint_brand_preferences || [],
         finish_preferences: finish_preferences || [],
         status: "job_posted",
+        customer_first_name: customer_first_name?.trim() || null,
+        customer_last_name: customer_last_name?.trim() || null,
+        customer_phone: customer_phone?.trim() || null,
       })
       .select("id")
       .single();

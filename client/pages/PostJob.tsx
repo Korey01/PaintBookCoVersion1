@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { MapPin, Paintbrush, FileText, Home, Palette, Mail, CheckCircle2, Upload, AlertCircle } from "lucide-react";
 import { z } from "zod";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200";
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
 const JOB_TYPES = [

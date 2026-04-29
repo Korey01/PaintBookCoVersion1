@@ -6,7 +6,7 @@ import {
 } from "../_shared/transpact.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://paintbook-app.netlify.app",
+  "Access-Control-Allow-Origin": "https://www.paintbookco.co.uk",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
   "X-Content-Type-Options": "nosniff",

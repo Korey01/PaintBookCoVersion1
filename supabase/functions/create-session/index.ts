@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
               postcode: postcodeDistrict,
               room_count: (rooms || []).length,
               job_description: cleanDescription,
-              dashboard_url: "https://deft-sherbet-1450d7.netlify.app/dashboard/painter",
+              dashboard_url: "https://www.paintbookco.co.uk/dashboard/painter",
             }),
           });
         } catch (err) {
@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
             postcode: postcodeDistrict,
             room_count: (rooms || []).length,
             job_description: cleanDescription,
-            dashboard_url: "https://deft-sherbet-1450d7.netlify.app/admin-dashboard",
+            dashboard_url: "https://www.paintbookco.co.uk/admin-dashboard",
           }),
         });
       } catch (err) {

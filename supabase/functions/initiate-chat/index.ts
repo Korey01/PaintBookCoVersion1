@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     );
 
     // Create chat link for both parties
-    const baseUrl = "https://paintbook-app.netlify.app";
+    const baseUrl = "https://www.paintbookco.co.uk";
     const painterChatLink = `${baseUrl}/chat/${channelId}?token=${painterToken}&user=${painter.id}&role=painter`;
     const customerChatLink = `${baseUrl}/chat/${channelId}?token=${customerToken}&user=${customerId}&role=customer`;
 

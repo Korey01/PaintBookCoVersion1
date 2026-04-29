@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
     // Share customer contact details with painter + terms
     const contactWebhook = Deno.env.get("MAKE_CONTACT_SHARED_WEBHOOK");
-    const confirmationUrl = `https://deft-sherbet-1450d7.netlify.app/confirm-completion/${transaction_id}?token=${customerToken}`;
+    const confirmationUrl = `https://www.paintbookco.co.uk/confirm-completion/${transaction_id}?token=${customerToken}`;
     const commissionRate = transaction.commission_rate || 12;
     const painterPayout = transaction.painter_payout || (transaction.amount * 0.88);
 

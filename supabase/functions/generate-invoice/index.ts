@@ -170,7 +170,7 @@ IMPORTANT:
       .eq("id", session_id);
 
     // Generate payment URL
-    const paymentUrl = `https://paintbook-app.netlify.app/pay/${transaction.id}`;
+    const paymentUrl = `https://www.paintbookco.co.uk/pay/${transaction.id}`;
 
     // Replace placeholder in invoice HTML
     const finalInvoiceHtml = invoiceHtml.replace(

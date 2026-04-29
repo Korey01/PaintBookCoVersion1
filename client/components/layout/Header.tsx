@@ -44,7 +44,7 @@ export default function Header() {
             className="flex-shrink-0 transition-opacity duration-200 hover:opacity-75"
           >
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200"
+              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
               alt="PaintBookCo"
               className={`h-20 w-auto transition-all duration-300 ${transparent ? "brightness-[10]" : ""}`}
             />
@@ -117,7 +117,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 px-6 border-b border-border">
           <Link to="/" aria-label="PaintBookCo home">
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800&height=1200"
+              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
               alt="PaintBookCo"
               className="h-20 w-auto"
             />

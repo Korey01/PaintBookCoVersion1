@@ -390,33 +390,41 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
   }
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
     const allowed = ["image/jpeg","image/png","image/webp"]
-    if (!allowed.includes(file.type)) { setError("Only JPG, PNG and WebP images are accepted"); return }
-    if (usedBytes + file.size > maxBytes) { setError("Gallery full — delete some images first"); return }
+    const invalid = files.filter(f => !allowed.includes(f.type))
+    if (invalid.length) { setError("Only JPG, PNG and WebP images are accepted"); return }
+    const totalSize = files.reduce((sum, f) => sum + f.size, 0)
+    if (usedBytes + totalSize > maxBytes) { setError("Gallery full — delete some images first"); return }
     setUploading(true)
     setError("")
+    let newUsedBytes = usedBytes
     try {
-      // Compress image
-      const compressed = await compressImage(file)
-      const ext = file.name.split(".").pop()
-      const path = `${painter.id}/${Date.now()}_${file.name}`
-      const { error: uploadErr } = await supabase.storage
-        .from("painter-gallery")
-        .upload(path, compressed, { upsert: false })
-      if (uploadErr) { setError(`Upload failed: ${uploadErr.message}`); setUploading(false); return }
-      const { data: { publicUrl } } = supabase.storage.from("painter-gallery").getPublicUrl(path)
-      await supabase.from("painter_gallery").insert({
-        painter_id: painter.id,
-        image_url: publicUrl,
-        image_size_bytes: compressed.size,
-        caption: "",
-        job_type: "",
-        uploaded_at: new Date().toISOString()
-      })
+      for (const file of files) {
+        try {
+          const compressed = await compressImage(file)
+          const path = `${painter.id}/${Date.now()}_${file.name}`
+          const { error: uploadErr } = await supabase.storage
+            .from("painter-gallery")
+            .upload(path, compressed, { upsert: false })
+          if (uploadErr) { console.error(`Upload failed for ${file.name}:`, uploadErr); continue }
+          const { data: { publicUrl } } = supabase.storage.from("painter-gallery").getPublicUrl(path)
+          await supabase.from("painter_gallery").insert({
+            painter_id: painter.id,
+            image_url: publicUrl,
+            image_size_bytes: compressed.size,
+            caption: "",
+            job_type: "",
+            uploaded_at: new Date().toISOString()
+          })
+          newUsedBytes += compressed.size
+        } catch (err: any) {
+          console.error(`Error uploading ${file.name}:`, err)
+        }
+      }
       await supabase.from("painters").update({
-        gallery_size_bytes: usedBytes + compressed.size
+        gallery_size_bytes: newUsedBytes
       }).eq("id", painter.id)
       await loadImages()
       onRefresh()
@@ -453,8 +461,8 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
           <p className="text-muted-foreground text-sm">Showcase your best work</p>
         </div>
         <label className="cursor-pointer bg-foreground text-background px-4 py-2 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center gap-2">
-          {uploading ? <><div className="h-3.5 w-3.5 border-2 border-background/30 border-t-background rounded-full animate-spin" /> Uploading...</> : "Upload Image"}
-          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleUpload} className="hidden" disabled={uploading} />
+          {uploading ? <><div className="h-3.5 w-3.5 border-2 border-background/30 border-t-background rounded-full animate-spin" /> Uploading...</> : "Upload Images"}
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleUpload} className="hidden" disabled={uploading} multiple />
         </label>
       </div>
 
@@ -1053,11 +1061,68 @@ export function PainterDashboard() {
                   <div className="border border-border rounded-lg p-4 sm:p-6">
                     <h3 className="font-semibold mb-3 sm:mb-4">Account Actions</h3>
                     <div className="space-y-2">
-                      <button className="w-full flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground p-3 rounded border border-border hover:bg-accent transition-colors min-h-[44px]">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { data: { session } } = await supabase.auth.getSession()
+                            if (!session) { alert("Session expired. Please log in again."); return }
+                            const res = await fetch(
+                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-my-data`,
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Authorization": `Bearer ${session.access_token}`,
+                                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                                }
+                              }
+                            )
+                            if (!res.ok) { alert("Download failed. Please try again."); return }
+                            const blob = await res.blob()
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement("a")
+                            a.href = url
+                            a.download = `paintbookco-data-${new Date().toISOString().split("T")[0]}.json`
+                            document.body.appendChild(a)
+                            a.click()
+                            document.body.removeChild(a)
+                            URL.revokeObjectURL(url)
+                          } catch (err: any) {
+                            alert("Download failed: " + (err.message || "Please try again."))
+                          }
+                        }}
+                        className="w-full flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground p-3 rounded border border-border hover:bg-accent transition-colors min-h-[44px]">
                         <Download className="h-4 w-4" />
                         Download My Data
                       </button>
-                      <button className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors min-h-[44px]">
+                      <button
+                        onClick={async () => {
+                          const input = window.prompt("Type DELETE to confirm account deletion. Note: your job history and compliance records will be retained as required by law.")
+                          if (input !== "DELETE") return
+                          try {
+                            const { data: { session } } = await supabase.auth.getSession()
+                            if (!session) { alert("Session expired. Please log in again."); return }
+                            const res = await fetch(
+                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-my-account`,
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Authorization": `Bearer ${session.access_token}`,
+                                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                                }
+                              }
+                            )
+                            const result = await res.json()
+                            if (result.success) {
+                              await supabase.auth.signOut()
+                              window.location.href = "/"
+                            } else {
+                              alert(result.error || "Failed to delete account. Please contact support.")
+                            }
+                          } catch (err: any) {
+                            alert("Error: " + (err.message || "Please try again."))
+                          }
+                        }}
+                        className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors min-h-[44px]">
                         <Trash2 className="h-4 w-4" />
                         Delete Account
                       </button>

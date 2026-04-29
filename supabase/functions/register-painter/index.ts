@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
         type: "signup",
         email: email.toLowerCase().trim(),
         options: {
-          redirectTo: "https://deft-sherbet-1450d7.netlify.app/login"
+          redirectTo: "https://www.paintbookco.co.uk/login"
         }
       });
     } catch (emailErr) {

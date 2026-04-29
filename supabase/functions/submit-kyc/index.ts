@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           vendor_data: painter.id,
-          callback: "https://deft-sherbet-1450d7.netlify.app/kyc/painter",
+          callback: "https://www.paintbookco.co.uk/kyc/painter",
           workflow_id: Deno.env.get("DIDIT_WORKFLOW_ID"),
         }),
       }

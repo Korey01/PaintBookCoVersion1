@@ -80,7 +80,7 @@ export default function LoginPage() {
       setLoading(false);
 
       if (!painter) {
-        setError("No painter account found. Please register at /join-painter");
+        navigate("/dashboard/customer");
         return;
       }
 

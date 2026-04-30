@@ -172,7 +172,7 @@ export default function Dashboard(){
       const budgetValue = maxBudget || minBudget || 500;
       const distanceValue = typeof j.distance === "number" && j.distance > 0
         ? j.distance
-        : Math.max(1, Math.min(20, Math.round(Math.random() * 15) + 1));
+        : Math.max(1, Math.min(20, Math.round((crypto.getRandomValues(new Uint8Array(1))[0] / 255) * 15) + 1));
       return {
         id: jobId,
         title: j.jobType ? `${j.jobType} job` : "Customer job",

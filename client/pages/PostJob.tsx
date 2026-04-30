@@ -681,7 +681,7 @@ export function PostJobConfirmation() {
 
           <div className="bg-card border border-border rounded-md p-4">
             <p className="text-xs text-muted-foreground mb-1">Your job reference</p>
-            <p className="font-mono text-sm font-medium">PBC-{Math.random().toString(36).substring(2, 8).toUpperCase()}</p>
+            <p className="font-mono text-sm font-medium">PBC-{Array.from(crypto.getRandomValues(new Uint8Array(4))).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase()}</p>
           </div>
 
           <div className="bg-accent/20 border border-border rounded-md p-4 text-sm space-y-2">

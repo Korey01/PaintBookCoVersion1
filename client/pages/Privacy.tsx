@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import LegalPageLayout from "@/components/site/LegalPageLayout";
+import { PRIVACY_EMAIL, SUPPORT_EMAIL } from "@/lib/config";
 
 export default function Privacy() {
   useEffect(() => { document.title = "Privacy Policy | PaintBookCo"; }, []);
@@ -35,7 +36,7 @@ export default function Privacy() {
           <tr><td><strong>Company number</strong></td><td>16690724</td></tr>
           <tr><td><strong>Registered address</strong></td><td>1, 1 Fenman Mews, Walkden, Manchester, UK. M28 3YU</td></tr>
           <tr><td><strong>Website</strong></td><td>paintbookco.co.uk</td></tr>
-          <tr><td><strong>Contact email</strong></td><td><a href="mailto:privacy@paintbookco.co.uk">privacy@paintbookco.co.uk</a></td></tr>
+          <tr><td><strong>Contact email</strong></td><td><a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a></td></tr>
           <tr><td><strong>ICO Registration</strong></td><td>ZC118117</td></tr>
         </tbody>
       </table>
@@ -73,7 +74,7 @@ export default function Privacy() {
         (ICO) — registration number <strong>ZC118117</strong>.
       </p>
       <p>
-        For data protection queries: <a href="mailto:privacy@paintbookco.co.uk">privacy@paintbookco.co.uk</a>
+        For data protection queries: <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>
       </p>
 
       {/* 4 */}
@@ -192,7 +193,7 @@ export default function Privacy() {
         <li>Sending transactional emails related to your account activity</li>
         <li>Responding to support queries and complaints</li>
         <li>Sending marketing communications only where you have explicitly opted in — unsubscribe at any time via the link in any marketing email or by contacting{" "}
-          <a href="mailto:m&c@paintbookco.co.uk">m&amp;c@paintbookco.co.uk</a></li>
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></li>
       </ul>
 
       <h3>6.4 Platform Improvement</h3>
@@ -336,7 +337,7 @@ export default function Privacy() {
       <h2>10. Your Rights Under UK GDPR</h2>
       <p>
         You have the following rights in relation to your personal data. To exercise any right,
-        contact us at <a href="mailto:privacy@paintbookco.co.uk">privacy@paintbookco.co.uk</a>{" "}
+        contact us at <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>{" "}
         with the subject line <strong>'Data Rights Request'</strong>, including your full name, email
         address, the right you wish to exercise, and any relevant details. We will respond within
         <strong> 30 calendar days</strong>.
@@ -455,7 +456,7 @@ export default function Privacy() {
         The PaintBookCo Platform is not directed at children under the age of 18. We do not
         knowingly collect personal data from anyone under 18. If you believe we may have
         collected data from a child, please contact us at{" "}
-        <a href="mailto:privacy@paintbookco.co.uk">privacy@paintbookco.co.uk</a> and we will
+        <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a> and we will
         delete it promptly.
       </p>
 
@@ -480,13 +481,13 @@ export default function Privacy() {
       </p>
       <p>
         Previous versions are available on request at{" "}
-        <a href="mailto:privacy@paintbookco.co.uk">privacy@paintbookco.co.uk</a>.
+        <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>.
       </p>
 
       {/* 16 */}
       <h2>16. How to Contact Us</h2>
       <ul>
-        <li><strong>Email:</strong> <a href="mailto:privacy@paintbookco.co.uk">privacy@paintbookco.co.uk</a> — subject line: 'Data Rights Request' or 'Privacy Query'</li>
+        <li><strong>Email:</strong> <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a> — subject line: 'Data Rights Request' or 'Privacy Query'</li>
         <li><strong>Post:</strong> The PaintBook Company Ltd, 1, 1 Fenman Mews, Walkden, Manchester, M28 3YU</li>
         <li><strong>Website:</strong> <a href="https://paintbookco.co.uk">paintbookco.co.uk</a></li>
       </ul>

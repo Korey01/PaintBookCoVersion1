@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { PRIVACY_EMAIL } from "@/lib/config";
 
 export default function CookiePolicyPage() {
   useEffect(() => { document.title = "Cookie Policy | PaintBookCo"; }, []);
@@ -115,7 +116,7 @@ export default function CookiePolicyPage() {
             <h2 className="font-display text-xl text-foreground mb-4">Contact</h2>
             <p className="leading-[1.8]">
               Questions about our use of cookies? Email{" "}
-              <a href="mailto:privacy@paintbookco.co.uk" className="text-primary hover:underline">privacy@paintbookco.co.uk</a>{" "}
+              <a href={`mailto:${PRIVACY_EMAIL}`} className="text-primary hover:underline">{PRIVACY_EMAIL}</a>{" "}
               or see our{" "}
               <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
             </p>

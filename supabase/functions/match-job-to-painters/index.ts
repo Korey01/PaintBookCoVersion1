@@ -27,6 +27,9 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "";
+const SUPPORT_EMAIL = Deno.env.get("SUPPORT_EMAIL") ?? "";
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 
 const corsHeaders = {
@@ -316,7 +319,7 @@ async function sendPainterNotificationEmail(
       },
     ],
     from: {
-      email: "o.a.alashe@paintbookco.co.uk",
+      email: ADMIN_EMAIL,
       name: "PaintBookCo",
     },
     content: [
@@ -433,7 +436,7 @@ async function sendCustomerNoMatchEmail(job: JobRecord): Promise<void> {
       },
     ],
     from: {
-      email: "o.a.alashe@paintbookco.co.uk",
+      email: ADMIN_EMAIL,
       name: "PaintBookCo",
     },
     content: [
@@ -447,7 +450,7 @@ async function sendCustomerNoMatchEmail(job: JobRecord): Promise<void> {
           "We are still finding the right painter for your job.",
           "Our team has been alerted and will follow up shortly.",
           "",
-          "If you have any questions in the meantime, please contact us at hello@paintbookco.co.uk.",
+          `If you have any questions in the meantime, please contact us at ${SUPPORT_EMAIL}.`,
           "",
           "The PaintBookCo Team",
         ].join("\n"),
@@ -466,7 +469,7 @@ async function sendCustomerNoMatchEmail(job: JobRecord): Promise<void> {
     <p>Thank you for posting <strong>${job.title}</strong> on PaintBookCo.</p>
     <p>We are still finding the right painter for your job. Our team has been alerted and will follow up shortly.</p>
     <p>If you have any questions in the meantime, please contact us at
-      <a href="mailto:hello@paintbookco.co.uk" style="color: #2E75B6;">hello@paintbookco.co.uk</a>.
+      <a href="mailto:${SUPPORT_EMAIL}" style="color: #2E75B6;">${SUPPORT_EMAIL}</a>.
     </p>
     <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e5e5;">
     <p style="margin: 0; font-size: 11px; color: #aaa;">The PaintBookCo Team · paintbookco.co.uk</p>

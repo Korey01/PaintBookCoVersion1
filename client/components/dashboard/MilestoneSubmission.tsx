@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase, Job, JobMilestone } from "@/lib/supabase";
 import { submitMilestone as submitMilestoneAPI } from "@/lib/api";
+import { SUPPORT_EMAIL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import PayoutCalculator from "./PayoutCalculator";
@@ -221,7 +222,7 @@ export default function MilestoneSubmission({
                         <strong>Customer concern:</strong> {m.customer_notes}
                       </div>
                     )}
-                    <a href="mailto:hello@paintbookco.co.uk" className="inline-flex items-center gap-1 text-xs text-dashboard-painter-accent hover:opacity-80">
+                    <a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex items-center gap-1 text-xs text-dashboard-painter-accent hover:opacity-80">
                       <ExternalLink className="h-3 w-3" /> Contact Support
                     </a>
                   </div>

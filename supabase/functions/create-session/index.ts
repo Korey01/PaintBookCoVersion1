@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "content-type, apikey",
@@ -162,7 +164,7 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            painter_email: "o.a.alashe@paintbookco.co.uk",
+            painter_email: ADMIN_EMAIL,
             painter_name: "Admin",
             session_id: session.id,
             job_ref: jobRef,

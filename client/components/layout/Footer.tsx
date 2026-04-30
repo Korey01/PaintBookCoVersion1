@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SUPPORT_EMAIL } from "@/lib/config";
 
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
 
@@ -42,7 +43,7 @@ export default function Footer() {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Support</p>
             <ul className="space-y-2">
               <li><Link to="/help" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Help & FAQ</Link></li>
-              <li><a href="mailto:hello@paintbookco.co.uk" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Email Support</a></li>
+              <li><a href={`mailto:${SUPPORT_EMAIL}`} className="text-sm text-foreground hover:text-muted-foreground transition-colors">Email Support</a></li>
             </ul>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { ADMIN_EMAIL } from "@/lib/config";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
@@ -48,7 +49,7 @@ export default function LoginPage() {
     }
 
     // Admin check first
-    if (user.email === "o.a.alashe@paintbookco.co.uk") {
+    if (user.email === ADMIN_EMAIL) {
       setLoading(false);
       navigate("/admin-dashboard");
       return;

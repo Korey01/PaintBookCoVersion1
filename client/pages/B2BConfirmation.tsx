@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Home, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
+import { SUPPORT_EMAIL } from "@/lib/config";
 
 export default function B2BConfirmation() {
   const navigate = useNavigate();
@@ -173,10 +174,10 @@ export default function B2BConfirmation() {
           <p className="text-sm text-blue-800">
             Questions? Contact us at{" "}
             <a
-              href="mailto:support@paintbookco.co.uk"
+              href={`mailto:${SUPPORT_EMAIL}`}
               className="underline font-semibold"
             >
-              support@paintbookco.co.uk
+              {SUPPORT_EMAIL}
             </a>{" "}
             or call us on your preferred date/time.
           </p>

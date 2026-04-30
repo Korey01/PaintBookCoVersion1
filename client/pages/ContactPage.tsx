@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Mail, Phone, Building2 } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { ADMIN_EMAIL } from "@/lib/config";
 
 type Subject = "" | "General Enquiry" | "Technical Support" | "Billing" | "Partnership" | "Press";
 
@@ -32,7 +33,7 @@ export default function ContactPage() {
       if (res.ok) { setSubmitted(true); return; }
     } catch { /* fall through */ }
     const body = `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\n${message}`;
-    window.location.href = `mailto:o.a.alashe@paintbookco.co.uk?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${ADMIN_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setSubmitting(false);
   }
 
@@ -57,8 +58,8 @@ export default function ContactPage() {
           <div ref={detailsRef} className="scroll-animate space-y-8">
             <div>
               <p className="editorial-label text-muted-foreground mb-4">Email</p>
-              <a href="mailto:o.a.alashe@paintbookco.co.uk" className="text-sm text-foreground hover:text-primary transition-colors duration-200 break-all">
-                o.a.alashe@paintbookco.co.uk
+              <a href={`mailto:${ADMIN_EMAIL}`} className="text-sm text-foreground hover:text-primary transition-colors duration-200 break-all">
+                {ADMIN_EMAIL}
               </a>
             </div>
             <div className="h-px bg-border/50" />

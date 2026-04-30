@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from "@/lib/config";
+
 export default function Terms() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -167,7 +169,7 @@ export default function Terms() {
 
             <h3 className="text-xl mt-6 mb-4">Account Security</h3>
             <p>
-              You are responsible for maintaining the security of your account, including your password. You must not share your login credentials with any other person. You agree to notify us immediately at <strong>hello@paintbookco.co.uk</strong> if you become aware of any unauthorised use of your account.
+              You are responsible for maintaining the security of your account, including your password. You must not share your login credentials with any other person. You agree to notify us immediately at <strong>{SUPPORT_EMAIL}</strong> if you become aware of any unauthorised use of your account.
             </p>
             <p>
               PaintBookCo will not be liable for any loss or damage resulting from your failure to comply with these security obligations.
@@ -527,7 +529,7 @@ export default function Terms() {
 
             <h4 className="text-lg font-semibold mt-4 mb-2">Property Damage by the Painter — Insurance</h4>
             <p>
-              Where a painter causes physical damage to the customer's property during a job (for example, paint spillage on flooring, a broken fixture, or damage to an adjacent surface), this is a matter between the customer and the painter's public liability insurer. Public liability insurance covers accidental damage to third-party property during the course of the painter's work. It does not cover the quality of the paint job itself, the cost of a replacement painter, or the customer's loss of time or convenience. Customers should contact the painter directly to make a claim on their public liability insurance, and may request the painter's insurance details through PaintBookCo at <strong>hello@paintbookco.co.uk</strong>. PaintBookCo is not a party to any insurance claim and accepts no liability for property damage caused by painters.
+              Where a painter causes physical damage to the customer's property during a job (for example, paint spillage on flooring, a broken fixture, or damage to an adjacent surface), this is a matter between the customer and the painter's public liability insurer. Public liability insurance covers accidental damage to third-party property during the course of the painter's work. It does not cover the quality of the paint job itself, the cost of a replacement painter, or the customer's loss of time or convenience. Customers should contact the painter directly to make a claim on their public liability insurance, and may request the painter's insurance details through PaintBookCo at <strong>{SUPPORT_EMAIL}</strong>. PaintBookCo is not a party to any insurance claim and accepts no liability for property damage caused by painters.
             </p>
 
             <h3 className="text-xl mt-6 mb-4">Dispute Resolution Process</h3>
@@ -823,7 +825,7 @@ export default function Terms() {
 
             <h3 className="text-xl mt-6 mb-4">Termination by You</h3>
             <p>
-              You may close your account at any time by contacting us at <strong>hello@paintbookco.co.uk</strong>. Account closure does not affect any obligations or liabilities arising before the date of closure. In particular, any commission owing in respect of jobs accepted before closure remains payable. If you are a painter with active jobs at the time of closure, you must complete those jobs or reach an agreed resolution with the relevant customers.
+              You may close your account at any time by contacting us at <strong>{SUPPORT_EMAIL}</strong>. Account closure does not affect any obligations or liabilities arising before the date of closure. In particular, any commission owing in respect of jobs accepted before closure remains payable. If you are a painter with active jobs at the time of closure, you must complete those jobs or reach an agreed resolution with the relevant customers.
             </p>
 
             <h3 className="text-xl mt-6 mb-4">Suspension or Termination by PaintBookCo</h3>
@@ -924,7 +926,7 @@ export default function Terms() {
             <div className="surface-card p-6 mt-4">
               <p><strong>The PaintBook Company Ltd</strong></p>
               <p>Company Number: 16690724</p>
-              <p>Email: hello@paintbookco.co.uk</p>
+              <p>Email: {SUPPORT_EMAIL}</p>
               <p>Website: www.paintbookco.co.uk</p>
               <p>Registered address: 1, 1 Fenman Mews, Walkden, Manchester, UK. M28 3YU</p>
             </div>

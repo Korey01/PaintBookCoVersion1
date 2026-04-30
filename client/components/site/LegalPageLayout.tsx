@@ -9,6 +9,7 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
+import { SUPPORT_EMAIL, PRIVACY_EMAIL } from "@/lib/config";
 
 interface LegalPageLayoutProps {
   title: string;
@@ -81,8 +82,8 @@ export default function LegalPageLayout({
             <div>
               <p className="font-semibold text-foreground mb-2">Contact</p>
               <div className="text-xs text-muted-foreground leading-relaxed">
-                <p>General: <a href="mailto:hello@paintbookco.co.uk" className="text-primary hover:underline">hello@paintbookco.co.uk</a></p>
-                <p>Privacy: <a href="mailto:privacy@paintbookco.co.uk" className="text-primary hover:underline">privacy@paintbookco.co.uk</a></p>
+                <p>General: <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">{SUPPORT_EMAIL}</a></p>
+                <p>Privacy: <a href={`mailto:${PRIVACY_EMAIL}`} className="text-primary hover:underline">{PRIVACY_EMAIL}</a></p>
                 <p>Website: <a href="https://paintbookco.co.uk" className="text-primary hover:underline">paintbookco.co.uk</a></p>
               </div>
             </div>

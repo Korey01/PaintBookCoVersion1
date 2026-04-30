@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, ShieldCheck, Users, Lock, Zap, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SUPPORT_EMAIL } from "@/lib/config";
 
 export default function About() {
   return (
@@ -205,7 +206,7 @@ export default function About() {
               <p><strong>Registration:</strong> England and Wales</p>
               <p><strong>Registered Address:</strong> 1, 1 Fenman Mews, Walkden, Manchester, UK. M28 3YU</p>
               <p><strong>Website:</strong> paintbookco.co.uk</p>
-              <p><strong>Email:</strong> hello@paintbookco.co.uk</p>
+              <p><strong>Email:</strong> {SUPPORT_EMAIL}</p>
             </div>
           </div>
         </div>

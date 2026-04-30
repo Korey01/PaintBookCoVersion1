@@ -55,7 +55,7 @@ export default function Checkout(){
       const jobs = JSON.parse(localStorage.getItem('paintbook:jobs')||'[]');
       const last = jobs[jobs.length-1] || {};
       const base = Number(last.budgetMax || last.budgetMin || 500);
-      const pct = 0.3 + Math.random()*0.1; // 30–40%
+      const pct = 0.3 + (crypto.getRandomValues(new Uint8Array(1))[0] / 255) * 0.1; // 30–40%
       return Math.round(base * pct);
     } catch {
       return 200;

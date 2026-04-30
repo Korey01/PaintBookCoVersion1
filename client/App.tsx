@@ -17,6 +17,7 @@ const FindPainters = lazy(() => import("./pages/FindPainters"));
 const Estimator = lazy(() => import("./pages/Estimator"));
 const PostJob = lazy(() => import("./pages/PostJob"));
 const PostJobConfirmation = lazy(() => import("./pages/PostJob").then(m => ({ default: m.PostJobConfirmation })));
+const JobSessionPage = lazy(() => import("./pages/JobSessionPage"));
 const PainterProfile = lazy(() => import("./pages/PainterProfile"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const CheckoutConfirmation = lazy(() => import("./pages/CheckoutConfirmation"));
@@ -163,6 +164,7 @@ const App = () => (
             <Route path="/find-painter" element={<FindPainters />} />
             <Route path="/post-job" element={<PostJobPage />} />
             <Route path="/post-job/confirmation" element={<PostJobConfirmation />} />
+            <Route path="/job/:token" element={<JobSessionPage />} />
             <Route path="/estimator" element={<Estimator />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />

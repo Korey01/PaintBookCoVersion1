@@ -42,6 +42,8 @@ Deno.serve(async (req) => {
 
     const cleanDescription = job_description ? stripPII(job_description) : null;
 
+    const customerToken = crypto.randomUUID();
+
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SERVICE_ROLE_KEY")!,
@@ -99,9 +101,11 @@ Deno.serve(async (req) => {
         paint_brand_preferences: paint_brand_preferences || [],
         finish_preferences: finish_preferences || [],
         status: "job_posted",
-        customer_first_name: customer_first_name?.trim() || null,
-        customer_last_name: customer_last_name?.trim() || null,
-        customer_phone: customer_phone?.trim() || null,
+        first_name: customer_first_name?.trim() || null,
+        last_name: customer_last_name?.trim() || null,
+        phone: customer_phone?.trim() || null,
+        marketing_consent: body.marketing_consent || false,
+        customer_token: customerToken,
       })
       .select("id")
       .single();
@@ -199,10 +203,57 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Send customer session link email via SendGrid
+    const sendgridKey = Deno.env.get("SENDGRID_API_KEY");
+    if (sendgridKey && body.email) {
+      try {
+        await fetch("https://api.sendgrid.com/v3/mail/send", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${sendgridKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            personalizations: [{ to: [{ email: body.email.toLowerCase().trim() }] }],
+            from: { email: "hello@paintbookco.co.uk", name: "PaintBookCo" },
+            subject: "Your PaintBookCo job is live — track it here",
+            content: [{
+              type: "text/html",
+              value: `<!DOCTYPE html>
+<html>
+<body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:0 auto;padding:24px;">
+  <div style="background:#1B3A5C;padding:20px 24px;border-radius:8px 8px 0 0;">
+    <h1 style="color:#fff;font-size:18px;margin:0;">PaintBookCo</h1>
+  </div>
+  <div style="background:#f9f9f9;padding:24px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 8px 8px;">
+    <p>Hi ${customer_first_name || "there"},</p>
+    <p>Your job has been posted successfully. Your job reference is <strong>${jobRef}</strong>.</p>
+    <p>Use the link below to track your job, chat with your painter, approve milestones and release payment. No password needed.</p>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="https://www.paintbookco.co.uk/job/${customerToken}"
+         style="background:#1B3A5C;color:#fff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:16px;">
+        Track My Job
+      </a>
+    </div>
+    <p style="font-size:13px;color:#666;">This link is permanent for the life of your job. Keep it safe — anyone with this link can access your job details.</p>
+    <p style="font-size:13px;color:#666;">Job ref: ${jobRef}</p>
+    <hr style="margin:20px 0;border:none;border-top:1px solid #e5e5e5;">
+    <p style="margin:0;font-size:11px;color:#aaa;">The PaintBookCo Team · paintbookco.co.uk</p>
+  </div>
+</body>
+</html>`,
+            }],
+          }),
+        });
+      } catch (emailErr) {
+        console.error("SendGrid email error:", emailErr);
+      }
+    }
+
     return json({
       success: true,
       session_id: session.id,
-      session_token: sessionToken,
+      customer_token: customerToken,
       job_ref: jobRef,
     });
 

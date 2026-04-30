@@ -206,6 +206,7 @@ export default function JobSessionPage() {
               dangerouslySetInnerHTML={{ __html: transaction.invoice_html }}
             />
             
+            <a
               href={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-transpact?transaction_id=${transaction.id}&customer_token=${token}`}
               className="block w-full bg-foreground text-background text-center py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
             >

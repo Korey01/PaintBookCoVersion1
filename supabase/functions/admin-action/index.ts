@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ADMIN_EMAIL = "o.a.alashe@paintbookco.co.uk";
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

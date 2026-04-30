@@ -48,7 +48,7 @@ export default function LoginPage() {
     }
 
     // Admin check first
-    if (user.email === "o.a.alashe@paintbookco.co.uk") {
+    if (user.email === import.meta.env.VITE_ADMIN_EMAIL) {
       setLoading(false);
       navigate("/admin-dashboard");
       return;

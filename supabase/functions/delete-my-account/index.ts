@@ -233,7 +233,7 @@ async function sendDeletionEmail(
       },
     ],
     from: {
-      email: "o.a.alashe@paintbookco.co.uk",
+      email: Deno.env.get("ADMIN_EMAIL") ?? "",
       name: "PaintBookCo",
     },
     content: [

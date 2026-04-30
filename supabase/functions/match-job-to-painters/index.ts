@@ -316,7 +316,7 @@ async function sendPainterNotificationEmail(
       },
     ],
     from: {
-      email: "o.a.alashe@paintbookco.co.uk",
+      email: Deno.env.get("ADMIN_EMAIL") ?? "",
       name: "PaintBookCo",
     },
     content: [
@@ -433,7 +433,7 @@ async function sendCustomerNoMatchEmail(job: JobRecord): Promise<void> {
       },
     ],
     from: {
-      email: "o.a.alashe@paintbookco.co.uk",
+      email: Deno.env.get("ADMIN_EMAIL") ?? "",
       name: "PaintBookCo",
     },
     content: [

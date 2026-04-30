@@ -238,7 +238,8 @@ export default function JobSessionPage() {
             <h2 className="text-sm font-medium flex items-center gap-2 mb-3">
               <MessageSquare className="h-4 w-4" /> Chat with your painter
             </h2>
-            
+
+            <a
               href={`/chat/${transaction.chat_channel_id}?token=${token}`}
               className="block w-full border border-border text-center py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
             >

@@ -27,7 +27,7 @@ import {
   MessageList,
   MessageInput,
 } from "stream-chat-react";
-import "stream-chat-react/dist/css/v2/index.css";
+import "@stream-io/stream-chat-css/dist/css/index.css";
 import { supabase } from "../../lib/supabase";
 
 // ── Layer 1 PII regex patterns ────────────────────────────────────────────────

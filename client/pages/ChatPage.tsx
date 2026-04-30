@@ -5,7 +5,7 @@ import {
   Chat, Channel, ChannelHeader,
   MessageInput, MessageList, Window,
 } from "stream-chat-react";
-import "stream-chat-react/dist/css/v2/index.css";
+import "@stream-io/stream-chat-css/dist/css/index.css";
 import { Loader2, ShieldCheck, Clock } from "lucide-react";
 
 const PII_PATTERNS = [

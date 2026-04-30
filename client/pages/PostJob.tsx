@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { MapPin, Paintbrush, FileText, Home, Palette, Mail, CheckCircle2, Upload, AlertCircle } from "lucide-react";
 import { z } from "zod";
@@ -658,6 +658,9 @@ export default function PostJob() {
 }
 
 export function PostJobConfirmation() {
+  const location = useLocation();
+  const jobRef = location.state?.jobRef || "PBC-XXXXXX";
+  const email = location.state?.email || "your email";
   const navigate = useNavigate();
 
   return (
@@ -681,17 +684,23 @@ export function PostJobConfirmation() {
 
           <div className="bg-card border border-border rounded-md p-4">
             <p className="text-xs text-muted-foreground mb-1">Your job reference</p>
-            <p className="font-mono text-sm font-medium">PBC-{Array.from(crypto.getRandomValues(new Uint8Array(4))).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase()}</p>
+            <p className="font-mono text-sm font-medium">{jobRef}</p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 text-sm space-y-2">
+            <p className="font-medium text-blue-900">Check your email</p>
+            <p className="text-xs text-blue-700">We have sent a job tracking link to <strong>{email}</strong>. Use it to track progress, chat with your painter, approve milestones and release payment.</p>
+            <p className="text-xs text-blue-600">No password needed — keep the link safe.</p>
           </div>
 
           <div className="bg-accent/20 border border-border rounded-md p-4 text-sm space-y-2">
             <p className="font-medium">What happens next</p>
             <ol className="text-xs text-muted-foreground space-y-1 text-left">
-              <li>1. A verified painter contacts you to chat</li>
-              <li>2. Agree the job details and price</li>
-              <li>3. Receive invoice by email — pay securely</li>
+              <li>1. A verified painter reviews your job and makes contact</li>
+              <li>2. Agree the job details and price via chat</li>
+              <li>3. Receive invoice by email — pay securely into escrow</li>
               <li>4. Painter completes the work</li>
-              <li>5. Confirm completion — funds released</li>
+              <li>5. Confirm completion — funds released to painter</li>
             </ol>
           </div>
 

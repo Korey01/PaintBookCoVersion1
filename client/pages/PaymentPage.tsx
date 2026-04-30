@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Loader2, Shield, CheckCircle2, AlertCircle } from "lucide-react";
@@ -187,7 +188,7 @@ export default function PaymentPage() {
             </div>
             <div
               className="p-4 max-h-64 overflow-y-auto text-xs"
-              dangerouslySetInnerHTML={{ __html: transaction.invoice_html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(transaction.invoice_html ?? "") }}
             />
           </div>
         )}

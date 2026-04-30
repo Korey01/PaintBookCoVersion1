@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            painter_email: "o.a.alashe@paintbookco.co.uk",
+            painter_email: Deno.env.get("ADMIN_EMAIL") ?? "",
             painter_name: "Admin",
             session_id: session.id,
             job_ref: jobRef,

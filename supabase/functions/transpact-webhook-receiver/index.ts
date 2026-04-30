@@ -151,7 +151,7 @@ async function sendMismatchAlert(received: number, expected: number, jobId: stri
     await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ personalizations: [{ to: [{ email: "o.a.alashe@paintbookco.co.uk" }], subject: `[ALERT] Transpact amount mismatch — Job ${jobId}` }], from: { email: "o.a.alashe@paintbookco.co.uk", name: "PaintBookCo Alerts" }, content: [{ type: "text/plain", value: `Amount mismatch detected.\n\nJob ID: ${jobId}\nTranspact #: ${transpactNumber}\nExpected: £${expected.toFixed(2)}\nReceived: £${received.toFixed(2)}\nDelta: £${Math.abs(received - expected).toFixed(2)}\n\nJob status has NOT been updated. Please investigate immediately.` }] }),
+      body: JSON.stringify({ personalizations: [{ to: [{ email: Deno.env.get("ADMIN_EMAIL") ?? "" }], subject: `[ALERT] Transpact amount mismatch — Job ${jobId}` }], from: { email: Deno.env.get("ADMIN_EMAIL") ?? "", name: "PaintBookCo Alerts" }, content: [{ type: "text/plain", value: `Amount mismatch detected.\n\nJob ID: ${jobId}\nTranspact #: ${transpactNumber}\nExpected: £${expected.toFixed(2)}\nReceived: £${received.toFixed(2)}\nDelta: £${Math.abs(received - expected).toFixed(2)}\n\nJob status has NOT been updated. Please investigate immediately.` }] }),
     });
   } catch (e) {
     console.error("Mismatch alert email failed:", e);

@@ -1,1 +1,1 @@
-export const ADMIN_EMAIL = "o.a.alashe@paintbookco.co.uk";
+export const ADMIN_EMAIL = "import.meta.env.VITE_ADMIN_EMAIL";

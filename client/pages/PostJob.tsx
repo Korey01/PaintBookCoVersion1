@@ -62,7 +62,10 @@ export default function PostJob() {
   // Step 5 - Paint Details
   const [paintChoice, setPaintChoice] = useState("");
 
-  // Step 6 - Email & Submit
+  // Step 6 - Contact & Submit
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -152,6 +155,10 @@ export default function PostJob() {
 
   async function handleSubmit() {
     const errors: Record<string, string> = {};
+    if (!firstName.trim()) errors.firstName = "First name is required";
+    if (!lastName.trim()) errors.lastName = "Last name is required";
+    if (!phone.trim()) errors.phone = "Phone number is required";
+    else if (!/^[0-9+\s]{10,}$/.test(phone.trim())) errors.phone = "Invalid phone number";
     if (!email.trim()) errors.email = "Email is required";
     else if (!email.includes("@")) errors.email = "Invalid email address";
 
@@ -174,6 +181,9 @@ export default function PostJob() {
         structural_details: structuralDetails.trim() || null,
         rooms: rooms.length > 0 ? rooms : null,
         paint_choice: paintChoice.trim() || null,
+        customer_first_name: firstName.trim(),
+        customer_last_name: lastName.trim(),
+        customer_phone: phone.trim(),
         email: email.trim(),
         marketing_consent: marketingConsent,
         images: images.slice(0, 5),
@@ -182,13 +192,27 @@ export default function PostJob() {
         utm_campaign: params.get("utm_campaign"),
       };
 
-      // In a real implementation, this would call your API endpoint
-      // For now, we'll store in localStorage and navigate to confirmation
-      const sessionId = `pbc_${Date.now()}`;
-      localStorage.setItem("pbc_session_id", sessionId);
-      localStorage.setItem("pbc_job_data", JSON.stringify(payload));
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      navigate("/post-job/confirmation");
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to post job");
+      }
+
+      navigate("/post-job/confirmation", {
+        state: { jobRef: result.job_ref, email: email.trim() }
+      });
     } catch (error) {
       console.error("Error posting job:", error);
       setErrors({ submit: "Failed to post job. Please try again." });
@@ -585,6 +609,41 @@ export default function PostJob() {
               </div>
 
               <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">First Name</label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className={fieldClass}
+                      placeholder="Jane"
+                    />
+                    {errors.firstName && <p className="text-xs text-destructive mt-1">{errors.firstName}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Last Name</label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className={fieldClass}
+                      placeholder="Smith"
+                    />
+                    {errors.lastName && <p className="text-xs text-destructive mt-1">{errors.lastName}</p>}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={fieldClass}
+                    placeholder="07700 900000"
+                  />
+                  {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
                   <input
@@ -594,7 +653,7 @@ export default function PostJob() {
                     className={fieldClass}
                     placeholder="you@example.com"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">No account needed. Used only for job updates.</p>
+                  <p className="text-xs text-muted-foreground mt-1">No account needed. We'll send your job tracking link here.</p>
                   {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
                 </div>
 

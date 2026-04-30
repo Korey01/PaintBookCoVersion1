@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "";
+const SUPPORT_EMAIL = Deno.env.get("SUPPORT_EMAIL") ?? "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,6 +43,7 @@ Deno.serve(async (req) => {
       return json({ error: "postcode and job_type are required" }, 400);
     }
 
+    const customerToken = crypto.randomUUID();
     const cleanDescription = job_description ? stripPII(job_description) : null;
 
     const serviceClient = createClient(
@@ -101,6 +103,11 @@ Deno.serve(async (req) => {
         paint_brand_preferences: paint_brand_preferences || [],
         finish_preferences: finish_preferences || [],
         status: "job_posted",
+        customer_token: customerToken,
+        first_name: customer_first_name?.trim() || null,
+        last_name: customer_last_name?.trim() || null,
+        phone: customer_phone?.trim() || null,
+        marketing_consent: body.marketing_consent || false,
         customer_first_name: customer_first_name?.trim() || null,
         customer_last_name: customer_last_name?.trim() || null,
         customer_phone: customer_phone?.trim() || null,
@@ -118,6 +125,66 @@ Deno.serve(async (req) => {
     );
 
     const jobRef = `PBC-${session.id.slice(-6).toUpperCase()}`;
+
+    // Send customer confirmation email
+    const sendgridKey = Deno.env.get("SENDGRID_API_KEY");
+    if (sendgridKey && email) {
+      const trackingUrl = `https://www.paintbookco.co.uk/job/${customerToken}`;
+      await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${sendgridKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: email.toLowerCase().trim() }], subject: "Your PaintBookCo job is live — track it here" }],
+          from: { email: SUPPORT_EMAIL, name: "PaintBookCo" },
+          content: [
+            {
+              type: "text/plain",
+              value: `Hi${customer_first_name ? ` ${customer_first_name}` : ""},\n\nYour job has been submitted successfully.\n\nJob reference: ${jobRef}\n\nTrack your job here:\n${trackingUrl}\n\nUse this link to track your job, chat with your painter, approve milestones and release payment. No password needed. The link is permanent for the life of your job.\n\nThe PaintBookCo Team`,
+            },
+            {
+              type: "text/html",
+              value: `<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; color: #333; max-width: 560px; margin: 0 auto; padding: 24px;">
+  <div style="background: #1B3A5C; padding: 20px 24px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: #fff; font-size: 18px; margin: 0;">PaintBookCo</h1>
+  </div>
+  <div style="background: #f9f9f9; padding: 24px; border: 1px solid #e5e5e5; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="margin: 0 0 16px;">Hi${customer_first_name ? ` <strong>${customer_first_name}</strong>` : ""},</p>
+    <p style="margin: 0 0 16px;">Your job has been submitted and we're finding the right painter for you.</p>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px;">
+      <tr>
+        <td style="padding: 10px 14px; font-weight: bold; font-size: 13px; color: #1B3A5C; border-bottom: 1px solid #f0f0f0; width: 120px;">Job reference</td>
+        <td style="padding: 10px 14px; font-size: 13px; font-family: monospace; border-bottom: 1px solid #f0f0f0;">${jobRef}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 14px; font-weight: bold; font-size: 13px; color: #1B3A5C;">Job type</td>
+        <td style="padding: 10px 14px; font-size: 13px;">${job_type}</td>
+      </tr>
+    </table>
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${trackingUrl}" style="display: inline-block; background: #1B3A5C; color: #fff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 15px;">Track Your Job →</a>
+    </div>
+    <p style="margin: 0 0 12px; font-size: 14px; color: #555;">Use this link to:</p>
+    <ul style="margin: 0 0 16px; padding-left: 20px; font-size: 14px; color: #555; line-height: 1.7;">
+      <li>Track your job status in real time</li>
+      <li>Chat with your painter once matched</li>
+      <li>Approve milestones and release payment</li>
+    </ul>
+    <p style="margin: 0 0 16px; font-size: 13px; color: #888; background: #f0f4f8; border-radius: 6px; padding: 12px;">No password needed. This link is permanent for the life of your job — keep it safe.</p>
+    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e5e5;">
+    <p style="margin: 0; font-size: 11px; color: #aaa;">The PaintBookCo Team · paintbookco.co.uk</p>
+  </div>
+</body>
+</html>`,
+            },
+          ],
+        }),
+      }).catch((e) => console.error("Customer confirmation email failed:", e));
+    }
 
     // Find nearby active painters using postcode district match
     const postcodeDistrict = postcode.trim().toUpperCase().split(" ")[0];
@@ -205,6 +272,7 @@ Deno.serve(async (req) => {
       success: true,
       session_id: session.id,
       session_token: sessionToken,
+      customer_token: customerToken,
       job_ref: jobRef,
     });
 

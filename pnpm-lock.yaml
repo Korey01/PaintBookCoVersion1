@@ -11,6 +11,9 @@ importers:
       '@prisma/client':
         specifier: ^5.7.1
         version: 5.22.0(prisma@5.22.0)
+      '@stream-io/stream-chat-css':
+        specifier: ^5.16.1
+        version: 5.16.1
       '@supabase/supabase-js':
         specifier: ^2.103.0
         version: 2.103.0
@@ -1549,6 +1552,9 @@ packages:
   '@stream-io/escape-string-regexp@5.0.1':
     resolution: {integrity: sha512-qIaSrzJXieZqo2fZSYTdzwSbZgHHsT3tkd646vvZhh4fr+9nO4NlvqGmPF43Y+OfZiWf+zYDFgNiPGG5+iZulQ==}
     engines: {node: '>=12'}
+
+  '@stream-io/stream-chat-css@5.16.1':
+    resolution: {integrity: sha512-sjrg7+cHM9IPMa+18tVS+Dqxt8gteqw+IvQuSmTBRztjoJyrk9MoApVsng92X3iRh6+RG6O8Z1gBkRiBmeObTQ==}
 
   '@stream-io/transliterate@1.5.5':
     resolution: {integrity: sha512-r6Qp0HylAZhHNWHxU1nGfRI2Dtkbs1iqLCnOp1bvKhv8yj0/sEUigN0dk0LGPbE4I7zDO3tppyd7PaTPBvvJkg==}
@@ -5115,6 +5121,8 @@ snapshots:
 
   '@stream-io/escape-string-regexp@5.0.1':
     optional: true
+
+  '@stream-io/stream-chat-css@5.16.1': {}
 
   '@stream-io/transliterate@1.5.5':
     dependencies:

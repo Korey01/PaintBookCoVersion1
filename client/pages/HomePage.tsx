@@ -314,7 +314,4 @@ export default function HomePage() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(HomePage, { name: "HomePage", inputs: [] }); })
   .catch(() => {});

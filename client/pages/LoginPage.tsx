@@ -80,7 +80,7 @@ export default function LoginPage() {
       setLoading(false);
 
       if (!painter) {
-        navigate("/dashboard/customer");
+        setError("No painter account found. Please register at /join-painter");
         return;
       }
 
@@ -183,12 +183,6 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            New customer?{" "}
-            <Link to="/register/customer" className="text-foreground font-medium hover:underline underline-offset-4">
-              Create an account
-            </Link>
-          </p>
-          <p className="mt-3 text-center text-sm text-muted-foreground">
             Are you a painter or decorator?{" "}
             <Link to="/join-painter" className="text-foreground font-medium hover:underline underline-offset-4">
               Join as a painter

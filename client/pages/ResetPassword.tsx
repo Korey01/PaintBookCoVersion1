@@ -85,7 +85,4 @@ export default function ResetPassword() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(ResetPassword, { name: "ResetPassword", inputs: [] }); })
   .catch(() => {});

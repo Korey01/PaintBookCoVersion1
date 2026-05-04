@@ -27,7 +27,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^5.7.1",
+    "@prisma/client": "^7.8.0",
     "@stream-io/stream-chat-css": "^5.16.1",
     "@supabase/supabase-js": "^2.103.0",
     "bcryptjs": "^2.4.3",

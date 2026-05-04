@@ -36,11 +36,11 @@ export default function Header() {
   }
 
   const navLinks = [
-    { to: "/vestimator",   label: "Estimate" },
-    { to: "/find-painter", label: "Find Painters" },
-    { to: "/about",        label: "About" },
-    { to: "/trust-safety", label: "Trust & Safety" },
-    ...(loggedIn ? [{ to: `/dashboard${search || ""}`, label: "Dashboard" }] : []),
+    { to: "/vestimator",    label: "Estimate" },
+    { to: "/find-painters", label: "Find Painters" },
+    { to: "/about",         label: "About" },
+    { to: "/trust-safety",  label: "Trust & Safety" },
+    ...(loggedIn ? [{ to: "/dashboard/painter", label: "Dashboard" }] : []),
   ];
 
   return (
@@ -61,7 +61,7 @@ export default function Header() {
             className="flex-shrink-0 transition-opacity duration-200 hover:opacity-75"
           >
             <img
-              src="/logo.png"
+              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
               alt="PaintBookco"
               className="h-7 w-auto"
             />
@@ -138,7 +138,7 @@ export default function Header() {
           <div className="flex items-center justify-between px-6 h-16 border-b border-border/40">
             <Link to="/" onClick={() => setMobileOpen(false)}>
               <img
-                src="/logo.png"
+                src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
                 alt="PaintBookco"
                 className="h-6 w-auto"
               />
@@ -175,13 +175,23 @@ export default function Header() {
                 Join as a Decorator
               </Link>
             </Button>
-            {loggedIn && (
+            {loggedIn ? (
               <button
                 onClick={() => { setMobileOpen(false); handleLogout(); }}
                 className="w-full flex items-center justify-center gap-2 text-sm text-foreground/50 hover:text-foreground py-2 transition-colors"
               >
                 <LogOut className="h-4 w-4" /> Log out
               </button>
+            ) : (
+              <div className="pt-2 text-center">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Painter Login
+                </Link>
+              </div>
             )}
           </div>
         </SheetContent>

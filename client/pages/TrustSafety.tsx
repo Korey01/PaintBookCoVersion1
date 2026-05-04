@@ -60,7 +60,7 @@ export default function TrustSafety() {
                     <li>When you book a painter, 100% of your payment is securely held in escrow.</li>
                     <li>Escrow is optional — you can opt in per job and you cover any escrow service fees.</li>
                     <li>Funds are only released to the painter once you confirm the job is satisfactorily completed.</li>
-                    <li>Protected via Stripe (FCA-regulated payment partner) for maximum peace of mind.</li>
+                    <li>Protected via Transpact escrow for maximum peace of mind.</li>
                   </ul>
                   <div className="mt-5 grid gap-3 text-xs text-muted-foreground md:grid-cols-2">
                     <div className="bg-muted/50 border border-border/40 p-4">
@@ -83,7 +83,7 @@ export default function TrustSafety() {
                 {[
                   { label: "Customer", sub: "Pays securely" },
                   null,
-                  { label: "Escrow", sub: "Held via Stripe (FCA-regulated)" },
+                  { label: "Escrow", sub: "Held via Transpact" },
                   null,
                   { label: "Painter", sub: "Released on approval" },
                 ].map((item, i) =>

@@ -8,7 +8,4 @@ export default function PainterDashboardPage() {
   return <PainterDashboard />;
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(PainterDashboardPage, { name: "PainterDashboardPage", inputs: [] }); })
   .catch(() => {});

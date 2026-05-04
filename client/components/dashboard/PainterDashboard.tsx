@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { PaintBookChat } from "@/components/chat/PaintBookChat";
 import {
   BarChart3,
   CheckCircle2,
@@ -15,6 +16,8 @@ import {
   Trash2,
   Upload,
   Shield,
+  MessageSquare,
+  X,
 } from "lucide-react";
 
 function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: () => void }) {
@@ -206,13 +209,20 @@ class InsuranceBoundary extends React.Component<
   }
 }
 
-function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }) {
+function AvailableJobsTab({
+  painter,
+  supabase,
+  onTabChange,
+}: {
+  painter: any;
+  supabase: any;
+  onTabChange: (tab: string) => void;
+}) {
   const [jobs, setJobs] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
-  const [passedJobs, setPassedJobs] = React.useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("pbc_passed_jobs") || "[]") } catch { return [] }
-  })
+  const [passedJobs, setPassedJobs] = React.useState<string[]>([])
   const [chatting, setChatting] = React.useState<string | null>(null)
+  const [chatError, setChatError] = React.useState("")
 
   React.useEffect(() => {
     if (painter?.is_active) loadJobs()
@@ -237,14 +247,13 @@ function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }
   }
 
   const handlePass = (jobId: string) => {
-    const updated = [...passedJobs, jobId]
-    setPassedJobs(updated)
-    localStorage.setItem("pbc_passed_jobs", JSON.stringify(updated))
+    setPassedJobs(prev => [...prev, jobId])
     setJobs(prev => prev.filter(j => j.id !== jobId))
   }
 
   const handleChat = async (job: any) => {
     setChatting(job.id)
+    setChatError("")
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setChatting(null); return }
@@ -262,13 +271,13 @@ function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }
       )
       const result = await res.json()
       if (result.success) {
-        window.open(result.painter_chat_link, "_blank")
         setJobs(prev => prev.filter(j => j.id !== job.id))
+        onTabChange("my-jobs")
       } else {
-        alert(result.error || "Failed to start chat")
+        setChatError(result.error || "Failed to start chat. Please try again.")
       }
     } catch {
-      alert("Failed to start chat. Please try again.")
+      setChatError("Failed to start chat. Please try again.")
     }
     setChatting(null)
   }
@@ -303,6 +312,15 @@ function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }
           Refresh
         </button>
       </div>
+
+      {chatError && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center justify-between gap-2">
+          <p className="text-sm text-destructive">{chatError}</p>
+          <button onClick={() => setChatError("")} className="text-destructive/70 hover:text-destructive">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -372,6 +390,7 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
   const [loading, setLoading] = React.useState(true)
   const [uploading, setUploading] = React.useState(false)
   const [error, setError] = React.useState("")
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null)
   const maxBytes = 104857600 // 100MB
   const usedBytes = painter?.gallery_size_bytes || 0
 
@@ -433,7 +452,6 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
   }
 
   const handleDelete = async (img: any) => {
-    if (!confirm("Delete this image?")) return
     try {
       const path = img.image_url.split("/painter-gallery/")[1]
       await supabase.storage.from("painter-gallery").remove([path])
@@ -441,6 +459,7 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
       await supabase.from("painters").update({
         gallery_size_bytes: Math.max(0, usedBytes - (img.image_size_bytes || 0))
       }).eq("id", painter.id)
+      setDeleteConfirmId(null)
       await loadImages()
       onRefresh()
     } catch (err: any) { setError(err.message) }
@@ -507,10 +526,23 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
                   <span className="text-xs text-muted-foreground">
                     {img.image_size_bytes ? `${(img.image_size_bytes / 1024).toFixed(0)} KB` : ""}
                   </span>
-                  <button onClick={() => handleDelete(img)}
-                    className="text-xs text-destructive hover:text-destructive/70 transition-colors">
-                    Delete
-                  </button>
+                  {deleteConfirmId === img.id ? (
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleDelete(img)}
+                        className="text-xs text-white bg-destructive px-2 py-0.5 rounded hover:bg-destructive/90">
+                        Confirm
+                      </button>
+                      <button onClick={() => setDeleteConfirmId(null)}
+                        className="text-xs text-muted-foreground hover:text-foreground px-1">
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setDeleteConfirmId(img.id)}
+                      className="text-xs text-destructive hover:text-destructive/70 transition-colors">
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -594,7 +626,10 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Availability</h1>
-        <p className="text-muted-foreground text-sm">Mark the days you are available for jobs</p>
+        <p className="text-muted-foreground text-sm">
+          Your availability calendar — this is for admin reference when manually assigning jobs.
+          You will receive all new job notifications automatically regardless of your availability settings.
+        </p>
       </div>
 
       {/* Month navigation */}
@@ -653,6 +688,166 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
   )
 }
 
+function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supabase: any }) {
+  const [sessions, setSessions] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [activeChatId, setActiveChatId] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (painter?.id) loadSessions()
+  }, [painter?.id])
+
+  const loadSessions = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from("sessions")
+      .select("id, job_type, postcode, status, chat_channel_id, created_at, transactions(id, amount, status)")
+      .eq("painter_id", painter.id)
+      .not("status", "eq", "job_posted")
+      .order("created_at", { ascending: false })
+      .limit(20)
+    setSessions(data || [])
+    setLoading(false)
+  }
+
+  const activeStatuses = ["painter_contacted", "invoice_sent", "funded", "in_progress", "completion_requested"]
+  const activeSessions = sessions.filter(s => activeStatuses.includes(s.status))
+  const pastSessions = sessions.filter(s => !activeStatuses.includes(s.status))
+
+  const statusLabel: Record<string, string> = {
+    painter_contacted: "Awaiting invoice",
+    invoice_sent: "Invoice sent",
+    funded: "Escrow funded",
+    in_progress: "In progress",
+    completion_requested: "Completion requested",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    disputed: "Disputed",
+  }
+
+  const statusColor: Record<string, string> = {
+    painter_contacted: "text-blue-400 bg-blue-900/20 border-blue-800/40",
+    invoice_sent: "text-amber-400 bg-amber-900/20 border-amber-800/40",
+    funded: "text-green-400 bg-green-900/20 border-green-800/40",
+    in_progress: "text-green-400 bg-green-900/20 border-green-800/40",
+    completion_requested: "text-amber-400 bg-amber-900/20 border-amber-800/40",
+    completed: "text-muted-foreground bg-muted border-border",
+    cancelled: "text-destructive bg-destructive/10 border-destructive/20",
+    disputed: "text-destructive bg-destructive/10 border-destructive/20",
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">My Jobs</h1>
+          <p className="text-muted-foreground text-sm">Your active and past jobs</p>
+        </div>
+        <button onClick={loadSessions}
+          className="text-sm border border-border px-3 py-1.5 rounded hover:bg-accent transition-colors">
+          Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+        </div>
+      ) : sessions.length === 0 ? (
+        <div className="border border-border rounded-xl p-8 text-center space-y-2">
+          <p className="font-medium">No jobs yet</p>
+          <p className="text-sm text-muted-foreground">
+            Accept a job from Available Jobs to get started.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {activeSessions.length > 0 && (
+            <div>
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Active</h3>
+              <div className="space-y-4">
+                {activeSessions.map(session => {
+                  const tx = Array.isArray(session.transactions) ? session.transactions[0] : session.transactions
+                  const isOpen = activeChatId === session.id
+                  return (
+                    <div key={session.id} className="border border-border rounded-xl overflow-hidden">
+                      <div className="p-5 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{session.job_type}</p>
+                            <p className="text-sm text-muted-foreground">📍 {session.postcode?.split(" ")[0]}</p>
+                          </div>
+                          <div className="text-right space-y-1">
+                            <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor[session.status] || "text-muted-foreground bg-muted border-border"}`}>
+                              {statusLabel[session.status] || session.status}
+                            </span>
+                            {tx?.amount && (
+                              <p className="text-sm font-medium">£{Number(tx.amount).toFixed(2)}</p>
+                            )}
+                          </div>
+                        </div>
+                        {session.chat_channel_id && (
+                          <button
+                            onClick={() => setActiveChatId(isOpen ? null : session.id)}
+                            className="w-full flex items-center justify-center gap-2 border border-border text-sm py-2 rounded-md hover:bg-accent transition-colors"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            {isOpen ? "Hide Chat" : "Open Chat"}
+                          </button>
+                        )}
+                      </div>
+                      {isOpen && session.chat_channel_id && (
+                        <div className="border-t border-border h-96">
+                          <PaintBookChat
+                            sessionId={session.id}
+                            userId={user?.id}
+                            userRole="painter"
+                            jobStatus={session.status}
+                            transactionId={tx?.id}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {pastSessions.length > 0 && (
+            <div>
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Past</h3>
+              <div className="space-y-2">
+                {pastSessions.map(session => {
+                  const tx = Array.isArray(session.transactions) ? session.transactions[0] : session.transactions
+                  return (
+                    <div key={session.id} className="border border-border rounded-lg p-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">{session.job_type}</p>
+                        <p className="text-xs text-muted-foreground">
+                          📍 {session.postcode?.split(" ")[0]} · {new Date(session.created_at).toLocaleDateString("en-GB")}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor[session.status] || "text-muted-foreground bg-muted border-border"}`}>
+                          {statusLabel[session.status] || session.status}
+                        </span>
+                        {tx?.amount && (
+                          <p className="text-xs text-muted-foreground mt-1">£{Number(tx.amount).toFixed(2)}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
 
@@ -692,6 +887,18 @@ export function PainterDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Inline toast for account actions
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null)
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    setToast({ msg, type })
+    setTimeout(() => setToast(null), 4000)
+  }
+
+  // Delete account inline flow
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteInputVal, setDeleteInputVal] = useState("")
+  const [deletingAccount, setDeletingAccount] = useState(false)
+
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -722,6 +929,67 @@ export function PainterDashboard() {
   async function handleSignOut() {
     await supabase.auth.signOut();
     window.location.href = "/login";
+  }
+
+  async function handleDownloadData() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast("Session expired. Please log in again.", "error"); return }
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-my-data`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          }
+        }
+      )
+      if (!res.ok) { showToast("Download failed. Please try again.", "error"); return }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `paintbookco-data-${new Date().toISOString().split("T")[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err: any) {
+      showToast("Download failed: " + (err.message || "Please try again."), "error")
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteInputVal !== "DELETE") return
+    setDeletingAccount(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast("Session expired. Please log in again.", "error"); setDeletingAccount(false); return }
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-my-account`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          }
+        }
+      )
+      const result = await res.json()
+      if (result.success) {
+        await supabase.auth.signOut()
+        window.location.href = "/"
+      } else {
+        showToast(result.error || "Failed to delete account. Please contact support.", "error")
+        setDeletingAccount(false)
+        setShowDeleteConfirm(false)
+        setDeleteInputVal("")
+      }
+    } catch (err: any) {
+      showToast("Error: " + (err.message || "Please try again."), "error")
+      setDeletingAccount(false)
+    }
   }
 
   if (loading) {
@@ -776,6 +1044,20 @@ export function PainterDashboard() {
           </div>
         </div>
       </header>
+
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg text-sm max-w-sm ${
+          toast.type === "error"
+            ? "bg-destructive/10 border-destructive/30 text-destructive"
+            : "bg-green-900/30 border-green-800/40 text-green-400"
+        }`}>
+          <span className="flex-1">{toast.msg}</span>
+          <button onClick={() => setToast(null)} className="flex-shrink-0 opacity-70 hover:opacity-100">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 flex overflow-x-hidden">
         {/* Sidebar — desktop only */}
@@ -959,32 +1241,16 @@ export function PainterDashboard() {
 
             {/* TAB 3: Available Jobs */}
             {activeTab === "available-jobs" && (
-              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Available Jobs</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Jobs near you looking for painters</p>
-                </div>
-                <div className="bg-accent/10 border border-border rounded-lg p-4">
-                  <p className="text-sm">
-                    {!painter.is_active
-                      ? "⏳ Complete your profile to see available jobs"
-                      : "No available jobs matching your criteria right now"}
-                  </p>
-                </div>
-              </div>
+              <AvailableJobsTab
+                painter={painter}
+                supabase={supabase}
+                onTabChange={setActiveTab}
+              />
             )}
 
             {/* TAB 4: My Jobs */}
             {activeTab === "my-jobs" && (
-              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">My Jobs</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Track your current and past jobs</p>
-                </div>
-                <div className="bg-accent/10 border border-border rounded-lg p-4">
-                  <p className="text-sm">No jobs yet</p>
-                </div>
-              </div>
+              <MyJobsTab painter={painter} user={user} supabase={supabase} />
             )}
 
             {/* TAB 5: Gallery */}
@@ -1062,70 +1328,49 @@ export function PainterDashboard() {
                     <h3 className="font-semibold mb-3 sm:mb-4">Account Actions</h3>
                     <div className="space-y-2">
                       <button
-                        onClick={async () => {
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            if (!session) { alert("Session expired. Please log in again."); return }
-                            const res = await fetch(
-                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-my-data`,
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Authorization": `Bearer ${session.access_token}`,
-                                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-                                }
-                              }
-                            )
-                            if (!res.ok) { alert("Download failed. Please try again."); return }
-                            const blob = await res.blob()
-                            const url = URL.createObjectURL(blob)
-                            const a = document.createElement("a")
-                            a.href = url
-                            a.download = `paintbookco-data-${new Date().toISOString().split("T")[0]}.json`
-                            document.body.appendChild(a)
-                            a.click()
-                            document.body.removeChild(a)
-                            URL.revokeObjectURL(url)
-                          } catch (err: any) {
-                            alert("Download failed: " + (err.message || "Please try again."))
-                          }
-                        }}
+                        onClick={handleDownloadData}
                         className="w-full flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground p-3 rounded border border-border hover:bg-accent transition-colors min-h-[44px]">
                         <Download className="h-4 w-4" />
                         Download My Data
                       </button>
-                      <button
-                        onClick={async () => {
-                          const input = window.prompt("Type DELETE to confirm account deletion. Note: your job history and compliance records will be retained as required by law.")
-                          if (input !== "DELETE") return
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            if (!session) { alert("Session expired. Please log in again."); return }
-                            const res = await fetch(
-                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-my-account`,
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Authorization": `Bearer ${session.access_token}`,
-                                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-                                }
-                              }
-                            )
-                            const result = await res.json()
-                            if (result.success) {
-                              await supabase.auth.signOut()
-                              window.location.href = "/"
-                            } else {
-                              alert(result.error || "Failed to delete account. Please contact support.")
-                            }
-                          } catch (err: any) {
-                            alert("Error: " + (err.message || "Please try again."))
-                          }
-                        }}
-                        className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors min-h-[44px]">
-                        <Trash2 className="h-4 w-4" />
-                        Delete Account
-                      </button>
+
+                      {!showDeleteConfirm ? (
+                        <button
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors min-h-[44px]">
+                          <Trash2 className="h-4 w-4" />
+                          Delete Account
+                        </button>
+                      ) : (
+                        <div className="space-y-3 border border-destructive/40 rounded-lg p-4">
+                          <p className="text-sm text-muted-foreground">
+                            Type <strong className="text-foreground">DELETE</strong> to confirm.
+                            Your job history and compliance records will be retained as required by law.
+                          </p>
+                          <input
+                            type="text"
+                            value={deleteInputVal}
+                            onChange={e => setDeleteInputVal(e.target.value)}
+                            placeholder="Type DELETE to confirm"
+                            className="w-full border-b border-border bg-transparent text-sm py-2 focus:outline-none focus:border-destructive placeholder:text-muted-foreground/50"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleDeleteAccount}
+                              disabled={deleteInputVal !== "DELETE" || deletingAccount}
+                              className="flex-1 bg-destructive text-white py-2 rounded text-sm font-medium disabled:opacity-50 min-h-[44px]"
+                            >
+                              {deletingAccount ? "Deleting..." : "Confirm Delete"}
+                            </button>
+                            <button
+                              onClick={() => { setShowDeleteConfirm(false); setDeleteInputVal("") }}
+                              className="flex-1 border border-border py-2 rounded text-sm min-h-[44px]"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -117,11 +117,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update session status
+    // Update session status and store channel_id
     await serviceClient
       .from("sessions")
-      .update({ status: "painter_contacted" })
+      .update({ status: "painter_contacted", chat_channel_id: channelId })
       .eq("id", session_id);
+
+    // Store channel_id on transaction if one exists
+    const { data: existingTx } = await serviceClient
+      .from("transactions")
+      .select("id")
+      .eq("session_id", session_id)
+      .maybeSingle();
+    if (existingTx) {
+      await serviceClient
+        .from("transactions")
+        .update({ chat_channel_id: channelId, status: "painter_contacted" })
+        .eq("id", existingTx.id);
+    }
 
     // Audit log
     await serviceClient.from("audit_log").insert({

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabase";
-import { CheckCircle2, Clock, MessageSquare, Shield, AlertTriangle, XCircle, ChevronRight } from "lucide-react";
+import { PaintBookChat } from "@/components/chat/PaintBookChat";
+import { CheckCircle2, Clock, MessageSquare, Shield, AlertTriangle, XCircle, ChevronRight, Loader2 } from "lucide-react";
 
 const STATUS_STEPS = [
   { key: "job_posted",        label: "Job Posted" },
@@ -25,6 +27,7 @@ export default function JobSessionPage() {
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const [payLoading, setPayLoading] = useState(false);
 
   useEffect(() => {
     if (!token) { setError("Invalid link."); setLoading(false); return; }
@@ -115,9 +118,44 @@ export default function JobSessionPage() {
   const status = transaction?.status || session?.status || "job_posted";
   const stepIndex = getStepIndex(status);
   const isReadOnly = ["completed", "cancelled", "disputed"].includes(status);
+  // Painter name: first name only until escrow funded; full name after
   const painterName = transaction?.painters
-    ? `${transaction.painters.first_name} ${transaction.painters.last_name}`
+    ? (["funded", "in_progress", "completion_requested", "completed"].includes(status)
+        ? `${transaction.painters.first_name} ${transaction.painters.last_name}`
+        : transaction.painters.first_name)
     : null;
+
+  async function handlePayNow() {
+    if (!transaction) return;
+    setPayLoading(true);
+    setActionMessage("");
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-transpact`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            transaction_id: transaction.id,
+            customer_token: token,
+          }),
+        }
+      );
+      const result = await res.json();
+      if (result.payment_url) {
+        window.location.href = result.payment_url;
+      } else {
+        setActionMessage(result.error || "Could not create payment. Please try again.");
+      }
+    } catch {
+      setActionMessage("Payment request failed. Please try again.");
+    } finally {
+      setPayLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -203,15 +241,21 @@ export default function JobSessionPage() {
             </h2>
             <div
               className="text-sm"
-              dangerouslySetInnerHTML={{ __html: transaction.invoice_html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(transaction.invoice_html) }}
             />
-            
-            <a
-              href={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-transpact?transaction_id=${transaction.id}&customer_token=${token}`}
-              className="block w-full bg-foreground text-background text-center py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
+
+            {actionMessage && (
+              <p className="text-sm text-destructive text-center">{actionMessage}</p>
+            )}
+
+            <button
+              onClick={handlePayNow}
+              disabled={payLoading}
+              className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
+              {payLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               Pay Now — Secure Escrow
-            </a>
+            </button>
           </div>
         )}
 
@@ -232,19 +276,20 @@ export default function JobSessionPage() {
           </div>
         )}
 
-        {/* Chat link */}
-        {transaction?.chat_channel_id && !isReadOnly && (
+        {/* Chat — embedded for customer */}
+        {(transaction?.chat_channel_id || session?.chat_channel_id) && !isReadOnly && (
           <div className="bg-card border border-border rounded-lg p-5">
             <h2 className="text-sm font-medium flex items-center gap-2 mb-3">
               <MessageSquare className="h-4 w-4" /> Chat with your painter
             </h2>
-
-            <a
-              href={`/chat/${transaction.chat_channel_id}?token=${token}`}
-              className="block w-full border border-border text-center py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
-            >
-              Open Chat
-            </a>
+            <div className="h-96">
+              <PaintBookChat
+                sessionId={session?.id}
+                userId={`customer-${session?.id}`}
+                userRole="customer"
+                customerToken={token}
+              />
+            </div>
           </div>
         )}
 
@@ -267,7 +312,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {!["disputed", "cancelled", "completed"].includes(status) && (
+            {["funded", "in_progress", "completion_requested"].includes(status) && (
               <button
                 onClick={() => handleAction("raise-dispute")}
                 disabled={!!actionLoading}

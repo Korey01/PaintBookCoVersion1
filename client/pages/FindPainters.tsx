@@ -146,7 +146,7 @@ export default function FindPainters() {
         <p className="mt-1 text-muted-foreground">
           Compare painters by ratings, skills and price. Enjoy 100% escrow
           protection — your full payment is held securely until you approve the
-          job (via Stripe (FCA-regulated payment partner)).
+          job (via Transpact secure escrow).
         </p>
       </div>
       <div className="grid gap-8 md:grid-cols-[280px_1fr]">

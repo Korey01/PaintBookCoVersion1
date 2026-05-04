@@ -408,7 +408,7 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
           const { error: uploadErr } = await supabase.storage
             .from("painter-gallery")
             .upload(path, compressed, { upsert: false })
-          if (uploadErr) { console.error(`Upload failed for ${file.name}:`, uploadErr); continue }
+          if (uploadErr) { setError(`Upload failed: ${uploadErr.message} (${uploadErr.statusCode})`); setUploading(false); return }
           const { data: { publicUrl } } = supabase.storage.from("painter-gallery").getPublicUrl(path)
           await supabase.from("painter_gallery").insert({
             painter_id: painter.id,

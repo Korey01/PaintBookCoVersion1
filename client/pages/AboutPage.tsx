@@ -264,7 +264,4 @@ export default function AboutPage() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(AboutPage, { name: "AboutPage", inputs: [] }); })
   .catch(() => {});

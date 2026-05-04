@@ -147,7 +147,4 @@ export default function PricingPage() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(PricingPage, { name: "PricingPage", inputs: [] }); })
   .catch(() => {});

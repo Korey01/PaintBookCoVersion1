@@ -25,7 +25,4 @@ export default function NotFoundPage() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(NotFoundPage, { name: "NotFoundPage", inputs: [] }); })
   .catch(() => {});

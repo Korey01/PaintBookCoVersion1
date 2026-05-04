@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabase";
+import { PaintBookChat } from "@/components/chat/PaintBookChat";
 import { CheckCircle2, Clock, MessageSquare, Shield, AlertTriangle, XCircle, ChevronRight, Loader2 } from "lucide-react";
 
 const STATUS_STEPS = [
@@ -275,19 +276,20 @@ export default function JobSessionPage() {
           </div>
         )}
 
-        {/* Chat link */}
-        {transaction?.chat_channel_id && !isReadOnly && (
+        {/* Chat — embedded for customer */}
+        {(transaction?.chat_channel_id || session?.chat_channel_id) && !isReadOnly && (
           <div className="bg-card border border-border rounded-lg p-5">
             <h2 className="text-sm font-medium flex items-center gap-2 mb-3">
               <MessageSquare className="h-4 w-4" /> Chat with your painter
             </h2>
-
-            <a
-              href={`/chat/${transaction.chat_channel_id}?token=${token}`}
-              className="block w-full border border-border text-center py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
-            >
-              Open Chat
-            </a>
+            <div className="h-96">
+              <PaintBookChat
+                sessionId={session?.id}
+                userId={`customer-${session?.id}`}
+                userRole="customer"
+                customerToken={token}
+              />
+            </div>
           </div>
         )}
 

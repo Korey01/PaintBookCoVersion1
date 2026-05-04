@@ -15,7 +15,7 @@ export default function Footer() {
           {/* Brand — 5 cols */}
           <div className="md:col-span-5 space-y-6">
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800"
+              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
               alt="PaintBookco"
               className="h-7 w-auto brightness-0 invert opacity-90"
             />
@@ -41,16 +41,16 @@ export default function Footer() {
 
           {/* Product links — 3 cols */}
           <div className="md:col-span-3">
-            <p className="editorial-label text-white/30 mb-5">Product</p>
+            <p className="editorial-label text-white/30 mb-5">Platform</p>
             <ul className="space-y-3">
               {[
-                { to: "/post-job",        label: "Find a Decorator" },
-                { to: "/post-job",        label: "Post a Job" },
-                { to: "/vestimator",      label: "Paint Vestimator" },
-                { to: "/join-decorator",  label: "Join as a Decorator" },
-                { to: "/b2b/find-painter", label: "Commercial Projects" },
+                { to: "/how-it-works/customers", label: "How It Works" },
+                { to: "/post-job",               label: "Post a Job" },
+                { to: "/find-painters",           label: "Find Painters" },
+                { to: "/vestimator",              label: "Paint Vestimator" },
+                { to: "/join-painter",            label: "Join as a Decorator" },
               ].map(({ to, label }) => (
-                <li key={to}>
+                <li key={label}>
                   <Link
                     to={to}
                     className="text-sm text-white/50 hover:text-white transition-colors duration-200 inline-flex items-center gap-1 group"
@@ -70,7 +70,7 @@ export default function Footer() {
               {[
                 { to: "/about",        label: "About" },
                 { to: "/trust-safety", label: "Trust & Safety" },
-                { to: "/help",         label: "Help & Support" },
+                { to: "/contact",      label: "Contact" },
                 { to: "/privacy",      label: "Privacy Policy" },
                 { to: "/terms",        label: "Terms of Service" },
                 { to: "/cookies",      label: "Cookie Policy" },

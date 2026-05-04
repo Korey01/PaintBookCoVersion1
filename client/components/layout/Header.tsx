@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
+const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
+
 const NAV_LINKS = [
-  { to: "/how-it-works/customers", label: "How It Works" },
-  { to: "/pricing", label: "Pricing" },
+  { to: "/vestimator", label: "Estimate" },
+  { to: "/find-painters", label: "Find Painters" },
   { to: "/about", label: "About" },
+  { to: "/trust-safety", label: "Trust & Safety" },
 ];
 
 export default function Header() {
@@ -21,7 +24,6 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const transparent = isHome && !scrolled;
@@ -44,7 +46,7 @@ export default function Header() {
             className="flex-shrink-0 transition-opacity duration-200 hover:opacity-75"
           >
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
+              src={LOGO}
               alt="PaintBookCo"
               className={`h-20 w-auto transition-all duration-300 ${transparent ? "brightness-[10]" : ""}`}
             />
@@ -69,27 +71,28 @@ export default function Header() {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <Link
-              to="/login"
+              to="/join-painter"
               className={[
-                "text-sm font-medium transition-colors duration-300",
-                transparent ? "text-white/80 hover:text-white" : "text-foreground/70 hover:text-foreground",
+                "text-sm font-medium px-4 py-2 border transition-all duration-200 hover:scale-[1.02]",
+                transparent
+                  ? "border-white/60 text-white/90 hover:border-white hover:text-white"
+                  : "border-border text-foreground hover:bg-accent",
               ].join(" ")}
             >
-              Log In
+              Join as a Decorator
             </Link>
             <Link
-              to="/register/customer"
+              to="/post-job"
               className={[
-                "text-sm font-medium px-5 py-2.5 transition-all duration-200",
-                "hover:scale-[1.02] hover:shadow-[0_4px_16px_rgba(0,0,0,0.15)]",
+                "text-sm font-medium px-5 py-2.5 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_4px_16px_rgba(0,0,0,0.15)]",
                 transparent
                   ? "bg-white text-foreground"
-                  : "bg-foreground text-background",
+                  : "bg-foreground text-background hover:bg-foreground/90",
               ].join(" ")}
             >
-              Get Started
+              Post a Job
             </Link>
           </div>
 
@@ -116,11 +119,7 @@ export default function Header() {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-border">
           <Link to="/" aria-label="PaintBookCo home">
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
-              alt="PaintBookCo"
-              className="h-20 w-auto"
-            />
+            <img src={LOGO} alt="PaintBookCo" className="h-20 w-auto" />
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
@@ -131,7 +130,7 @@ export default function Header() {
           </button>
         </div>
 
-        <nav className="flex flex-col px-6 py-8">
+        <nav className="flex flex-col px-6 py-8 flex-1">
           {NAV_LINKS.map(({ to, label }) => (
             <Link
               key={to}
@@ -141,28 +140,31 @@ export default function Header() {
               {label}
             </Link>
           ))}
-          <Link
-            to="/login"
-            className="py-4 text-base font-medium text-foreground border-b border-border/50 hover:text-primary transition-colors"
-          >
-            Log In
-          </Link>
         </nav>
 
-        <div className="px-6 mt-auto pb-10">
+        <div className="px-6 pb-6 space-y-3">
           <Link
-            to="/register/customer"
+            to="/post-job"
             className="block text-center bg-foreground text-background font-medium py-4 w-full hover:bg-foreground/85 transition-colors"
           >
-            Get Started
+            Post a Job
           </Link>
+          <Link
+            to="/join-painter"
+            className="block text-center border border-border text-foreground font-medium py-4 w-full hover:bg-accent transition-colors"
+          >
+            Join as a Decorator
+          </Link>
+          <div className="pt-2 text-center">
+            <Link
+              to="/login"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Painter Login
+            </Link>
+          </div>
         </div>
       </div>
     </>
   );
 }
-
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(Header, { name: "PublicHeader", inputs: [] }); })
-  .catch(() => {});

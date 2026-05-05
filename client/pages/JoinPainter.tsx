@@ -350,7 +350,11 @@ export default function JoinPainter() {
       }
 
       // Trigger confirmation email (Edge Function creates the user, resend ensures delivery)
-      await supabase.auth.resend({ type: "signup", email });
+      await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/verify-email` },
+      });
 
       // After signup, go to completed page
       setIsSubmitting(false);

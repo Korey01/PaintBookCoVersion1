@@ -75,7 +75,7 @@ function Hero() {
           style={{ animationDelay: "0.65s", animationFillMode: "both" }}
         >
           <Link
-            to="/choose-role"
+            to="/post-job"
             className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium text-base px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_hsl(18_88%_52%_/_0.4)]"
           >
             Get Started
@@ -277,7 +277,7 @@ function CTABand() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            to="/choose-role"
+            to="/post-job"
             className="group inline-flex items-center gap-2 bg-foreground text-background font-medium px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.02]"
           >
             Get Started Now

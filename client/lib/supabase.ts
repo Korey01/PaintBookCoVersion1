@@ -9,6 +9,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     persistSession: true,
     detectSessionInUrl: true,
     storage: typeof window !== "undefined" ? window.localStorage : undefined,
+    lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => {
+      return fn();
+    },
   },
 });
 

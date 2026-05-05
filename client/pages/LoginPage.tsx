@@ -47,10 +47,10 @@ export default function LoginPage() {
       return;
     }
 
-    // Admin check first
-    if (user.email === import.meta.env.VITE_ADMIN_EMAIL) {
+    // Admin check — must happen before any painters table lookup
+    if (user.email && user.email === import.meta.env.VITE_ADMIN_EMAIL) {
       setLoading(false);
-      navigate("/admin-dashboard");
+      navigate("/admin-dashboard", { replace: true });
       return;
     }
 

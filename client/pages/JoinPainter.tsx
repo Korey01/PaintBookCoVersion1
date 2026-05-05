@@ -349,6 +349,9 @@ export default function JoinPainter() {
         }
       }
 
+      // Trigger confirmation email (Edge Function creates the user, resend ensures delivery)
+      await supabase.auth.resend({ type: "signup", email });
+
       // After signup, go to completed page
       setIsSubmitting(false);
       navigate("/join-painter/completed");

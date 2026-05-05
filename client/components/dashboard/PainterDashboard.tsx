@@ -218,6 +218,7 @@ function AvailableJobsTab({
   supabase: any;
   onTabChange: (tab: string) => void;
 }) {
+  const navigate = useNavigate()
   const [jobs, setJobs] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [passedJobs, setPassedJobs] = React.useState<string[]>([])
@@ -256,7 +257,11 @@ function AvailableJobsTab({
     setChatError("")
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setChatting(null); return }
+      if (!session) {
+        setChatError("Session expired. Please log in again.")
+        setChatting(null)
+        return
+      }
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/initiate-chat`,
         {
@@ -266,12 +271,13 @@ function AvailableJobsTab({
             "Authorization": `Bearer ${session.access_token}`,
             "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ session_id: job.id })
+          body: JSON.stringify({ session_id: job.id, painter_id: painter.id })
         }
       )
       const result = await res.json()
-      if (result.success) {
-        setJobs(prev => prev.filter(j => j.id !== job.id))
+      if (result.success && result.channel_id) {
+        navigate(`/chat/${result.channel_id}`)
+      } else if (result.success) {
         onTabChange("my-jobs")
       } else {
         setChatError(result.error || "Failed to start chat. Please try again.")

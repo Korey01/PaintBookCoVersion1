@@ -7,7 +7,7 @@ export default function LogoStroke() {
     <div className="relative mx-auto flex h-[60vh] w-full items-center justify-center">
       <div className="pointer-events-none absolute left-0 right-0 top-0 h-[60vh] bg-gradient-to-br from-black/10 to-white/20 mix-blend-overlay" />
       <motion.img
-        src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png"
+        src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
         alt="PaintBookco logo"
         className="relative z-10 max-h-[70vh] w-auto -translate-y-36"
         initial={{ opacity: 0 }}

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 export default function ConfirmPage() {
   const navigate = useNavigate();

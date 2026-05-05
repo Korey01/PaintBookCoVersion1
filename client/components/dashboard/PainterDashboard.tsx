@@ -849,7 +849,7 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
 }
 
 
-const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: BarChart3 },

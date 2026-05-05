@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 export default function Footer() {
   return (

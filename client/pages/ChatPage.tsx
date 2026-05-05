@@ -149,7 +149,7 @@ export default function ChatPage() {
       <div className="bg-gray-900 border-b border-gray-800 px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div>
-            <img src="/logo.png" alt="PaintBookCo" className="h-7 object-contain" />
+            <img src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png" alt="PaintBookCo" className="h-7 object-contain" />
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-green-400 text-xs">

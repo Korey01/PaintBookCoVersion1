@@ -206,7 +206,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="border-b border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800" alt="PaintBookCo" className="h-7 object-contain" />
+          <img src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png" alt="PaintBookCo" className="h-7 object-contain" />
           <span className="text-sm font-medium text-muted-foreground">Admin Dashboard</span>
         </div>
         <div className="flex items-center gap-3">

@@ -9,7 +9,7 @@ import {
   Estimate,
 } from "@/lib/vestimator-utils";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png";
 
 type Step = "product" | "rooms" | "estimate";
 

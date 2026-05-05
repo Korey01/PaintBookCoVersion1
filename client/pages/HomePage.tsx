@@ -13,7 +13,7 @@ function Label({ children, className = "" }: { children: React.ReactNode; classN
   );
 }
 
-const VIDEO_SRC = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/Background+video+loop.mp4";
+const VIDEO_SRC = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/hero-background.mp4";
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
-const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/PaintBookCO+Official+Logo.png";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 const NAV_LINKS = [
   { to: "/vestimator", label: "Estimate" },

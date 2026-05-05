@@ -1,3 +1,5 @@
+// Required migration: ALTER TABLE painters ADD COLUMN IF NOT EXISTS profile_picture_url text;
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -18,6 +20,8 @@ import {
   Shield,
   MessageSquare,
   X,
+  Star,
+  Camera,
 } from "lucide-react";
 
 function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: () => void }) {
@@ -855,6 +859,101 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
 }
 
 
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1,2,3,4,5].map(n => (
+        <Star key={n} className={`h-3.5 w-3.5 ${n <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+      ))}
+    </div>
+  )
+}
+
+function ReviewsTab({ painter, supabase }: { painter: any; supabase: any }) {
+  const [reviews, setReviews] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => { if (painter?.id) load() }, [painter?.id])
+
+  const load = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from("reviews")
+      .select("id, rating, review_text, created_at")
+      .eq("painter_id", painter.id)
+      .order("created_at", { ascending: false })
+    setReviews(data || [])
+    setLoading(false)
+  }
+
+  const avg = reviews.length
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : null
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Reviews</h1>
+        {avg && (
+          <div className="flex items-center gap-2 mt-1">
+            <StarDisplay rating={Number(avg)} />
+            <span className="text-sm font-medium">{avg} avg</span>
+            <span className="text-xs text-muted-foreground">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
+          </div>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="border border-dashed border-border rounded-xl p-12 text-center">
+          <p className="font-medium">No reviews yet</p>
+          <p className="text-sm text-muted-foreground mt-1">Reviews appear here once customers complete and rate jobs</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {reviews.map(r => (
+            <div key={r.id} className="border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <StarDisplay rating={r.rating} />
+                <span className="text-xs text-muted-foreground">
+                  {new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              </div>
+              <p className="text-sm">{r.review_text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+async function compressProfileImage(file: File): Promise<File> {
+  return new Promise(resolve => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const max = 400
+      let w = img.width, h = img.height
+      if (w > max || h > max) {
+        if (w > h) { h = Math.round(h * max / w); w = max }
+        else { w = Math.round(w * max / h); h = max }
+      }
+      const canvas = document.createElement("canvas")
+      canvas.width = w; canvas.height = h
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h)
+      canvas.toBlob(blob => {
+        URL.revokeObjectURL(url)
+        resolve(new File([blob!], "profile.jpg", { type: "image/jpeg" }))
+      }, "image/jpeg", 0.88)
+    }
+    img.src = url
+  })
+}
+
 const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 const TABS = [
@@ -863,6 +962,7 @@ const TABS = [
   { id: "available-jobs", label: "Available Jobs", icon: Briefcase },
   { id: "my-jobs", label: "My Jobs", icon: FileText },
   { id: "gallery", label: "Gallery", icon: Image },
+  { id: "reviews", label: "Reviews", icon: Star },
   { id: "availability", label: "Availability", icon: Calendar },
   { id: "profile", label: "Profile", icon: Settings },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -904,6 +1004,37 @@ export function PainterDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteInputVal, setDeleteInputVal] = useState("")
   const [deletingAccount, setDeletingAccount] = useState(false)
+
+  // Profile picture
+  const [profilePicUploading, setProfilePicUploading] = useState(false)
+  const [profilePicError, setProfilePicError] = useState("")
+
+  async function handleProfilePicUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const allowed = ["image/jpeg", "image/png", "image/webp"]
+    if (!allowed.includes(file.type)) { setProfilePicError("Only JPG, PNG or WebP accepted."); return }
+    if (file.size > 2 * 1024 * 1024) { setProfilePicError("Image must be under 2MB."); return }
+    setProfilePicError("")
+    setProfilePicUploading(true)
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession) { setProfilePicError("Session expired. Please log in again."); setProfilePicUploading(false); return }
+      const compressed = await compressProfileImage(file)
+      const path = `${painter.id}/profile.jpg`
+      const { error: uploadErr } = await supabase.storage
+        .from("painter-profiles")
+        .upload(path, compressed, { upsert: true })
+      if (uploadErr) { setProfilePicError(`Upload failed: ${uploadErr.message}`); setProfilePicUploading(false); return }
+      const { data: { publicUrl } } = supabase.storage.from("painter-profiles").getPublicUrl(path)
+      await supabase.from("painters").update({ profile_picture_url: publicUrl }).eq("id", painter.id)
+      setPainter((p: any) => ({ ...p, profile_picture_url: publicUrl }))
+      showToast("Profile picture updated.")
+    } catch (err: any) {
+      setProfilePicError(err.message || "Upload failed.")
+    }
+    setProfilePicUploading(false)
+  }
 
   useEffect(() => {
     loadDashboard();
@@ -1094,9 +1225,18 @@ export function PainterDashboard() {
             {/* TAB 1: Overview */}
             {activeTab === "overview" && (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Overview</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {painter.first_name}</p>
+                <div className="flex items-center gap-4">
+                  {painter.profile_picture_url ? (
+                    <img src={painter.profile_picture_url} alt={painter.first_name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg font-bold text-foreground/60">{painter.first_name?.[0]?.toUpperCase()}</span>
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-0.5">Overview</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {painter.first_name}</p>
+                  </div>
                 </div>
 
                 {/* Insurance required banner */}
@@ -1266,7 +1406,12 @@ export function PainterDashboard() {
               </div>
             )}
 
-            {/* TAB 6: Availability */}
+            {/* TAB 6: Reviews */}
+            {activeTab === "reviews" && (
+              <ReviewsTab painter={painter} supabase={supabase} />
+            )}
+
+            {/* TAB 7: Availability */}
             {activeTab === "availability" && (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <AvailabilityTab painter={painter} supabase={supabase} onRefresh={loadDashboard} />
@@ -1282,6 +1427,38 @@ export function PainterDashboard() {
                 </div>
 
                 <div className="space-y-4 sm:space-y-6">
+                  {/* Profile Picture */}
+                  <div className="border border-border rounded-lg p-4 sm:p-6">
+                    <h3 className="font-semibold mb-3 sm:mb-4">Profile Picture</h3>
+                    <div className="flex items-center gap-4">
+                      {painter.profile_picture_url ? (
+                        <img src={painter.profile_picture_url} alt={painter.first_name} className="w-20 h-20 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-2xl font-bold text-foreground/50">{painter.first_name?.[0]?.toUpperCase()}</span>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <label className="cursor-pointer inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent transition-colors min-h-[44px]">
+                          {profilePicUploading ? (
+                            <><div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> Uploading...</>
+                          ) : (
+                            <><Camera className="h-4 w-4" /> Change Photo</>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleProfilePicUpload}
+                            className="hidden"
+                            disabled={profilePicUploading}
+                          />
+                        </label>
+                        <p className="text-xs text-muted-foreground">JPG, PNG or WebP — max 2MB</p>
+                        {profilePicError && <p className="text-xs text-destructive">{profilePicError}</p>}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Personal Details */}
                   <div className="border border-border rounded-lg p-4 sm:p-6">
                     <h3 className="font-semibold mb-3 sm:mb-4">Personal Details</h3>

@@ -97,6 +97,8 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             // Customer notification
             customer_email: session.email,
+            customer_first_name: session.first_name || "",
+            customer_token: session.customer_token || "",
             chat_link: customerChatLink,
             job_ref: jobRef,
             job_type: session.job_type,

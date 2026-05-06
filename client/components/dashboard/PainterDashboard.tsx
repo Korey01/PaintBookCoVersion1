@@ -433,7 +433,8 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
       for (const file of files) {
         try {
           const compressed = await compressImage(file)
-          const path = `${painter.id}/${Date.now()}_${file.name}`
+          const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const path = `${painter.id}/${Date.now()}_${sanitizedName}`
           const { error: uploadErr } = await supabase.storage
             .from("painter-gallery")
             .upload(path, compressed, { upsert: false })

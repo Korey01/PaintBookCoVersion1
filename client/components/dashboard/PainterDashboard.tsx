@@ -449,7 +449,9 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
           })
           newUsedBytes += compressed.size
         } catch (err: any) {
-          console.error(`Error uploading ${file.name}:`, err)
+          setError(err.message || `Upload failed`)
+          setUploading(false)
+          return
         }
       }
       await supabase.from("painters").update({
@@ -563,25 +565,35 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
   )
 }
 
-async function compressImage(file: File): Promise<File> {
-  return new Promise(resolve => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
+async function compressImage(file: File, maxDimension = 1920): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement("img") as HTMLImageElement;
+    const url = URL.createObjectURL(file);
     img.onload = () => {
-      const canvas = document.createElement("canvas")
-      const maxW = 1920
-      let w = img.width, h = img.height
-      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW }
-      canvas.width = w; canvas.height = h
-      const ctx = canvas.getContext("2d")!
-      ctx.drawImage(img, 0, 0, w, h)
-      canvas.toBlob(blob => {
-        URL.revokeObjectURL(url)
-        resolve(new File([blob!], file.name, { type: "image/jpeg" }))
-      }, "image/jpeg", 0.82)
-    }
-    img.src = url
-  })
+      try {
+        const canvas = document.createElement("canvas");
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (w > maxDimension) { h = Math.round(h * maxDimension / w); w = maxDimension; }
+        if (h > maxDimension) { w = Math.round(w * maxDimension / h); h = maxDimension; }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(file); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          URL.revokeObjectURL(url);
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name, { type: "image/jpeg" }));
+        }, "image/jpeg", 0.82);
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
 }
 
 function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supabase: any, onRefresh: () => void }) {
@@ -931,27 +943,70 @@ function ReviewsTab({ painter, supabase }: { painter: any; supabase: any }) {
   )
 }
 
-async function compressProfileImage(file: File): Promise<File> {
-  return new Promise(resolve => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      const max = 400
-      let w = img.width, h = img.height
-      if (w > max || h > max) {
-        if (w > h) { h = Math.round(h * max / w); w = max }
-        else { w = Math.round(w * max / h); h = max }
-      }
-      const canvas = document.createElement("canvas")
-      canvas.width = w; canvas.height = h
-      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h)
-      canvas.toBlob(blob => {
-        URL.revokeObjectURL(url)
-        resolve(new File([blob!], "profile.jpg", { type: "image/jpeg" }))
-      }, "image/jpeg", 0.88)
+function ProfilePictureUpload({ painter, supabase, onRefresh }: { painter: any; supabase: any; onRefresh: () => void }) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState("")
+  const [localUrl, setLocalUrl] = useState<string | null>(painter.profile_picture_url || null)
+
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const allowed = ["image/jpeg", "image/png", "image/webp"]
+    if (!allowed.includes(file.type)) { setError("Only JPG, PNG or WebP accepted."); return }
+    if (file.size > 5 * 1024 * 1024) { setError("Image must be under 5MB."); return }
+    setError("")
+    setUploading(true)
+    try {
+      const compressed = await compressImage(file, 400)
+      const path = `${painter.id}/profile.jpg`
+      const { error: uploadErr } = await supabase.storage
+        .from("painter-profiles")
+        .upload(path, compressed, { upsert: true })
+      if (uploadErr) { setError(`Upload failed: ${uploadErr.message}`); setUploading(false); return }
+      const { data: { publicUrl } } = supabase.storage.from("painter-profiles").getPublicUrl(path)
+      await supabase.from("painters").update({ profile_picture_url: publicUrl }).eq("id", painter.id)
+      setLocalUrl(publicUrl)
+      onRefresh()
+    } catch (err: any) {
+      setError(err.message || "Upload failed.")
     }
-    img.src = url
-  })
+    setUploading(false)
+  }
+
+  const initials = `${painter.first_name?.[0] || ""}${painter.last_name?.[0] || ""}`.toUpperCase()
+
+  return (
+    <div className="border border-border rounded-lg p-4 sm:p-6">
+      <h3 className="font-semibold mb-3 sm:mb-4">Profile Picture</h3>
+      <div className="flex items-center gap-4">
+        {localUrl ? (
+          <img src={localUrl} alt={painter.first_name} className="w-20 h-20 rounded-full object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-2xl font-bold text-foreground/50">{initials}</span>
+          </div>
+        )}
+        <div className="space-y-2">
+          <label className="cursor-pointer inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent transition-colors min-h-[44px]">
+            {uploading ? (
+              <><div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> Uploading...</>
+            ) : (
+              <><Camera className="h-4 w-4" /> Change Photo</>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleChange}
+              className="hidden"
+              disabled={uploading}
+            />
+          </label>
+          <p className="text-xs text-muted-foreground">JPG, PNG or WebP — max 5MB</p>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
@@ -1004,37 +1059,6 @@ export function PainterDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteInputVal, setDeleteInputVal] = useState("")
   const [deletingAccount, setDeletingAccount] = useState(false)
-
-  // Profile picture
-  const [profilePicUploading, setProfilePicUploading] = useState(false)
-  const [profilePicError, setProfilePicError] = useState("")
-
-  async function handleProfilePicUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const allowed = ["image/jpeg", "image/png", "image/webp"]
-    if (!allowed.includes(file.type)) { setProfilePicError("Only JPG, PNG or WebP accepted."); return }
-    if (file.size > 2 * 1024 * 1024) { setProfilePicError("Image must be under 2MB."); return }
-    setProfilePicError("")
-    setProfilePicUploading(true)
-    try {
-      const { data: { session: authSession } } = await supabase.auth.getSession()
-      if (!authSession) { setProfilePicError("Session expired. Please log in again."); setProfilePicUploading(false); return }
-      const compressed = await compressProfileImage(file)
-      const path = `${painter.id}/profile.jpg`
-      const { error: uploadErr } = await supabase.storage
-        .from("painter-profiles")
-        .upload(path, compressed, { upsert: true })
-      if (uploadErr) { setProfilePicError(`Upload failed: ${uploadErr.message}`); setProfilePicUploading(false); return }
-      const { data: { publicUrl } } = supabase.storage.from("painter-profiles").getPublicUrl(path)
-      await supabase.from("painters").update({ profile_picture_url: publicUrl }).eq("id", painter.id)
-      setPainter((p: any) => ({ ...p, profile_picture_url: publicUrl }))
-      showToast("Profile picture updated.")
-    } catch (err: any) {
-      setProfilePicError(err.message || "Upload failed.")
-    }
-    setProfilePicUploading(false)
-  }
 
   useEffect(() => {
     loadDashboard();
@@ -1428,36 +1452,7 @@ export function PainterDashboard() {
 
                 <div className="space-y-4 sm:space-y-6">
                   {/* Profile Picture */}
-                  <div className="border border-border rounded-lg p-4 sm:p-6">
-                    <h3 className="font-semibold mb-3 sm:mb-4">Profile Picture</h3>
-                    <div className="flex items-center gap-4">
-                      {painter.profile_picture_url ? (
-                        <img src={painter.profile_picture_url} alt={painter.first_name} className="w-20 h-20 rounded-full object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-20 h-20 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-2xl font-bold text-foreground/50">{painter.first_name?.[0]?.toUpperCase()}</span>
-                        </div>
-                      )}
-                      <div className="space-y-2">
-                        <label className="cursor-pointer inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent transition-colors min-h-[44px]">
-                          {profilePicUploading ? (
-                            <><div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> Uploading...</>
-                          ) : (
-                            <><Camera className="h-4 w-4" /> Change Photo</>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={handleProfilePicUpload}
-                            className="hidden"
-                            disabled={profilePicUploading}
-                          />
-                        </label>
-                        <p className="text-xs text-muted-foreground">JPG, PNG or WebP — max 2MB</p>
-                        {profilePicError && <p className="text-xs text-destructive">{profilePicError}</p>}
-                      </div>
-                    </div>
-                  </div>
+                  <ProfilePictureUpload painter={painter} supabase={supabase} onRefresh={loadDashboard} />
 
                   {/* Personal Details */}
                   <div className="border border-border rounded-lg p-4 sm:p-6">

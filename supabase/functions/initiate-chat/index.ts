@@ -70,18 +70,10 @@ Deno.serve(async (req) => {
       expiresAt
     );
 
-    // Generate customer token (anonymous user ID based on session)
-    const customerId = `customer-${session_id}`;
-    const customerToken = await generateStreamToken(
-      streamSecret,
-      customerId,
-      expiresAt
-    );
-
     // Create chat link for both parties
     const baseUrl = "https://www.paintbookco.co.uk";
     const painterChatLink = `${baseUrl}/chat/${channelId}?token=${painterToken}&user=${painter.id}&role=painter`;
-    const customerChatLink = `${baseUrl}/chat/${channelId}?token=${customerToken}&user=${customerId}&role=customer`;
+    const customerChatLink = `${baseUrl}/chat/${channelId}?customer_token=${session.customer_token}&session_id=${session_id}`;
 
     // Job reference
     const jobRef = `PBC-${session_id.slice(-6).toUpperCase()}`;

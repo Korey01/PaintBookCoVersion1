@@ -34,16 +34,65 @@ export default function ChatPage() {
   const token = searchParams.get("token") || "";
   const userId = searchParams.get("user") || "";
   const role = searchParams.get("role") || "customer";
+  const customerToken = searchParams.get("customer_token") || "";
+  const sessionId = searchParams.get("session_id") || "";
   const streamApiKey = import.meta.env.VITE_STREAM_API_KEY;
 
   useEffect(() => {
-    if (!token || !userId || !channel_id || !streamApiKey) {
+    if (!channel_id || !streamApiKey) {
       setError("Invalid chat link. Please use the link from your email.");
       setLoading(false);
       return;
     }
-    initChat();
+    if (customerToken && sessionId) {
+      initCustomerChat();
+    } else if (token && userId) {
+      initChat();
+    } else {
+      setError("Invalid chat link. Please use the link from your email.");
+      setLoading(false);
+    }
   }, []);
+
+  const initCustomerChat = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            customer_token: customerToken,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || !data.token) {
+        setError("Failed to authenticate. Please use the link from your email.");
+        setLoading(false);
+        return;
+      }
+      const chatClient = StreamChat.getInstance(streamApiKey);
+      await chatClient.connectUser(
+        { id: data.user_id, name: "Customer" },
+        data.token
+      );
+      const chatChannel = chatClient.channel("messaging", channel_id, {
+        name: "Job Discussion",
+        members: [data.user_id],
+      });
+      await chatChannel.watch();
+      setClient(chatClient);
+      setChannel(chatChannel);
+    } catch (err: any) {
+      setError("Failed to connect to chat. Please try again.");
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {

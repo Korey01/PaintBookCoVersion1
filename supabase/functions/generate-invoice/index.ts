@@ -30,29 +30,21 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Unauthorised" }, 401);
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
-
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) return json({ error: "Unauthenticated" }, 401);
-
     const serviceClient = createClient(supabaseUrl, serviceRoleKey);
 
+    // Parse body first so we can access painter_token for fallback auth
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const { transaction_id, session_id, job_description, line_items, amount, notes } = body as {
+    const { transaction_id, session_id, job_description, line_items, amount, notes, painter_token: painterToken } = body as {
       transaction_id?: string;
       session_id?: string;
       job_description: string;
       line_items: Array<{ description: string; amount: number }>;
       amount: number;
       notes?: string;
+      painter_token?: string;
     };
 
     if (!job_description || !amount || amount <= 0) {
@@ -62,14 +54,68 @@ Deno.serve(async (req) => {
       return json({ error: "transaction_id or session_id is required" }, 400);
     }
 
-    // Get painter
-    const { data: painter } = await serviceClient
-      .from("painters")
-      .select("id, first_name, last_name, email, completed_jobs")
-      .eq("user_id", user.id)
-      .single();
+    let painter: { id: string; first_name: string; last_name: string; email: string; completed_jobs: number; user_id?: string } | null = null;
+    let actorId: string | undefined;
 
-    if (!painter) return json({ error: "Painter not found" }, 404);
+    // ── Auth path 1: Supabase JWT ─────────────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        const { data: p } = await serviceClient
+          .from("painters")
+          .select("id, first_name, last_name, email, completed_jobs, user_id")
+          .eq("user_id", user.id)
+          .single();
+        if (p) { painter = p; actorId = user.id; }
+      }
+    }
+
+    // ── Auth path 2: Stream JWT painter_token ─────────────────────────────────
+    if (!painter && painterToken) {
+      const parts = painterToken.split(".");
+      if (parts.length === 3) {
+        try {
+          const paddedPayload = parts[1] + "==".slice((parts[1].length + 3) % 4 === 0 ? 2 : (parts[1].length % 4));
+          const payload = JSON.parse(atob(paddedPayload.replace(/-/g, "+").replace(/_/g, "/")));
+          const painterId: string | undefined = payload.user_id;
+          const exp: number | undefined = payload.exp;
+
+          if (exp && exp < Math.floor(Date.now() / 1000)) {
+            return json({ error: "Token expired" }, 401);
+          }
+
+          if (painterId) {
+            // Verify HMAC signature
+            const streamSecret = Deno.env.get("STREAM_API_SECRET")!;
+            const sigInput = `${parts[0]}.${parts[1]}`;
+            const key = await crypto.subtle.importKey(
+              "raw", new TextEncoder().encode(streamSecret),
+              { name: "HMAC", hash: "SHA-256" }, false, ["verify"]
+            );
+            const sigPadded = parts[2] + "==".slice((parts[2].length + 3) % 4 === 0 ? 2 : (parts[2].length % 4));
+            const sigBytes = Uint8Array.from(atob(sigPadded.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+            const valid = await crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(sigInput));
+
+            if (valid) {
+              const { data: p } = await serviceClient
+                .from("painters")
+                .select("id, first_name, last_name, email, completed_jobs, user_id")
+                .eq("id", painterId)
+                .single();
+              if (p) { painter = p; actorId = p.user_id; }
+            }
+          }
+        } catch {
+          // token decode failed — fall through to 401
+        }
+      }
+    }
+
+    if (!painter) return json({ error: "Unauthorised" }, 401);
 
     // Resolve transaction and session
     let txId = transaction_id;
@@ -299,7 +345,7 @@ Deno.serve(async (req) => {
 
     await serviceClient.from("audit_log").insert({
       action: "invoice_generated",
-      actor_id: user.id,
+      actor_id: actorId ?? painter.id,
       actor_role: "painter",
       entity_type: "transaction",
       entity_id: txId,

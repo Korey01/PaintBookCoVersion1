@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star, ShieldCheck, BadgeCheck, ArrowRight, Loader2 } from "lucide-react";
+import { Star, ShieldCheck, BadgeCheck, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
 
 function StarDisplay({ rating }: { rating: number }) {
   return (
@@ -83,8 +83,14 @@ export default function PainterProfile() {
   );
 
   if (!painter) return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 py-16 space-y-4">
       <p className="text-sm text-muted-foreground">Painter not found or profile not active.</p>
+      <button
+        onClick={() => navigate("/find-painters")}
+        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+      >
+        <ChevronLeft className="h-4 w-4" /> Back to Find Painters
+      </button>
     </div>
   );
 
@@ -160,9 +166,11 @@ export default function PainterProfile() {
           </div>
 
           {/* Gallery */}
-          {gallery.length > 0 && (
-            <div className="mt-6">
-              <h2 className="text-lg font-semibold mb-3">Portfolio</h2>
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold mb-3">Portfolio</h2>
+            {gallery.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No portfolio images yet.</p>
+            ) : (
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {gallery.map(img => (
                   <button
@@ -180,8 +188,8 @@ export default function PainterProfile() {
                   </button>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Reviews */}
           <div className="mt-6">

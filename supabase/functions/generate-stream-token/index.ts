@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
     const streamApiSecret = Deno.env.get("STREAM_API_SECRET")!;
     const channelId = `job-${session_id}`;
-    const exp = Math.floor(Date.now() / 1000) + 3600;
+    const exp = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60); // 90 days — valid for life of job
 
     // ── Customer path (no Supabase auth required) ─────────────────────────────
     if (customer_token) {

@@ -18,6 +18,7 @@ const PublicLayout = lazy(() => import("@/components/layout/PublicLayout"));
 const PostJob = lazy(() => import("./pages/PostJob"));
 const PostJobConfirmation = lazy(() => import("./pages/PostJob").then(m => ({ default: m.PostJobConfirmation })));
 const JobSessionPage = lazy(() => import("./pages/JobSessionPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
 import LoginPage from "./pages/LoginPage";
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -99,6 +100,7 @@ const App = () => (
               <Route path="/post-job" element={<PostJob />} />
               <Route path="/post-job/confirmation" element={<PostJobConfirmation />} />
               <Route path="/job/:token" element={<JobSessionPage />} />
+            <Route path="/chat/:channel_id" element={<ChatPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/reset-password" element={<ResetPassword />} />

@@ -712,9 +712,37 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
 }
 
 function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supabase: any }) {
+  const navigate = useNavigate()
   const [sessions, setSessions] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [activeChatId, setActiveChatId] = React.useState<string | null>(null)
+  const [invoiceNavigating, setInvoiceNavigating] = React.useState<string | null>(null)
+
+  const openChatWithInvoice = async (session: any) => {
+    setInvoiceNavigating(session.id)
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession) return
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${authSession.access_token}`,
+          },
+          body: JSON.stringify({ session_id: session.id }),
+        }
+      )
+      const data = await res.json()
+      if (data.token) {
+        navigate(`/chat/${session.chat_channel_id}?token=${data.token}&user=${painter.id}&role=painter&openInvoice=true`)
+      }
+    } finally {
+      setInvoiceNavigating(null)
+    }
+  }
 
   React.useEffect(() => {
     if (painter?.id) loadSessions()
@@ -810,13 +838,24 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
                           </div>
                         </div>
                         {session.chat_channel_id && (
-                          <button
-                            onClick={() => setActiveChatId(isOpen ? null : session.id)}
-                            className="w-full flex items-center justify-center gap-2 border border-border text-sm py-2 rounded-md hover:bg-accent transition-colors"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                            {isOpen ? "Hide Chat" : "Open Chat"}
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setActiveChatId(isOpen ? null : session.id)}
+                              className="flex-1 flex items-center justify-center gap-2 border border-border text-sm py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                              {isOpen ? "Hide Chat" : "Open Chat"}
+                            </button>
+                            {session.status === "painter_contacted" && (
+                              <button
+                                onClick={() => openChatWithInvoice(session)}
+                                disabled={invoiceNavigating === session.id}
+                                className="px-3 py-2 border border-border text-sm rounded-md hover:bg-accent transition-colors disabled:opacity-50 whitespace-nowrap"
+                              >
+                                {invoiceNavigating === session.id ? "..." : "📄 Invoice"}
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                       {isOpen && session.chat_channel_id && (

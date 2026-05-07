@@ -209,7 +209,7 @@ export function PaintBookChat({
           headers: {
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${authSession?.access_token ?? ""}`,
+            "Authorization": `Bearer ${authSession?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
             transaction_id: transactionId,

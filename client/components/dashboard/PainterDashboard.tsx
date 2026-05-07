@@ -767,12 +767,19 @@ function MyJobsTab({
 
   const loadSessions = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from("sessions")
-      .select("*, transactions(*)")
+    const { data: txData } = await supabase
+      .from("transactions")
+      .select("*, sessions(*)")
       .eq("painter_id", painter.id)
       .order("updated_at", { ascending: false })
-    setSessions(data || [])
+    // Reshape to sessions with transactions nested
+    const shaped = (txData || []).map((tx: any) => ({
+      ...(tx.sessions || {}),
+      status: tx.status || tx.sessions?.status,
+      transactions: [tx],
+      chat_channel_id: tx.chat_channel_id,
+    }))
+    setSessions(shaped)
     setLoading(false)
   }
 

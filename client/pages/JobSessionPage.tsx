@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabase";
-import { PaintBookChat } from "@/components/chat/PaintBookChat";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { CheckCircle2, Clock, MessageSquare, Shield, AlertTriangle, XCircle, ChevronRight, Loader2, Star } from "lucide-react";
 
 const STATUS_STEPS = [
@@ -55,6 +55,8 @@ export default function JobSessionPage() {
   const [actionLoading, setActionLoading] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [payLoading, setPayLoading] = useState(false);
+  const [chatWidget, setChatWidget] = useState<{ token: string; userId: string } | null>(null);
+  const [chatLoading, setChatLoading] = useState(false);
 
   // Review state
   const [review, setReview] = useState<any>(null);
@@ -238,6 +240,36 @@ export default function JobSessionPage() {
     }
   }
 
+  const jobRef = `PBC-${session?.id?.slice(-6).toUpperCase()}`;
+  const chatChannelId = transaction?.chat_channel_id || session?.chat_channel_id;
+
+  async function handleOpenChat() {
+    if (chatWidget) return; // already have token
+    if (!session?.id) return;
+    setChatLoading(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ session_id: session.id, customer_token: token }),
+        }
+      );
+      const data = await res.json();
+      if (data.token) {
+        setChatWidget({ token: data.token, userId: data.user_id });
+      }
+    } catch (err) {
+      console.error("Failed to open chat:", err);
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -356,20 +388,24 @@ export default function JobSessionPage() {
           </div>
         )}
 
-        {/* Chat — embedded for customer */}
-        {(transaction?.chat_channel_id || session?.chat_channel_id) && !isReadOnly && (
+        {/* Chat */}
+        {chatChannelId && !isReadOnly && (
           <div className="bg-card border border-border rounded-lg p-5">
             <h2 className="text-sm font-medium flex items-center gap-2 mb-3">
               <MessageSquare className="h-4 w-4" /> Chat with your painter
             </h2>
-            <div className="h-96">
-              <PaintBookChat
-                sessionId={session?.id}
-                userId={`customer-${session?.id}`}
-                userRole="customer"
-                customerToken={token}
-              />
-            </div>
+            {chatWidget ? (
+              <p className="text-sm text-muted-foreground">Chat is open — see the floating window at the bottom of the screen.</p>
+            ) : (
+              <button
+                onClick={handleOpenChat}
+                disabled={chatLoading}
+                className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {chatLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                💬 Open Chat
+              </button>
+            )}
           </div>
         )}
 
@@ -466,6 +502,20 @@ export default function JobSessionPage() {
         )}
 
       </main>
+
+      {chatWidget && chatChannelId && (
+        <ChatWidget
+          channelId={chatChannelId}
+          sessionId={session?.id}
+          userId={chatWidget.userId}
+          userToken={chatWidget.token}
+          userRole="customer"
+          userName={session?.first_name || "Customer"}
+          jobRef={jobRef}
+          streamApiKey={import.meta.env.VITE_STREAM_API_KEY}
+          onClose={() => setChatWidget(null)}
+        />
+      )}
     </div>
   );
 }

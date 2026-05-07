@@ -280,7 +280,7 @@ function AvailableJobsTab({
       )
       const result = await res.json()
       if (result.success && result.channel_id) {
-        navigate(`/chat/${result.channel_id}`)
+        navigate(`/chat/${result.channel_id}?token=${result.painter_token}&user=${painter.id}&role=painter`)
       } else if (result.success) {
         onTabChange("my-jobs")
       } else {

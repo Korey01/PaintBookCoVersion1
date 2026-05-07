@@ -213,6 +213,8 @@ export function PaintBookChat({
           },
           body: JSON.stringify({
             transaction_id: transactionId,
+            session_id: sessionId,
+            painter_id: userId,
             job_description: invoiceDescription,
             line_items: invoiceLines.filter(l => l.description.trim()),
             amount: invoiceTotal,

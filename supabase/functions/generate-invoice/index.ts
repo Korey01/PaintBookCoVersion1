@@ -30,20 +30,21 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Unauthorised" }, 401);
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
-
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) return json({ error: "Unauthenticated" }, 401);
-
     const serviceClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Try Supabase JWT auth first, fall back to painter_id in body
+    let user = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader && authHeader.startsWith("Bearer ") && authHeader.length > 100) {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data } = await userClient.auth.getUser();
+      user = data?.user ?? null;
+    }
 
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     const { transaction_id, session_id, job_description, line_items, amount, notes } = body as {
@@ -66,7 +67,7 @@ Deno.serve(async (req) => {
     const { data: painter } = await serviceClient
       .from("painters")
       .select("id, first_name, last_name, email, completed_jobs")
-      .eq("user_id", user.id)
+      .eq("user_id", user?.id ?? body.painter_id ?? "")
       .single();
 
     if (!painter) return json({ error: "Painter not found" }, 404);
@@ -299,7 +300,7 @@ Deno.serve(async (req) => {
 
     await serviceClient.from("audit_log").insert({
       action: "invoice_generated",
-      actor_id: user.id,
+      actor_id: user?.id ?? null,
       actor_role: "painter",
       entity_type: "transaction",
       entity_id: txId,

@@ -70,6 +70,76 @@ Deno.serve(async (req) => {
       expiresAt
     );
 
+    // Create Stream channel with both painter and customer as members
+    const customerId = `customer-${session_id}`;
+    try {
+      const serverToken = await generateStreamToken(streamSecret, painter.id, new Date(Date.now() + 3600000));
+      // Upsert both users
+      await fetch(`https://chat.stream-io-api.com/users?api_key=${streamApiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serverToken}`,
+          "stream-auth-type": "jwt",
+        },
+        body: JSON.stringify({
+          users: {
+            [painter.id]: { id: painter.id, name: `${painter.first_name} ${painter.last_name}` },
+            [customerId]: { id: customerId, name: session.first_name || "Customer" },
+          }
+        }),
+      });
+      // Create channel with both members
+      await fetch(`https://chat.stream-io-api.com/channels/messaging/${channelId}?api_key=${streamApiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serverToken}`,
+          "stream-auth-type": "jwt",
+        },
+        body: JSON.stringify({
+          data: { members: [painter.id, customerId], created_by_id: painter.id }
+        }),
+      });
+    } catch (streamErr) {
+      console.error("Stream channel creation error:", streamErr);
+    }
+
+    // Create Stream channel with both painter and customer as members
+    const customerId = `customer-${session_id}`;
+    try {
+      const serverToken = await generateStreamToken(streamSecret, painter.id, new Date(Date.now() + 3600000));
+      // Upsert both users
+      await fetch(`https://chat.stream-io-api.com/users?api_key=${streamApiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serverToken}`,
+          "stream-auth-type": "jwt",
+        },
+        body: JSON.stringify({
+          users: {
+            [painter.id]: { id: painter.id, name: `${painter.first_name} ${painter.last_name}` },
+            [customerId]: { id: customerId, name: session.first_name || "Customer" },
+          }
+        }),
+      });
+      // Create channel with both members
+      await fetch(`https://chat.stream-io-api.com/channels/messaging/${channelId}?api_key=${streamApiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serverToken}`,
+          "stream-auth-type": "jwt",
+        },
+        body: JSON.stringify({
+          data: { members: [painter.id, customerId], created_by_id: painter.id }
+        }),
+      });
+    } catch (streamErr) {
+      console.error("Stream channel creation error:", streamErr);
+    }
+
     // Create chat link for both parties
     const baseUrl = "https://www.paintbookco.co.uk";
     const painterChatLink = `${baseUrl}/chat/${channelId}?token=${painterToken}&user=${painter.id}&role=painter`;

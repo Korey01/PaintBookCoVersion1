@@ -80,7 +80,3 @@ export default function HowItWorksPainters() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(HowItWorksPainters, { name: "HowItWorksPainters", inputs: [] }); })
-  .catch(() => {});

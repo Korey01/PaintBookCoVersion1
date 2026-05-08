@@ -127,7 +127,3 @@ export default function CookiePolicyPage() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(CookiePolicyPage, { name: "CookiePolicyPage", inputs: [] }); })
-  .catch(() => {});

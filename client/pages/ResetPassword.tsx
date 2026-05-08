@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 export default function ResetPassword() {
   useEffect(() => { document.title = "Reset Password | PaintBookCo"; }, []);
@@ -85,7 +85,3 @@ export default function ResetPassword() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(ResetPassword, { name: "ResetPassword", inputs: [] }); })
-  .catch(() => {});

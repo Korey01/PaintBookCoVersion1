@@ -82,7 +82,3 @@ export default function HowItWorksCustomers() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(HowItWorksCustomers, { name: "HowItWorksCustomers", inputs: [] }); })
-  .catch(() => {});

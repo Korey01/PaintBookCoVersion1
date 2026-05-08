@@ -1,6 +1,9 @@
+// Required migration: ALTER TABLE painters ADD COLUMN IF NOT EXISTS profile_picture_url text;
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
   BarChart3,
   CheckCircle2,
@@ -15,6 +18,10 @@ import {
   Trash2,
   Upload,
   Shield,
+  MessageSquare,
+  X,
+  Star,
+  Camera,
 } from "lucide-react";
 
 function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: () => void }) {
@@ -206,13 +213,22 @@ class InsuranceBoundary extends React.Component<
   }
 }
 
-function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }) {
+function AvailableJobsTab({
+  painter,
+  supabase,
+  onTabChange,
+  onOpenChat,
+}: {
+  painter: any;
+  supabase: any;
+  onTabChange: (tab: string) => void;
+  onOpenChat: (job: { channelId: string; sessionId: string; token: string; jobRef: string }) => void;
+}) {
   const [jobs, setJobs] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
-  const [passedJobs, setPassedJobs] = React.useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("pbc_passed_jobs") || "[]") } catch { return [] }
-  })
+  const [passedJobs, setPassedJobs] = React.useState<string[]>([])
   const [chatting, setChatting] = React.useState<string | null>(null)
+  const [chatError, setChatError] = React.useState("")
 
   React.useEffect(() => {
     if (painter?.is_active) loadJobs()
@@ -237,17 +253,20 @@ function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }
   }
 
   const handlePass = (jobId: string) => {
-    const updated = [...passedJobs, jobId]
-    setPassedJobs(updated)
-    localStorage.setItem("pbc_passed_jobs", JSON.stringify(updated))
+    setPassedJobs(prev => [...prev, jobId])
     setJobs(prev => prev.filter(j => j.id !== jobId))
   }
 
   const handleChat = async (job: any) => {
     setChatting(job.id)
+    setChatError("")
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setChatting(null); return }
+      if (!session) {
+        setChatError("Session expired. Please log in again.")
+        setChatting(null)
+        return
+      }
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/initiate-chat`,
         {
@@ -257,18 +276,25 @@ function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }
             "Authorization": `Bearer ${session.access_token}`,
             "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ session_id: job.id })
+          body: JSON.stringify({ session_id: job.id, painter_id: painter.id })
         }
       )
       const result = await res.json()
-      if (result.success) {
-        window.open(result.painter_chat_link, "_blank")
-        setJobs(prev => prev.filter(j => j.id !== job.id))
+      if (result.success && result.channel_id) {
+        onOpenChat({
+          channelId: result.channel_id,
+          sessionId: job.id,
+          token: result.painter_token,
+          jobRef: `PBC-${job.id.slice(-6).toUpperCase()}`,
+        });
+        onTabChange("my-jobs");
+      } else if (result.success) {
+        onTabChange("my-jobs")
       } else {
-        alert(result.error || "Failed to start chat")
+        setChatError(result.error || "Failed to start chat. Please try again.")
       }
     } catch {
-      alert("Failed to start chat. Please try again.")
+      setChatError("Failed to start chat. Please try again.")
     }
     setChatting(null)
   }
@@ -303,6 +329,15 @@ function AvailableJobsTab({ painter, supabase }: { painter: any, supabase: any }
           Refresh
         </button>
       </div>
+
+      {chatError && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center justify-between gap-2">
+          <p className="text-sm text-destructive">{chatError}</p>
+          <button onClick={() => setChatError("")} className="text-destructive/70 hover:text-destructive">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -372,6 +407,7 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
   const [loading, setLoading] = React.useState(true)
   const [uploading, setUploading] = React.useState(false)
   const [error, setError] = React.useState("")
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null)
   const maxBytes = 104857600 // 100MB
   const usedBytes = painter?.gallery_size_bytes || 0
 
@@ -408,7 +444,7 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
           const { error: uploadErr } = await supabase.storage
             .from("painter-gallery")
             .upload(path, compressed, { upsert: false })
-          if (uploadErr) { console.error(`Upload failed for ${file.name}:`, uploadErr); continue }
+          if (uploadErr) { setError(`Upload failed: ${uploadErr.message} (${uploadErr.statusCode})`); setUploading(false); return }
           const { data: { publicUrl } } = supabase.storage.from("painter-gallery").getPublicUrl(path)
           await supabase.from("painter_gallery").insert({
             painter_id: painter.id,
@@ -420,7 +456,9 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
           })
           newUsedBytes += compressed.size
         } catch (err: any) {
-          console.error(`Error uploading ${file.name}:`, err)
+          setError(err.message || `Upload failed`)
+          setUploading(false)
+          return
         }
       }
       await supabase.from("painters").update({
@@ -433,7 +471,6 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
   }
 
   const handleDelete = async (img: any) => {
-    if (!confirm("Delete this image?")) return
     try {
       const path = img.image_url.split("/painter-gallery/")[1]
       await supabase.storage.from("painter-gallery").remove([path])
@@ -441,6 +478,7 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
       await supabase.from("painters").update({
         gallery_size_bytes: Math.max(0, usedBytes - (img.image_size_bytes || 0))
       }).eq("id", painter.id)
+      setDeleteConfirmId(null)
       await loadImages()
       onRefresh()
     } catch (err: any) { setError(err.message) }
@@ -507,10 +545,23 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
                   <span className="text-xs text-muted-foreground">
                     {img.image_size_bytes ? `${(img.image_size_bytes / 1024).toFixed(0)} KB` : ""}
                   </span>
-                  <button onClick={() => handleDelete(img)}
-                    className="text-xs text-destructive hover:text-destructive/70 transition-colors">
-                    Delete
-                  </button>
+                  {deleteConfirmId === img.id ? (
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleDelete(img)}
+                        className="text-xs text-white bg-destructive px-2 py-0.5 rounded hover:bg-destructive/90">
+                        Confirm
+                      </button>
+                      <button onClick={() => setDeleteConfirmId(null)}
+                        className="text-xs text-muted-foreground hover:text-foreground px-1">
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setDeleteConfirmId(img.id)}
+                      className="text-xs text-destructive hover:text-destructive/70 transition-colors">
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -521,25 +572,35 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
   )
 }
 
-async function compressImage(file: File): Promise<File> {
-  return new Promise(resolve => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
+async function compressImage(file: File, maxDimension = 1920): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement("img") as HTMLImageElement;
+    const url = URL.createObjectURL(file);
     img.onload = () => {
-      const canvas = document.createElement("canvas")
-      const maxW = 1920
-      let w = img.width, h = img.height
-      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW }
-      canvas.width = w; canvas.height = h
-      const ctx = canvas.getContext("2d")!
-      ctx.drawImage(img, 0, 0, w, h)
-      canvas.toBlob(blob => {
-        URL.revokeObjectURL(url)
-        resolve(new File([blob!], file.name, { type: "image/jpeg" }))
-      }, "image/jpeg", 0.82)
-    }
-    img.src = url
-  })
+      try {
+        const canvas = document.createElement("canvas");
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (w > maxDimension) { h = Math.round(h * maxDimension / w); w = maxDimension; }
+        if (h > maxDimension) { w = Math.round(w * maxDimension / h); h = maxDimension; }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(file); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          URL.revokeObjectURL(url);
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name, { type: "image/jpeg" }));
+        }, "image/jpeg", 0.82);
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
 }
 
 function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supabase: any, onRefresh: () => void }) {
@@ -594,7 +655,10 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Availability</h1>
-        <p className="text-muted-foreground text-sm">Mark the days you are available for jobs</p>
+        <p className="text-muted-foreground text-sm">
+          Your availability calendar — this is for admin reference when manually assigning jobs.
+          You will receive all new job notifications automatically regardless of your availability settings.
+        </p>
       </div>
 
       {/* Month navigation */}
@@ -653,8 +717,843 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
   )
 }
 
+function timeAgo(dateString: string): string {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateString).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
+function MyJobsTab({
+  painter,
+  supabase,
+  onOpenChat,
+  onRefresh,
+}: {
+  painter: any;
+  supabase: any;
+  onOpenChat: (job: { channelId: string; sessionId: string; token: string; jobRef: string }) => void;
+  onRefresh: () => void;
+}) {
+  const [sessions, setSessions] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  // Invoice modal state (TASK 2)
+  const [invoiceJob, setInvoiceJob] = React.useState<any>(null)
+  const [invoiceIsEdit, setInvoiceIsEdit] = React.useState(false)
+  const [invoiceDescription, setInvoiceDescription] = React.useState("")
+  const [invoiceItems, setInvoiceItems] = React.useState([{ description: "", amount: "" }])
+  const [invoiceNotes, setInvoiceNotes] = React.useState("")
+  const [invoiceLoading, setInvoiceLoading] = React.useState(false)
+  const [invoiceSuccess, setInvoiceSuccess] = React.useState(false)
+  const [invoiceError, setInvoiceError] = React.useState("")
+
+  // View Invoice modal state
+  const [viewInvoiceHtml, setViewInvoiceHtml] = React.useState<string | null>(null)
+
+  // Action confirmation state (TASK 4)
+  const [cancelConfirmId, setCancelConfirmId] = React.useState<string | null>(null)
+  const [disputeSessionId, setDisputeSessionId] = React.useState<string | null>(null)
+  const [disputeReason, setDisputeReason] = React.useState("")
+  const [actionLoading, setActionLoading] = React.useState<string | null>(null)
+  const [actionError, setActionError] = React.useState("")
+
+  // Chat token fetching
+  const [chatOpening, setChatOpening] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (painter?.id) loadSessions()
+  }, [painter?.id])
+
+  const loadSessions = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from("sessions")
+      .select("*, transactions(*)")
+      .eq("painter_id", painter.user_id ?? "")
+      .order("updated_at", { ascending: false })
+    setSessions(data || [])
+    setLoading(false)
+  }
+
+  const getTx = (session: any) =>
+    Array.isArray(session.transactions) ? session.transactions[0] : session.transactions
+
+  // ── Chat open handler ────────────────────────────────────────────────────
+  const handleOpenChat = async (session: any) => {
+    if (!session.chat_channel_id) return
+    setChatOpening(session.id)
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession) return
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${authSession.access_token}`,
+          },
+          body: JSON.stringify({ session_id: session.id }),
+        }
+      )
+      const data = await res.json()
+      if (data.token) {
+        onOpenChat({
+          channelId: session.chat_channel_id,
+          sessionId: session.id,
+          token: data.token,
+          jobRef: `PBC-${session.id.slice(-6).toUpperCase()}`,
+        })
+      }
+    } finally {
+      setChatOpening(null)
+    }
+  }
+
+  // ── Invoice handler (TASK 2) ─────────────────────────────────────────────
+  const handleSendInvoice = async () => {
+    setInvoiceLoading(true)
+    setInvoiceError("")
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession?.access_token) {
+        setInvoiceError("Session expired. Please log in again.")
+        setInvoiceLoading(false)
+        return
+      }
+      const validItems = invoiceItems.filter(i => i.description.trim() && i.amount)
+      const total = validItems.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0)
+      if (!invoiceDescription.trim() || validItems.length === 0 || total <= 0) {
+        setInvoiceError("Please add a description and at least one line item with an amount.")
+        setInvoiceLoading(false)
+        return
+      }
+      const tx = getTx(invoiceJob)
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-invoice`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${authSession.access_token}`,
+          },
+          body: JSON.stringify({
+            ...(tx?.id ? { transaction_id: tx.id } : { session_id: invoiceJob.id }),
+            job_description: invoiceDescription,
+            line_items: validItems.map(i => ({ description: i.description, amount: parseFloat(i.amount) })),
+            amount: total,
+            notes: invoiceNotes,
+          }),
+        }
+      )
+      const result = await res.json()
+      if (result.success) {
+        setInvoiceSuccess(true)
+        setTimeout(() => {
+          setInvoiceJob(null)
+          setInvoiceSuccess(false)
+          setInvoiceDescription("")
+          setInvoiceItems([{ description: "", amount: "" }])
+          setInvoiceNotes("")
+          loadSessions()
+          onRefresh()
+        }, 2500)
+      } else {
+        setInvoiceError(result.error || "Failed to send invoice. Please try again.")
+      }
+    } catch {
+      setInvoiceError("An unexpected error occurred.")
+    }
+    setInvoiceLoading(false)
+  }
+
+  const downloadInvoicePDF = (invoiceHtml: string) => {
+    const w = window.open("", "_blank")
+    if (!w) return
+    w.document.write(invoiceHtml)
+    w.document.close()
+    w.focus()
+    w.print()
+  }
+
+  const openInvoiceForEdit = (session: any) => {
+    const tx = getTx(session)
+    setInvoiceJob(session)
+    setInvoiceIsEdit(!!tx?.invoice_html)
+    setInvoiceDescription(tx?.job_summary || session.job_description || "")
+    setInvoiceItems([{ description: "", amount: "" }])
+    setInvoiceNotes("")
+    setInvoiceError("")
+    setInvoiceSuccess(false)
+  }
+
+  // ── Action handlers (TASK 4) ─────────────────────────────────────────────
+  const callAction = async (endpoint: string, body: Record<string, unknown>) => {
+    const { data: { session: authSession } } = await supabase.auth.getSession()
+    if (!authSession) return false
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${authSession.access_token}`,
+        },
+        body: JSON.stringify(body),
+      }
+    )
+    const result = await res.json()
+    return result.success ?? false
+  }
+
+  const handleRequestCompletion = async (sessionId: string) => {
+    setActionLoading(sessionId + ":complete")
+    setActionError("")
+    const ok = await callAction("confirm-completion", { session_id: sessionId, requested_by: "painter" })
+    if (ok) { loadSessions(); onRefresh() } else { setActionError("Failed to request completion. Please try again.") }
+    setActionLoading(null)
+  }
+
+  const handleCancelJob = async (sessionId: string) => {
+    setActionLoading(sessionId + ":cancel")
+    setActionError("")
+    const ok = await callAction("cancel-job", { session_id: sessionId, cancelled_by: "painter" })
+    if (ok) { loadSessions(); onRefresh(); setCancelConfirmId(null) } else { setActionError("Failed to cancel job. Please try again.") }
+    setActionLoading(null)
+  }
+
+  const handleRaiseDispute = async (sessionId: string) => {
+    if (!disputeReason.trim()) return
+    setActionLoading(sessionId + ":dispute")
+    setActionError("")
+    const ok = await callAction("raise-dispute", { session_id: sessionId, reason: disputeReason, raised_by: "painter" })
+    if (ok) { loadSessions(); onRefresh(); setDisputeSessionId(null); setDisputeReason("") }
+    else { setActionError("Failed to raise dispute. Please try again.") }
+    setActionLoading(null)
+  }
+
+  // ── Sections ─────────────────────────────────────────────────────────────
+  const negotiating = sessions.filter(s => ["painter_contacted", "invoice_sent"].includes(s.status))
+  const active = sessions.filter(s => ["funded", "in_progress", "completion_requested"].includes(s.status))
+  const completed = sessions.filter(s => s.status === "completed")
+  const closed = sessions.filter(s => ["cancelled", "disputed"].includes(s.status))
+
+  const statusLabel: Record<string, string> = {
+    painter_contacted: "Awaiting invoice",
+    invoice_sent: "Invoice sent",
+    funded: "Escrow funded",
+    in_progress: "In progress",
+    completion_requested: "Completion requested",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    disputed: "Disputed",
+  }
+  const statusColor: Record<string, string> = {
+    painter_contacted: "text-blue-400 bg-blue-900/20 border-blue-800/40",
+    invoice_sent: "text-amber-400 bg-amber-900/20 border-amber-800/40",
+    funded: "text-green-400 bg-green-900/20 border-green-800/40",
+    in_progress: "text-green-400 bg-green-900/20 border-green-800/40",
+    completion_requested: "text-amber-400 bg-amber-900/20 border-amber-800/40",
+    completed: "text-muted-foreground bg-muted border-border",
+    cancelled: "text-destructive bg-destructive/10 border-destructive/20",
+    disputed: "text-destructive bg-destructive/10 border-destructive/20",
+  }
+
+  const SectionHeader = ({ title, count }: { title: string; count: number }) =>
+    count > 0 ? (
+      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        {title} <span className="ml-1 text-foreground/60">({count})</span>
+      </h3>
+    ) : null
+
+  const invoiceTotal = invoiceItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0)
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">My Jobs</h1>
+          <p className="text-muted-foreground text-sm">All your jobs in one place</p>
+        </div>
+        <button onClick={loadSessions}
+          className="text-sm border border-border px-3 py-1.5 rounded hover:bg-accent transition-colors">
+          Refresh
+        </button>
+      </div>
+
+      {actionError && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center justify-between">
+          <p className="text-sm text-destructive">{actionError}</p>
+          <button onClick={() => setActionError("")}><X className="h-4 w-4 text-destructive/70" /></button>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+        </div>
+      ) : sessions.length === 0 ? (
+        <div className="border border-border rounded-xl p-8 text-center space-y-2">
+          <p className="font-medium">No jobs yet</p>
+          <p className="text-sm text-muted-foreground">Accept a job from Available Jobs to get started.</p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+
+          {/* ── NEGOTIATING ─────────────────────────────────────────────── */}
+          {negotiating.length > 0 && (
+            <div>
+              <SectionHeader title="Negotiating" count={negotiating.length} />
+              <div className="space-y-3">
+                {negotiating.map(session => {
+                  const tx = getTx(session)
+                  const jobRef = `PBC-${session.id.slice(-6).toUpperCase()}`
+                  return (
+                    <div key={session.id} className="border border-border rounded-xl p-5 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">{session.job_type}</p>
+                          <p className="text-sm text-muted-foreground">
+                            👤 {session.first_name || "Customer"} · 📍 {session.postcode?.split(" ")[0] || session.city}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Updated {timeAgo(session.updated_at || session.created_at)}</p>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <span className="text-xs font-mono text-muted-foreground">{jobRef}</span>
+                          <div>
+                            <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor[session.status]}`}>
+                              {statusLabel[session.status]}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {session.chat_channel_id && (
+                          <button
+                            onClick={() => handleOpenChat(session)}
+                            disabled={chatOpening === session.id}
+                            className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors disabled:opacity-50"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {chatOpening === session.id ? "Opening…" : "Open Chat"}
+                          </button>
+                        )}
+                        {getTx(session)?.invoice_html ? (
+                          <>
+                            <button
+                              onClick={() => setViewInvoiceHtml(getTx(session).invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              👁 View Invoice
+                            </button>
+                            <button
+                              onClick={() => downloadInvoicePDF(getTx(session).invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              ⬇ PDF
+                            </button>
+                            {session.status === "invoice_sent" && (
+                              <button
+                                onClick={() => openInvoiceForEdit(session)}
+                                className="flex items-center gap-1.5 border border-amber-600/40 text-amber-500 text-sm px-3 py-2 rounded-md hover:bg-amber-600/10 transition-colors"
+                              >
+                                ✏ Edit Invoice
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => openInvoiceForEdit(session)}
+                            className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                          >
+                            📄 Generate Invoice
+                          </button>
+                        )}
+                        {cancelConfirmId === session.id ? (
+                          <div className="w-full bg-destructive/10 border border-destructive/20 rounded-lg p-3 space-y-2">
+                            <p className="text-xs text-destructive font-medium">Are you sure you want to cancel this job? This cannot be undone.</p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleCancelJob(session.id)}
+                                disabled={actionLoading === session.id + ":cancel"}
+                                className="text-xs bg-destructive text-destructive-foreground px-3 py-1.5 rounded hover:opacity-90 disabled:opacity-50"
+                              >
+                                {actionLoading === session.id + ":cancel" ? "Cancelling…" : "Yes, cancel"}
+                              </button>
+                              <button onClick={() => setCancelConfirmId(null)} className="text-xs border border-border px-3 py-1.5 rounded hover:bg-accent">
+                                Keep job
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setCancelConfirmId(session.id)}
+                            className="flex items-center gap-1.5 border border-destructive/40 text-destructive text-sm px-3 py-2 rounded-md hover:bg-destructive/10 transition-colors"
+                          >
+                            Cancel Job
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── ACTIVE ──────────────────────────────────────────────────── */}
+          {active.length > 0 && (
+            <div>
+              <SectionHeader title="Active" count={active.length} />
+              <div className="space-y-3">
+                {active.map(session => {
+                  const tx = getTx(session)
+                  const jobRef = `PBC-${session.id.slice(-6).toUpperCase()}`
+                  return (
+                    <div key={session.id} className="border border-border rounded-xl p-5 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">{session.job_type}</p>
+                          {/* Full customer details after escrow funded */}
+                          <p className="text-sm text-muted-foreground">
+                            👤 {session.first_name} {session.last_name}
+                          </p>
+                          {session.city && <p className="text-xs text-muted-foreground">📍 {session.city}, {session.postcode}</p>}
+                          {session.email && <p className="text-xs text-muted-foreground">✉️ {session.email}</p>}
+                          {session.phone && <p className="text-xs text-muted-foreground">📞 {session.phone}</p>}
+                          <p className="text-xs text-muted-foreground mt-0.5">Updated {timeAgo(session.updated_at || session.created_at)}</p>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <span className="text-xs font-mono text-muted-foreground">{jobRef}</span>
+                          <div>
+                            <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor[session.status]}`}>
+                              {statusLabel[session.status]}
+                            </span>
+                          </div>
+                          {tx?.amount && (
+                            <p className="text-sm font-medium">£{Number(tx.amount).toFixed(2)}</p>
+                          )}
+                          {tx?.painter_payout && (
+                            <p className="text-xs text-green-400">Your payout: £{Number(tx.painter_payout).toFixed(2)}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {session.chat_channel_id && (
+                          <button
+                            onClick={() => handleOpenChat(session)}
+                            disabled={chatOpening === session.id}
+                            className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors disabled:opacity-50"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {chatOpening === session.id ? "Opening…" : "Open Chat"}
+                          </button>
+                        )}
+                        {tx?.invoice_html && (
+                          <>
+                            <button
+                              onClick={() => setViewInvoiceHtml(tx.invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              👁 View Invoice
+                            </button>
+                            <button
+                              onClick={() => downloadInvoicePDF(tx.invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              ⬇ PDF
+                            </button>
+                          </>
+                        )}
+                        {session.status === "in_progress" && (
+                          <button
+                            onClick={() => handleRequestCompletion(session.id)}
+                            disabled={actionLoading === session.id + ":complete"}
+                            className="flex items-center gap-1.5 border border-green-500/50 text-green-500 text-sm px-3 py-2 rounded-md hover:bg-green-500/10 transition-colors disabled:opacity-50"
+                          >
+                            {actionLoading === session.id + ":complete" ? "Requesting…" : "✓ Request Completion"}
+                          </button>
+                        )}
+                        {["funded", "in_progress"].includes(session.status) && (
+                          disputeSessionId === session.id ? (
+                            <div className="w-full bg-amber-900/20 border border-amber-800/30 rounded-lg p-3 space-y-2">
+                              <p className="text-xs font-medium text-amber-400">Describe the issue — our team will review within 10 working days.</p>
+                              <textarea
+                                value={disputeReason}
+                                onChange={e => setDisputeReason(e.target.value)}
+                                rows={2}
+                                placeholder="Please describe the issue…"
+                                className="w-full text-xs border border-border bg-background rounded px-2 py-1.5 focus:outline-none focus:border-foreground resize-none"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleRaiseDispute(session.id)}
+                                  disabled={!disputeReason.trim() || actionLoading === session.id + ":dispute"}
+                                  className="text-xs bg-amber-600 text-white px-3 py-1.5 rounded hover:opacity-90 disabled:opacity-50"
+                                >
+                                  {actionLoading === session.id + ":dispute" ? "Raising…" : "Confirm Dispute"}
+                                </button>
+                                <button onClick={() => { setDisputeSessionId(null); setDisputeReason("") }} className="text-xs border border-border px-3 py-1.5 rounded hover:bg-accent">
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDisputeSessionId(session.id)}
+                              className="flex items-center gap-1.5 border border-amber-600/40 text-amber-500 text-sm px-3 py-2 rounded-md hover:bg-amber-600/10 transition-colors"
+                            >
+                              Raise Dispute
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── COMPLETED ───────────────────────────────────────────────── */}
+          {completed.length > 0 && (
+            <div>
+              <SectionHeader title="Completed" count={completed.length} />
+              <div className="space-y-2">
+                {completed.map(session => {
+                  const tx = getTx(session)
+                  const jobRef = `PBC-${session.id.slice(-6).toUpperCase()}`
+                  return (
+                    <div key={session.id} className="border border-border rounded-lg p-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">{session.job_type}</p>
+                        <p className="text-xs text-muted-foreground">📍 {session.postcode?.split(" ")[0] || session.city}</p>
+                        {tx?.painter_payout && (
+                          <p className="text-xs text-green-400">Payout: £{Number(tx.painter_payout).toFixed(2)}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">{timeAgo(session.updated_at || session.created_at)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-mono text-muted-foreground mb-1">{jobRef}</p>
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor["completed"]}`}>Completed</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── CANCELLED / DISPUTED ────────────────────────────────────── */}
+          {closed.length > 0 && (
+            <div>
+              <SectionHeader title="Cancelled & Disputed" count={closed.length} />
+              <div className="space-y-2">
+                {closed.map(session => {
+                  const jobRef = `PBC-${session.id.slice(-6).toUpperCase()}`
+                  return (
+                    <div key={session.id} className="border border-border rounded-lg p-4 flex items-center justify-between gap-3 opacity-70">
+                      <div>
+                        <p className="text-sm font-medium">{session.job_type}</p>
+                        <p className="text-xs text-muted-foreground">📍 {session.postcode?.split(" ")[0] || session.city}</p>
+                        <p className="text-xs text-muted-foreground">{timeAgo(session.updated_at || session.created_at)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-mono text-muted-foreground mb-1">{jobRef}</p>
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor[session.status]}`}>
+                          {statusLabel[session.status]}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* ── View Invoice Modal ────────────────────────────────────────── */}
+      {viewInvoiceHtml && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-background border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Invoice</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => downloadInvoicePDF(viewInvoiceHtml)}
+                  className="border border-border text-sm px-3 py-1.5 rounded hover:bg-accent transition-colors"
+                >
+                  Download PDF
+                </button>
+                <button onClick={() => setViewInvoiceHtml(null)} className="text-muted-foreground hover:text-foreground p-1">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div
+              className="text-sm border border-border rounded-lg overflow-hidden"
+              dangerouslySetInnerHTML={{ __html: viewInvoiceHtml }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Invoice Modal (TASK 2) ─────────────────────────────────────── */}
+      {invoiceJob && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-background border border-border rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{invoiceIsEdit ? "Edit Invoice" : "Generate Invoice"}</h2>
+              <button onClick={() => setInvoiceJob(null)} className="text-muted-foreground hover:text-foreground p-1">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="text-sm text-muted-foreground bg-accent/30 rounded-lg px-3 py-2">
+              {invoiceJob.job_type} · {invoiceJob.first_name || "Customer"} · {invoiceJob.postcode?.split(" ")[0] || invoiceJob.city}
+            </div>
+
+            {invoiceSuccess ? (
+              <div className="bg-green-900/20 border border-green-800/30 rounded-lg p-4 text-center">
+                <p className="text-green-400 font-medium">✓ Invoice sent! Customer has been notified by email.</p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Job Description</label>
+                  <textarea
+                    value={invoiceDescription}
+                    onChange={e => setInvoiceDescription(e.target.value)}
+                    rows={2}
+                    placeholder="Brief description of the work…"
+                    className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider">Line Items</label>
+                  {invoiceItems.map((item, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        value={item.description}
+                        onChange={e => setInvoiceItems(prev => prev.map((it, idx) => idx === i ? { ...it, description: e.target.value } : it))}
+                        placeholder="Item description"
+                        className="flex-1 border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground"
+                      />
+                      <div className="flex items-center gap-1 border border-border bg-background rounded-md px-2">
+                        <span className="text-sm text-muted-foreground">£</span>
+                        <input
+                          value={item.amount}
+                          onChange={e => setInvoiceItems(prev => prev.map((it, idx) => idx === i ? { ...it, amount: e.target.value } : it))}
+                          placeholder="0.00"
+                          className="w-20 py-2 text-sm bg-transparent focus:outline-none text-right"
+                        />
+                      </div>
+                      {invoiceItems.length > 1 && (
+                        <button onClick={() => setInvoiceItems(prev => prev.filter((_, idx) => idx !== i))} className="text-destructive/70 hover:text-destructive px-1">✕</button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setInvoiceItems(prev => [...prev, { description: "", amount: "" }])}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    + Add line item
+                  </button>
+                </div>
+
+                <div className="flex justify-between text-sm font-medium border-t border-border pt-3">
+                  <span>Total</span>
+                  <span>£{invoiceTotal.toFixed(2)}</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Notes (optional)</label>
+                  <textarea
+                    value={invoiceNotes}
+                    onChange={e => setInvoiceNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Payment terms, special notes…"
+                    className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground resize-none"
+                  />
+                </div>
+
+                {invoiceError && <p className="text-sm text-destructive">{invoiceError}</p>}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setInvoiceJob(null); setInvoiceIsEdit(false) }}
+                    className="flex-1 border border-border py-2.5 rounded-md text-sm hover:bg-accent transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSendInvoice}
+                    disabled={invoiceLoading || invoiceTotal <= 0 || !invoiceDescription.trim()}
+                    className="flex-1 bg-foreground text-background py-2.5 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50"
+                  >
+                    {invoiceLoading ? "Sending…" : invoiceIsEdit ? "Update Invoice" : "Send Invoice to Customer"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1,2,3,4,5].map(n => (
+        <Star key={n} className={`h-3.5 w-3.5 ${n <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+      ))}
+    </div>
+  )
+}
+
+function ReviewsTab({ painter, supabase }: { painter: any; supabase: any }) {
+  const [reviews, setReviews] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => { if (painter?.id) load() }, [painter?.id])
+
+  const load = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from("reviews")
+      .select("id, rating, review_text, created_at")
+      .eq("painter_id", painter.user_id ?? "")
+      .order("created_at", { ascending: false })
+    setReviews(data || [])
+    setLoading(false)
+  }
+
+  const avg = reviews.length
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : null
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Reviews</h1>
+        {avg && (
+          <div className="flex items-center gap-2 mt-1">
+            <StarDisplay rating={Number(avg)} />
+            <span className="text-sm font-medium">{avg} avg</span>
+            <span className="text-xs text-muted-foreground">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
+          </div>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="border border-dashed border-border rounded-xl p-12 text-center">
+          <p className="font-medium">No reviews yet</p>
+          <p className="text-sm text-muted-foreground mt-1">Reviews appear here once customers complete and rate jobs</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {reviews.map(r => (
+            <div key={r.id} className="border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <StarDisplay rating={r.rating} />
+                <span className="text-xs text-muted-foreground">
+                  {new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              </div>
+              <p className="text-sm">{r.review_text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ProfilePictureUpload({ painter, supabase, onRefresh }: { painter: any; supabase: any; onRefresh: () => void }) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState("")
+  const [localUrl, setLocalUrl] = useState<string | null>(painter.profile_picture_url || null)
+
+  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const allowed = ["image/jpeg", "image/png", "image/webp"]
+    if (!allowed.includes(file.type)) { setError("Only JPG, PNG or WebP accepted."); return }
+    if (file.size > 5 * 1024 * 1024) { setError("Image must be under 5MB."); return }
+    setError("")
+    setUploading(true)
+    try {
+      const compressed = await compressImage(file, 400)
+      const path = `${painter.id}/profile.jpg`
+      const { error: uploadErr } = await supabase.storage
+        .from("painter-profiles")
+        .upload(path, compressed, { upsert: true })
+      if (uploadErr) { setError(`Upload failed: ${uploadErr.message}`); setUploading(false); return }
+      const { data: { publicUrl } } = supabase.storage.from("painter-profiles").getPublicUrl(path)
+      await supabase.from("painters").update({ profile_picture_url: publicUrl }).eq("id", painter.id)
+      setLocalUrl(publicUrl)
+      onRefresh()
+    } catch (err: any) {
+      setError(err.message || "Upload failed.")
+    }
+    setUploading(false)
+  }
+
+  const initials = `${painter.first_name?.[0] || ""}${painter.last_name?.[0] || ""}`.toUpperCase()
+
+  return (
+    <div className="border border-border rounded-lg p-4 sm:p-6">
+      <h3 className="font-semibold mb-3 sm:mb-4">Profile Picture</h3>
+      <div className="flex items-center gap-4">
+        {localUrl ? (
+          <img src={localUrl} alt={painter.first_name} className="w-20 h-20 rounded-full object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-2xl font-bold text-foreground/50">{initials}</span>
+          </div>
+        )}
+        <div className="space-y-2">
+          <label className="cursor-pointer inline-flex items-center gap-2 border border-border rounded-md px-4 py-2 text-sm font-medium hover:bg-accent transition-colors min-h-[44px]">
+            {uploading ? (
+              <><div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" /> Uploading...</>
+            ) : (
+              <><Camera className="h-4 w-4" /> Change Photo</>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleChange}
+              className="hidden"
+              disabled={uploading}
+            />
+          </label>
+          <p className="text-xs text-muted-foreground">JPG, PNG or WebP — max 5MB</p>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -662,6 +1561,7 @@ const TABS = [
   { id: "available-jobs", label: "Available Jobs", icon: Briefcase },
   { id: "my-jobs", label: "My Jobs", icon: FileText },
   { id: "gallery", label: "Gallery", icon: Image },
+  { id: "reviews", label: "Reviews", icon: Star },
   { id: "availability", label: "Availability", icon: Calendar },
   { id: "profile", label: "Profile", icon: Settings },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -691,6 +1591,23 @@ export function PainterDashboard() {
   const [painter, setPainter] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Inline toast for account actions
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null)
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    setToast({ msg, type })
+    setTimeout(() => setToast(null), 4000)
+  }
+
+  // Active chat widget
+  const [activeChatJob, setActiveChatJob] = useState<{
+    channelId: string; sessionId: string; token: string; jobRef: string;
+  } | null>(null)
+
+  // Delete account inline flow
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteInputVal, setDeleteInputVal] = useState("")
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   useEffect(() => {
     loadDashboard();
@@ -722,6 +1639,67 @@ export function PainterDashboard() {
   async function handleSignOut() {
     await supabase.auth.signOut();
     window.location.href = "/login";
+  }
+
+  async function handleDownloadData() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast("Session expired. Please log in again.", "error"); return }
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-my-data`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          }
+        }
+      )
+      if (!res.ok) { showToast("Download failed. Please try again.", "error"); return }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `paintbookco-data-${new Date().toISOString().split("T")[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err: any) {
+      showToast("Download failed: " + (err.message || "Please try again."), "error")
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteInputVal !== "DELETE") return
+    setDeletingAccount(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast("Session expired. Please log in again.", "error"); setDeletingAccount(false); return }
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-my-account`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          }
+        }
+      )
+      const result = await res.json()
+      if (result.success) {
+        await supabase.auth.signOut()
+        window.location.href = "/"
+      } else {
+        showToast(result.error || "Failed to delete account. Please contact support.", "error")
+        setDeletingAccount(false)
+        setShowDeleteConfirm(false)
+        setDeleteInputVal("")
+      }
+    } catch (err: any) {
+      showToast("Error: " + (err.message || "Please try again."), "error")
+      setDeletingAccount(false)
+    }
   }
 
   if (loading) {
@@ -777,6 +1755,20 @@ export function PainterDashboard() {
         </div>
       </header>
 
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg text-sm max-w-sm ${
+          toast.type === "error"
+            ? "bg-destructive/10 border-destructive/30 text-destructive"
+            : "bg-green-900/30 border-green-800/40 text-green-400"
+        }`}>
+          <span className="flex-1">{toast.msg}</span>
+          <button onClick={() => setToast(null)} className="flex-shrink-0 opacity-70 hover:opacity-100">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <div className="flex-1 flex overflow-x-hidden">
         {/* Sidebar — desktop only */}
         <aside className="w-56 border-r border-border hidden lg:flex flex-col bg-card/30 flex-shrink-0">
@@ -806,9 +1798,18 @@ export function PainterDashboard() {
             {/* TAB 1: Overview */}
             {activeTab === "overview" && (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Overview</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {painter.first_name}</p>
+                <div className="flex items-center gap-4">
+                  {painter.profile_picture_url ? (
+                    <img src={painter.profile_picture_url} alt={painter.first_name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg font-bold text-foreground/60">{painter.first_name?.[0]?.toUpperCase()}</span>
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-0.5">Overview</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {painter.first_name}</p>
+                  </div>
                 </div>
 
                 {/* Insurance required banner */}
@@ -959,32 +1960,22 @@ export function PainterDashboard() {
 
             {/* TAB 3: Available Jobs */}
             {activeTab === "available-jobs" && (
-              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Available Jobs</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Jobs near you looking for painters</p>
-                </div>
-                <div className="bg-accent/10 border border-border rounded-lg p-4">
-                  <p className="text-sm">
-                    {!painter.is_active
-                      ? "⏳ Complete your profile to see available jobs"
-                      : "No available jobs matching your criteria right now"}
-                  </p>
-                </div>
-              </div>
+              <AvailableJobsTab
+                painter={painter}
+                supabase={supabase}
+                onTabChange={setActiveTab}
+                onOpenChat={setActiveChatJob}
+              />
             )}
 
             {/* TAB 4: My Jobs */}
             {activeTab === "my-jobs" && (
-              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">My Jobs</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Track your current and past jobs</p>
-                </div>
-                <div className="bg-accent/10 border border-border rounded-lg p-4">
-                  <p className="text-sm">No jobs yet</p>
-                </div>
-              </div>
+              <MyJobsTab
+                painter={painter}
+                supabase={supabase}
+                onOpenChat={setActiveChatJob}
+                onRefresh={loadDashboard}
+              />
             )}
 
             {/* TAB 5: Gallery */}
@@ -994,7 +1985,12 @@ export function PainterDashboard() {
               </div>
             )}
 
-            {/* TAB 6: Availability */}
+            {/* TAB 6: Reviews */}
+            {activeTab === "reviews" && (
+              <ReviewsTab painter={painter} supabase={supabase} />
+            )}
+
+            {/* TAB 7: Availability */}
             {activeTab === "availability" && (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                 <AvailabilityTab painter={painter} supabase={supabase} onRefresh={loadDashboard} />
@@ -1010,6 +2006,9 @@ export function PainterDashboard() {
                 </div>
 
                 <div className="space-y-4 sm:space-y-6">
+                  {/* Profile Picture */}
+                  <ProfilePictureUpload painter={painter} supabase={supabase} onRefresh={loadDashboard} />
+
                   {/* Personal Details */}
                   <div className="border border-border rounded-lg p-4 sm:p-6">
                     <h3 className="font-semibold mb-3 sm:mb-4">Personal Details</h3>
@@ -1062,70 +2061,49 @@ export function PainterDashboard() {
                     <h3 className="font-semibold mb-3 sm:mb-4">Account Actions</h3>
                     <div className="space-y-2">
                       <button
-                        onClick={async () => {
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            if (!session) { alert("Session expired. Please log in again."); return }
-                            const res = await fetch(
-                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-my-data`,
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Authorization": `Bearer ${session.access_token}`,
-                                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-                                }
-                              }
-                            )
-                            if (!res.ok) { alert("Download failed. Please try again."); return }
-                            const blob = await res.blob()
-                            const url = URL.createObjectURL(blob)
-                            const a = document.createElement("a")
-                            a.href = url
-                            a.download = `paintbookco-data-${new Date().toISOString().split("T")[0]}.json`
-                            document.body.appendChild(a)
-                            a.click()
-                            document.body.removeChild(a)
-                            URL.revokeObjectURL(url)
-                          } catch (err: any) {
-                            alert("Download failed: " + (err.message || "Please try again."))
-                          }
-                        }}
+                        onClick={handleDownloadData}
                         className="w-full flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground p-3 rounded border border-border hover:bg-accent transition-colors min-h-[44px]">
                         <Download className="h-4 w-4" />
                         Download My Data
                       </button>
-                      <button
-                        onClick={async () => {
-                          const input = window.prompt("Type DELETE to confirm account deletion. Note: your job history and compliance records will be retained as required by law.")
-                          if (input !== "DELETE") return
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            if (!session) { alert("Session expired. Please log in again."); return }
-                            const res = await fetch(
-                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-my-account`,
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Authorization": `Bearer ${session.access_token}`,
-                                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-                                }
-                              }
-                            )
-                            const result = await res.json()
-                            if (result.success) {
-                              await supabase.auth.signOut()
-                              window.location.href = "/"
-                            } else {
-                              alert(result.error || "Failed to delete account. Please contact support.")
-                            }
-                          } catch (err: any) {
-                            alert("Error: " + (err.message || "Please try again."))
-                          }
-                        }}
-                        className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors min-h-[44px]">
-                        <Trash2 className="h-4 w-4" />
-                        Delete Account
-                      </button>
+
+                      {!showDeleteConfirm ? (
+                        <button
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="w-full flex items-center gap-2 text-sm font-medium text-destructive hover:bg-destructive/10 p-3 rounded border border-destructive/20 transition-colors min-h-[44px]">
+                          <Trash2 className="h-4 w-4" />
+                          Delete Account
+                        </button>
+                      ) : (
+                        <div className="space-y-3 border border-destructive/40 rounded-lg p-4">
+                          <p className="text-sm text-muted-foreground">
+                            Type <strong className="text-foreground">DELETE</strong> to confirm.
+                            Your job history and compliance records will be retained as required by law.
+                          </p>
+                          <input
+                            type="text"
+                            value={deleteInputVal}
+                            onChange={e => setDeleteInputVal(e.target.value)}
+                            placeholder="Type DELETE to confirm"
+                            className="w-full border-b border-border bg-transparent text-sm py-2 focus:outline-none focus:border-destructive placeholder:text-muted-foreground/50"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleDeleteAccount}
+                              disabled={deleteInputVal !== "DELETE" || deletingAccount}
+                              className="flex-1 bg-destructive text-white py-2 rounded text-sm font-medium disabled:opacity-50 min-h-[44px]"
+                            >
+                              {deletingAccount ? "Deleting..." : "Confirm Delete"}
+                            </button>
+                            <button
+                              onClick={() => { setShowDeleteConfirm(false); setDeleteInputVal("") }}
+                              className="flex-1 border border-border py-2 rounded text-sm min-h-[44px]"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1147,6 +2125,21 @@ export function PainterDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Floating chat widget */}
+      {activeChatJob && (
+        <ChatWidget
+          channelId={activeChatJob.channelId}
+          sessionId={activeChatJob.sessionId}
+          userId={painter.id}
+          userToken={activeChatJob.token}
+          userRole="painter"
+          userName={`${painter.first_name} ${painter.last_name}`}
+          jobRef={activeChatJob.jobRef}
+          streamApiKey={import.meta.env.VITE_STREAM_API_KEY}
+          onClose={() => setActiveChatJob(null)}
+        />
+      )}
 
       {/* Mobile bottom tab bar — icons only, horizontal scroll */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">

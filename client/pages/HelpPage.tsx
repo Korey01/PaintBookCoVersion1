@@ -132,7 +132,3 @@ export default function HelpPage() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(HelpPage, { name: "HelpPage", inputs: [] }); })
-  .catch(() => {});

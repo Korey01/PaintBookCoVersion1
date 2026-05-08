@@ -133,7 +133,3 @@ export default function ContactPage() {
   );
 }
 
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(ContactPage, { name: "ContactPage", inputs: [] }); })
-  .catch(() => {});

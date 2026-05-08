@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { MapPin, Paintbrush, FileText, Home, Palette, Mail, CheckCircle2, Upload, AlertCircle } from "lucide-react";
 import { z } from "zod";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
 const JOB_TYPES = [
@@ -62,7 +62,10 @@ export default function PostJob() {
   // Step 5 - Paint Details
   const [paintChoice, setPaintChoice] = useState("");
 
-  // Step 6 - Email & Submit
+  // Step 6 - Contact & Submit
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -152,6 +155,9 @@ export default function PostJob() {
 
   async function handleSubmit() {
     const errors: Record<string, string> = {};
+    if (!firstName.trim()) errors.firstName = "First name is required";
+    if (!lastName.trim()) errors.lastName = "Last name is required";
+    if (!phone.trim()) errors.phone = "Phone number is required";
     if (!email.trim()) errors.email = "Email is required";
     else if (!email.includes("@")) errors.email = "Invalid email address";
 
@@ -174,6 +180,9 @@ export default function PostJob() {
         structural_details: structuralDetails.trim() || null,
         rooms: rooms.length > 0 ? rooms : null,
         paint_choice: paintChoice.trim() || null,
+        customer_first_name: firstName.trim(),
+        customer_last_name: lastName.trim(),
+        customer_phone: phone.trim(),
         email: email.trim(),
         marketing_consent: marketingConsent,
         images: images.slice(0, 5),
@@ -182,13 +191,27 @@ export default function PostJob() {
         utm_campaign: params.get("utm_campaign"),
       };
 
-      // In a real implementation, this would call your API endpoint
-      // For now, we'll store in localStorage and navigate to confirmation
-      const sessionId = `pbc_${Date.now()}`;
-      localStorage.setItem("pbc_session_id", sessionId);
-      localStorage.setItem("pbc_job_data", JSON.stringify(payload));
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      navigate("/post-job/confirmation");
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to post job");
+      }
+
+      navigate("/post-job/confirmation", {
+        state: { jobRef: result.job_ref, email: email.trim() }
+      });
     } catch (error) {
       console.error("Error posting job:", error);
       setErrors({ submit: "Failed to post job. Please try again." });
@@ -585,6 +608,41 @@ export default function PostJob() {
               </div>
 
               <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">First Name</label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className={fieldClass}
+                      placeholder="Jane"
+                    />
+                    {errors.firstName && <p className="text-xs text-destructive mt-1">{errors.firstName}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Last Name</label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className={fieldClass}
+                      placeholder="Smith"
+                    />
+                    {errors.lastName && <p className="text-xs text-destructive mt-1">{errors.lastName}</p>}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={fieldClass}
+                    placeholder="07700 900000"
+                  />
+                  {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
                   <input
@@ -594,7 +652,7 @@ export default function PostJob() {
                     className={fieldClass}
                     placeholder="you@example.com"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">No account needed. Used only for job updates.</p>
+                  <p className="text-xs text-muted-foreground mt-1">No account needed. We'll send your job tracking link here.</p>
                   {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
                 </div>
 
@@ -658,6 +716,9 @@ export default function PostJob() {
 }
 
 export function PostJobConfirmation() {
+  const location = useLocation();
+  const jobRef = location.state?.jobRef || "PBC-XXXXXX";
+  const email = location.state?.email || "your email";
   const navigate = useNavigate();
 
   return (
@@ -681,17 +742,23 @@ export function PostJobConfirmation() {
 
           <div className="bg-card border border-border rounded-md p-4">
             <p className="text-xs text-muted-foreground mb-1">Your job reference</p>
-            <p className="font-mono text-sm font-medium">PBC-{Math.random().toString(36).substring(2, 8).toUpperCase()}</p>
+            <p className="font-mono text-sm font-medium">{jobRef}</p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 text-sm space-y-2">
+            <p className="font-medium text-blue-900">Check your email</p>
+            <p className="text-xs text-blue-700">We have sent a job tracking link to <strong>{email}</strong>. Use it to track progress, chat with your painter, approve milestones and release payment.</p>
+            <p className="text-xs text-blue-600">No password needed — keep the link safe.</p>
           </div>
 
           <div className="bg-accent/20 border border-border rounded-md p-4 text-sm space-y-2">
             <p className="font-medium">What happens next</p>
             <ol className="text-xs text-muted-foreground space-y-1 text-left">
-              <li>1. A verified painter contacts you to chat</li>
-              <li>2. Agree the job details and price</li>
-              <li>3. Receive invoice by email — pay securely</li>
+              <li>1. A verified painter reviews your job and makes contact</li>
+              <li>2. Agree the job details and price via chat</li>
+              <li>3. Receive invoice by email — pay securely into escrow</li>
               <li>4. Painter completes the work</li>
-              <li>5. Confirm completion — funds released</li>
+              <li>5. Confirm completion — funds released to painter</li>
             </ol>
           </div>
 

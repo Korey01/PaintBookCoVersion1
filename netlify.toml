@@ -43,7 +43,10 @@
       img-src 'self' data: blob:
         https://cdn.builder.io
         https://*.supabase.co
-        https://res.cloudinary.com;
+        https://res.cloudinary.com
+        https://*.amazonaws.com;
+      media-src 'self'
+        https://*.amazonaws.com;
       font-src 'self' data:
         https://fonts.gstatic.com;
       connect-src 'self'

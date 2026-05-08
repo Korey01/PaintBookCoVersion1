@@ -1,62 +1,33 @@
-/**
- * ConfirmPage — handles Supabase email confirmation and password reset callbacks.
- *
- * Supabase automatically parses the #access_token fragment from the confirmation
- * link and fires an onAuthStateChange event (SIGNED_IN or PASSWORD_RECOVERY).
- * We listen for SIGNED_IN, then route the user to the correct dashboard based on
- * whether they have a record in the painters table.
- *
- * Supabase dashboard setup reminder:
- *   Authentication → URL Configuration:
- *     Site URL:      https://paintbook-app.netlify.app
- *     Redirect URLs: https://paintbook-app.netlify.app/confirm
- *                    https://paintbook-app.netlify.app/dashboard/customer
- *                    https://paintbook-app.netlify.app/dashboard/painter
- */
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F4d3ba4dca12d422aaa4ee4ceafe37a1f%2F58508160cf8c4641baffc02ea4d04605?format=webp&width=800";
-
-async function redirectByRole(_userId: string, navigate: ReturnType<typeof useNavigate>) {
-  // Sign out so painter must log in fresh
-  // Login page handles all onboarding gates (KYC → Insurance → Dashboard)
-  await supabase.auth.signOut();
-  navigate("/login", { replace: true });
-}
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 export default function ConfirmPage() {
-  useEffect(() => { document.title = "Confirming Email | PaintBookCo"; }, []);
-
   const navigate = useNavigate();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    // Supabase fires SIGNED_IN after automatically parsing the confirmation token
-    // from the URL fragment (#access_token=...) that Supabase appended to the link.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
         setStatus("success");
-        // Brief pause so the success message is visible before redirect
-        setTimeout(() => redirectByRole(session.user.id, navigate), 2000);
+        setMessage("Email confirmed.");
+        // Sign out and send to login — login handles all role-based routing
+        await supabase.auth.signOut();
+        setTimeout(() => navigate("/login", { replace: true }), 1500);
+      } else if (event === "PASSWORD_RECOVERY") {
+        navigate("/reset-password", { replace: true });
       }
     });
 
-    // Also check if the user already has an active session on load
-    // (e.g. they landed here after already confirming in another tab)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setStatus("success");
-        setTimeout(() => redirectByRole(session.user.id, navigate), 2000);
-      }
-    });
-
-    // If no SIGNED_IN event fires within 12 seconds, show an error
+    // Timeout fallback
     const timeout = setTimeout(() => {
-      setStatus((prev) => (prev === "loading" ? "error" : prev));
-    }, 12000);
+      setStatus("error");
+      setMessage("Verification timed out. Please try logging in.");
+    }, 10000);
 
     return () => {
       subscription.unsubscribe();
@@ -65,48 +36,41 @@ export default function ConfirmPage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-background">
-      <div className="w-full max-w-sm text-center animate-editorial-up" style={{ animationFillMode: "both" }}>
-        <Link to="/" aria-label="PaintBookCo home" className="inline-block mb-16">
-          <img src={LOGO} alt="PaintBookCo" className="h-8 w-auto mx-auto" />
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+      <header className="px-6 py-5 border-b border-border">
+        <Link to="/">
+          <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain max-w-[140px]" />
         </Link>
+      </header>
 
-        {status === "loading" && (
-          <>
-            <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto mb-6" />
-            <h1 className="font-display text-xl text-foreground mb-3">Confirming your email…</h1>
-            <p className="text-sm text-muted-foreground leading-[1.8]">Please wait a moment.</p>
-          </>
-        )}
-
-        {status === "success" && (
-          <>
-            <CheckCircle2 className="h-10 w-10 text-primary mx-auto mb-6" />
-            <h1 className="font-display text-xl text-foreground mb-3">Email confirmed!</h1>
-            <p className="text-sm text-muted-foreground leading-[1.8] mb-8">
-              Your email has been confirmed. Taking you to sign in…
-            </p>
-          </>
-        )}
-
-        {status === "error" && (
-          <>
-            <XCircle className="h-10 w-10 text-destructive mx-auto mb-6" />
-            <h1 className="font-display text-xl text-foreground mb-3">Confirmation failed</h1>
-            <p className="text-sm text-muted-foreground leading-[1.8] mb-8">
-              The confirmation link may have expired or already been used. Please request a new one.
-            </p>
-            <Link to="/login" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Back to login
-            </Link>
-          </>
-        )}
-      </div>
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="text-center space-y-4 max-w-sm">
+          {status === "loading" && (
+            <>
+              <Loader2 className="h-10 w-10 animate-spin mx-auto text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Confirming your email…</p>
+            </>
+          )}
+          {status === "success" && (
+            <>
+              <CheckCircle2 className="h-10 w-10 text-green-600 mx-auto" />
+              <h1 className="text-xl font-semibold">Email confirmed</h1>
+              <p className="text-sm text-muted-foreground">{message}</p>
+              <p className="text-xs text-muted-foreground">Redirecting you to login…</p>
+            </>
+          )}
+          {status === "error" && (
+            <>
+              <XCircle className="h-10 w-10 text-destructive mx-auto" />
+              <h1 className="text-xl font-semibold">Verification failed</h1>
+              <p className="text-sm text-muted-foreground">{message}</p>
+              <Link to="/login" className="text-sm font-medium text-foreground underline">
+                Go to login
+              </Link>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
-
-// ── Builder.io registration ───────────────────────────────────────────────────
-import("@builder.io/react")
-  .then(({ Builder }) => { Builder.registerComponent(ConfirmPage, { name: "ConfirmPage", inputs: [] }); })
-  .catch(() => {});

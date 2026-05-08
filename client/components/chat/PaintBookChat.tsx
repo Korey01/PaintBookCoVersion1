@@ -1,25 +1,6 @@
-/**
- * PaintBookChat — Secure painter–customer job chat
- *
- * Two-layer PII filter:
- *   Layer 1 (client): regex blocks UK phone, email, postcodes,
- *                     URLs and social handles before sending
- *   Layer 2 (server): SightEngine AI moderation via filter-message
- *                     Edge Function
- *
- * Access is gated by generate-stream-token Edge Function:
- *   - Customer: must own the job AND escrow_funded = true
- *   - Painter:  must be KYC approved, assigned, AND escrow_funded = true
- *   - Admin:    read-only transcript view
- *
- * Required env vars (in .env):
- *   VITE_STREAM_API_KEY              — Stream Chat public API key
- *   VITE_MAKE_DISPUTE_RAISED_WEBHOOK — Make.com webhook for message reports
- */
-
 import React, { useEffect, useRef, useState } from "react";
 import { StreamChat } from "stream-chat";
-import type { Channel as StreamChannelType, MessageResponse } from "stream-chat";
+import type { Channel as StreamChannelType } from "stream-chat";
 import {
   Chat,
   Channel,
@@ -30,103 +11,143 @@ import {
 import "stream-chat-react/dist/css/v2/index.css";
 import { supabase } from "../../lib/supabase";
 
-// ── Layer 1 PII regex patterns ────────────────────────────────────────────────
-
+// ── PII regex patterns ────────────────────────────────────────────────────────
 const PII_PATTERNS: RegExp[] = [
-  /(\+44|0)7\d{3}[\s\-]?\d{3}[\s\-]?\d{3}/g,      // UK mobile
-  /(\+44|0)(1|2|3)\d{8,9}/g,                         // UK landline
-  /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, // Email
-  /[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}/gi,            // UK postcode
-  /(https?:\/\/|www\.)/gi,                            // URLs
-  /@[a-zA-Z0-9_]{3,}/g,                              // Social handles
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  /(\+44\s?|0044\s?|0)[\s\-.]?[17][0-9\s\-.]{8,12}/g,
+  /\b07\d{2}[\s\-.]?\d{3}[\s\-.]?\d{3,4}\b/g,
+  /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}\b/gi,
+  /\b\d+\s+[A-Za-z]+\s+(Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Close|Way|Court|Place|Crescent|Terrace|Grove)\b/gi,
+  /\b(whatsapp|telegram|signal|snapchat|instagram|facebook|tiktok)\b/gi,
+  /@[a-zA-Z0-9_.]{2,}/g,
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface PaintBookChatProps {
-  jobId: string;
+  sessionId: string;
   userId: string;
   userRole: "painter" | "customer" | "admin";
-}
-
-interface TokenData {
-  token: string;
-  user_id: string;
-  channel_id: string;
-}
-
-interface ReportState {
-  messageId: string;
-  reason: string;
+  customerToken?: string;
+  // Direct-connect props (used by ChatWidget — skips internal token fetch)
+  streamToken?: string;
+  streamApiKey?: string;
+  channelId?: string;
+  onUnreadCountChange?: (count: number) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function PaintBookChat({ jobId, userId, userRole }: PaintBookChatProps) {
+export function PaintBookChat({
+  sessionId,
+  userId,
+  userRole,
+  customerToken,
+  streamToken,
+  streamApiKey: streamApiKeyProp,
+  channelId: channelIdProp,
+  onUnreadCountChange,
+}: PaintBookChatProps) {
   const [chatClient, setChatClient] = useState<StreamChat | null>(null);
   const [streamChannel, setStreamChannel] = useState<StreamChannelType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<{ message: string; code?: string } | null>(null);
 
-  // Warning banners
   const [piiWarning, setPiiWarning] = useState("");
   const [blockedMessage, setBlockedMessage] = useState("");
-  const [reportConfirmation, setReportConfirmation] = useState("");
-
-  // Report dialog
-  const [reportState, setReportState] = useState<ReportState | null>(null);
 
   const channelRef = useRef<StreamChannelType | null>(null);
   const clientRef = useRef<StreamChat | null>(null);
 
-  // ── Init: fetch token and connect ─────────────────────────────────────────
+  // ── Connect to Stream Chat ────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
     let refreshTimer: ReturnType<typeof setTimeout>;
 
-    async function connect(isRefresh = false) {
+    async function connectDirect() {
+      // Direct-connect path: token pre-provided by ChatWidget
       try {
-        const { data, error: fnError } = await supabase.functions.invoke(
-          "generate-stream-token",
-          { body: { job_id: jobId } },
-        );
+        const apiKey = streamApiKeyProp ?? import.meta.env.VITE_STREAM_API_KEY ?? "";
+        const client = StreamChat.getInstance(apiKey);
+        clientRef.current = client;
+        await client.connectUser({ id: userId }, streamToken!);
+
+        const channel = client.channel("messaging", channelIdProp!, {
+          name: "Job Chat",
+          created_by_id: userId,
+        });
+        await channel.watch({ messages: { limit: 300 } });
 
         if (!mounted) return;
+        channelRef.current = channel;
+        setChatClient(client);
+        setStreamChannel(channel);
+      } catch (err) {
+        console.error("PaintBookChat direct connect error:", err);
+        if (mounted) setError({ message: "Failed to load chat. Please try again." });
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
 
-        if (fnError || !data?.token) {
+    async function connectViaTokenFetch(isRefresh = false) {
+      // Internal-fetch path: get token from generate-stream-token edge function
+      try {
+        const body: Record<string, string> = { session_id: sessionId };
+        if (customerToken) body.customer_token = customerToken;
+
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+        };
+
+        if (userRole !== "customer") {
+          const { data: { session: authSession } } = await supabase.auth.getSession();
+          if (authSession?.access_token) {
+            headers["Authorization"] = `Bearer ${authSession.access_token}`;
+          }
+        }
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+          { method: "POST", headers, body: JSON.stringify(body) },
+        );
+
+        const data = await res.json().catch(() => ({}));
+        if (!mounted) return;
+
+        if (!res.ok || !data?.token) {
           const code: string = data?.code ?? "unknown";
           const msg: string = data?.error ?? "Chat is not available.";
           if (!isRefresh) setError({ message: msg, code });
           return;
         }
 
-        const td = data as TokenData;
-        const apiKey = (import.meta as Record<string, unknown> & { env: Record<string, string> }).env.VITE_STREAM_API_KEY ?? "";
+        const { token, user_id, channel_id } = data as {
+          token: string; user_id: string; channel_id: string;
+        };
+        const apiKey = import.meta.env.VITE_STREAM_API_KEY ?? "";
 
         if (!isRefresh) {
-          // First connection
           const client = StreamChat.getInstance(apiKey);
           clientRef.current = client;
-          await client.connectUser({ id: td.user_id }, td.token);
+          await client.connectUser({ id: user_id }, token);
 
-          const channel = client.channel("messaging", td.channel_id, {
-            name: `Job Chat`,
-            created_by_id: td.user_id,
+          const channel = client.channel("messaging", channel_id, {
+            name: "Job Chat",
+            created_by_id: user_id,
           });
           await channel.watch({ messages: { limit: 300 } });
 
           if (!mounted) return;
-
           channelRef.current = channel;
           setChatClient(client);
           setStreamChannel(channel);
         } else {
-          // Token refresh — update token without disconnecting
-          await clientRef.current?.updateToken(td.token);
+          await clientRef.current?.updateToken(token);
         }
 
-        // Schedule refresh 5 minutes before the 1-hour token expires
-        refreshTimer = setTimeout(() => connect(true), 55 * 60 * 1000);
+        refreshTimer = setTimeout(() => connectViaTokenFetch(true), 55 * 60 * 1000);
       } catch (err) {
         console.error("PaintBookChat init error:", err);
         if (!isRefresh && mounted) {
@@ -137,97 +158,75 @@ export function PaintBookChat({ jobId, userId, userRole }: PaintBookChatProps) {
       }
     }
 
-    connect();
+    if (streamToken && channelIdProp) {
+      connectDirect();
+    } else {
+      connectViaTokenFetch();
+    }
 
     return () => {
       mounted = false;
       clearTimeout(refreshTimer);
       clientRef.current?.disconnectUser().catch(console.error);
     };
-  }, [jobId]);
+  }, [sessionId, customerToken, userRole, streamToken, channelIdProp]);
 
-  // ── Message send handler with two-layer PII filter ────────────────────────
+  // ── Unread count listener ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!streamChannel || !onUnreadCountChange) return;
+    const handler = () => {
+      onUnreadCountChange(streamChannel.countUnread?.() ?? 0);
+    };
+    streamChannel.on("message.new", handler);
+    return () => {
+      streamChannel.off("message.new", handler);
+    };
+  }, [streamChannel, onUnreadCountChange]);
+
+  // ── PII-filtered message send ─────────────────────────────────────────────
   const handleSubmit = async (message: { text?: string }) => {
     const content = (message.text ?? "").trim();
     if (!content) return;
 
-    // Clear previous warnings
     setPiiWarning("");
     setBlockedMessage("");
 
-    // ── Layer 1: client-side regex ──────────────────────────────
     for (const pattern of PII_PATTERNS) {
       pattern.lastIndex = 0;
       if (pattern.test(content)) {
-        setPiiWarning("Contact details cannot be shared in chat");
-        // Async audit log — fire and forget
-        supabase.functions
-          .invoke("filter-message", {
-            body: { content, job_id: jobId, sender_role: userRole, layer1_blocked: true },
-          })
-          .catch(console.error);
+        setPiiWarning("Contact details cannot be shared in chat before payment is secured.");
+        supabase.functions.invoke("filter-message", {
+          body: { content, session_id: sessionId, sender_role: userRole, layer1_blocked: true },
+        }).catch(console.error);
         return;
       }
     }
 
-    // ── Layer 2: server-side SightEngine check ──────────────────
     try {
       const { data: filterData } = await supabase.functions.invoke("filter-message", {
-        body: { content, job_id: jobId, sender_role: userRole, layer1_blocked: false },
+        body: { content, session_id: sessionId, sender_role: userRole, layer1_blocked: false },
       });
-
       if (filterData?.blocked) {
-        setBlockedMessage(
-          filterData.message ??
-            "For security, contact details cannot be shared in chat.",
-        );
+        setBlockedMessage(filterData.message ?? "Message could not be sent — contact details are not permitted.");
         return;
       }
-    } catch (err) {
-      console.error("filter-message error:", err);
+    } catch {
       setBlockedMessage("Message could not be sent. Please try again.");
       return;
     }
 
-    // ── Both layers passed — send ───────────────────────────────
     await channelRef.current?.sendMessage({ text: content });
   };
 
-  // ── Report message ────────────────────────────────────────────────────────
-  const handleReportClick = (message: MessageResponse) => {
-    setReportState({ messageId: message.id, reason: "" });
-  };
-
-  const submitReport = async () => {
-    if (!reportState?.reason.trim()) return;
-
-    await supabase.functions
-      .invoke("filter-message", {
-        body: {
-          action: "report_message",
-          job_id: jobId,
-          message_id: reportState.messageId,
-          reporter_id: userId,
-          reason: reportState.reason,
-        },
-      })
-      .catch(console.error);
-
-    setReportState(null);
-    setReportConfirmation("Message reported. Our team will review it.");
-    setTimeout(() => setReportConfirmation(""), 5000);
-  };
-
-  // ── Loading state ─────────────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
         Loading secure chat…
       </div>
     );
   }
 
-  // ── Access denied ─────────────────────────────────────────────────────────
   if (error) {
     const iconMap: Record<string, string> = {
       kyc_not_approved: "🔒",
@@ -235,31 +234,27 @@ export function PaintBookChat({ jobId, userId, userRole }: PaintBookChatProps) {
       not_assigned: "💬",
     };
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4 text-center p-8">
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
         <span className="text-5xl" role="img" aria-label="chat unavailable">
           {iconMap[error.code ?? ""] ?? "⚠️"}
         </span>
-        <p className="text-sm text-gray-600 max-w-xs leading-relaxed">
-          {error.message}
-        </p>
+        <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">{error.message}</p>
       </div>
     );
   }
 
   if (!chatClient || !streamChannel) return null;
 
-  // ── Admin read-only transcript ────────────────────────────────────────────
+  // ── Admin read-only ───────────────────────────────────────────────────────
   if (userRole === "admin") {
     return (
-      <div className="border rounded-xl overflow-hidden">
-        <div className="px-4 py-2 bg-gray-100 border-b text-xs text-gray-500 font-medium">
+      <div className="border rounded-xl overflow-hidden h-full">
+        <div className="px-4 py-2 bg-muted border-b text-xs text-muted-foreground font-medium">
           Admin view — read only
         </div>
         <Chat client={chatClient}>
           <Channel channel={streamChannel}>
-            <Window>
-              <MessageList />
-            </Window>
+            <Window><MessageList /></Window>
           </Channel>
         </Chat>
       </div>
@@ -268,119 +263,36 @@ export function PaintBookChat({ jobId, userId, userRole }: PaintBookChatProps) {
 
   // ── Full chat UI ──────────────────────────────────────────────────────────
   return (
-    <div className="relative flex flex-col h-full border rounded-xl overflow-hidden">
-
-      {/* Warning banners */}
+    <div className="flex flex-col h-full overflow-hidden">
       {piiWarning && (
-        <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-2">
+        <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-2 flex-shrink-0">
           <span>⚠️</span>
           <span>{piiWarning}</span>
-          <button
-            onClick={() => setPiiWarning("")}
-            className="ml-auto text-amber-600 hover:text-amber-800"
-            aria-label="Dismiss"
-          >
-            ✕
-          </button>
+          <button onClick={() => setPiiWarning("")} className="ml-auto text-amber-600 hover:text-amber-800">✕</button>
         </div>
       )}
       {blockedMessage && (
-        <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-xs font-medium flex items-center gap-2">
+        <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-xs font-medium flex items-center gap-2 flex-shrink-0">
           <span>🚫</span>
           <span>{blockedMessage}</span>
-          <button
-            onClick={() => setBlockedMessage("")}
-            className="ml-auto text-red-500 hover:text-red-700"
-            aria-label="Dismiss"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-      {reportConfirmation && (
-        <div className="px-4 py-2 bg-green-50 border-b border-green-200 text-green-700 text-xs font-medium">
-          ✓ {reportConfirmation}
+          <button onClick={() => setBlockedMessage("")} className="ml-auto text-red-500 hover:text-red-700">✕</button>
         </div>
       )}
 
-      {/* Report dialog overlay */}
-      {reportState && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-80 max-w-full mx-4">
-            <h3 className="font-semibold text-gray-900 mb-1">Report message</h3>
-            <p className="text-xs text-gray-500 mb-4">
-              Tell us why you are reporting this message.
-            </p>
-            <textarea
-              className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]"
-              rows={3}
-              placeholder="Describe the issue…"
-              value={reportState.reason}
-              autoFocus
-              onChange={(e) =>
-                setReportState((s) => s && { ...s, reason: e.target.value })
-              }
-            />
-            <div className="flex gap-2 mt-4 justify-end">
-              <button
-                onClick={() => setReportState(null)}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitReport}
-                disabled={!reportState.reason.trim()}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg disabled:opacity-40 hover:bg-red-700 transition-colors"
-              >
-                Submit report
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stream Chat UI */}
       <div className="flex-1 overflow-hidden">
         <Chat client={chatClient}>
-          <Channel
-            channel={streamChannel}
-            customMessageActions={{
-              "Report message": (message: MessageResponse, event: React.BaseSyntheticEvent) => {
-                event.stopPropagation();
-                handleReportClick(message);
-              },
-            }}
-          >
+          <Channel channel={streamChannel}>
             <Window>
               <MessageList />
-              <MessageInput
-                overrideSubmitHandler={handleSubmit}
-                disableAttachments
-              />
+              <MessageInput overrideSubmitHandler={handleSubmit} disableAttachments />
             </Window>
           </Channel>
         </Chat>
       </div>
 
-      {/* Security notice */}
-      <p className="text-center text-xs text-gray-400 py-2 border-t bg-white">
-        All messages are monitored. Contact details cannot be shared in chat.
+      <p className="text-center text-xs text-muted-foreground py-2 border-t bg-background flex-shrink-0">
+        All messages are monitored. Contact details cannot be shared before payment is secured.
       </p>
     </div>
   );
 }
-
-// ── Builder.io registration ───────────────────────────────────────────────────
-
-(async () => {
-  const { Builder } = await import("@builder.io/react");
-  Builder.registerComponent(PaintBookChat, {
-    name: "PaintBookChat",
-    inputs: [
-      { name: "jobId", type: "string" },
-      { name: "userId", type: "string" },
-      { name: "userRole", type: "string" },
-    ],
-  });
-})();

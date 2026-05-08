@@ -23,14 +23,14 @@ export default function Layout({ children }: PropsWithChildren) {
             muted
             loop
             playsInline
-            src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
+            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
           />
         </div>
       )}
       {isFind && !isHome && (
         <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
           <img
-            src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
+            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
             alt=""
             className="h-full w-full object-cover -scale-x-100 opacity-70"
           />

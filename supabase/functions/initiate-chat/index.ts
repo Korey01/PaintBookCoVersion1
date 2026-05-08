@@ -53,37 +53,38 @@ Deno.serve(async (req) => {
 
     if (!session) return json({ error: "Job not found" }, 404);
 
-    // Generate Stream Chat token for painter
     const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
     const streamSecret = Deno.env.get("STREAM_API_SECRET")!;
 
-    // Create channel ID based on session
     const channelId = `job-${session_id}`;
-
-    // Calculate expiry (3 hours from now)
     const expiresAt = new Date(Date.now() + CHAT_SESSION_HOURS * 60 * 60 * 1000);
 
-    // Generate painter token
-    const painterToken = await generateStreamToken(
-      streamSecret,
-      painter.id,
-      expiresAt
-    );
+    // Generate painter Stream JWT
+    const painterToken = await generateStreamToken(streamSecret, painter.id, expiresAt);
 
-    // Generate customer token (anonymous user ID based on session)
+    // Generate server token (no expiry) for API management calls
+    const serverToken = await generateStreamServerToken(streamSecret);
+
     const customerId = `customer-${session_id}`;
-    const customerToken = await generateStreamToken(
-      streamSecret,
-      customerId,
-      expiresAt
+
+    // Upsert both users in Stream
+    await upsertStreamUsers(
+      [
+        { id: painter.id, name: `${painter.first_name} ${painter.last_name}`, role: "user" },
+        { id: customerId, name: session.first_name || "Customer", role: "user" },
+      ],
+      streamApiKey,
+      serverToken,
     );
 
-    // Create chat link for both parties
+    // Create channel with both members
+    await createStreamChannel(channelId, painter.id, [painter.id, customerId], streamApiKey, serverToken);
+
+    // Build notification links
     const baseUrl = "https://www.paintbookco.co.uk";
     const painterChatLink = `${baseUrl}/chat/${channelId}?token=${painterToken}&user=${painter.id}&role=painter`;
-    const customerChatLink = `${baseUrl}/chat/${channelId}?token=${customerToken}&user=${customerId}&role=customer`;
+    const customerChatLink = `${baseUrl}/chat/${channelId}?customer_token=${session.customer_token}&session_id=${session_id}`;
 
-    // Job reference
     const jobRef = `PBC-${session_id.slice(-6).toUpperCase()}`;
     const postcodeDistrict = session.postcode?.split(" ")[0] || session.postcode;
 
@@ -95,18 +96,15 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            // Customer notification
             customer_email: session.email,
             chat_link: customerChatLink,
             job_ref: jobRef,
             job_type: session.job_type,
             postcode: session.postcode,
-            // Painter notification
             painter_email: painter.email,
             painter_name: `${painter.first_name} ${painter.last_name}`,
             painter_chat_link: painterChatLink,
             postcode_district: postcodeDistrict,
-            // Session info
             channel_id: channelId,
             expires_at: expiresAt.toISOString(),
             stream_api_key: streamApiKey,
@@ -117,13 +115,29 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update session status
+    // Update session — set painter_id, status, and chat_channel_id
     await serviceClient
       .from("sessions")
-      .update({ status: "painter_contacted" })
+      .update({
+        status: "painter_contacted",
+        chat_channel_id: channelId,
+        painter_id: user.id,
+      })
       .eq("id", session_id);
 
-    // Audit log
+    // Store channel_id on transaction if one exists
+    const { data: existingTx } = await serviceClient
+      .from("transactions")
+      .select("id")
+      .eq("session_id", session_id)
+      .maybeSingle();
+    if (existingTx) {
+      await serviceClient
+        .from("transactions")
+        .update({ chat_channel_id: channelId, status: "painter_contacted" })
+        .eq("id", existingTx.id);
+    }
+
     await serviceClient.from("audit_log").insert({
       action: "chat_initiated",
       actor_id: user.id,
@@ -153,48 +167,99 @@ Deno.serve(async (req) => {
   }
 });
 
-async function generateStreamToken(
-  secret: string,
-  userId: string,
-  expiresAt: Date
-): Promise<string> {
-  const header = { alg: "HS256", typ: "JWT" };
-  const payload = {
+// ── Stream helpers ─────────────────────────────────────────────────────────────
+
+async function generateStreamToken(secret: string, userId: string, expiresAt: Date): Promise<string> {
+  const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = b64url(JSON.stringify({
     user_id: userId,
     exp: Math.floor(expiresAt.getTime() / 1000),
     iat: Math.floor(Date.now() / 1000),
-  };
+  }));
+  const sig = await hmacSha256(`${header}.${payload}`, secret);
+  return `${header}.${payload}.${sig}`;
+}
 
-  const encode = (obj: object) =>
-    btoa(JSON.stringify(obj))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=/g, "");
+async function generateStreamServerToken(secret: string): Promise<string> {
+  const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = b64url(JSON.stringify({ server: true }));
+  const sig = await hmacSha256(`${header}.${payload}`, secret);
+  return `${header}.${payload}.${sig}`;
+}
 
-  const headerB64 = encode(header);
-  const payloadB64 = encode(payload);
-  const sigInput = `${headerB64}.${payloadB64}`;
-
+async function hmacSha256(data: string, secret: string): Promise<string> {
   const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
   );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
+  return b64urlFromBuffer(new Uint8Array(sig));
+}
 
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(sigInput)
+function b64url(str: string): string {
+  return btoa(str).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+function b64urlFromBuffer(buf: Uint8Array): string {
+  return btoa(String.fromCharCode(...buf)).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+async function upsertStreamUsers(
+  users: Array<{ id: string; name: string; role: string }>,
+  apiKey: string,
+  serverToken: string,
+): Promise<void> {
+  const usersMap: Record<string, unknown> = {};
+  for (const u of users) {
+    usersMap[u.id] = { id: u.id, name: u.name, role: u.role };
+  }
+  const res = await fetch(`https://chat.stream-io-api.com/users?api_key=${apiKey}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serverToken}`,
+      "stream-auth-type": "jwt",
+      "X-Stream-Client": "stream-chat-server",
+    },
+    body: JSON.stringify({ users: usersMap }),
+  });
+  if (!res.ok) {
+    console.error(`Stream upsert users error ${res.status}: ${await res.text().catch(() => "")}`);
+  }
+}
+
+async function createStreamChannel(
+  channelId: string,
+  createdById: string,
+  members: string[],
+  apiKey: string,
+  serverToken: string,
+): Promise<void> {
+  const res = await fetch(
+    `https://chat.stream-io-api.com/channels/messaging/${channelId}?api_key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serverToken}`,
+        "stream-auth-type": "jwt",
+        "X-Stream-Client": "stream-chat-server",
+      },
+      body: JSON.stringify({
+        data: {
+          members,
+          created_by_id: createdById,
+        },
+      }),
+    }
   );
-
-  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-
-  return `${sigInput}.${sigB64}`;
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    // 400 with "already exists" is fine — channel exists, members will be updated
+    if (!errText.includes("already exists") && res.status !== 400) {
+      console.error(`Stream create channel error ${res.status}: ${errText}`);
+    }
+  }
 }
 
 function json(data: unknown, status = 200) {

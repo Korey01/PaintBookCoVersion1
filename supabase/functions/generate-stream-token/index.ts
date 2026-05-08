@@ -1,29 +1,27 @@
 /**
- * generate-stream-token — Supabase Edge Function
+ * generate-stream-token — issues Stream Chat user token for painter–customer chat.
  *
- * Issues a Stream Chat user token for painter–customer job chat.
+ * Painter path (requires Bearer JWT):
+ *   - painter must be KYC approved and active
+ *   - painter must be matched to the session (painter_id on transaction OR session)
+ *   - no escrow requirement — painters need chat before payment to send invoices
  *
- * Access rules:
- *   Customer: owns the job AND escrow_funded = true
- *   Painter:  kyc_status = 'approved' AND assigned to job AND escrow_funded = true
+ * Customer path (requires customer_token):
+ *   - validates customer_token against sessions table (no Supabase auth)
+ *   - issues anonymous customer token for the channel
  *
- * Request body: { job_id: string }
- * Response:     { token, user_id, channel_id }
+ * Request body:
+ *   Painter:  { session_id: string }
+ *   Customer: { session_id: string, customer_token: string }
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
-
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://www.paintbookco.co.uk",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-// ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,154 +29,126 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ── Auth: require valid Supabase JWT ──────────────────────
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized." }, 401);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey);
+
+    const body = await req.json().catch(() => ({})) as Record<string, string>;
+    const { session_id, customer_token } = body;
+
+    if (!session_id) return json({ error: "session_id is required" }, 400);
+
+    // Get session
+    const { data: session, error: sessErr } = await serviceClient
+      .from("sessions")
+      .select("*")
+      .eq("id", session_id)
+      .single();
+
+    if (sessErr || !session) return json({ error: "Session not found" }, 404);
+
+    const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
+    const streamApiSecret = Deno.env.get("STREAM_API_SECRET")!;
+    const channelId = `job-${session_id}`;
+    const exp = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60); // 90 days — valid for life of job
+
+    // ── Customer path (no Supabase auth required) ─────────────────────────────
+    if (customer_token) {
+      if (session.customer_token !== customer_token) {
+        return json({ error: "Invalid customer token" }, 403);
+      }
+
+      const customerId = `customer-${session_id}`;
+      const token = await generateStreamUserToken(customerId, streamApiSecret, exp);
+      await upsertStreamUser(
+        { id: customerId, name: session.first_name || "Customer", role: "user" },
+        streamApiKey,
+        streamApiSecret,
+      );
+
+      return json({ token, user_id: customerId, channel_id: channelId });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
+    // ── Painter path (requires valid Supabase JWT) ─────────────────────────────
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
 
-    // User client — validates JWT, applies RLS
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-
     const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) return json({ error: "Unauthorized." }, 401);
+    if (authError || !user) return json({ error: "Unauthorized" }, 401);
 
-    // ── Parse body ────────────────────────────────────────────
-    const body = await req.json().catch(() => ({}));
-    const { job_id } = body as { job_id?: string };
-    if (!job_id) return json({ error: "job_id is required." }, 400);
-
-    // ── Service client — bypasses RLS for access checks ───────
-    const serviceClient = createClient(supabaseUrl, serviceRoleKey);
-
-    const { data: job, error: jobErr } = await serviceClient
-      .from("jobs")
-      .select("id, customer_id, assigned_painter_id, escrow_funded, status, title")
-      .eq("id", job_id)
-      .single();
-
-    if (jobErr || !job) return json({ error: "Job not found." }, 404);
-
-    // ── Determine role and validate access conditions ─────────
-    let userRole: "painter" | "customer";
-    let displayName: string;
-
-    if (job.customer_id === user.id) {
-      // ── Customer path ───────────────────────────────────────
-      if (!job.escrow_funded) {
-        return json(
-          { error: "Chat opens when payment is confirmed.", code: "escrow_not_funded" },
-          403,
-        );
-      }
-      userRole = "customer";
-      displayName =
-        user.user_metadata?.full_name ??
-        user.user_metadata?.name ??
-        user.email ??
-        "Customer";
-    } else {
-      // ── Painter path ────────────────────────────────────────
-      const { data: painter } = await serviceClient
-        .from("painters")
-        .select("id, kyc_status, first_name, last_name")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!painter) {
-        return json(
-          { error: "Chat not available for this job.", code: "not_assigned" },
-          403,
-        );
-      }
-
-      if (painter.kyc_status !== "approved") {
-        return json(
-          { error: "Complete verification to access chat.", code: "kyc_not_approved" },
-          403,
-        );
-      }
-
-      if (job.assigned_painter_id !== painter.id) {
-        return json(
-          { error: "Chat not available for this job.", code: "not_assigned" },
-          403,
-        );
-      }
-
-      if (!job.escrow_funded) {
-        return json(
-          { error: "Chat opens when payment is confirmed.", code: "escrow_not_funded" },
-          403,
-        );
-      }
-
-      userRole = "painter";
-      displayName =
-        [painter.first_name, painter.last_name].filter(Boolean).join(" ") || "Painter";
+    // Check admin access
+    const adminEmail = Deno.env.get("ADMIN_EMAIL") ?? "";
+    if (user.email === adminEmail) {
+      const token = await generateStreamUserToken(user.id, streamApiSecret, exp);
+      await upsertStreamUser({ id: user.id, name: "Admin", role: "admin" }, streamApiKey, streamApiSecret);
+      return json({ token, user_id: user.id, channel_id: channelId });
     }
 
-    // ── Generate Stream Chat user token (1-hour expiry) ───────
-    const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
-    const streamApiSecret = Deno.env.get("STREAM_API_SECRET")!;
-    const exp = Math.floor(Date.now() / 1000) + 3600;
+    // Painter validation
+    const { data: painter } = await serviceClient
+      .from("painters")
+      .select("id, first_name, last_name, kyc_status, is_active")
+      .eq("user_id", user.id)
+      .single();
 
-    const token = await generateStreamUserToken(user.id, streamApiSecret, exp);
+    if (!painter) return json({ error: "Painter account not found" }, 404);
+    if (painter.kyc_status !== "approved") {
+      return json({ error: "Complete KYC verification to access chat", code: "kyc_not_approved" }, 403);
+    }
+    if (!painter.is_active) {
+      return json({ error: "Account not yet active" }, 403);
+    }
 
-    // ── Upsert Stream user via REST API ───────────────────────
-    await upsertStreamUser(
-      { id: user.id, name: displayName, role: userRole },
-      streamApiKey,
-      streamApiSecret,
-    );
+    // Verify painter is assigned to this job
+    const { data: tx } = await serviceClient
+      .from("transactions")
+      .select("id, painter_id, status")
+      .eq("session_id", session_id)
+      .eq("painter_id", painter.id)
+      .maybeSingle();
 
-    // ── Audit log ─────────────────────────────────────────────
+    // Also check session.painter_id for jobs where transaction hasn't been created yet
+    const sessionPainterMatch = session.painter_id === painter.id;
+
+    if (!tx && !sessionPainterMatch) {
+      return json({ error: "Chat not available for this job", code: "not_assigned" }, 403);
+    }
+
+    const displayName = [painter.first_name, painter.last_name].filter(Boolean).join(" ") || "Painter";
+    const token = await generateStreamUserToken(painter.id, streamApiSecret, exp);
+    await upsertStreamUser({ id: painter.id, name: displayName, role: "user" }, streamApiKey, streamApiSecret);
+
     await serviceClient.from("audit_log").insert({
       action: "stream_token_generated",
       actor_id: user.id,
-      actor_role: userRole,
-      entity_type: "job",
-      entity_id: job_id,
-      details: {
-        user_id: user.id,
-        channel_id: `job_${job_id}`,
-        exp,
-      },
+      actor_role: "painter",
+      entity_type: "session",
+      entity_id: session_id,
+      details: { painter_id: painter.id, channel_id: channelId, exp },
     });
 
-    return json({ token, user_id: user.id, channel_id: `job_${job_id}` });
+    return json({ token, user_id: painter.id, channel_id: channelId });
+
   } catch (err) {
     console.error("generate-stream-token error:", err);
-    return json({ error: "Internal server error." }, 500);
+    return json({ error: "Internal server error" }, 500);
   }
 });
 
-// ── Stream JWT helpers ────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Generates a Stream Chat user token (HS256 JWT).
- * Payload: { user_id, exp }
- */
-async function generateStreamUserToken(
-  userId: string,
-  secret: string,
-  exp: number,
-): Promise<string> {
+async function generateStreamUserToken(userId: string, secret: string, exp: number): Promise<string> {
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = b64url(JSON.stringify({ user_id: userId, exp }));
   return `${header}.${payload}.${await hmacSha256(`${header}.${payload}`, secret)}`;
 }
 
-/**
- * Generates a Stream Chat server token (HS256 JWT, no expiry).
- * Payload: { server: true }
- */
 async function generateStreamServerToken(secret: string): Promise<string> {
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = b64url(JSON.stringify({ server: true }));
@@ -187,11 +157,8 @@ async function generateStreamServerToken(secret: string): Promise<string> {
 
 async function hmacSha256(data: string, secret: string): Promise<string> {
   const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
   );
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
   return b64urlFromBuffer(new Uint8Array(sig));
@@ -202,13 +169,8 @@ function b64url(str: string): string {
 }
 
 function b64urlFromBuffer(buf: Uint8Array): string {
-  return btoa(String.fromCharCode(...buf))
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
+  return btoa(String.fromCharCode(...buf)).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
-
-// ── Stream REST API ───────────────────────────────────────────────────────────
 
 async function upsertStreamUser(
   user: { id: string; name: string; role: string },
@@ -216,33 +178,20 @@ async function upsertStreamUser(
   apiSecret: string,
 ): Promise<void> {
   const serverToken = await generateStreamServerToken(apiSecret);
-
-  const res = await fetch(
-    `https://chat.stream-io-api.com/users?api_key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: serverToken,
-        "stream-auth-type": "jwt",
-        "X-Stream-Client": "stream-chat-server",
-      },
-      body: JSON.stringify({
-        users: {
-          [user.id]: { id: user.id, name: user.name, role: user.role },
-        },
-      }),
+  const res = await fetch(`https://chat.stream-io-api.com/users?api_key=${apiKey}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: serverToken,
+      "stream-auth-type": "jwt",
+      "X-Stream-Client": "stream-chat-server",
     },
-  );
-
+    body: JSON.stringify({ users: { [user.id]: { id: user.id, name: user.name, role: user.role } } }),
+  });
   if (!res.ok) {
-    const text = await res.text().catch(() => "(unreadable)");
-    console.error(`Stream upsert user error ${res.status}: ${text}`);
-    // Non-fatal — token is still valid even if upsert fails
+    console.error(`Stream upsert user error ${res.status}: ${await res.text().catch(() => "")}`);
   }
 }
-
-// ── Utility ───────────────────────────────────────────────────────────────────
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {

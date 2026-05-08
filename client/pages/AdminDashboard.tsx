@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, RefreshCw, CheckCircle2, XCircle, LogOut, Shield, Briefcase, AlertTriangle, Users, BarChart3 } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle2, XCircle, LogOut, Shield, Briefcase, AlertTriangle, Users, BarChart3, X } from "lucide-react";
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL as string;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   // Rejection reason state
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [viewInvoiceHtml, setViewInvoiceHtml] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -206,7 +207,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="border-b border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="PaintBookCo" className="h-7 object-contain" />
+          <img src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png" alt="PaintBookCo" className="h-7 object-contain" />
           <span className="text-sm font-medium text-muted-foreground">Admin Dashboard</span>
         </div>
         <div className="flex items-center gap-3">
@@ -560,7 +561,7 @@ export default function AdminDashboard() {
                       <table className="w-full text-sm">
                         <thead className="border-b border-border bg-accent/30">
                           <tr>
-                            {["Invoice", "Customer", "Amount", "Commission", "Payout", "Status", "Date"].map(h => (
+                            {["Invoice", "Customer", "Amount", "Commission", "Payout", "Status", "Date", ""].map(h => (
                               <th key={h} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                 {h}
                               </th>
@@ -578,6 +579,16 @@ export default function AdminDashboard() {
                               <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
                               <td className="px-4 py-3 text-muted-foreground text-xs">
                                 {new Date(t.created_at).toLocaleDateString("en-GB")}
+                              </td>
+                              <td className="px-4 py-3">
+                                {t.invoice_html && (
+                                  <button
+                                    onClick={() => setViewInvoiceHtml(t.invoice_html)}
+                                    className="text-xs text-blue-400 hover:text-blue-300 underline whitespace-nowrap"
+                                  >
+                                    View Invoice
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}
@@ -649,6 +660,39 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
+
+      {/* Invoice viewer modal */}
+      {viewInvoiceHtml && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-background border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Invoice</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const w = window.open("", "_blank");
+                    if (!w) return;
+                    w.document.write(viewInvoiceHtml);
+                    w.document.close();
+                    w.focus();
+                    w.print();
+                  }}
+                  className="border border-border text-sm px-3 py-1.5 rounded hover:bg-accent transition-colors"
+                >
+                  Download PDF
+                </button>
+                <button onClick={() => setViewInvoiceHtml(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div
+              className="text-sm border border-border rounded-lg overflow-hidden"
+              dangerouslySetInnerHTML={{ __html: viewInvoiceHtml }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

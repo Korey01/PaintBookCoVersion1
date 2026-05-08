@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     // Create Stream channel with both painter and customer as members
     const customerId = `customer-${session_id}`;
     try {
-      const serverToken = await generateStreamToken(streamSecret, painter.id, new Date(Date.now() + 3600000));
+      const serverToken = await generateServerToken(streamSecret);
       // Upsert both users
       await fetch(`https://chat.stream-io-api.com/users?api_key=${streamApiKey}`, {
         method: "POST",
@@ -89,8 +89,8 @@ Deno.serve(async (req) => {
           }
         }),
       });
-      // Create channel with both members
-      await fetch(`https://chat.stream-io-api.com/channels/messaging/${channelId}?api_key=${streamApiKey}`, {
+      // Create channel using Stream query endpoint (creates if not exists)
+      const channelRes = await fetch(`https://chat.stream-io-api.com/channels/messaging/${channelId}/query?api_key=${streamApiKey}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,47 +98,22 @@ Deno.serve(async (req) => {
           "stream-auth-type": "jwt",
         },
         body: JSON.stringify({
-          data: { members: [painter.id, customerId], created_by_id: painter.id }
+          data: {
+            members: [painter.id, customerId],
+            created_by_id: painter.id,
+          },
+          watch: false,
+          state: false,
+          presence: false,
         }),
       });
+      const channelData = await channelRes.json();
+      console.log("Stream channel response:", JSON.stringify(channelData).slice(0, 500));
     } catch (streamErr) {
-      console.error("Stream channel creation error:", streamErr);
+      console.error("Stream channel creation error:", String(streamErr));
     }
 
     // Create Stream channel with both painter and customer as members
-    const customerId = `customer-${session_id}`;
-    try {
-      const serverToken = await generateStreamToken(streamSecret, painter.id, new Date(Date.now() + 3600000));
-      // Upsert both users
-      await fetch(`https://chat.stream-io-api.com/users?api_key=${streamApiKey}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${serverToken}`,
-          "stream-auth-type": "jwt",
-        },
-        body: JSON.stringify({
-          users: {
-            [painter.id]: { id: painter.id, name: `${painter.first_name} ${painter.last_name}` },
-            [customerId]: { id: customerId, name: session.first_name || "Customer" },
-          }
-        }),
-      });
-      // Create channel with both members
-      await fetch(`https://chat.stream-io-api.com/channels/messaging/${channelId}?api_key=${streamApiKey}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${serverToken}`,
-          "stream-auth-type": "jwt",
-        },
-        body: JSON.stringify({
-          data: { members: [painter.id, customerId], created_by_id: painter.id }
-        }),
-      });
-    } catch (streamErr) {
-      console.error("Stream channel creation error:", streamErr);
-    }
 
     // Create chat link for both parties
     const baseUrl = "https://www.paintbookco.co.uk";
@@ -229,6 +204,28 @@ Deno.serve(async (req) => {
     return json({ error: "An unexpected error occurred" }, 500);
   }
 });
+
+async function generateServerToken(secret: string): Promise<string> {
+  const header = { alg: "HS256", typ: "JWT" };
+  const payload = {
+    server: true,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  };
+  const encode = (obj: object) =>
+    btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  const headerB64 = encode(header);
+  const payloadB64 = encode(payload);
+  const sigInput = `${headerB64}.${payloadB64}`;
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(sigInput));
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return `${sigInput}.${sigB64}`;
+}
 
 async function generateStreamToken(
   secret: string,

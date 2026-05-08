@@ -112,10 +112,14 @@ export default function JobSessionPage() {
   }
 
   async function handleAction(action: string) {
-    if (!transaction) return;
     setActionLoading(action);
     setActionMessage("");
     try {
+      // cancel-job supports session-level cancel when no transaction exists
+      const body = action === "cancel-job" && !transaction
+        ? { session_id: session?.id, customer_token: token }
+        : { transaction_id: transaction?.id, customer_token: token };
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${action}`,
         {
@@ -124,10 +128,7 @@ export default function JobSessionPage() {
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({
-            transaction_id: transaction.id,
-            customer_token: token,
-          }),
+          body: JSON.stringify(body),
         }
       );
       const result = await res.json();
@@ -142,6 +143,17 @@ export default function JobSessionPage() {
     } finally {
       setActionLoading("");
     }
+  }
+
+  function downloadInvoicePDF() {
+    const html = transaction?.invoice_html;
+    if (!html) return;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
   }
 
   async function handleSubmitReview(e: React.FormEvent) {
@@ -345,8 +357,8 @@ export default function JobSessionPage() {
           </div>
         </div>
 
-        {/* Invoice + Pay Now */}
-        {transaction?.invoice_html && status === "invoice_sent" && !isReadOnly && (
+        {/* Invoice */}
+        {transaction?.invoice_html && (
           <div className="bg-card border border-border rounded-lg p-5 space-y-4">
             <h2 className="text-sm font-medium flex items-center gap-2">
               <Shield className="h-4 w-4" /> Invoice
@@ -360,14 +372,24 @@ export default function JobSessionPage() {
               <p className="text-sm text-destructive text-center">{actionMessage}</p>
             )}
 
-            <button
-              onClick={handlePayNow}
-              disabled={payLoading}
-              className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {payLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Pay Now — Secure Escrow
-            </button>
+            <div className="flex gap-3">
+              {status === "invoice_sent" && !isReadOnly && (
+                <button
+                  onClick={handlePayNow}
+                  disabled={payLoading}
+                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {payLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Pay Now — Secure Escrow
+                </button>
+              )}
+              <button
+                onClick={downloadInvoicePDF}
+                className="px-4 py-3 border border-border text-muted-foreground rounded-md text-sm hover:bg-accent transition-colors"
+              >
+                Download PDF
+              </button>
+            </div>
           </div>
         )}
 
@@ -410,7 +432,7 @@ export default function JobSessionPage() {
         )}
 
         {/* Action buttons */}
-        {!isReadOnly && transaction && (
+        {!isReadOnly && (
           <div className="space-y-3">
             {actionMessage && (
               <div className="bg-accent/20 border border-border rounded-md p-3 text-sm text-center">
@@ -418,7 +440,7 @@ export default function JobSessionPage() {
               </div>
             )}
 
-            {["funded", "in_progress", "completion_requested"].includes(status) && (
+            {transaction && ["funded", "in_progress", "completion_requested"].includes(status) && (
               <button
                 onClick={() => handleAction("confirm-completion")}
                 disabled={!!actionLoading}
@@ -428,7 +450,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {["funded", "in_progress", "completion_requested"].includes(status) && (
+            {transaction && ["funded", "in_progress", "completion_requested"].includes(status) && (
               <button
                 onClick={() => handleAction("raise-dispute")}
                 disabled={!!actionLoading}
@@ -438,7 +460,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {["job_posted", "painter_contacted"].includes(status) && (
+            {["job_posted", "painter_contacted", "invoice_sent"].includes(status) && (
               <button
                 onClick={() => handleAction("cancel-job")}
                 disabled={!!actionLoading}

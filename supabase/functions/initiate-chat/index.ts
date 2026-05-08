@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       .update({
         status: "painter_contacted",
         chat_channel_id: channelId,
-        painter_id: painter.id,
+        painter_id: user.id,
       })
       .eq("id", session_id);
 

@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
             // Customer notification
             customer_email: session.email,
             chat_link: customerChatLink,
+            customer_token: session.customer_token,
             job_ref: jobRef,
             job_type: session.job_type,
             postcode: session.postcode,

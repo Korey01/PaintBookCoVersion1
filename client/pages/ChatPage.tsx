@@ -34,18 +34,30 @@ export default function ChatPage() {
   const token = searchParams.get("token") || "";
   const userId = searchParams.get("user") || "";
   const role = searchParams.get("role") || "customer";
+  const customerToken = searchParams.get("customer_token") || "";
+  const sessionId = searchParams.get("session_id") || "";
   const streamApiKey = import.meta.env.VITE_STREAM_API_KEY;
 
   useEffect(() => {
-    if (!token || !userId || !channel_id || !streamApiKey) {
+    if (!channel_id || !streamApiKey) {
       setError("Invalid chat link. Please use the link from your email.");
       setLoading(false);
       return;
     }
-    initChat();
+    if (token && userId) {
+      // Painter path — token pre-provided in URL
+      initChatDirect(token, userId, role === "painter" ? "Painter" : "Customer");
+    } else if (customerToken && sessionId) {
+      // Customer path — exchange customer_token for a Stream token
+      initChatAsCustomer();
+    } else {
+      setError("Invalid chat link. Please use the link from your email.");
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
+    if (!token) return;
     const interval = setInterval(() => {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
@@ -67,22 +79,55 @@ export default function ChatPage() {
     return () => clearInterval(interval);
   }, [token]);
 
-  const initChat = async () => {
+  const connectToStream = async (streamToken: string, streamUserId: string, displayName: string) => {
+    const chatClient = StreamChat.getInstance(streamApiKey);
+    // Disconnect stale connection before reconnecting as a different user
+    if (chatClient.userID && chatClient.userID !== streamUserId) {
+      await chatClient.disconnectUser();
+    }
+    if (!chatClient.userID) {
+      await chatClient.connectUser({ id: streamUserId, name: displayName }, streamToken);
+    }
+    // Channel was created server-side with both parties as members — don't override membership
+    const chatChannel = chatClient.channel("messaging", channel_id!);
+    await chatChannel.watch();
+    setClient(chatClient);
+    setChannel(chatChannel);
+  };
+
+  const initChatDirect = async (streamToken: string, streamUserId: string, displayName: string) => {
     try {
-      const chatClient = StreamChat.getInstance(streamApiKey);
-      await chatClient.connectUser(
-        { id: userId, name: role === "painter" ? "Painter" : "Customer" },
-        token
+      await connectToStream(streamToken, streamUserId, displayName);
+    } catch (err: any) {
+      if (err.message?.includes("token is expired")) {
+        setExpired(true);
+      } else {
+        setError("Failed to connect to chat. Please try again.");
+      }
+    }
+    setLoading(false);
+  };
+
+  const initChatAsCustomer = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ session_id: sessionId, customer_token: customerToken }),
+        }
       );
-
-      const chatChannel = chatClient.channel("messaging", channel_id, {
-        name: "Job Discussion",
-        members: [userId],
-      });
-
-      await chatChannel.watch();
-      setClient(chatClient);
-      setChannel(chatChannel);
+      const data = await res.json();
+      if (!res.ok || !data.token) {
+        setError(data.error || "Failed to authenticate. Please use the link from your email.");
+        setLoading(false);
+        return;
+      }
+      await connectToStream(data.token, data.user_id, "Customer");
     } catch (err: any) {
       if (err.message?.includes("token is expired")) {
         setExpired(true);

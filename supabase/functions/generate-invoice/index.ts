@@ -223,13 +223,17 @@ Deno.serve(async (req) => {
         invoice_sent_at: new Date().toISOString(),
       }).eq("id", txId);
     } else {
+      const sess = session as Record<string, unknown>;
       const { data: newTx, error: txErr } = await serviceClient
         .from("transactions")
         .insert({
           session_id,
           painter_id: painter.id,
-          customer_email: (session as Record<string, unknown>).email as string ?? "",
-          customer_first_name: (session as Record<string, unknown>).first_name as string ?? "Customer",
+          customer_email: sess.email as string ?? "",
+          customer_first_name: sess.first_name as string ?? "Customer",
+          customer_last_name: sess.last_name as string ?? null,
+          customer_phone: sess.phone as string ?? null,
+          customer_postcode: sess.postcode as string ?? null,
           customer_token: customerToken ?? "",
           invoice_html: invoiceHtml,
           invoice_id: invoiceRef,
@@ -264,7 +268,7 @@ Deno.serve(async (req) => {
     }
 
     const sessionToken = customerToken;
-    const paymentUrl = `${Deno.env.get("SUPABASE_URL")?.replace("supabase.co", "paintbookco.co.uk") ?? "https://www.paintbookco.co.uk"}/job/${sessionToken ?? txId}`;
+    const paymentUrl = `https://www.paintbookco.co.uk/job/${sessionToken ?? txId}`;
 
     // Replace placeholder with actual customer job page URL
     const finalInvoiceHtml = invoiceHtml.replace(payLinkPlaceholder, paymentUrl);

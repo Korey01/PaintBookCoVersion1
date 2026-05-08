@@ -182,7 +182,7 @@ async function upsertStreamUser(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: serverToken,
+      "Authorization": `Bearer ${serverToken}`,
       "stream-auth-type": "jwt",
       "X-Stream-Client": "stream-chat-server",
     },

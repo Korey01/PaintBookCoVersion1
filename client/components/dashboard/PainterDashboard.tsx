@@ -802,8 +802,6 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
                             sessionId={session.id}
                             userId={user?.id}
                             userRole="painter"
-                            jobStatus={session.status}
-                            transactionId={tx?.id}
                           />
                         </div>
                       )}

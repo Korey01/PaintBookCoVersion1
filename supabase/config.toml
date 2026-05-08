@@ -1,0 +1,32 @@
+[functions.generate-invoice]
+verify_jwt = false
+
+[functions.generate-stream-token]
+verify_jwt = false
+
+[functions.create-session]
+verify_jwt = false
+
+[functions.initiate-chat]
+verify_jwt = false
+
+[functions.confirm-completion]
+verify_jwt = false
+
+[functions.raise-dispute]
+verify_jwt = false
+
+[functions.cancel-job]
+verify_jwt = false
+
+[functions.auto-release-escrow]
+verify_jwt = false
+
+[functions.transpact-webhook-receiver]
+verify_jwt = false
+
+[functions.review-job]
+verify_jwt = false
+
+[functions.create-transpact]
+verify_jwt = false

@@ -115,6 +115,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Auth path 3: painter_id in body ─────────────────────────────────────
+    if (!painter && body.painter_id) {
+      const { data: p } = await serviceClient
+        .from("painters")
+        .select("id, first_name, last_name, email, completed_jobs, user_id")
+        .eq("id", body.painter_id as string)
+        .single();
+      if (p) { painter = p; actorId = p.user_id; }
+    }
+
     if (!painter) return json({ error: "Unauthorised" }, 401);
 
     // Resolve transaction and session

@@ -116,22 +116,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Generate server token for Stream API management calls
-    const serverToken = await generateStreamServerToken(streamSecret);
-
-    // Upsert both users in Stream so the channel can be created with both as members
-    await upsertStreamUsers(
-      [
-        { id: painter.id, name: `${painter.first_name} ${painter.last_name}`, role: "user" },
-        { id: customerId, name: session.first_name || "Customer", role: "user" },
-      ],
-      streamApiKey,
-      serverToken,
-    );
-
-    // Create channel server-side with both parties as members before either client connects
-    await createStreamChannel(channelId, painter.id, [painter.id, customerId], streamApiKey, serverToken);
-
     // Update session status, assign painter, and store channel_id
     await serviceClient
       .from("sessions")

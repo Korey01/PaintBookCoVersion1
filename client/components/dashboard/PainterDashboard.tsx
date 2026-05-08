@@ -774,7 +774,7 @@ function MyJobsTab({
     const { data } = await supabase
       .from("sessions")
       .select("*, transactions(*)")
-      .eq("painter_id", painter.user_id ?? "")
+      .eq("painter_id", painter.id ?? "")
       .order("updated_at", { ascending: false })
     setSessions(data || [])
     setLoading(false)
@@ -1102,15 +1102,6 @@ function MyJobsTab({
                           </button>
                         )}
                       </div>
-                      {isOpen && session.chat_channel_id && (
-                        <div className="border-t border-border h-96">
-                          <PaintBookChat
-                            sessionId={session.id}
-                            userId={user?.id}
-                            userRole="painter"
-                          />
-                        </div>
-                      )}
                     </div>
                   )
                 })}
@@ -1445,7 +1436,7 @@ function ReviewsTab({ painter, supabase }: { painter: any; supabase: any }) {
     const { data } = await supabase
       .from("reviews")
       .select("id, rating, review_text, created_at")
-      .eq("painter_id", painter.user_id ?? "")
+      .eq("painter_id", painter.id ?? "")
       .order("created_at", { ascending: false })
     setReviews(data || [])
     setLoading(false)

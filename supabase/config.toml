@@ -1,5 +1,5 @@
 [functions.generate-invoice]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-stream-token]
 verify_jwt = false
@@ -26,4 +26,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.review-job]
+verify_jwt = false
+
+[functions.create-transpact]
 verify_jwt = false

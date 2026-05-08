@@ -744,12 +744,16 @@ function MyJobsTab({
 
   // Invoice modal state (TASK 2)
   const [invoiceJob, setInvoiceJob] = React.useState<any>(null)
+  const [invoiceIsEdit, setInvoiceIsEdit] = React.useState(false)
   const [invoiceDescription, setInvoiceDescription] = React.useState("")
   const [invoiceItems, setInvoiceItems] = React.useState([{ description: "", amount: "" }])
   const [invoiceNotes, setInvoiceNotes] = React.useState("")
   const [invoiceLoading, setInvoiceLoading] = React.useState(false)
   const [invoiceSuccess, setInvoiceSuccess] = React.useState(false)
   const [invoiceError, setInvoiceError] = React.useState("")
+
+  // View Invoice modal state
+  const [viewInvoiceHtml, setViewInvoiceHtml] = React.useState<string | null>(null)
 
   // Action confirmation state (TASK 4)
   const [cancelConfirmId, setCancelConfirmId] = React.useState<string | null>(null)
@@ -868,6 +872,26 @@ function MyJobsTab({
       setInvoiceError("An unexpected error occurred.")
     }
     setInvoiceLoading(false)
+  }
+
+  const downloadInvoicePDF = (invoiceHtml: string) => {
+    const w = window.open("", "_blank")
+    if (!w) return
+    w.document.write(invoiceHtml)
+    w.document.close()
+    w.focus()
+    w.print()
+  }
+
+  const openInvoiceForEdit = (session: any) => {
+    const tx = getTx(session)
+    setInvoiceJob(session)
+    setInvoiceIsEdit(!!tx?.invoice_html)
+    setInvoiceDescription(tx?.job_summary || session.job_description || "")
+    setInvoiceItems([{ description: "", amount: "" }])
+    setInvoiceNotes("")
+    setInvoiceError("")
+    setInvoiceSuccess(false)
   }
 
   // ── Action handlers (TASK 4) ─────────────────────────────────────────────
@@ -1022,12 +1046,37 @@ function MyJobsTab({
                             {chatOpening === session.id ? "Opening…" : "Open Chat"}
                           </button>
                         )}
-                        <button
-                          onClick={() => { setInvoiceJob(session); setInvoiceDescription(""); setInvoiceItems([{ description: "", amount: "" }]); setInvoiceNotes(""); setInvoiceError("") }}
-                          className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
-                        >
-                          📄 Generate Invoice
-                        </button>
+                        {getTx(session)?.invoice_html ? (
+                          <>
+                            <button
+                              onClick={() => setViewInvoiceHtml(getTx(session).invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              👁 View Invoice
+                            </button>
+                            <button
+                              onClick={() => downloadInvoicePDF(getTx(session).invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              ⬇ PDF
+                            </button>
+                            {session.status === "invoice_sent" && (
+                              <button
+                                onClick={() => openInvoiceForEdit(session)}
+                                className="flex items-center gap-1.5 border border-amber-600/40 text-amber-500 text-sm px-3 py-2 rounded-md hover:bg-amber-600/10 transition-colors"
+                              >
+                                ✏ Edit Invoice
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => openInvoiceForEdit(session)}
+                            className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                          >
+                            📄 Generate Invoice
+                          </button>
+                        )}
                         {cancelConfirmId === session.id ? (
                           <div className="w-full bg-destructive/10 border border-destructive/20 rounded-lg p-3 space-y-2">
                             <p className="text-xs text-destructive font-medium">Are you sure you want to cancel this job? This cannot be undone.</p>
@@ -1107,6 +1156,22 @@ function MyJobsTab({
                             <MessageSquare className="h-3.5 w-3.5" />
                             {chatOpening === session.id ? "Opening…" : "Open Chat"}
                           </button>
+                        )}
+                        {tx?.invoice_html && (
+                          <>
+                            <button
+                              onClick={() => setViewInvoiceHtml(tx.invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              👁 View Invoice
+                            </button>
+                            <button
+                              onClick={() => downloadInvoicePDF(tx.invoice_html)}
+                              className="flex items-center gap-1.5 border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                            >
+                              ⬇ PDF
+                            </button>
+                          </>
                         )}
                         {session.status === "in_progress" && (
                           <button
@@ -1217,12 +1282,38 @@ function MyJobsTab({
         </div>
       )}
 
+      {/* ── View Invoice Modal ────────────────────────────────────────── */}
+      {viewInvoiceHtml && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-background border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Invoice</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => downloadInvoicePDF(viewInvoiceHtml)}
+                  className="border border-border text-sm px-3 py-1.5 rounded hover:bg-accent transition-colors"
+                >
+                  Download PDF
+                </button>
+                <button onClick={() => setViewInvoiceHtml(null)} className="text-muted-foreground hover:text-foreground p-1">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div
+              className="text-sm border border-border rounded-lg overflow-hidden"
+              dangerouslySetInnerHTML={{ __html: viewInvoiceHtml }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Invoice Modal (TASK 2) ─────────────────────────────────────── */}
       {invoiceJob && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-background border border-border rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Generate Invoice</h2>
+              <h2 className="text-lg font-semibold">{invoiceIsEdit ? "Edit Invoice" : "Generate Invoice"}</h2>
               <button onClick={() => setInvoiceJob(null)} className="text-muted-foreground hover:text-foreground p-1">
                 <X className="h-5 w-5" />
               </button>
@@ -1301,7 +1392,7 @@ function MyJobsTab({
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setInvoiceJob(null)}
+                    onClick={() => { setInvoiceJob(null); setInvoiceIsEdit(false) }}
                     className="flex-1 border border-border py-2.5 rounded-md text-sm hover:bg-accent transition-colors"
                   >
                     Cancel
@@ -1311,7 +1402,7 @@ function MyJobsTab({
                     disabled={invoiceLoading || invoiceTotal <= 0 || !invoiceDescription.trim()}
                     className="flex-1 bg-foreground text-background py-2.5 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50"
                   >
-                    {invoiceLoading ? "Sending…" : "Send Invoice to Customer"}
+                    {invoiceLoading ? "Sending…" : invoiceIsEdit ? "Update Invoice" : "Send Invoice to Customer"}
                   </button>
                 </div>
               </>

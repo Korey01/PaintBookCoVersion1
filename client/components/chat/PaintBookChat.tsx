@@ -13,12 +13,13 @@ import { supabase } from "../../lib/supabase";
 
 // ── PII regex patterns ────────────────────────────────────────────────────────
 const PII_PATTERNS: RegExp[] = [
-  /(\+44|0)7\d{3}[\s\-]?\d{3}[\s\-]?\d{3}/g,
-  /(\+44|0)(1|2|3)\d{8,9}/g,
-  /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,
-  /[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}/gi,
-  /(https?:\/\/|www\.)/gi,
-  /@[a-zA-Z0-9_]{3,}/g,
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  /(\+44\s?|0044\s?|0)[\s\-.]?[17][0-9\s\-.]{8,12}/g,
+  /\b07\d{2}[\s\-.]?\d{3}[\s\-.]?\d{3,4}\b/g,
+  /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}\b/gi,
+  /\b\d+\s+[A-Za-z]+\s+(Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Close|Way|Court|Place|Crescent|Terrace|Grove)\b/gi,
+  /\b(whatsapp|telegram|signal|snapchat|instagram|facebook|tiktok)\b/gi,
+  /@[a-zA-Z0-9_.]{2,}/g,
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────────────

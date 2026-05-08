@@ -118,10 +118,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update session status and store channel_id
+    // Generate server token for Stream API management calls
+    const serverToken = await generateStreamServerToken(streamSecret);
+
+    // Upsert both users in Stream so the channel can be created with both as members
+    await upsertStreamUsers(
+      [
+        { id: painter.id, name: `${painter.first_name} ${painter.last_name}`, role: "user" },
+        { id: customerId, name: session.first_name || "Customer", role: "user" },
+      ],
+      streamApiKey,
+      serverToken,
+    );
+
+    // Create channel server-side with both parties as members before either client connects
+    await createStreamChannel(channelId, painter.id, [painter.id, customerId], streamApiKey, serverToken);
+
+    // Update session status, assign painter, and store channel_id
     await serviceClient
       .from("sessions")
-      .update({ status: "painter_contacted", chat_channel_id: channelId })
+      .update({ status: "painter_contacted", chat_channel_id: channelId, painter_id: painter.id })
       .eq("id", session_id);
 
     // Store channel_id on transaction if one exists
@@ -209,6 +225,67 @@ async function generateStreamToken(
     .replace(/=/g, "");
 
   return `${sigInput}.${sigB64}`;
+}
+
+async function generateStreamServerToken(secret: string): Promise<string> {
+  const encode = (obj: object) =>
+    btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  const header = encode({ alg: "HS256", typ: "JWT" });
+  const payload = encode({ server: true });
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${header}.${payload}`));
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return `${header}.${payload}.${sigB64}`;
+}
+
+async function upsertStreamUsers(
+  users: Array<{ id: string; name: string; role: string }>,
+  apiKey: string,
+  serverToken: string,
+): Promise<void> {
+  const usersMap: Record<string, unknown> = {};
+  for (const u of users) usersMap[u.id] = { id: u.id, name: u.name, role: u.role };
+  const res = await fetch(`https://chat.stream-io-api.com/users?api_key=${apiKey}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serverToken}`,
+      "stream-auth-type": "jwt",
+      "X-Stream-Client": "stream-chat-server",
+    },
+    body: JSON.stringify({ users: usersMap }),
+  });
+  if (!res.ok) console.error(`Stream upsert users error ${res.status}: ${await res.text().catch(() => "")}`);
+}
+
+async function createStreamChannel(
+  channelId: string,
+  createdById: string,
+  members: string[],
+  apiKey: string,
+  serverToken: string,
+): Promise<void> {
+  const res = await fetch(
+    `https://chat.stream-io-api.com/channels/messaging/${channelId}?api_key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serverToken}`,
+        "stream-auth-type": "jwt",
+        "X-Stream-Client": "stream-chat-server",
+      },
+      body: JSON.stringify({ data: { members, created_by_id: createdById } }),
+    }
+  );
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    if (!errText.includes("already exists") && res.status !== 400) {
+      console.error(`Stream create channel error ${res.status}: ${errText}`);
+    }
+  }
 }
 
 function json(data: unknown, status = 200) {

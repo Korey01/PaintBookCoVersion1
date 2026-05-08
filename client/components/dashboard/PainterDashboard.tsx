@@ -774,7 +774,7 @@ function MyJobsTab({
     const { data } = await supabase
       .from("sessions")
       .select("*, transactions(*)")
-      .eq("painter_id", painter.id)
+      .eq("painter_id", painter.user_id ?? "")
       .order("updated_at", { ascending: false })
     setSessions(data || [])
     setLoading(false)
@@ -1436,7 +1436,7 @@ function ReviewsTab({ painter, supabase }: { painter: any; supabase: any }) {
     const { data } = await supabase
       .from("reviews")
       .select("id, rating, review_text, created_at")
-      .eq("painter_id", painter.id)
+      .eq("painter_id", painter.user_id ?? "")
       .order("created_at", { ascending: false })
     setReviews(data || [])
     setLoading(false)

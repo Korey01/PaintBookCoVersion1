@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabase";
-import { PaintBookChat } from "@/components/chat/PaintBookChat";
-import { CheckCircle2, Clock, MessageSquare, Shield, AlertTriangle, XCircle, ChevronRight, Loader2 } from "lucide-react";
+import { ChatWidget } from "@/components/chat/ChatWidget";
+import { CheckCircle2, Clock, MessageSquare, Shield, AlertTriangle, XCircle, ChevronRight, Loader2, Star } from "lucide-react";
 
 const STATUS_STEPS = [
   { key: "job_posted",        label: "Job Posted" },
@@ -19,6 +19,33 @@ function getStepIndex(status: string) {
   return idx === -1 ? 0 : idx;
 }
 
+function StarRating({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(n => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange?.(n)}
+          onMouseEnter={() => onChange && setHover(n)}
+          onMouseLeave={() => onChange && setHover(0)}
+          className={onChange ? "cursor-pointer" : "cursor-default"}
+          aria-label={`${n} star${n > 1 ? "s" : ""}`}
+        >
+          <Star
+            className={`h-7 w-7 transition-colors ${
+              n <= (hover || value)
+                ? "fill-amber-400 text-amber-400"
+                : "text-muted-foreground/40"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function JobSessionPage() {
   const { token } = useParams<{ token: string }>();
   const [session, setSession] = useState<any>(null);
@@ -28,6 +55,16 @@ export default function JobSessionPage() {
   const [actionLoading, setActionLoading] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [payLoading, setPayLoading] = useState(false);
+  const [chatWidget, setChatWidget] = useState<{ token: string; userId: string } | null>(null);
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // Review state
+  const [review, setReview] = useState<any>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   useEffect(() => {
     if (!token) { setError("Invalid link."); setLoading(false); return; }
@@ -58,6 +95,15 @@ export default function JobSessionPage() {
           .single();
         setTransaction(tx);
       }
+
+      // Check for existing review
+      const { data: existingReview } = await supabase
+        .from("reviews")
+        .select("id, rating, review_text, created_at")
+        .eq("session_id", sess.id)
+        .maybeSingle();
+      if (existingReview) setReview(existingReview);
+
     } catch (err) {
       setError("Failed to load your job. Please try again.");
     } finally {
@@ -66,11 +112,14 @@ export default function JobSessionPage() {
   }
 
   async function handleAction(action: string) {
-    if (!transaction) return;
     setActionLoading(action);
     setActionMessage("");
     try {
-      const { data: { session: authSession } } = await supabase.auth.getSession();
+      // cancel-job supports session-level cancel when no transaction exists
+      const body = action === "cancel-job" && !transaction
+        ? { session_id: session?.id, customer_token: token }
+        : { transaction_id: transaction?.id, customer_token: token };
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${action}`,
         {
@@ -79,10 +128,7 @@ export default function JobSessionPage() {
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({
-            transaction_id: transaction.id,
-            customer_token: token,
-          }),
+          body: JSON.stringify(body),
         }
       );
       const result = await res.json();
@@ -96,6 +142,55 @@ export default function JobSessionPage() {
       setActionMessage("Request failed. Please try again.");
     } finally {
       setActionLoading("");
+    }
+  }
+
+  function downloadInvoicePDF() {
+    const html = transaction?.invoice_html;
+    if (!html) return;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
+  }
+
+  async function handleSubmitReview(e: React.FormEvent) {
+    e.preventDefault();
+    setReviewError("");
+    if (reviewRating === 0) { setReviewError("Please select a star rating."); return; }
+    if (reviewText.trim().length < 10) { setReviewError("Review must be at least 10 characters."); return; }
+    if (reviewText.trim().length > 500) { setReviewError("Review must be under 500 characters."); return; }
+    setReviewLoading(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/review-job`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            customer_token: token,
+            session_id: session?.id,
+            rating: reviewRating,
+            review_text: reviewText.trim(),
+          }),
+        }
+      );
+      const result = await res.json();
+      if (result.success) {
+        setReviewSubmitted(true);
+        setReview({ rating: reviewRating, review_text: reviewText.trim(), created_at: new Date().toISOString() });
+      } else {
+        setReviewError(result.error || "Failed to submit review. Please try again.");
+      }
+    } catch {
+      setReviewError("Failed to submit review. Please try again.");
+    } finally {
+      setReviewLoading(false);
     }
   }
 
@@ -157,6 +252,36 @@ export default function JobSessionPage() {
     }
   }
 
+  const jobRef = `PBC-${session?.id?.slice(-6).toUpperCase()}`;
+  const chatChannelId = transaction?.chat_channel_id || session?.chat_channel_id;
+
+  async function handleOpenChat() {
+    if (chatWidget) return; // already have token
+    if (!session?.id) return;
+    setChatLoading(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ session_id: session.id, customer_token: token }),
+        }
+      );
+      const data = await res.json();
+      if (data.token) {
+        setChatWidget({ token: data.token, userId: data.user_id });
+      }
+    } catch (err) {
+      console.error("Failed to open chat:", err);
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -188,7 +313,6 @@ export default function JobSessionPage() {
             {STATUS_STEPS.map((step, i) => {
               const done = i < stepIndex;
               const current = i === stepIndex;
-              const upcoming = i > stepIndex;
               return (
                 <div key={step.key} className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -233,8 +357,8 @@ export default function JobSessionPage() {
           </div>
         </div>
 
-        {/* Invoice + Pay Now */}
-        {transaction?.invoice_html && status === "invoice_sent" && !isReadOnly && (
+        {/* Invoice */}
+        {transaction?.invoice_html && (
           <div className="bg-card border border-border rounded-lg p-5 space-y-4">
             <h2 className="text-sm font-medium flex items-center gap-2">
               <Shield className="h-4 w-4" /> Invoice
@@ -248,14 +372,24 @@ export default function JobSessionPage() {
               <p className="text-sm text-destructive text-center">{actionMessage}</p>
             )}
 
-            <button
-              onClick={handlePayNow}
-              disabled={payLoading}
-              className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {payLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Pay Now — Secure Escrow
-            </button>
+            <div className="flex gap-3">
+              {status === "invoice_sent" && !isReadOnly && (
+                <button
+                  onClick={handlePayNow}
+                  disabled={payLoading}
+                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {payLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Pay Now — Secure Escrow
+                </button>
+              )}
+              <button
+                onClick={downloadInvoicePDF}
+                className="px-4 py-3 border border-border text-muted-foreground rounded-md text-sm hover:bg-accent transition-colors"
+              >
+                Download PDF
+              </button>
+            </div>
           </div>
         )}
 
@@ -276,25 +410,29 @@ export default function JobSessionPage() {
           </div>
         )}
 
-        {/* Chat — embedded for customer */}
-        {(transaction?.chat_channel_id || session?.chat_channel_id) && !isReadOnly && (
+        {/* Chat */}
+        {chatChannelId && !isReadOnly && (
           <div className="bg-card border border-border rounded-lg p-5">
             <h2 className="text-sm font-medium flex items-center gap-2 mb-3">
               <MessageSquare className="h-4 w-4" /> Chat with your painter
             </h2>
-            <div className="h-96">
-              <PaintBookChat
-                sessionId={session?.id}
-                userId={`customer-${session?.id}`}
-                userRole="customer"
-                customerToken={token}
-              />
-            </div>
+            {chatWidget ? (
+              <p className="text-sm text-muted-foreground">Chat is open — see the floating window at the bottom of the screen.</p>
+            ) : (
+              <button
+                onClick={handleOpenChat}
+                disabled={chatLoading}
+                className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {chatLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                💬 Open Chat
+              </button>
+            )}
           </div>
         )}
 
         {/* Action buttons */}
-        {!isReadOnly && transaction && (
+        {!isReadOnly && (
           <div className="space-y-3">
             {actionMessage && (
               <div className="bg-accent/20 border border-border rounded-md p-3 text-sm text-center">
@@ -302,7 +440,7 @@ export default function JobSessionPage() {
               </div>
             )}
 
-            {["funded", "in_progress", "completion_requested"].includes(status) && (
+            {transaction && ["funded", "in_progress", "completion_requested"].includes(status) && (
               <button
                 onClick={() => handleAction("confirm-completion")}
                 disabled={!!actionLoading}
@@ -312,7 +450,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {["funded", "in_progress", "completion_requested"].includes(status) && (
+            {transaction && ["funded", "in_progress", "completion_requested"].includes(status) && (
               <button
                 onClick={() => handleAction("raise-dispute")}
                 disabled={!!actionLoading}
@@ -322,7 +460,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {["job_posted", "painter_contacted"].includes(status) && (
+            {["job_posted", "painter_contacted", "invoice_sent"].includes(status) && (
               <button
                 onClick={() => handleAction("cancel-job")}
                 disabled={!!actionLoading}
@@ -334,7 +472,72 @@ export default function JobSessionPage() {
           </div>
         )}
 
+        {/* Review section — only when completed */}
+        {status === "completed" && (
+          <div className="bg-card border border-border rounded-lg p-5 space-y-4">
+            <h2 className="text-sm font-medium flex items-center gap-2">
+              <Star className="h-4 w-4" /> Rate Your Painter
+            </h2>
+
+            {review ? (
+              <div className="space-y-3">
+                {reviewSubmitted && (
+                  <p className="text-sm text-green-600 font-medium">Thank you for your review!</p>
+                )}
+                <StarRating value={review.rating} />
+                <p className="text-sm text-foreground">{review.review_text}</p>
+                <p className="text-xs text-muted-foreground">
+                  Reviewed on {new Date(review.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">How would you rate your painter?</p>
+                  <StarRating value={reviewRating} onChange={setReviewRating} />
+                </div>
+                <div>
+                  <textarea
+                    value={reviewText}
+                    onChange={e => setReviewText(e.target.value)}
+                    placeholder="Tell us about your experience (min 10 characters)…"
+                    maxLength={500}
+                    rows={4}
+                    className="w-full border border-border bg-transparent text-sm text-foreground rounded-md p-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground resize-none transition-colors"
+                  />
+                  <p className="text-xs text-muted-foreground text-right mt-1">{reviewText.length}/500</p>
+                </div>
+                {reviewError && (
+                  <p className="text-sm text-destructive">{reviewError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={reviewLoading}
+                  className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {reviewLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Submit Review
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
       </main>
+
+      {chatWidget && chatChannelId && (
+        <ChatWidget
+          channelId={chatChannelId}
+          sessionId={session?.id}
+          userId={chatWidget.userId}
+          userToken={chatWidget.token}
+          userRole="customer"
+          userName={session?.first_name || "Customer"}
+          jobRef={jobRef}
+          streamApiKey={import.meta.env.VITE_STREAM_API_KEY}
+          onClose={() => setChatWidget(null)}
+        />
+      )}
     </div>
   );
 }

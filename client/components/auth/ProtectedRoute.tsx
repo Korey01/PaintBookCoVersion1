@@ -31,7 +31,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   if (requiredRole && role && role !== requiredRole && role !== "admin") {
     return (
       <Navigate
-        to={role === "painter" ? "/dashboard/painter" : "/dashboard/customer"}
+        to={role === "painter" ? "/dashboard/painter" : "/login"}
         replace
       />
     );

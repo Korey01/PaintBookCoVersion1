@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { User, Briefcase, Shield, FileCheck, Fingerprint, CheckCircle2, Mail, Upload, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 // text-base (16px) prevents iOS Safari from auto-zooming on input focus
 const fieldClass = "w-full border-b border-border bg-transparent text-base text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
@@ -348,6 +348,13 @@ export default function JoinPainter() {
           // Don't block registration if insurance fails
         }
       }
+
+      // Trigger confirmation email (Edge Function creates the user, resend ensures delivery)
+      await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/verify-email` },
+      });
 
       // After signup, go to completed page
       setIsSubmitting(false);

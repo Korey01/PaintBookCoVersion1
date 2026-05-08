@@ -13,33 +13,28 @@ function Label({ children, className = "" }: { children: React.ReactNode; classN
   );
 }
 
-// Local file served from /public — CDN URL is the fallback if the file is unavailable
-const VIDEO_LOCAL = "";
-const VIDEO_CDN   =
-  "https://cdn.builder.io/o/assets%2F14c4faafcca042659116108680661770%2Fbb4e598e517d4620bf513b8cafff9bf5?alt=media&token=a0efc0e2-6148-4399-a38c-5252da9110fa&apiKey=14c4faafcca042659116108680661770";
+const VIDEO_SRC = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/hero-background.mp4";
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
-      {/* Background video — fits hero section only */}
+      {/* Background video */}
       <video
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
-        style={{ filter: "contrast(1.35) saturate(1.25) brightness(0.85)" }}
         autoPlay
-        muted
         loop
+        muted
         playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ zIndex: 0 }}
       >
-        <source src={VIDEO_LOCAL} type="video/mp4" />
-        <source src={VIDEO_CDN}   type="video/mp4" />
+        <source src={VIDEO_SRC} type="video/mp4" />
       </video>
 
-      {/* Gradient scrim — keeps hero text legible over the video */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/80" />
+      {/* Dark overlay */}
+      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)", zIndex: 1 }} />
 
-      <div className="relative z-10 mx-auto max-w-4xl text-center pt-16">
+      <div className="relative mx-auto max-w-4xl text-center pt-16" style={{ zIndex: 2 }}>
         <p
           className="editorial-label text-white/40 mb-10 tracking-[0.2em] animate-fade-in"
           style={{ animationDelay: "0.05s", animationFillMode: "both" }}
@@ -80,7 +75,7 @@ function Hero() {
           style={{ animationDelay: "0.65s", animationFillMode: "both" }}
         >
           <Link
-            to="/choose-role"
+            to="/post-job"
             className="group inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium text-base px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_hsl(18_88%_52%_/_0.4)]"
           >
             Get Started
@@ -282,7 +277,7 @@ function CTABand() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            to="/choose-role"
+            to="/post-job"
             className="group inline-flex items-center gap-2 bg-foreground text-background font-medium px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.02]"
           >
             Get Started Now
@@ -314,4 +309,3 @@ export default function HomePage() {
   );
 }
 
-  .catch(() => {});

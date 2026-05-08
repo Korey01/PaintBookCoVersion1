@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
     const streamApiSecret = Deno.env.get("STREAM_API_SECRET")!;
     const channelId = `job-${session_id}`;
-    const exp = Math.floor(Date.now() / 1000) + 3600;
+    const exp = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60); // 90 days — valid for life of job
 
     // ── Customer path (no Supabase auth required) ─────────────────────────────
     if (customer_token) {
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       const customerId = `customer-${session_id}`;
       const token = await generateStreamUserToken(customerId, streamApiSecret, exp);
       await upsertStreamUser(
-        { id: customerId, name: session.first_name || "Customer", role: "customer" },
+        { id: customerId, name: session.first_name || "Customer", role: "user" },
         streamApiKey,
         streamApiSecret,
       );
@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     const displayName = [painter.first_name, painter.last_name].filter(Boolean).join(" ") || "Painter";
     const token = await generateStreamUserToken(painter.id, streamApiSecret, exp);
-    await upsertStreamUser({ id: painter.id, name: displayName, role: "painter" }, streamApiKey, streamApiSecret);
+    await upsertStreamUser({ id: painter.id, name: displayName, role: "user" }, streamApiKey, streamApiSecret);
 
     await serviceClient.from("audit_log").insert({
       action: "stream_token_generated",

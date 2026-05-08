@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
-const LOGO = "https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800";
+const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 export default function LoginPage() {
   useEffect(() => { document.title = "Log In | PaintBookCo"; }, []);
@@ -47,10 +47,10 @@ export default function LoginPage() {
       return;
     }
 
-    // Admin check first
-    if (user.email === import.meta.env.VITE_ADMIN_EMAIL) {
+    // Admin check — must happen before any painters table lookup
+    if (user.email && user.email === import.meta.env.VITE_ADMIN_EMAIL) {
       setLoading(false);
-      navigate("/admin-dashboard");
+      navigate("/admin-dashboard", { replace: true });
       return;
     }
 

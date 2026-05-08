@@ -13,12 +13,13 @@ import { supabase } from "../../lib/supabase";
 
 // ── PII regex patterns ────────────────────────────────────────────────────────
 const PII_PATTERNS: RegExp[] = [
-  /(\+44|0)7\d{3}[\s\-]?\d{3}[\s\-]?\d{3}/g,
-  /(\+44|0)(1|2|3)\d{8,9}/g,
-  /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,
-  /[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}/gi,
-  /(https?:\/\/|www\.)/gi,
-  /@[a-zA-Z0-9_]{3,}/g,
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  /(\+44\s?|0044\s?|0)[\s\-.]?[17][0-9\s\-.]{8,12}/g,
+  /\b07\d{2}[\s\-.]?\d{3}[\s\-.]?\d{3,4}\b/g,
+  /\b[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}\b/gi,
+  /\b\d+\s+[A-Za-z]+\s+(Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Close|Way|Court|Place|Crescent|Terrace|Grove)\b/gi,
+  /\b(whatsapp|telegram|signal|snapchat|instagram|facebook|tiktok)\b/gi,
+  /@[a-zA-Z0-9_.]{2,}/g,
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -27,15 +28,12 @@ interface PaintBookChatProps {
   sessionId: string;
   userId: string;
   userRole: "painter" | "customer" | "admin";
-  customerToken?: string;          // Required when userRole === "customer"
-  transactionId?: string;          // Required for invoice generation
-  jobStatus?: string;              // Current job status
-  onInvoiceSent?: () => void;      // Called after invoice successfully sent
-}
-
-interface InvoiceLineItem {
-  description: string;
-  amount: number;
+  customerToken?: string;
+  // Direct-connect props (used by ChatWidget — skips internal token fetch)
+  streamToken?: string;
+  streamApiKey?: string;
+  channelId?: string;
+  onUnreadCountChange?: (count: number) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -45,9 +43,10 @@ export function PaintBookChat({
   userId,
   userRole,
   customerToken,
-  transactionId,
-  jobStatus,
-  onInvoiceSent,
+  streamToken,
+  streamApiKey: streamApiKeyProp,
+  channelId: channelIdProp,
+  onUnreadCountChange,
 }: PaintBookChatProps) {
   const [chatClient, setChatClient] = useState<StreamChat | null>(null);
   const [streamChannel, setStreamChannel] = useState<StreamChannelType | null>(null);
@@ -57,30 +56,42 @@ export function PaintBookChat({
   const [piiWarning, setPiiWarning] = useState("");
   const [blockedMessage, setBlockedMessage] = useState("");
 
-  // Invoice modal state
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [invoiceDescription, setInvoiceDescription] = useState("");
-  const [invoiceLines, setInvoiceLines] = useState<InvoiceLineItem[]>([{ description: "", amount: 0 }]);
-  const [invoiceNotes, setInvoiceNotes] = useState("");
-  const [invoiceSending, setInvoiceSending] = useState(false);
-  const [invoiceSent, setInvoiceSent] = useState(false);
-  const [invoiceError, setInvoiceError] = useState("");
-
   const channelRef = useRef<StreamChannelType | null>(null);
   const clientRef = useRef<StreamChat | null>(null);
-
-  const canSendInvoice =
-    userRole === "painter" &&
-    !invoiceSent &&
-    transactionId &&
-    ["painter_contacted", "invoice_sent"].includes(jobStatus ?? "");
 
   // ── Connect to Stream Chat ────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
     let refreshTimer: ReturnType<typeof setTimeout>;
 
-    async function connect(isRefresh = false) {
+    async function connectDirect() {
+      // Direct-connect path: token pre-provided by ChatWidget
+      try {
+        const apiKey = streamApiKeyProp ?? import.meta.env.VITE_STREAM_API_KEY ?? "";
+        const client = StreamChat.getInstance(apiKey);
+        clientRef.current = client;
+        await client.connectUser({ id: userId }, streamToken!);
+
+        const channel = client.channel("messaging", channelIdProp!, {
+          name: "Job Chat",
+          created_by_id: userId,
+        });
+        await channel.watch({ messages: { limit: 300 } });
+
+        if (!mounted) return;
+        channelRef.current = channel;
+        setChatClient(client);
+        setStreamChannel(channel);
+      } catch (err) {
+        console.error("PaintBookChat direct connect error:", err);
+        if (mounted) setError({ message: "Failed to load chat. Please try again." });
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    async function connectViaTokenFetch(isRefresh = false) {
+      // Internal-fetch path: get token from generate-stream-token edge function
       try {
         const body: Record<string, string> = { session_id: sessionId };
         if (customerToken) body.customer_token = customerToken;
@@ -90,7 +101,6 @@ export function PaintBookChat({
           "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
         };
 
-        // Painter/admin: attach Supabase auth token
         if (userRole !== "customer") {
           const { data: { session: authSession } } = await supabase.auth.getSession();
           if (authSession?.access_token) {
@@ -104,7 +114,6 @@ export function PaintBookChat({
         );
 
         const data = await res.json().catch(() => ({}));
-
         if (!mounted) return;
 
         if (!res.ok || !data?.token) {
@@ -138,7 +147,7 @@ export function PaintBookChat({
           await clientRef.current?.updateToken(token);
         }
 
-        refreshTimer = setTimeout(() => connect(true), 55 * 60 * 1000);
+        refreshTimer = setTimeout(() => connectViaTokenFetch(true), 55 * 60 * 1000);
       } catch (err) {
         console.error("PaintBookChat init error:", err);
         if (!isRefresh && mounted) {
@@ -149,14 +158,30 @@ export function PaintBookChat({
       }
     }
 
-    connect();
+    if (streamToken && channelIdProp) {
+      connectDirect();
+    } else {
+      connectViaTokenFetch();
+    }
 
     return () => {
       mounted = false;
       clearTimeout(refreshTimer);
       clientRef.current?.disconnectUser().catch(console.error);
     };
-  }, [sessionId, customerToken, userRole]);
+  }, [sessionId, customerToken, userRole, streamToken, channelIdProp]);
+
+  // ── Unread count listener ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!streamChannel || !onUnreadCountChange) return;
+    const handler = () => {
+      onUnreadCountChange(streamChannel.countUnread?.() ?? 0);
+    };
+    streamChannel.on("message.new", handler);
+    return () => {
+      streamChannel.off("message.new", handler);
+    };
+  }, [streamChannel, onUnreadCountChange]);
 
   // ── PII-filtered message send ─────────────────────────────────────────────
   const handleSubmit = async (message: { text?: string }) => {
@@ -193,67 +218,10 @@ export function PaintBookChat({
     await channelRef.current?.sendMessage({ text: content });
   };
 
-  // ── Invoice generation ────────────────────────────────────────────────────
-  const invoiceTotal = invoiceLines.reduce((s, l) => s + (l.amount || 0), 0);
-
-  async function handleSendInvoice() {
-    if (!transactionId) return;
-    setInvoiceSending(true);
-    setInvoiceError("");
-    try {
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-invoice`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${authSession?.access_token ?? ""}`,
-          },
-          body: JSON.stringify({
-            transaction_id: transactionId,
-            job_description: invoiceDescription,
-            line_items: invoiceLines.filter(l => l.description.trim()),
-            amount: invoiceTotal,
-            notes: invoiceNotes,
-          }),
-        },
-      );
-      const result = await res.json();
-      if (result.success) {
-        setInvoiceSent(true);
-        setShowInvoiceModal(false);
-        onInvoiceSent?.();
-        channelRef.current?.sendMessage({
-          text: `Invoice sent for £${invoiceTotal.toFixed(2)}. Your customer has been notified by email with a Pay Now link.`,
-        }).catch(console.error);
-      } else {
-        setInvoiceError(result.error || "Failed to send invoice. Please try again.");
-      }
-    } catch {
-      setInvoiceError("Failed to send invoice. Please try again.");
-    } finally {
-      setInvoiceSending(false);
-    }
-  }
-
-  function addLineItem() {
-    setInvoiceLines(l => [...l, { description: "", amount: 0 }]);
-  }
-
-  function updateLineItem(i: number, field: keyof InvoiceLineItem, value: string | number) {
-    setInvoiceLines(l => l.map((item, idx) => idx === i ? { ...item, [field]: value } : item));
-  }
-
-  function removeLineItem(i: number) {
-    setInvoiceLines(l => l.filter((_, idx) => idx !== i));
-  }
-
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
         Loading secure chat…
       </div>
     );
@@ -266,7 +234,7 @@ export function PaintBookChat({
       not_assigned: "💬",
     };
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4 text-center p-8">
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
         <span className="text-5xl" role="img" aria-label="chat unavailable">
           {iconMap[error.code ?? ""] ?? "⚠️"}
         </span>
@@ -280,7 +248,7 @@ export function PaintBookChat({
   // ── Admin read-only ───────────────────────────────────────────────────────
   if (userRole === "admin") {
     return (
-      <div className="border rounded-xl overflow-hidden">
+      <div className="border rounded-xl overflow-hidden h-full">
         <div className="px-4 py-2 bg-muted border-b text-xs text-muted-foreground font-medium">
           Admin view — read only
         </div>
@@ -295,156 +263,36 @@ export function PaintBookChat({
 
   // ── Full chat UI ──────────────────────────────────────────────────────────
   return (
-    <>
-      <div className="relative flex flex-col h-full border rounded-xl overflow-hidden">
-        {/* Warning banners */}
-        {piiWarning && (
-          <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-2">
-            <span>⚠️</span>
-            <span>{piiWarning}</span>
-            <button onClick={() => setPiiWarning("")} className="ml-auto text-amber-600 hover:text-amber-800">✕</button>
-          </div>
-        )}
-        {blockedMessage && (
-          <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-xs font-medium flex items-center gap-2">
-            <span>🚫</span>
-            <span>{blockedMessage}</span>
-            <button onClick={() => setBlockedMessage("")} className="ml-auto text-red-500 hover:text-red-700">✕</button>
-          </div>
-        )}
-
-        {/* Painter toolbar — Generate Invoice button */}
-        {canSendInvoice && (
-          <div className="px-4 py-2 bg-card border-b flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Ready to quote? Send your customer an invoice.</span>
-            <button
-              onClick={() => setShowInvoiceModal(true)}
-              className="text-xs font-medium bg-foreground text-background px-3 py-1.5 rounded hover:bg-foreground/90 transition-colors"
-            >
-              Generate Invoice
-            </button>
-          </div>
-        )}
-        {invoiceSent && (
-          <div className="px-4 py-2 bg-green-50 border-b border-green-200 text-green-700 text-xs font-medium">
-            ✓ Invoice sent — awaiting customer payment
-          </div>
-        )}
-
-        <div className="flex-1 overflow-hidden">
-          <Chat client={chatClient}>
-            <Channel channel={streamChannel}>
-              <Window>
-                <MessageList />
-                <MessageInput overrideSubmitHandler={handleSubmit} disableAttachments />
-              </Window>
-            </Channel>
-          </Chat>
-        </div>
-
-        <p className="text-center text-xs text-muted-foreground py-2 border-t bg-background">
-          All messages are monitored. Contact details cannot be shared before payment is secured.
-        </p>
-      </div>
-
-      {/* Invoice modal */}
-      {showInvoiceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-background border border-border rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-              <h2 className="font-semibold text-sm">Generate Invoice</h2>
-              <button onClick={() => setShowInvoiceModal(false)} className="text-muted-foreground hover:text-foreground text-lg leading-none">✕</button>
-            </div>
-
-            <div className="px-6 py-5 space-y-5">
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Job Description</label>
-                <textarea
-                  value={invoiceDescription}
-                  onChange={e => setInvoiceDescription(e.target.value)}
-                  rows={2}
-                  className="w-full border-b border-border bg-transparent text-sm py-2 focus:outline-none focus:border-foreground resize-none"
-                  placeholder="Brief description of the work…"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Line Items</label>
-                <div className="space-y-2">
-                  {invoiceLines.map((line, i) => (
-                    <div key={i} className="flex gap-2 items-start">
-                      <input
-                        type="text"
-                        value={line.description}
-                        onChange={e => updateLineItem(i, "description", e.target.value)}
-                        className="flex-1 border-b border-border bg-transparent text-sm py-1.5 focus:outline-none focus:border-foreground"
-                        placeholder="Item description"
-                      />
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm text-muted-foreground">£</span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={line.amount || ""}
-                          onChange={e => updateLineItem(i, "amount", parseFloat(e.target.value) || 0)}
-                          className="w-24 border-b border-border bg-transparent text-sm py-1.5 focus:outline-none focus:border-foreground text-right"
-                          placeholder="0.00"
-                        />
-                      </div>
-                      {invoiceLines.length > 1 && (
-                        <button onClick={() => removeLineItem(i)} className="text-muted-foreground hover:text-destructive mt-1 text-xs">✕</button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={addLineItem}
-                  className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  + Add line item
-                </button>
-              </div>
-
-              <div className="flex justify-between items-center py-2 border-t border-border">
-                <span className="text-sm font-medium">Total</span>
-                <span className="font-semibold">£{invoiceTotal.toFixed(2)}</span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Notes (optional)</label>
-                <textarea
-                  value={invoiceNotes}
-                  onChange={e => setInvoiceNotes(e.target.value)}
-                  rows={2}
-                  className="w-full border-b border-border bg-transparent text-sm py-2 focus:outline-none focus:border-foreground resize-none"
-                  placeholder="Payment terms, special notes…"
-                />
-              </div>
-
-              {invoiceError && (
-                <p className="text-sm text-destructive">{invoiceError}</p>
-              )}
-            </div>
-
-            <div className="px-6 py-4 border-t border-border flex gap-3">
-              <button
-                onClick={() => setShowInvoiceModal(false)}
-                className="flex-1 border border-border py-2.5 text-sm rounded hover:bg-accent transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSendInvoice}
-                disabled={invoiceSending || invoiceTotal <= 0 || !invoiceDescription.trim()}
-                className="flex-1 bg-foreground text-background py-2.5 text-sm rounded hover:bg-foreground/90 transition-colors disabled:opacity-50"
-              >
-                {invoiceSending ? "Sending…" : "Send Invoice"}
-              </button>
-            </div>
-          </div>
+    <div className="flex flex-col h-full overflow-hidden">
+      {piiWarning && (
+        <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-2 flex-shrink-0">
+          <span>⚠️</span>
+          <span>{piiWarning}</span>
+          <button onClick={() => setPiiWarning("")} className="ml-auto text-amber-600 hover:text-amber-800">✕</button>
         </div>
       )}
-    </>
+      {blockedMessage && (
+        <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-xs font-medium flex items-center gap-2 flex-shrink-0">
+          <span>🚫</span>
+          <span>{blockedMessage}</span>
+          <button onClick={() => setBlockedMessage("")} className="ml-auto text-red-500 hover:text-red-700">✕</button>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-hidden">
+        <Chat client={chatClient}>
+          <Channel channel={streamChannel}>
+            <Window>
+              <MessageList />
+              <MessageInput overrideSubmitHandler={handleSubmit} disableAttachments />
+            </Window>
+          </Channel>
+        </Chat>
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground py-2 border-t bg-background flex-shrink-0">
+        All messages are monitored. Contact details cannot be shared before payment is secured.
+      </p>
+    </div>
   );
 }

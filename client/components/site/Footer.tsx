@@ -15,8 +15,8 @@ export default function Footer() {
           {/* Brand — 5 cols */}
           <div className="md:col-span-5 space-y-6">
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F14c4faafcca042659116108680661770%2F30b601eb466f425b8151484359ee8820?format=webp&width=800"
-              alt="PaintBookco"
+              src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+              alt="PaintBookCo"
               className="h-7 w-auto brightness-0 invert opacity-90"
             />
             <p className="text-sm leading-[1.7] text-white/50 max-w-[32ch]">

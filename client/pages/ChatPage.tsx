@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
+
+// Separate client for chat page — no auto-refresh (customers have no Supabase session)
+const chatSupabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+);
 import { StreamChat } from "stream-chat";
 import {
   Chat, Channel, ChannelHeader,

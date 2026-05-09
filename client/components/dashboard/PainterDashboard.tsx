@@ -717,6 +717,8 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
   const [loading, setLoading] = React.useState(true)
   const [activeChatId, setActiveChatId] = React.useState<string | null>(null)
   const [invoiceNavigating, setInvoiceNavigating] = React.useState<string | null>(null)
+  const [passOnConfirm, setPassOnConfirm] = React.useState<string | null>(null)
+  const [passOnLoading, setPassOnLoading] = React.useState(false)
 
   const openChatWithInvoice = async (session: any) => {
     setInvoiceNavigating(session.id)
@@ -744,6 +746,37 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
     }
   }
 
+  const handlePassOnJob = async (sessionId: string) => {
+    setPassOnLoading(true)
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      if (!authSession) return
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pass-on-job`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${authSession.access_token}`,
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            painter_id: painter.id,
+            reason: "painter_passed",
+          }),
+        }
+      )
+      const result = await res.json()
+      if (result.success) {
+        setPassOnConfirm(null)
+        await loadSessions()
+      }
+    } finally {
+      setPassOnLoading(false)
+    }
+  }
+
   React.useEffect(() => {
     if (painter?.id) loadSessions()
   }, [painter?.id])
@@ -752,11 +785,9 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
     setLoading(true)
     const { data } = await supabase
       .from("sessions")
-      .select("id, job_type, postcode, status, chat_channel_id, created_at, transactions(id, amount, status)")
-      .eq("painter_id", painter.id)
-      .not("status", "eq", "job_posted")
-      .order("created_at", { ascending: false })
-      .limit(20)
+      .select("*, transactions(*)")
+      .eq("painter_id", painter.user_id)
+      .order("updated_at", { ascending: false })
     setSessions(data || [])
     setLoading(false)
   }
@@ -856,6 +887,35 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
                               </button>
                             )}
                           </div>
+                        )}
+                        {["painter_contacted", "invoice_sent"].includes(session.status) && (
+                          passOnConfirm === session.id ? (
+                            <div className="border border-amber-800/40 bg-amber-900/10 rounded-lg p-3 space-y-2">
+                              <p className="text-xs text-muted-foreground">Are you sure? This job will return to the available queue.</p>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handlePassOnJob(session.id)}
+                                  disabled={passOnLoading}
+                                  className="flex-1 text-xs bg-amber-600 text-white py-1.5 rounded hover:bg-amber-700 transition-colors disabled:opacity-50"
+                                >
+                                  {passOnLoading ? "..." : "Confirm"}
+                                </button>
+                                <button
+                                  onClick={() => setPassOnConfirm(null)}
+                                  className="flex-1 text-xs border border-border text-muted-foreground py-1.5 rounded hover:bg-accent transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setPassOnConfirm(session.id)}
+                              className="w-full text-xs border border-border text-muted-foreground py-1.5 rounded hover:bg-accent transition-colors"
+                            >
+                              Pass on Job
+                            </button>
+                          )
                         )}
                       </div>
                       {isOpen && session.chat_channel_id && (

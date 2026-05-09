@@ -55,6 +55,8 @@ export default function JobSessionPage() {
   const [actionLoading, setActionLoading] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [payLoading, setPayLoading] = useState(false);
+  const [showFindAnotherPainterConfirm, setShowFindAnotherPainterConfirm] = useState(false);
+  const [findingAnotherPainter, setFindingAnotherPainter] = useState(false);
 
   // Review state
   const [review, setReview] = useState<any>(null);
@@ -238,6 +240,40 @@ export default function JobSessionPage() {
     }
   }
 
+  async function handleFindAnotherPainter() {
+    if (!session) return;
+    setFindingAnotherPainter(true);
+    setActionMessage("");
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pass-on-job`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            session_id: session.id,
+            customer_token: token,
+            reason: "customer_requested_new_painter",
+          }),
+        }
+      );
+      const result = await res.json();
+      if (result.success) {
+        setShowFindAnotherPainterConfirm(false);
+        await loadSession();
+      } else {
+        setActionMessage(result.error || "Something went wrong.");
+      }
+    } catch {
+      setActionMessage("Request failed. Please try again.");
+    } finally {
+      setFindingAnotherPainter(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -402,7 +438,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {["job_posted", "painter_contacted"].includes(status) && (
+            {["job_posted", "painter_contacted", "invoice_sent"].includes(status) && (
               <button
                 onClick={() => handleAction("cancel-job")}
                 disabled={!!actionLoading}
@@ -410,6 +446,41 @@ export default function JobSessionPage() {
               >
                 {actionLoading === "cancel-job" ? "Processing..." : "Cancel Job"}
               </button>
+            )}
+          </div>
+        )}
+
+        {/* Find Another Painter — available before payment, no transaction required */}
+        {!isReadOnly && ["painter_contacted", "invoice_sent"].includes(status) && (
+          <div className="space-y-2">
+            {!showFindAnotherPainterConfirm ? (
+              <button
+                onClick={() => setShowFindAnotherPainterConfirm(true)}
+                className="w-full border border-border text-muted-foreground py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+              >
+                Find Another Painter
+              </button>
+            ) : (
+              <div className="border border-amber-500/30 bg-amber-900/10 rounded-md p-4 space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  This will remove the current painter and put your job back in the queue.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleFindAnotherPainter}
+                    disabled={findingAnotherPainter}
+                    className="flex-1 bg-amber-600 text-white py-2 rounded-md text-sm font-medium hover:bg-amber-700 transition-colors disabled:opacity-50"
+                  >
+                    {findingAnotherPainter ? "Processing..." : "Confirm"}
+                  </button>
+                  <button
+                    onClick={() => setShowFindAnotherPainterConfirm(false)}
+                    className="flex-1 border border-border py-2 rounded-md text-sm text-muted-foreground hover:bg-accent transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}

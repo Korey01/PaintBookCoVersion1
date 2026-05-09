@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.create-transpact]
 verify_jwt = false
+
+[functions.pass-on-job]
+verify_jwt = false

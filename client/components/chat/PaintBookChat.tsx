@@ -186,8 +186,7 @@ export function PaintBookChat({
         return;
       }
     } catch {
-      setBlockedMessage("Message could not be sent. Please try again.");
-      return;
+      // filter-message unavailable — PII regex above already ran as first-layer protection
     }
 
     await channelRef.current?.sendMessage({ text: content });

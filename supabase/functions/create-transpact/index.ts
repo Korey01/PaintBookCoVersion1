@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     // Load transaction with painter details
     const { data: transaction } = await serviceClient
       .from("transactions")
-      .select("*, painters(id, first_name, last_name, email, completed_jobs)")
+      .select("*, painters(first_name, last_name, email, completed_jobs), sessions(customer_token, status)")
       .eq("id", transaction_id)
       .single();
 
@@ -92,16 +92,53 @@ Deno.serve(async (req) => {
     // Temporary mock for testing — remove when Transpact credentials verified
     if (Deno.env.get("TRANSPACT_IS_TEST") === "true") {
       const mockUrl = `https://paintbookco.co.uk/job/${transaction.customer_token}?payment_success=true`;
-      await serviceClient.from("transactions").update({ status: "funded", funded_at: new Date().toISOString() }).eq("id", transaction_id);
-      await serviceClient.from("sessions").update({ status: "funded" }).eq("id", transaction.session_id);
-      return json({ success: true, payment_url: mockUrl });
-    }
 
-    // Temporary mock for testing — remove when Transpact credentials verified
-    if (Deno.env.get("TRANSPACT_IS_TEST") === "true") {
-      const mockUrl = `https://paintbookco.co.uk/job/${transaction.customer_token}?payment_success=true`;
-      await serviceClient.from("transactions").update({ status: "funded", funded_at: new Date().toISOString() }).eq("id", transaction_id);
-      await serviceClient.from("sessions").update({ status: "funded" }).eq("id", transaction.session_id);
+      await serviceClient.from("transactions")
+        .update({ status: "funded", funded_at: new Date().toISOString() })
+        .eq("id", transaction_id);
+      await serviceClient.from("sessions")
+        .update({ status: "funded" })
+        .eq("id", transaction.session_id);
+
+      const escrowWebhook = Deno.env.get("MAKE_ESCROW_FUNDED_WEBHOOK");
+      const contactWebhook = Deno.env.get("MAKE_CONTACT_SHARED_WEBHOOK");
+      const jobRef = `PBC-${transaction_id.slice(-6).toUpperCase()}`;
+
+      if (escrowWebhook) {
+        await fetch(escrowWebhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transaction_id,
+            session_id: transaction.session_id,
+            customer_email: transaction.customer_email,
+            customer_first_name: transaction.customer_first_name,
+            amount: transaction.amount,
+            job_ref: jobRef,
+            painter_email: transaction.painters?.email,
+            painter_name: `${transaction.painters?.first_name} ${transaction.painters?.last_name}`,
+          }),
+        }).catch(console.error);
+      }
+
+      if (contactWebhook) {
+        await fetch(contactWebhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transaction_id,
+            session_id: transaction.session_id,
+            customer_email: transaction.customer_email,
+            customer_first_name: transaction.customer_first_name,
+            customer_last_name: transaction.customer_last_name,
+            customer_phone: transaction.customer_phone,
+            customer_address: transaction.customer_postcode,
+            painter_email: transaction.painters?.email,
+            amount: transaction.amount,
+          }),
+        }).catch(console.error);
+      }
+
       return json({ success: true, payment_url: mockUrl });
     }
 

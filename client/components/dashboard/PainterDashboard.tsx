@@ -783,10 +783,11 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
 
   const loadSessions = async () => {
     setLoading(true)
+    const painterId = painter.user_id ?? painter.id
     const { data } = await supabase
       .from("sessions")
       .select("*, transactions(*)")
-      .eq("painter_id", painter.user_id)
+      .eq("painter_id", painterId)
       .order("updated_at", { ascending: false })
     setSessions(data || [])
     setLoading(false)

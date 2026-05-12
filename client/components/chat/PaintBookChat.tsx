@@ -54,7 +54,7 @@ export function PaintBookChat({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<{ message: string; code?: string } | null>(null);
 
-  const [piiWarning, setPiiWarning] = useState("");
+  const [piiWarning, setPiiWarning] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState("");
 
   // Invoice modal state
@@ -163,18 +163,36 @@ export function PaintBookChat({
     const content = (message.text ?? "").trim();
     if (!content) return;
 
-    setPiiWarning("");
+    setPiiWarning(false);
     setBlockedMessage("");
 
-    for (const pattern of PII_PATTERNS) {
-      pattern.lastIndex = 0;
-      if (pattern.test(content)) {
-        setPiiWarning("Contact details cannot be shared in chat before payment is secured.");
-        supabase.functions.invoke("filter-message", {
-          body: { content, session_id: sessionId, sender_role: userRole, layer1_blocked: true },
+    const hasPII = PII_PATTERNS.some(p => {
+      p.lastIndex = 0;
+      return p.test(content);
+    });
+
+    if (hasPII) {
+      setPiiWarning(true);
+      setTimeout(() => setPiiWarning(false), 4000);
+
+      supabase.functions.invoke("filter-message", {
+        body: { content, session_id: sessionId, sender_role: userRole, layer1_blocked: true },
+      }).catch(console.error);
+
+      const webhookUrl = import.meta.env.VITE_MAKE_PII_VIOLATION_WEBHOOK;
+      if (webhookUrl) {
+        fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            user_id: userId,
+            user_role: userRole,
+            timestamp: new Date().toISOString(),
+          }),
         }).catch(console.error);
-        return;
       }
+      return;
     }
 
     try {
@@ -302,8 +320,8 @@ export function PaintBookChat({
         {piiWarning && (
           <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-2">
             <span>⚠️</span>
-            <span>{piiWarning}</span>
-            <button onClick={() => setPiiWarning("")} className="ml-auto text-amber-600 hover:text-amber-800">✕</button>
+            <span>Contact details cannot be shared in chat before payment is secured.</span>
+            <button onClick={() => setPiiWarning(false)} className="ml-auto text-amber-600 hover:text-amber-800">✕</button>
           </div>
         )}
         {blockedMessage && (

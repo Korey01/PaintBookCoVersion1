@@ -200,7 +200,7 @@ export default function JobSessionPage() {
 
   const status = transaction?.status || session?.status || "job_posted";
   const stepIndex = getStepIndex(status);
-  const isReadOnly = ["completed", "cancelled", "disputed"].includes(status);
+  const isReadOnly = ["completed", "cancelled"].includes(status);
   // Painter name: first name only until escrow funded; full name after
   const painterName = transaction?.painters
     ? (["funded", "in_progress", "completion_requested", "completed"].includes(status)
@@ -298,6 +298,16 @@ export default function JobSessionPage() {
           </div>
         )}
 
+        {status === "disputed" && (
+          <div className="bg-amber-900/20 border border-amber-800/40 rounded-lg p-4">
+            <p className="text-amber-400 font-medium">⚖️ Dispute Under Review</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Our team is reviewing this dispute and will contact both parties within 10 working days.
+              Once resolved, this page will update with the outcome.
+            </p>
+          </div>
+        )}
+
         {/* Status tracker */}
         <div className="bg-card border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium mb-4">Job Progress</h2>
@@ -350,7 +360,7 @@ export default function JobSessionPage() {
         </div>
 
         {/* Invoice + Pay Now */}
-        {transaction?.invoice_html && status === "invoice_sent" && !isReadOnly && (
+        {transaction?.invoice_html && status === "invoice_sent" && !isReadOnly && status !== "disputed" && (
           <div className="bg-card border border-border rounded-lg p-5 space-y-4">
             <h2 className="text-sm font-medium flex items-center gap-2">
               <Shield className="h-4 w-4" /> Invoice
@@ -393,7 +403,7 @@ export default function JobSessionPage() {
         )}
 
         {/* Chat — embedded for customer */}
-        {(transaction?.chat_channel_id || session?.chat_channel_id) && !isReadOnly && (
+        {(transaction?.chat_channel_id || session?.chat_channel_id) && !isReadOnly && status !== "disputed" && (
           <div className="bg-card border border-border rounded-lg p-5">
             <h2 className="text-sm font-medium flex items-center gap-2 mb-3">
               <MessageSquare className="h-4 w-4" /> Chat with your painter
@@ -418,7 +428,7 @@ export default function JobSessionPage() {
               </div>
             )}
 
-            {["funded", "in_progress", "completion_requested"].includes(status) && (
+            {["funded", "in_progress", "completion_requested"].includes(status) && status !== "disputed" && (
               <button
                 onClick={() => handleAction("confirm-completion")}
                 disabled={!!actionLoading}
@@ -428,7 +438,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {["funded", "in_progress", "completion_requested"].includes(status) && (
+            {["funded", "in_progress", "completion_requested"].includes(status) && status !== "disputed" && (
               <button
                 onClick={() => handleAction("raise-dispute")}
                 disabled={!!actionLoading}
@@ -438,7 +448,7 @@ export default function JobSessionPage() {
               </button>
             )}
 
-            {["job_posted", "painter_contacted", "invoice_sent"].includes(status) && (
+            {["job_posted", "painter_contacted", "invoice_sent"].includes(status) && status !== "disputed" && (
               <button
                 onClick={() => handleAction("cancel-job")}
                 disabled={!!actionLoading}

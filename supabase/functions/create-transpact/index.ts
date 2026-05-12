@@ -89,6 +89,22 @@ Deno.serve(async (req) => {
       return json({ success: true, payment_url: paymentUrl });
     }
 
+    // Temporary mock for testing — remove when Transpact credentials verified
+    if (Deno.env.get("TRANSPACT_IS_TEST") === "true") {
+      const mockUrl = `https://paintbookco.co.uk/job/${transaction.customer_token}?payment_success=true`;
+      await serviceClient.from("transactions").update({ status: "funded", funded_at: new Date().toISOString() }).eq("id", transaction_id);
+      await serviceClient.from("sessions").update({ status: "funded" }).eq("id", transaction.session_id);
+      return json({ success: true, payment_url: mockUrl });
+    }
+
+    // Temporary mock for testing — remove when Transpact credentials verified
+    if (Deno.env.get("TRANSPACT_IS_TEST") === "true") {
+      const mockUrl = `https://paintbookco.co.uk/job/${transaction.customer_token}?payment_success=true`;
+      await serviceClient.from("transactions").update({ status: "funded", funded_at: new Date().toISOString() }).eq("id", transaction_id);
+      await serviceClient.from("sessions").update({ status: "funded" }).eq("id", transaction.session_id);
+      return json({ success: true, payment_url: mockUrl });
+    }
+
     if (!["invoice_sent"].includes(transaction.status)) {
       return json({ error: "Payment can only be initiated for invoice_sent transactions" }, 400);
     }

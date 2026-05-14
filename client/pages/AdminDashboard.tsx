@@ -55,7 +55,6 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Admin dashboard - session email:", session?.user?.email, "ADMIN_EMAIL:", ADMIN_EMAIL, "match:", session?.user?.email === ADMIN_EMAIL);
       if (!session || session.user.email !== ADMIN_EMAIL) {
         window.location.href = "/login";
         return;

@@ -63,16 +63,25 @@ Deno.serve(async (req) => {
     const { data: existing } = await supabase
       .from("reviews")
       .select("id")
-      .eq("session_id", session_id)
+      .eq("job_id", session_id)
       .maybeSingle();
 
     if (existing) {
       return json({ error: "You have already reviewed this job" }, 400);
     }
 
+    // Look up painters table UUID from auth UUID
+    const { data: painterRecord } = await supabase
+      .from("painters")
+      .select("id")
+      .eq("user_id", session.painter_id)
+      .single();
+    
+    const painterTableId = painterRecord?.id ?? session.painter_id;
+
     // Insert review
     const { error: insertErr } = await supabase.from("reviews").insert({
-      painter_id: session.painter_id,
+      painter_id: painterTableId,
       job_id: session_id,
       rating,
       review_text: trimmed,
@@ -87,7 +96,7 @@ Deno.serve(async (req) => {
     const { data: allReviews } = await supabase
       .from("reviews")
       .select("rating")
-      .eq("painter_id", session.painter_id);
+      .eq("painter_id", painterTableId);
 
     if (allReviews && allReviews.length > 0) {
       const avg =
@@ -96,7 +105,7 @@ Deno.serve(async (req) => {
       await supabase
         .from("painters")
         .update({ avg_rating: Math.round(avg * 10) / 10 })
-        .eq("id", session.painter_id);
+        .eq("id", painterTableId);
     }
 
     return json({ success: true });

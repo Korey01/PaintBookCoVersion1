@@ -148,7 +148,7 @@ export default function JobSessionPage() {
     e.preventDefault();
     setReviewError("");
     if (reviewRating === 0) { setReviewError("Please select a star rating."); return; }
-    if (reviewText.trim().length < 10) { setReviewError("Review must be at least 10 characters."); return; }
+    if (reviewText.trim().length < 20) { setReviewError("Review must be at least 20 characters."); return; }
     if (reviewText.trim().length > 500) { setReviewError("Review must be under 500 characters."); return; }
     setReviewLoading(true);
     try {
@@ -523,7 +523,7 @@ export default function JobSessionPage() {
                   <textarea
                     value={reviewText}
                     onChange={e => setReviewText(e.target.value)}
-                    placeholder="Tell us about your experience (min 10 characters)…"
+                    placeholder="Tell us about your experience (min 20 characters)…"
                     maxLength={500}
                     rows={4}
                     className="w-full border border-border bg-transparent text-sm text-foreground rounded-md p-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground resize-none transition-colors"

@@ -213,6 +213,77 @@ class InsuranceBoundary extends React.Component<
   }
 }
 
+function NotificationsTab({ painter, supabase }: { painter: any; supabase: any }) {
+  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("painter_id", painter.id)
+        .order("created_at", { ascending: false });
+      setNotifications(data || []);
+      setLoading(false);
+    };
+    if (painter?.id) load();
+  }, [painter?.id]);
+
+  const markRead = async (id: string) => {
+    await supabase.from("notifications").update({ read: true }).eq("id", id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const markAllRead = async () => {
+    await supabase.from("notifications").update({ read: true }).eq("painter_id", painter.id);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-foreground" /></div>;
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">Notifications</h1>
+          <p className="text-sm text-muted-foreground">{notifications.filter(n => !n.read).length} unread</p>
+        </div>
+        {notifications.some(n => !n.read) && (
+          <button onClick={markAllRead} className="text-xs text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-md transition-colors">
+            Mark all read
+          </button>
+        )}
+      </div>
+      {notifications.length === 0 ? (
+        <div className="bg-accent/10 border border-border rounded-lg p-6 text-center">
+          <p className="text-sm text-muted-foreground">No notifications yet</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {notifications.map(n => (
+            <div
+              key={n.id}
+              onClick={() => !n.read && markRead(n.id)}
+              className={`border rounded-xl p-4 cursor-pointer transition-colors ${n.read ? "border-border bg-background" : "border-primary/30 bg-primary/5"}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <p className={`text-sm font-medium ${n.read ? "text-foreground" : "text-primary"}`}>{n.title}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{n.message}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                </div>
+                {!n.read && <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AvailableJobsTab({
   painter,
   supabase,
@@ -1658,15 +1729,7 @@ export function PainterDashboard() {
 
             {/* TAB 8: Notifications */}
             {activeTab === "notifications" && (
-              <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 sm:mb-2">Notifications</h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">Manage your notification preferences</p>
-                </div>
-                <div className="bg-accent/10 border border-border rounded-lg p-4">
-                  <p className="text-sm">No notifications yet</p>
-                </div>
-              </div>
+              <NotificationsTab painter={painter} supabase={supabase} />
             )}
           </div>
         </main>

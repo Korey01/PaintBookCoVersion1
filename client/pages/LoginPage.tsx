@@ -48,7 +48,6 @@ export default function LoginPage() {
     }
 
     // Admin check — must happen before any painters table lookup
-    console.log("Login check - user email:", user.email, "admin email:", import.meta.env.VITE_ADMIN_EMAIL, "match:", user.email === import.meta.env.VITE_ADMIN_EMAIL);
     if (user.email && user.email === import.meta.env.VITE_ADMIN_EMAIL) {
       setLoading(false);
       navigate("/admin-dashboard", { replace: true });

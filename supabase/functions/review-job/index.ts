@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     // Insert review
     const { error: insertErr } = await supabase.from("reviews").insert({
       painter_id: session.painter_id,
-      session_id,
+      job_id: session_id,
       rating,
       review_text: trimmed,
       created_at: new Date().toISOString(),

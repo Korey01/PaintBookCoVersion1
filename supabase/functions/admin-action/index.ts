@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://www.paintbookco.co.uk",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
@@ -87,6 +87,26 @@ Deno.serve(async (req) => {
           kyc_rejection_reason: reason || "Application unsuccessful."
         };
         auditAction = "kyc_rejected";
+        // Insert in-app notification
+        await serviceClient.from("notifications").insert({
+          painter_id: painter.id,
+          title: "KYC Application Unsuccessful",
+          message: reason || "Your KYC application was unsuccessful. Please resubmit with the correct documents.",
+          type: "kyc_rejected",
+        });
+        // Fire webhook
+        try {
+          const webhook = Deno.env.get("MAKE_KYC_REJECTED_WEBHOOK");
+          if (webhook) await fetch(webhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              painter_email: painter.email,
+              painter_name: `${painter.first_name} ${painter.last_name}`,
+              reason: reason || "Application unsuccessful.",
+            }),
+          });
+        } catch (e) { console.error("KYC rejected webhook error:", e); }
         break;
 
       case "verify_insurance":
@@ -109,6 +129,26 @@ Deno.serve(async (req) => {
           insurance_expiry_date: null,
         };
         auditAction = "insurance_rejected";
+        // Insert in-app notification
+        await serviceClient.from("notifications").insert({
+          painter_id: painter.id,
+          title: "Insurance Submission Returned",
+          message: reason || "Your insurance certificate was not accepted. Please resubmit with a valid certificate.",
+          type: "insurance_rejected",
+        });
+        // Fire webhook
+        try {
+          const webhook = Deno.env.get("MAKE_INSURANCE_REJECTED_WEBHOOK");
+          if (webhook) await fetch(webhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              painter_email: painter.email,
+              painter_name: `${painter.first_name} ${painter.last_name}`,
+              reason: reason || "Insurance certificate not accepted.",
+            }),
+          });
+        } catch (e) { console.error("Insurance rejected webhook error:", e); }
         break;
 
       case "activate_painter":

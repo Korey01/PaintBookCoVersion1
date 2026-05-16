@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2, RefreshCw, CheckCircle2, XCircle, LogOut, Shield, Briefcase, AlertTriangle, Users, BarChart3 } from "lucide-react";
+import DOMPurify from "dompurify";
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -29,6 +30,150 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function JobDetailModal({ job, onClose, onUpdateStatus }: {
+  job: any;
+  onClose: () => void;
+  onUpdateStatus: (id: string, status: string, dispute?: any) => void;
+}) {
+  const t = job.transactions?.[0] || job.transaction;
+  const painter = t?.painters;
+  const status = t?.status || job.status || "job_posted";
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center overflow-y-auto p-4">
+      <div className="bg-background border border-border rounded-xl w-full max-w-2xl my-8">
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Job Reference</p>
+            <h2 className="font-semibold text-lg font-mono">PBC-{job.id.slice(-6).toUpperCase()}</h2>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <XCircle className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(100vh-10rem)]">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <StatusBadge status={status} />
+          </div>
+
+          <section>
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Customer</h3>
+            <div className="bg-card border border-border rounded-lg p-4 space-y-1 text-sm">
+              <p className="font-medium">
+                {t?.customer_first_name ? `${t.customer_first_name} ${t.customer_last_name || ""}`.trim() : "—"}
+              </p>
+              <p className="text-muted-foreground">{t?.customer_email || job.email || "—"}</p>
+              <p className="text-muted-foreground">{t?.customer_phone || "—"}</p>
+              <p className="text-muted-foreground">{t?.customer_postcode || job.postcode || "—"}</p>
+            </div>
+          </section>
+
+          {painter && (
+            <section>
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Painter</h3>
+              <div className="bg-card border border-border rounded-lg p-4 space-y-1 text-sm">
+                <p className="font-medium">{painter.first_name} {painter.last_name}</p>
+                <p className="text-muted-foreground">{painter.email}</p>
+                <p className="text-muted-foreground">{painter.phone || "—"}</p>
+              </div>
+            </section>
+          )}
+
+          {t && (
+            <section>
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Financial</h3>
+              <div className="bg-card border border-border rounded-lg p-4 text-sm space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Invoice ID</span>
+                  <span className="font-mono text-xs">{t.invoice_id || "—"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-medium">£{t.amount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Commission ({t.commission_rate}%)</span>
+                  <span>
+                    £{t.amount && t.commission_rate
+                      ? ((parseFloat(t.amount) * parseFloat(t.commission_rate)) / 100).toFixed(2)
+                      : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Painter Payout</span>
+                  <span>£{t.painter_payout}</span>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {t?.invoice_html && (
+            <section>
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Invoice</h3>
+              <div
+                className="bg-white text-gray-900 rounded-lg p-4 text-sm overflow-x-auto"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t.invoice_html) }}
+              />
+            </section>
+          )}
+
+          <section>
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Timeline</h3>
+            <div className="space-y-1.5 text-sm">
+              {[
+                { label: "Posted", date: job.created_at },
+                { label: "Chat Initiated", date: t?.chat_initiated_at || job.chat_initiated_at },
+                { label: "Invoice Sent", date: t?.invoice_sent_at },
+                { label: "Funded", date: t?.funded_at },
+                { label: "Completed", date: t?.completed_at },
+                { label: "Disputed", date: t?.disputed_at },
+              ].filter(e => e.date).map(e => (
+                <div key={e.label} className="flex justify-between">
+                  <span className="text-muted-foreground">{e.label}</span>
+                  <span>{new Date(e.date!).toLocaleDateString("en-GB")}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="flex flex-wrap gap-2 pt-3 border-t border-border">
+            {status === "disputed" && (
+              <>
+                <button
+                  onClick={() => { onUpdateStatus(t.id, "completed", t); onClose(); }}
+                  className="px-4 py-2 bg-green-700 text-white rounded text-sm hover:bg-green-600 transition-colors">
+                  Release to Painter
+                </button>
+                <button
+                  onClick={() => { onUpdateStatus(t.id, "cancelled", t); onClose(); }}
+                  className="px-4 py-2 border border-red-800 text-red-400 rounded text-sm hover:bg-red-900/20 transition-colors">
+                  Refund Customer
+                </button>
+              </>
+            )}
+            {(status === "funded" || status === "in_progress") && (
+              <button
+                onClick={() => { onUpdateStatus(t.id, "completed"); onClose(); }}
+                className="px-4 py-2 bg-green-700 text-white rounded text-sm hover:bg-green-600 transition-colors">
+                Mark as Complete
+              </button>
+            )}
+            <a
+              href={`/chat/job-${job.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 border border-border text-muted-foreground rounded text-sm hover:bg-accent transition-colors inline-block">
+              View Chat →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("kyc");
   const [loading, setLoading] = useState(true);
@@ -52,6 +197,14 @@ export default function AdminDashboard() {
   // Rejection reason state
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+
+  // Job detail modal
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+
+  // Dispute messaging state
+  const [messagingId, setMessagingId] = useState<string | null>(null);
+  const [adminMessage, setAdminMessage] = useState("");
+  const [messageRecipient, setMessageRecipient] = useState<"customer" | "painter">("customer");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -88,9 +241,9 @@ export default function AdminDashboard() {
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=in.(pending,submitted)&select=*&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?insurance_submitted_at=not.is.null&insurance_verified=eq.false&select=*&order=insurance_submitted_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=eq.approved&insurance_verified=eq.true&is_active=eq.false&select=*&order=created_at.desc`, { headers }),
-        fetch(`${SUPABASE_URL}/rest/v1/sessions?select=*&order=created_at.desc&limit=50`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/sessions?select=*,transactions(id,invoice_id,amount,commission_rate,painter_payout,status,invoice_html,funded_at,completed_at,disputed_at,chat_initiated_at,invoice_sent_at,session_id,painter_id,customer_first_name,customer_last_name,customer_email,customer_phone,customer_postcode,painters(id,first_name,last_name,email,phone))&order=created_at.desc&limit=50`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/transactions?select=*&order=created_at.desc&limit=50`, { headers }),
-        fetch(`${SUPABASE_URL}/rest/v1/transactions?status=eq.disputed&select=*&order=disputed_at.desc`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/transactions?status=eq.disputed&select=*,painters(id,first_name,last_name,email,phone)&order=disputed_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?is_active=eq.true&select=id`, { headers }),
       ]);
 
@@ -157,28 +310,74 @@ export default function AdminDashboard() {
     setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
 
-  const updateTransactionStatus = async (id: string, status: string) => {
+  const updateTransactionStatus = async (id: string, status: string, dispute?: any) => {
     setActionLoading(id);
     try {
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/transactions?id=eq.${id}`,
-        {
-          method: "PATCH",
+      if (dispute && (status === "completed" || status === "cancelled")) {
+        const resolution = status === "completed" ? "release" : "refund";
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-action`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${session.access_token}`,
             "apikey": ANON_KEY,
-            "Prefer": "return=minimal",
           },
-          body: JSON.stringify({ status }),
-        }
-      );
+          body: JSON.stringify({
+            action: "resolve_dispute",
+            transaction_id: id,
+            resolution,
+          }),
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || "Resolution failed");
+      } else {
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/transactions?id=eq.${id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`,
+              "apikey": ANON_KEY,
+              "Prefer": "return=minimal",
+            },
+            body: JSON.stringify({ status }),
+          }
+        );
+      }
       setMessage({ text: `✓ Transaction updated to ${status}`, type: "success" });
       await loadAll(session.access_token);
     } catch (err) {
       setMessage({ text: "Update failed", type: "error" });
     }
     setActionLoading(null);
+    setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+  };
+
+  const sendAdminMessage = async (dispute: any) => {
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/admin-action`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+          "apikey": ANON_KEY,
+        },
+        body: JSON.stringify({
+          action: "send_dispute_message",
+          painter_email: dispute.painter_email || dispute.painters?.email,
+          transaction_id: dispute.id,
+          customer_email: dispute.customer_email,
+          message: adminMessage,
+          recipient: messageRecipient,
+        }),
+      });
+      setMessage({ text: "Message sent successfully", type: "success" });
+      setMessagingId(null);
+      setAdminMessage("");
+    } catch {
+      setMessage({ text: "Failed to send message", type: "error" });
+    }
     setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
 
@@ -436,7 +635,7 @@ export default function AdminDashboard() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => adminAction("reject_insurance", p.email, rejectReason)}
-                              disabled={!!actionLoading}
+                              disabled={!!actionLoading || !rejectReason.trim()}
                               className={btnRed}>
                               Confirm Reject
                             </button>
@@ -534,7 +733,11 @@ export default function AdminDashboard() {
                         </thead>
                         <tbody className="divide-y divide-border">
                           {sessions.map(s => (
-                            <tr key={s.id} className="hover:bg-accent/20 transition-colors">
+                            <tr
+                              key={s.id}
+                              className="hover:bg-accent/20 transition-colors cursor-pointer"
+                              onClick={() => setSelectedJob(s)}
+                            >
                               <td className="px-4 py-3 font-mono text-xs">PBC-{s.id.slice(-6).toUpperCase()}</td>
                               <td className="px-4 py-3">{s.job_type || "—"}</td>
                               <td className="px-4 py-3">{s.postcode || "—"}</td>
@@ -628,20 +831,56 @@ export default function AdminDashboard() {
                     <p className="text-xs text-muted-foreground">
                       Disputed: {d.disputed_at ? new Date(d.disputed_at).toLocaleDateString("en-GB") : "—"}
                     </p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
-                        onClick={() => updateTransactionStatus(d.id, "completed")}
+                        onClick={() => updateTransactionStatus(d.id, "completed", d)}
                         disabled={actionLoading === d.id}
                         className={btnGreen}>
                         Release to Painter
                       </button>
                       <button
-                        onClick={() => updateTransactionStatus(d.id, "cancelled")}
+                        onClick={() => updateTransactionStatus(d.id, "cancelled", d)}
                         disabled={actionLoading === d.id}
                         className={btnRed}>
                         Refund Customer
                       </button>
+                      <button
+                        onClick={() => { setMessagingId(d.id); setAdminMessage(""); setMessageRecipient("customer"); }}
+                        className="px-4 py-2 border border-border text-foreground rounded text-sm hover:bg-accent transition-colors">
+                        Message Parties
+                      </button>
                     </div>
+                    {messagingId === d.id && (
+                      <div className="space-y-2 mt-3">
+                        <select
+                          value={messageRecipient}
+                          onChange={e => setMessageRecipient(e.target.value as "customer" | "painter")}
+                          className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm">
+                          <option value="customer">Message Customer</option>
+                          <option value="painter">Message Painter</option>
+                        </select>
+                        <textarea
+                          value={adminMessage}
+                          onChange={e => setAdminMessage(e.target.value)}
+                          placeholder="Type your message..."
+                          rows={3}
+                          className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => sendAdminMessage(d)}
+                            disabled={!adminMessage.trim()}
+                            className="flex-1 bg-foreground text-background py-2 rounded-md text-sm font-medium disabled:opacity-50">
+                            Send Message
+                          </button>
+                          <button
+                            onClick={() => setMessagingId(null)}
+                            className="flex-1 border border-border py-2 rounded-md text-sm">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -649,6 +888,14 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
+
+      {selectedJob && (
+        <JobDetailModal
+          job={selectedJob}
+          onClose={() => setSelectedJob(null)}
+          onUpdateStatus={updateTransactionStatus}
+        />
+      )}
     </div>
   );
 }

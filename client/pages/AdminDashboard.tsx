@@ -241,7 +241,7 @@ export default function AdminDashboard() {
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=in.(pending,submitted)&select=*&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?insurance_submitted_at=not.is.null&insurance_verified=eq.false&select=*&order=insurance_submitted_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=eq.approved&insurance_verified=eq.true&is_active=eq.false&select=*&order=created_at.desc`, { headers }),
-        fetch(`${SUPABASE_URL}/rest/v1/sessions?select=*,transactions(id,invoice_id,amount,commission_rate,painter_payout,status,invoice_html,funded_at,completed_at,disputed_at,chat_initiated_at,invoice_sent_at,session_id,painter_id,customer_first_name,customer_last_name,customer_email,customer_phone,customer_postcode,painters(id,first_name,last_name,email,phone))&order=created_at.desc&limit=50`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/sessions?select=*,transactions(id,invoice_id,amount,commission_rate,painter_payout,status,invoice_html,funded_at,completed_at,disputed_at,invoice_sent_at,session_id,painter_id,customer_first_name,customer_last_name,customer_email,customer_phone,customer_postcode)&order=created_at.desc&limit=50`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/transactions?select=*&order=created_at.desc&limit=50`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/transactions?status=eq.disputed&select=*,painters(id,first_name,last_name,email,phone)&order=disputed_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?is_active=eq.true&select=id`, { headers }),

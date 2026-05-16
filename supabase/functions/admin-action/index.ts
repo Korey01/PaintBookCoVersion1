@@ -33,22 +33,30 @@ Deno.serve(async (req) => {
       Deno.env.get("SERVICE_ROLE_KEY")!,
     );
 
-    const { action, painter_email, painter_id, reason } = await req.json();
+    const body = await req.json();
+    const { action, painter_email, painter_id, reason } = body;
 
     if (!action) return json({ error: "action is required" }, 400);
-    if (!painter_email && !painter_id)
-      return json({ error: "painter_email or painter_id required" }, 400);
 
-    // Find painter
-    let query = serviceClient.from("painters")
-      .select("id, email, first_name, last_name, kyc_status, insurance_verified, is_active");
-    if (painter_id) {
-      query = query.eq("id", painter_id);
-    } else {
-      query = query.eq("email", painter_email.toLowerCase().trim());
+    // Actions that don't require a painter lookup
+    const directActions = ["send_dispute_message", "resolve_dispute"];
+
+    let painter: any = null;
+    if (!directActions.includes(action)) {
+      if (!painter_email && !painter_id)
+        return json({ error: "painter_email or painter_id required" }, 400);
+
+      let query = serviceClient.from("painters")
+        .select("id, email, first_name, last_name, kyc_status, insurance_verified, is_active");
+      if (painter_id) {
+        query = query.eq("id", painter_id);
+      } else {
+        query = query.eq("email", (painter_email as string).toLowerCase().trim());
+      }
+      const { data } = await query.single();
+      if (!data) return json({ error: "Painter not found" }, 404);
+      painter = data;
     }
-    const { data: painter } = await query.single();
-    if (!painter) return json({ error: "Painter not found" }, 404);
 
     let updates: Record<string, unknown> = {};
     let auditAction = "";
@@ -161,6 +169,83 @@ Deno.serve(async (req) => {
         auditAction = "painter_deactivated";
         break;
 
+      case "send_dispute_message": {
+        const { transaction_id, customer_email, message, recipient, painter_email: painterEmail } = body as any;
+        const disputeWebhook = Deno.env.get("MAKE_DISPUTE_RAISED_WEBHOOK");
+        if (disputeWebhook) {
+          await fetch(disputeWebhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "admin_message",
+              recipient,
+              message,
+              transaction_id,
+              customer_email: recipient === "customer" ? customer_email : undefined,
+              painter_email: recipient === "painter" ? painterEmail : undefined,
+              admin_name: "PaintBookCo Admin",
+            }),
+          });
+        }
+        return json({ success: true });
+      }
+
+      case "resolve_dispute": {
+        const { transaction_id, resolution } = body as any;
+        const { data: transaction } = await serviceClient
+          .from("transactions")
+          .select("id, session_id, painter_id, customer_email")
+          .eq("id", transaction_id)
+          .single();
+
+        if (!transaction) return json({ error: "Transaction not found" }, 404);
+
+        if (resolution === "release") {
+          await serviceClient.from("transactions")
+            .update({ status: "completed" })
+            .eq("id", transaction_id);
+          if (transaction.session_id) {
+            await serviceClient.from("sessions")
+              .update({ status: "completed" })
+              .eq("id", transaction.session_id);
+          }
+          if (transaction.painter_id) {
+            await serviceClient.from("notifications").insert({
+              painter_id: transaction.painter_id,
+              title: "Dispute Resolved",
+              message: "Dispute resolved in your favour — payment released",
+              type: "dispute_resolved",
+            });
+          }
+          const jobCompletedWebhook = Deno.env.get("MAKE_JOB_COMPLETED_WEBHOOK");
+          if (jobCompletedWebhook) {
+            await fetch(jobCompletedWebhook, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "dispute_resolved_release", transaction_id }),
+            }).catch(console.error);
+          }
+        } else if (resolution === "refund") {
+          await serviceClient.from("transactions")
+            .update({ status: "cancelled" })
+            .eq("id", transaction_id);
+          if (transaction.session_id) {
+            await serviceClient.from("sessions")
+              .update({ status: "cancelled" })
+              .eq("id", transaction.session_id);
+          }
+          if (transaction.painter_id) {
+            await serviceClient.from("notifications").insert({
+              painter_id: transaction.painter_id,
+              title: "Dispute Resolved",
+              message: "Dispute resolved — funds returned to customer",
+              type: "dispute_resolved",
+            });
+          }
+        }
+        return json({ success: true });
+      }
+
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
@@ -168,22 +253,22 @@ Deno.serve(async (req) => {
     await serviceClient
       .from("painters")
       .update(updates)
-      .eq("id", painter.id);
+      .eq("id", painter!.id);
 
     await serviceClient.from("audit_log").insert({
       action: auditAction,
       actor_id: user.id,
       actor_role: "admin",
       entity_type: "painter",
-      entity_id: painter.id,
-      details: { painter_email: painter.email, updates, reason },
+      entity_id: painter!.id,
+      details: { painter_email: painter!.email, updates, reason },
     });
 
     return json({
       success: true,
       action,
-      painter_id: painter.id,
-      painter_email: painter.email,
+      painter_id: painter!.id,
+      painter_email: painter!.email,
       updates,
     });
 

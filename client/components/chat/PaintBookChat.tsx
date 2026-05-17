@@ -12,14 +12,41 @@ import "stream-chat-react/dist/css/v2/index.css";
 import { supabase } from "../../lib/supabase";
 
 // ── PII regex patterns ────────────────────────────────────────────────────────
+// Normalise message — strip spaces/special chars between digits for evasion detection
+function normaliseText(text: string): string {
+  return text
+    .replace(/[\s\.\-_\*\/\|,;:'"(){}\[\]!?]/g, "") // strip separators
+    .toLowerCase();
+}
+
 const PII_PATTERNS: RegExp[] = [
-  /(\+44|0)7\d{3}[\s\-]?\d{3}[\s\-]?\d{3}/g,
-  /(\+44|0)(1|2|3)\d{8,9}/g,
-  /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,
-  /[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}/gi,
-  /(https?:\/\/|www\.)/gi,
-  /@[a-zA-Z0-9_]{3,}/g,
+  // UK mobile — catches 07xxx with any separators e.g. 07 481 439 567 or 07-481-439.567
+  /(\+\s*4\s*4\s*|0\s*0\s*4\s*4\s*|0)\s*7\s*[\d\s\.\-_]{9,14}/g,
+  // UK landline — 01, 02, 03 numbers
+  /(\+\s*4\s*4\s*|0\s*0\s*4\s*4\s*|0)\s*[123]\s*[\d\s\.\-_]{8,12}/g,
+  // Email addresses
+  /[a-zA-Z0-9._%+\-]+\s*@\s*[a-zA-Z0-9.\-]+\s*\.\s*[a-zA-Z]{2,}/g,
+  // UK postcodes — full postcode e.g. M28 3YU or M28-3YU or M283YU
+  /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/gi,
+  // URLs and social links
+  /(https?:\/\/|www\.|http)/gi,
+  // Social media handles
+  /@[a-zA-Z0-9_.]{2,}/g,
+  // Social media platform names
+  /(whatsapp|telegram|signal|snapchat|instagram|facebook|fb\.com|tiktok|twitter|linkedin|messenger)/gi,
+  // Street addresses — number followed by road type
+  /\d+\s*[a-zA-Z]+\s*(street|st|road|rd|avenue|ave|lane|ln|drive|dr|close|cl|way|court|ct|place|pl|crescent|cres|terrace|ter|grove|row|gardens|gate)/gi,
 ];
+
+// Also check normalised text for digit-only evasion (e.g. "07 4 8 1 4 3 9 5 6 7")
+function containsHiddenPhone(text: string): boolean {
+  const digits = text.replace(/\D/g, "");
+  // UK mobile: 11 digits starting with 07, or 12 starting with 447
+  if (/^(07\d{9}|447\d{9}|0044\d{9})/.test(digits)) return true;
+  // Any 11-digit sequence starting with 0 (UK landline)
+  if (/0\d{10}/.test(digits)) return true;
+  return false;
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -169,7 +196,7 @@ export function PaintBookChat({
     const hasPII = PII_PATTERNS.some(p => {
       p.lastIndex = 0;
       return p.test(content);
-    });
+    }) || containsHiddenPhone(content);
 
     if (hasPII) {
       setPiiWarning(true);

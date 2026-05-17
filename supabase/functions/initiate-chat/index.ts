@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
     // Update session status and store channel_id
     await serviceClient
       .from("sessions")
-      .update({ status: "painter_contacted", chat_channel_id: channelId })
+      .update({ status: "painter_contacted", chat_channel_id: channelId, painter_id: user.id })
       .eq("id", session_id);
 
     // Store channel_id on transaction if one exists

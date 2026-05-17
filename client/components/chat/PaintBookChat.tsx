@@ -186,8 +186,9 @@ export function PaintBookChat({
   }, [sessionId, customerToken, userRole]);
 
   // ── PII-filtered message send ─────────────────────────────────────────────
-  const handleSubmit = async (message: { text?: string }) => {
-    const content = (message.text ?? "").trim();
+  const handleSubmit = async (message: any) => {
+    console.log("PII handleSubmit called:", JSON.stringify(message));
+    const content = (message?.text ?? message?.message?.text ?? "").trim();
     if (!content) return;
 
     setPiiWarning(false);

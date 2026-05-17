@@ -912,6 +912,21 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
         </button>
       </div>
 
+      {/* Stage filter dropdown */}
+      <div className="flex items-center gap-3">
+        <select
+          value={stageFilter}
+          onChange={e => setStageFilter(e.target.value)}
+          className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+        >
+          <option value="all">All Jobs ({sessions.length})</option>
+          <option value="negotiating">Negotiating ({sessions.filter(s => ["painter_contacted","invoice_sent"].includes(s.status)).length})</option>
+          <option value="active">Active ({sessions.filter(s => ["funded","in_progress","completion_requested"].includes(s.status)).length})</option>
+          <option value="completed">Completed ({sessions.filter(s => s.status === "completed").length})</option>
+          <option value="cancelled">Cancelled & Disputed ({sessions.filter(s => ["cancelled","disputed"].includes(s.status)).length})</option>
+        </select>
+      </div>
+
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />

@@ -75,6 +75,31 @@ Deno.serve(async (req) => {
         .eq("id", transaction.session_id);
     }
 
+    // Freeze Stream channel — chat becomes read-only after completion
+    if (transaction.session_id) {
+      try {
+        const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
+        const streamSecret = Deno.env.get("STREAM_API_SECRET")!;
+        const channelId = `job-${transaction.session_id}`;
+        // Generate server token
+        const header = { alg: "HS256", typ: "JWT" };
+        const payload = { server: true, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 };
+        const encode = (obj: object) => btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+        const sigInput = `${encode(header)}.${encode(payload)}`;
+        const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(streamSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+        const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(sigInput));
+        const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+        const serverToken = `${sigInput}.${sigB64}`;
+        await fetch(`https://chat.stream-io-api.com/channels/messaging/${channelId}?api_key=${streamApiKey}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serverToken}`, "stream-auth-type": "jwt" },
+          body: JSON.stringify({ set: { frozen: true } }),
+        });
+      } catch (streamErr) {
+        console.error("Stream freeze error:", streamErr);
+      }
+    }
+
     // Fire Make.com completion webhook
     const completionWebhook = Deno.env.get("MAKE_JOB_COMPLETED_WEBHOOK");
     if (completionWebhook) {

@@ -188,6 +188,26 @@ export default function AdminDashboard() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
+  const [jobSearch, setJobSearch] = useState("");
+  const [jobStatusFilter, setJobStatusFilter] = useState("all");
+  const [jobSortBy, setJobSortBy] = useState("newest");
+
+  const filteredJobs = sessions
+    .filter(s => {
+      if (jobStatusFilter !== "all" && s.status !== jobStatusFilter) return false;
+      if (jobSearch) {
+        const q = jobSearch.toLowerCase();
+        const ref = `pbc-${s.id.slice(-6).toLowerCase()}`;
+        return ref.includes(q) || (s.postcode || "").toLowerCase().includes(q) || (s.email || "").toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (jobSortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (jobSortBy === "status") return (a.status || "").localeCompare(b.status || "");
+      if (jobSortBy === "postcode") return (a.postcode || "").localeCompare(b.postcode || "");
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
   const [stats, setStats] = useState({
     pendingKYC: 0, pendingInsurance: 0,
     readyToActivate: 0, activePainters: 0,
@@ -719,12 +739,61 @@ export default function AdminDashboard() {
                   <h3 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
                     Sessions — Job Postings ({sessions.length})
                   </h3>
+
+                  {/* Search and filter controls */}
+                  <div className="flex flex-wrap gap-3 mb-4">
+                    <input
+                      type="text"
+                      placeholder="Search by ref, postcode or email..."
+                      value={jobSearch}
+                      onChange={e => setJobSearch(e.target.value)}
+                      className="border border-border bg-background text-sm rounded-md px-3 py-2 flex-1 min-w-[200px] focus:outline-none focus:border-foreground"
+                    />
+                    <select
+                      value={jobStatusFilter}
+                      onChange={e => setJobStatusFilter(e.target.value)}
+                      className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="job_posted">Job Posted</option>
+                      <option value="painter_contacted">Negotiating</option>
+                      <option value="invoice_sent">Invoice Sent</option>
+                      <option value="funded">Escrow Funded</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completion_requested">Completion Requested</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="disputed">Disputed</option>
+                    </select>
+                    <select
+                      value={jobSortBy}
+                      onChange={e => setJobSortBy(e.target.value)}
+                      className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="status">By Status</option>
+                      <option value="postcode">By Postcode</option>
+                    </select>
+                    {(jobSearch || jobStatusFilter !== "all") && (
+                      <button
+                        onClick={() => { setJobSearch(""); setJobStatusFilter("all"); }}
+                        className="border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors text-muted-foreground"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Showing {filteredJobs.length} of {sessions.length} jobs
+                  </p>
+
                   <div className="border border-border rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="border-b border-border bg-accent/30">
                           <tr>
-                            {["Ref", "Job Type", "Postcode", "Rooms", "Status", "Email", "Posted"].map(h => (
+                            {["Ref", "Job Type", "Postcode", "Rooms", "Status", "Amount", "Painter Payout", "Commission", "Income", "Email", "Posted"].map(h => (
                               <th key={h} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                 {h}
                               </th>
@@ -732,7 +801,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                          {sessions.map(s => (
+                          {filteredJobs.map(s => (
                             <tr
                               key={s.id}
                               className="hover:bg-accent/20 transition-colors cursor-pointer"
@@ -743,6 +812,10 @@ export default function AdminDashboard() {
                               <td className="px-4 py-3">{s.postcode || "—"}</td>
                               <td className="px-4 py-3">{s.rooms?.length || 0}</td>
                               <td className="px-4 py-3"><StatusBadge status={s.status || "browsing"} /></td>
+                              <td className="px-4 py-3">{s.transactions?.[0]?.amount ? `£${Number(s.transactions[0].amount).toFixed(2)}` : "—"}</td>
+                              <td className="px-4 py-3 text-green-400">{s.transactions?.[0]?.painter_payout ? `£${Number(s.transactions[0].painter_payout).toFixed(2)}` : "—"}</td>
+                              <td className="px-4 py-3 text-muted-foreground">{s.transactions?.[0]?.commission_rate ? `${s.transactions[0].commission_rate}%` : "—"}</td>
+                              <td className="px-4 py-3 text-amber-400">{s.transactions?.[0]?.amount && s.transactions?.[0]?.commission_rate ? `£${(Number(s.transactions[0].amount) * Number(s.transactions[0].commission_rate) / 100).toFixed(2)}` : "—"}</td>
                               <td className="px-4 py-3 text-muted-foreground">{s.email || "Anonymous"}</td>
                               <td className="px-4 py-3 text-muted-foreground text-xs">
                                 {new Date(s.created_at).toLocaleDateString("en-GB")}

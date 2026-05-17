@@ -258,6 +258,36 @@ function ForPainters() {
   );
 }
 
+// ── Vestimator CTA ────────────────────────────────────────────────────────────
+function VestimatorCTA() {
+  const ref = useScrollAnimation();
+  return (
+    <section className="py-20 px-6" style={{ background: "#EEE8E0" }}>
+      <div ref={ref} className="mx-auto max-w-4xl scroll-animate">
+        <div className="rounded-xl border border-border/50 p-10 flex flex-col md:flex-row items-center gap-8" style={{ background: "rgba(255,255,255,0.7)" }}>
+          <div className="text-5xl flex-shrink-0">🎨</div>
+          <div className="flex-1 text-center md:text-left">
+            <Label>Free tool</Label>
+            <h3 className="font-display text-2xl text-foreground mb-3">
+              Try the Paint Vestimator
+            </h3>
+            <p className="text-muted-foreground text-sm leading-[1.8] mb-6 max-w-md">
+              Calculate exactly how much paint you need, browse 30+ UK paint colours with real hex values, visualise colours on your walls, and buy direct from Amazon or B&Q.
+            </p>
+            <Link
+              to="/vestimator"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-6 py-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_24px_hsl(18_88%_52%_/_0.3)] group"
+            >
+              Open Paint Vestimator
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── CTA Band ──────────────────────────────────────────────────────────────────
 function CTABand() {
   const ref = useScrollAnimation();
@@ -304,6 +334,7 @@ export default function HomePage() {
       <HowItWorks />
       <TrustSignals />
       <ForPainters />
+      <VestimatorCTA />
       <CTABand />
     </div>
   );

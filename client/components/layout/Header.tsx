@@ -5,7 +5,7 @@ import { Menu, X } from "lucide-react";
 const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
 
 const NAV_LINKS = [
-  { to: "/vestimator", label: "Estimate" },
+  { to: "/vestimator", label: "Vestimator" },
   { to: "/find-painters", label: "Find Painters" },
   { to: "/about", label: "About" },
   { to: "/trust-safety", label: "Trust & Safety" },

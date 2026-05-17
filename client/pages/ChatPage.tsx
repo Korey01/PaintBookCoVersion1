@@ -117,6 +117,32 @@ export default function ChatPage() {
           return;
         }
 
+        // Admin path — use Supabase session to get Stream token
+        const isAdmin = searchParams.get("admin") === "true";
+        if (isAdmin && sessionId) {
+          const { data: { session: authSession } } = await supabase.auth.getSession();
+          if (authSession?.access_token) {
+            const res = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                  "Authorization": `Bearer ${authSession.access_token}`,
+                },
+                body: JSON.stringify({ session_id: sessionId, role: "admin" }),
+              }
+            );
+            const data = await res.json();
+            if (data.token) {
+              await connectToChat(data.token, data.user_id, "Admin");
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
         setError("Invalid chat link. Please use the link from your email.");
         setLoading(false);
       } catch (err: any) {

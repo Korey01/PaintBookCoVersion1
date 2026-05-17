@@ -403,6 +403,25 @@ function AvailableJobsTab({
         </div>
       )}
 
+      {/* Stage filter */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { id: "all", label: "All" },
+          { id: "negotiating", label: "Negotiating" },
+          { id: "active", label: "Active" },
+          { id: "completed", label: "Completed" },
+          { id: "cancelled", label: "Cancelled & Disputed" },
+        ].map(f => (
+          <button
+            key={f.id}
+            onClick={() => setStageFilter(f.id)}
+            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${stageFilter === f.id ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:bg-accent"}`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="h-6 w-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
@@ -864,9 +883,17 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
     setLoading(false)
   }
 
+  const [stageFilter, setStageFilter] = React.useState<string>("all")
+
   const activeStatuses = ["painter_contacted", "invoice_sent", "funded", "in_progress", "completion_requested"]
-  const activeSessions = sessions.filter(s => activeStatuses.includes(s.status))
-  const pastSessions = sessions.filter(s => !activeStatuses.includes(s.status))
+  const filteredSessions = stageFilter === "all" ? sessions
+    : stageFilter === "negotiating" ? sessions.filter(s => ["painter_contacted", "invoice_sent"].includes(s.status))
+    : stageFilter === "active" ? sessions.filter(s => ["funded", "in_progress", "completion_requested"].includes(s.status))
+    : stageFilter === "completed" ? sessions.filter(s => s.status === "completed")
+    : stageFilter === "cancelled" ? sessions.filter(s => ["cancelled", "disputed"].includes(s.status))
+    : sessions
+  const activeSessions = filteredSessions.filter(s => activeStatuses.includes(s.status))
+  const pastSessions = filteredSessions.filter(s => !activeStatuses.includes(s.status))
 
   const statusLabel: Record<string, string> = {
     painter_contacted: "Awaiting invoice",

@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 
-// Separate client for chat page — no auto-refresh (customers have no Supabase session)
+// Separate client for chat page — persistSession true so admin session is available
 const chatSupabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
+  { auth: { autoRefreshToken: false, persistSession: true } }
 );
 import { StreamChat } from "stream-chat";
 import {
@@ -120,7 +120,7 @@ export default function ChatPage() {
         // Admin path — use Supabase session to get Stream token
         const isAdmin = searchParams.get("admin") === "true";
         if (isAdmin && sessionId) {
-          const { data: { session: authSession } } = await supabase.auth.getSession();
+          const { data: { session: authSession } } = await chatSupabase.auth.getSession();
           if (authSession?.access_token) {
             const res = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,

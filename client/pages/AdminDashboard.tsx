@@ -161,7 +161,7 @@ function JobDetailModal({ job, onClose, onUpdateStatus }: {
               </button>
             )}
             <a
-              href={`/chat/job-${job.id}`}
+              href={`/chat/job-${job.id}?admin=true&session_id=${job.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 border border-border text-muted-foreground rounded text-sm hover:bg-accent transition-colors inline-block">

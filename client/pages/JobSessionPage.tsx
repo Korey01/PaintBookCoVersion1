@@ -133,7 +133,11 @@ export default function JobSessionPage() {
       const result = await res.json();
       if (result.success) {
         setActionMessage(result.message || "Done.");
-        await loadSession();
+        // Optimistic UI update — don't wait for full reload
+        if (action === "confirm-completion") setStatus("completed");
+        else if (action === "raise-dispute") setStatus("disputed");
+        else if (action === "cancel-job") setStatus("cancelled");
+        loadSession(); // reload in background
       } else {
         setActionMessage(result.error || "Something went wrong.");
       }

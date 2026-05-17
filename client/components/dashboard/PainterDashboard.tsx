@@ -312,7 +312,7 @@ function AvailableJobsTab({
         .from("sessions")
         .select("id, job_type, postcode, rooms, job_description, has_structural_defects, created_at, status")
         .eq("status", "job_posted")
-        .eq("converted_to_transaction", false)
+        .or("converted_to_transaction.is.null,converted_to_transaction.eq.false")
         .order("created_at", { ascending: false })
         .limit(20)
       setJobs((data || []).filter((j: any) => !passedJobs.includes(j.id)))
@@ -403,23 +403,19 @@ function AvailableJobsTab({
         </div>
       )}
 
-      {/* Stage filter */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { id: "all", label: "All" },
-          { id: "negotiating", label: "Negotiating" },
-          { id: "active", label: "Active" },
-          { id: "completed", label: "Completed" },
-          { id: "cancelled", label: "Cancelled & Disputed" },
-        ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => setStageFilter(f.id)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${stageFilter === f.id ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:bg-accent"}`}
-          >
-            {f.label}
-          </button>
-        ))}
+      {/* Stage filter dropdown */}
+      <div className="flex items-center gap-3">
+        <select
+          value={stageFilter}
+          onChange={e => setStageFilter(e.target.value)}
+          className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+        >
+          <option value="all">All Jobs ({sessions.length})</option>
+          <option value="negotiating">Negotiating ({sessions.filter(s => ["painter_contacted","invoice_sent"].includes(s.status)).length})</option>
+          <option value="active">Active ({sessions.filter(s => ["funded","in_progress","completion_requested"].includes(s.status)).length})</option>
+          <option value="completed">Completed ({sessions.filter(s => s.status === "completed").length})</option>
+          <option value="cancelled">Cancelled & Disputed ({sessions.filter(s => ["cancelled","disputed"].includes(s.status)).length})</option>
+        </select>
       </div>
 
       {loading ? (
@@ -808,6 +804,7 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
   const [activeChatId, setActiveChatId] = React.useState<string | null>(null)
   const [invoiceNavigating, setInvoiceNavigating] = React.useState<string | null>(null)
   const [passOnConfirm, setPassOnConfirm] = React.useState<string | null>(null)
+  const [viewInvoiceJob, setViewInvoiceJob] = React.useState<{session: any, tx: any} | null>(null)
   const [passOnLoading, setPassOnLoading] = React.useState(false)
 
   const openChatWithInvoice = async (session: any) => {
@@ -1042,12 +1039,15 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
                 {pastSessions.map(session => {
                   const tx = Array.isArray(session.transactions) ? session.transactions[0] : session.transactions
                   return (
-                    <div key={session.id} className="border border-border rounded-lg p-4 flex items-center justify-between gap-3">
+                    <div key={session.id}
+                      onClick={() => tx?.invoice_html ? setViewInvoiceJob({ session, tx }) : null}
+                      className={`border border-border rounded-lg p-4 flex items-center justify-between gap-3 ${tx?.invoice_html ? "cursor-pointer hover:bg-accent transition-colors" : ""}`}>
                       <div>
                         <p className="text-sm font-medium">{session.job_type}</p>
                         <p className="text-xs text-muted-foreground">
                           📍 {session.postcode?.split(" ")[0]} · {new Date(session.created_at).toLocaleDateString("en-GB")}
                         </p>
+                        {tx?.invoice_html && <p className="text-xs text-primary mt-0.5">Click to view invoice</p>}
                       </div>
                       <div className="text-right">
                         <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor[session.status] || "text-muted-foreground bg-muted border-border"}`}>
@@ -1063,6 +1063,33 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
               </div>
             </div>
           )}
+        </div>
+      )}
+      {/* View Invoice Modal */}
+      {viewInvoiceJob && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setViewInvoiceJob(null)}>
+          <div className="bg-background border border-border rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Invoice — {viewInvoiceJob.session.job_type}</h2>
+              <button onClick={() => setViewInvoiceJob(null)} className="text-muted-foreground hover:text-foreground p-1">✕</button>
+            </div>
+            <div className="text-sm mb-4 pb-4 border-b border-border">
+              <p className="text-muted-foreground">Status: <span className="text-foreground font-medium">{viewInvoiceJob.session.status}</span></p>
+              <p className="text-muted-foreground">Amount: <span className="text-foreground font-medium">£{Number(viewInvoiceJob.tx?.amount || 0).toFixed(2)}</span></p>
+            </div>
+            <div dangerouslySetInnerHTML={{ __html: viewInvoiceJob.tx?.invoice_html || "" }} />
+            <button
+              onClick={() => {
+                const w = window.open("", "_blank");
+                w?.document.write(viewInvoiceJob.tx?.invoice_html || "");
+                w?.document.close();
+                w?.print();
+              }}
+              className="mt-4 w-full border border-border py-2.5 rounded-md text-sm hover:bg-accent transition-colors"
+            >
+              Download PDF
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -1091,7 +1118,7 @@ function ReviewsTab({ painter, supabase }: { painter: any; supabase: any }) {
     const { data } = await supabase
       .from("reviews")
       .select("id, rating, review_text, created_at")
-      .eq("painter_id", painter.user_id ?? painter.id)
+      .eq("painter_id", painter.id)
       .order("created_at", { ascending: false })
     setReviews(data || [])
     setLoading(false)

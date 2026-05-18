@@ -36,3 +36,6 @@ verify_jwt = false
 
 [functions.segment-walls]
 verify_jwt = false
+
+[functions.admin-action]
+verify_jwt = false

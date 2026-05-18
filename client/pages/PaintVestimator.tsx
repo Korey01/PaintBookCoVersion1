@@ -125,22 +125,66 @@ function calcCans(litres: number): { qty: number; size: number }[] {
   return result;
 }
 
-// ── Canvas helper ─────────────────────────────────────────────────────────────
+// ── Canvas helpers ────────────────────────────────────────────────────────────
 
-function applyColourOverlay(
+function hexToRgb(hex: string): [number, number, number] {
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
+}
+
+/** Full-image colour overlay — used as fallback when no mask is available */
+function applyFullOverlay(
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
   hex: string,
   opacity: number
 ) {
   const ctx = canvas.getContext("2d")!;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  ctx.drawImage(img, 0, 0);
+  const [r, g, b] = hexToRgb(hex);
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity * 0.65})`;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+/** Mask-guided colour blend — applies colour only to bright (wall) pixels */
+function applyMaskedOverlay(
+  canvas: HTMLCanvasElement,
+  maskCanvas: HTMLCanvasElement,
+  img: HTMLImageElement,
+  maskImg: HTMLImageElement,
+  hex: string,
+  opacity: number
+) {
+  const ctx = canvas.getContext("2d")!;
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  ctx.drawImage(img, 0, 0);
+
+  maskCanvas.width = canvas.width;
+  maskCanvas.height = canvas.height;
+  const maskCtx = maskCanvas.getContext("2d")!;
+  maskCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+
+  const [r, g, b] = hexToRgb(hex);
+  const maskData = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < maskData.data.length; i += 4) {
+    const brightness = (maskData.data[i] + maskData.data[i + 1] + maskData.data[i + 2]) / 3;
+    if (brightness > 128) {
+      // Wall pixel — blend paint colour
+      imgData.data[i] = Math.round(imgData.data[i] * (1 - opacity) + r * opacity);
+      imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);
+      imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - opacity) + b * opacity);
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -176,13 +220,21 @@ export default function PaintVestimator() {
   const [search, setSearch] = useState("");
   const [detailProduct, setDetailProduct] = useState<PaintProduct | null>(null);
 
-  // Visualiser state
-  const [uploadedImage, setUploadedImage] = useState<HTMLImageElement | null>(null);
-  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
-  const [visualColour, setVisualColour] = useState<PaintProduct | null>(null);
-  const [opacity, setOpacity] = useState(0.45);
+  // Visualiser state — AI-powered wall segmentation
+  const [visUploadedDataUrl, setVisUploadedDataUrl] = useState<string | null>(null);
+  const [visImageType, setVisImageType] = useState("image/jpeg");
+  const [visOriginalImg, setVisOriginalImg] = useState<HTMLImageElement | null>(null);
+  const [visMaskUrl, setVisMaskUrl] = useState<string | null>(null);
+  const [visMaskImg, setVisMaskImg] = useState<HTMLImageElement | null>(null);
+  const [visIsSegmenting, setVisIsSegmenting] = useState(false);
+  const [visSegmentError, setVisSegmentError] = useState("");
+  const [visColourHex, setVisColourHex] = useState("#FFFFFF");
+  const [visColourName, setVisColourName] = useState("Select a colour");
+  const [visOpacity, setVisOpacity] = useState(0.6);
+  const [visBrandFilter, setVisBrandFilter] = useState("All");
+  const [visSearch, setVisSearch] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const maskCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Quote state
   const [quote, setQuote] = useState<QuoteItem[]>(() => {
@@ -240,14 +292,20 @@ export default function PaintVestimator() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(quote));
   }, [quote]);
 
-  // ── Visualiser canvas redraw ────────────────────────────────────────────────
+  // ── Visualiser canvas redraw ─────────────────────────────────────────────────
+  // Re-runs whenever the colour, opacity, original image, or mask changes
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const img = imgRef.current;
-    if (!canvas || !img || !visualColour) return;
-    applyColourOverlay(canvas, img, visualColour.hex, opacity);
-  }, [visualColour, opacity]);
+    const maskCanvas = maskCanvasRef.current;
+    if (!canvas || !visOriginalImg || visColourHex === "#FFFFFF") return;
+
+    if (visMaskImg && maskCanvas) {
+      applyMaskedOverlay(canvas, maskCanvas, visOriginalImg, visMaskImg, visColourHex, visOpacity);
+    } else {
+      applyFullOverlay(canvas, visOriginalImg, visColourHex, visOpacity);
+    }
+  }, [visOriginalImg, visColourHex, visOpacity, visMaskImg]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -264,37 +322,94 @@ export default function PaintVestimator() {
     setCalcResult(null);
   }
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image must be under 5MB");
+      setVisSegmentError("Image must be under 5MB");
       return;
     }
+
+    setVisSegmentError("");
+    setVisMaskUrl(null);
+    setVisMaskImg(null);
+    setVisImageType(file.type);
+
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const dataUrl = ev.target?.result as string;
-      setImageDataUrl(dataUrl);
+      const base64 = dataUrl.split(",")[1];
+      setVisUploadedDataUrl(dataUrl);
+
+      // Load image element so canvas can draw it
       const img = new Image();
-      img.onload = () => {
-        imgRef.current = img;
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0);
-      };
+      img.onload = () => setVisOriginalImg(img);
       img.src = dataUrl;
+
+      // Trigger AI wall segmentation
+      await segmentWalls(base64, file.type);
     };
     reader.readAsDataURL(file);
   }
 
-  function handleDownload() {
+  async function segmentWalls(base64: string, imageType: string) {
+    setVisIsSegmenting(true);
+    setVisSegmentError("");
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/segment-walls`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ image_base64: base64, image_type: imageType }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.error === "segmentation_unavailable" || data.error) {
+        setVisSegmentError(
+          "Wall detection unavailable. Applying colour to the full image instead."
+        );
+        return;
+      }
+
+      const maskUrl: string | null = data.output
+        ? (Array.isArray(data.output) ? data.output[0] : data.output)
+        : null;
+
+      if (maskUrl) {
+        setVisMaskUrl(maskUrl);
+        // Pre-load mask image so canvas effect can fire
+        const maskImg = new Image();
+        maskImg.crossOrigin = "anonymous";
+        maskImg.onload = () => setVisMaskImg(maskImg);
+        maskImg.onerror = () =>
+          setVisSegmentError("Mask loaded but could not render. Using full overlay.");
+        maskImg.src = maskUrl;
+      } else {
+        setVisSegmentError(
+          "Wall detection returned no mask. Applying colour to the full image."
+        );
+      }
+    } catch {
+      setVisSegmentError(
+        "Wall detection unavailable. Applying colour to the full image instead."
+      );
+    } finally {
+      setVisIsSegmenting(false);
+    }
+  }
+
+  function handleVisDownload() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "paint-preview.png";
+    link.download = "room-preview.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
   }
@@ -794,7 +909,8 @@ export default function PaintVestimator() {
                     <button
                       onClick={() => {
                         setSelectedColour(detailProduct);
-                        setVisualColour(detailProduct);
+                        setVisColourHex(detailProduct.hex);
+                        setVisColourName(`${detailProduct.brand} — ${detailProduct.name}`);
                         setTab("calculator");
                       }}
                       className="mt-3 w-full py-2 border border-border rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
@@ -817,21 +933,27 @@ export default function PaintVestimator() {
         {/* ── VISUALISER TAB ───────────────────────────────────────────────── */}
         {tab === "visualiser" && (
           <div>
-            <h2 className="text-xl font-bold text-foreground mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-2">
               Wall Colour Visualiser
             </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Upload a room photo — AI detects your walls and previews any colour on them.
+            </p>
 
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* Left: canvas */}
+              {/* Left: canvas area */}
               <div className="flex-1 min-w-0">
-                {!imageDataUrl ? (
+                {/* Hidden mask canvas used for pixel-level blending */}
+                <canvas ref={maskCanvasRef} className="hidden" />
+
+                {!visUploadedDataUrl ? (
                   <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-12 cursor-pointer hover:border-primary transition-colors">
                     <span className="text-4xl mb-3">📷</span>
                     <p className="text-foreground font-medium mb-1">
                       Upload a room photo
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      JPG or PNG, max 5MB
+                      JPG or PNG, max 5 MB
                     </p>
                     <input
                       type="file"
@@ -842,47 +964,68 @@ export default function PaintVestimator() {
                   </label>
                 ) : (
                   <div className="space-y-4">
-                    <div className="relative rounded-xl overflow-hidden border border-border">
+                    {/* Canvas with loading overlay */}
+                    <div className="relative rounded-xl overflow-hidden border border-border bg-muted">
                       <canvas
                         ref={canvasRef}
                         className="w-full block"
                         style={{ maxHeight: "500px", objectFit: "contain" }}
                       />
+                      {visIsSegmenting && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-xl">
+                          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+                          <p className="text-white text-sm font-medium">
+                            AI is detecting walls…
+                          </p>
+                          <p className="text-white/60 text-xs mt-1">
+                            This takes 10–20 seconds
+                          </p>
+                        </div>
+                      )}
                     </div>
 
-                    {visualColour && (
-                      <div className="flex items-center gap-3 text-sm text-foreground">
-                        <div
-                          className="w-6 h-6 rounded-full border border-border"
-                          style={{ backgroundColor: visualColour.hex }}
-                        />
-                        <span>
-                          {visualColour.brand} — {visualColour.name}
-                        </span>
-                      </div>
+                    {/* Segmentation status messages */}
+                    {visSegmentError && (
+                      <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
+                        {visSegmentError}
+                      </p>
                     )}
+                    {visMaskUrl && !visSegmentError && (
+                      <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+                        ✓ Walls detected — colour is applied to wall pixels only.
+                      </p>
+                    )}
+
+                    {/* Selected colour badge */}
+                    <div className="flex items-center gap-3 text-sm text-foreground">
+                      <div
+                        className="w-6 h-6 rounded-full border border-border flex-shrink-0"
+                        style={{ backgroundColor: visColourHex === "#FFFFFF" ? "#e5e7eb" : visColourHex }}
+                      />
+                      <span className="text-muted-foreground">{visColourName}</span>
+                    </div>
 
                     {/* Opacity slider */}
                     <div>
                       <label className="text-sm text-muted-foreground mb-2 block">
-                        Colour intensity: {Math.round(opacity * 100)}%
+                        Colour intensity: {Math.round(visOpacity * 100)}%
                       </label>
                       <input
                         type="range"
-                        min={0.2}
-                        max={0.7}
+                        min={0.1}
+                        max={0.85}
                         step={0.05}
-                        value={opacity}
-                        onChange={(e) => setOpacity(parseFloat(e.target.value))}
+                        value={visOpacity}
+                        onChange={(e) => setVisOpacity(parseFloat(e.target.value))}
                         className="w-full"
                       />
                     </div>
 
                     <div className="flex gap-3">
                       <button
-                        onClick={handleDownload}
-                        disabled={!visualColour}
-                        className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        onClick={handleVisDownload}
+                        disabled={visColourHex === "#FFFFFF"}
+                        className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
                       >
                         Download Preview
                       </button>
@@ -900,40 +1043,65 @@ export default function PaintVestimator() {
                 )}
               </div>
 
-              {/* Right: colour selector (compact) */}
+              {/* Right: compact colour picker */}
               <div className="w-full lg:w-72 flex-shrink-0">
                 <p className="text-sm font-medium text-foreground mb-3">
                   Select a colour to preview
                 </p>
+
+                {/* Brand filter pills */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {["All", ...BRANDS].map((b) => (
+                    <button
+                      key={b}
+                      onClick={() => setVisBrandFilter(b)}
+                      className={[
+                        "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                        visBrandFilter === b
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border text-muted-foreground hover:border-primary/50",
+                      ].join(" ")}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Search */}
                 <input
                   type="text"
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search colours…"
+                  value={visSearch}
+                  onChange={(e) => setVisSearch(e.target.value)}
                   className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-3"
                 />
-                <div className="grid grid-cols-4 gap-2 max-h-[500px] overflow-y-auto pr-1">
-                  {filteredProducts.map((p) => (
-                    <button
-                      key={p.id}
-                      title={`${p.brand} — ${p.name}`}
-                      onClick={() => {
-                        setVisualColour(p);
-                        const canvas = canvasRef.current;
-                        const img = imgRef.current;
-                        if (canvas && img) {
-                          applyColourOverlay(canvas, img, p.hex, opacity);
-                        }
-                      }}
-                      className={[
-                        "w-12 h-12 rounded-full border-2 transition-all mx-auto block",
-                        visualColour?.id === p.id
-                          ? "border-primary scale-110 shadow-md"
-                          : "border-border hover:border-primary/50",
-                      ].join(" ")}
-                      style={{ backgroundColor: p.hex }}
-                    />
-                  ))}
+
+                {/* Swatch grid */}
+                <div className="grid grid-cols-5 gap-2 max-h-[420px] overflow-y-auto pr-1">
+                  {products
+                    .filter((p) =>
+                      (visBrandFilter === "All" || p.brand === visBrandFilter) &&
+                      (visSearch === "" ||
+                        p.name.toLowerCase().includes(visSearch.toLowerCase()) ||
+                        p.brand.toLowerCase().includes(visSearch.toLowerCase()))
+                    )
+                    .map((p) => (
+                      <button
+                        key={p.id}
+                        title={`${p.brand} — ${p.name}`}
+                        onClick={() => {
+                          setVisColourHex(p.hex);
+                          setVisColourName(`${p.brand} — ${p.name}`);
+                        }}
+                        className={[
+                          "w-10 h-10 rounded-full border-2 transition-all mx-auto block",
+                          visColourHex === p.hex
+                            ? "border-primary scale-110 shadow-md"
+                            : "border-border hover:border-primary/50",
+                        ].join(" ")}
+                        style={{ backgroundColor: p.hex }}
+                      />
+                    ))}
                 </div>
               </div>
             </div>

@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.pass-on-job]
 verify_jwt = false
+
+[functions.segment-walls]
+verify_jwt = false

@@ -176,7 +176,7 @@ function applyMaskedOverlay(
 
   for (let i = 0; i < maskData.data.length; i += 4) {
     const brightness = (maskData.data[i] + maskData.data[i + 1] + maskData.data[i + 2]) / 3;
-    if (brightness > 128) {
+    if (brightness > 200) {
       // Wall pixel — blend paint colour
       imgData.data[i] = Math.round(imgData.data[i] * (1 - opacity) + r * opacity);
       imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);

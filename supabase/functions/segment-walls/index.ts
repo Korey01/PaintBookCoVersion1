@@ -48,48 +48,13 @@ Deno.serve(async (req) => {
 
     const imageDataUrl = `data:${image_type || "image/jpeg"};base64,${image_base64}`;
 
-    // ── Primary: SAM 2 ────────────────────────────────────────────────────────
-    const sam2Result = await callReplicate(replicateKey, {
-      version: SAM2_VERSION,
-      input: {
-        image: imageDataUrl,
-        task_type: "semantic_segmentation",
-      },
-    });
-
-    if (sam2Result && !sam2Result.error && sam2Result.output) {
-      // Proxy mask image to avoid CORS issues
-      try {
-        const maskUrl = Array.isArray(sam2Result.output) ? sam2Result.output[0] : sam2Result.output;
-        const maskRes = await fetch(maskUrl);
-        const maskBuffer = await maskRes.arrayBuffer();
-        const uint8 = new Uint8Array(maskBuffer);
-        let binary = "";
-        const chunkSize = 8192;
-        for (let i = 0; i < uint8.length; i += chunkSize) {
-          binary += String.fromCharCode(...uint8.slice(i, i + chunkSize));
-        }
-        const maskBase64 = btoa(binary);
-        const contentType = maskRes.headers.get("content-type") || "image/png";
-        const maskDataUrl = `data:${contentType};base64,${maskBase64}`;
-        return new Response(JSON.stringify({ output: maskDataUrl }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } catch {
-        return new Response(JSON.stringify(sam2Result), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // ── Fallback: CLIPSeg with "wall" prompt ─────────────────────────────────
-    console.log("SAM2 failed, trying CLIPSeg fallback:", sam2Result?.error);
-
+    // ── CLIPSeg with combined wall prompts ────────────────────────────────────
+    // CLIPSeg is the correct model for text-guided wall segmentation
     const clipsegResult = await callReplicate(replicateKey, {
       version: CLIPSEG_VERSION,
       input: {
         image: imageDataUrl,
-        prompt: "wall",
+        prompts: "wall, painted wall, interior wall",
       },
     });
 

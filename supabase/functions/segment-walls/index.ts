@@ -58,9 +58,28 @@ Deno.serve(async (req) => {
     });
 
     if (sam2Result && !sam2Result.error && sam2Result.output) {
-      return new Response(JSON.stringify(sam2Result), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Proxy mask image to avoid CORS issues
+      try {
+        const maskUrl = Array.isArray(sam2Result.output) ? sam2Result.output[0] : sam2Result.output;
+        const maskRes = await fetch(maskUrl);
+        const maskBuffer = await maskRes.arrayBuffer();
+        const uint8 = new Uint8Array(maskBuffer);
+        let binary = "";
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8.length; i += chunkSize) {
+          binary += String.fromCharCode(...uint8.slice(i, i + chunkSize));
+        }
+        const maskBase64 = btoa(binary);
+        const contentType = maskRes.headers.get("content-type") || "image/png";
+        const maskDataUrl = `data:${contentType};base64,${maskBase64}`;
+        return new Response(JSON.stringify({ output: maskDataUrl }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch {
+        return new Response(JSON.stringify(sam2Result), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // ── Fallback: CLIPSeg with "wall" prompt ─────────────────────────────────
@@ -75,9 +94,27 @@ Deno.serve(async (req) => {
     });
 
     if (clipsegResult && clipsegResult.output) {
-      return new Response(JSON.stringify(clipsegResult), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      try {
+        const maskUrl = Array.isArray(clipsegResult.output) ? clipsegResult.output[0] : clipsegResult.output;
+        const maskRes = await fetch(maskUrl);
+        const maskBuffer = await maskRes.arrayBuffer();
+        const uint8 = new Uint8Array(maskBuffer);
+        let binary = "";
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8.length; i += chunkSize) {
+          binary += String.fromCharCode(...uint8.slice(i, i + chunkSize));
+        }
+        const maskBase64 = btoa(binary);
+        const contentType = maskRes.headers.get("content-type") || "image/png";
+        const maskDataUrl = `data:${contentType};base64,${maskBase64}`;
+        return new Response(JSON.stringify({ output: maskDataUrl }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch {
+        return new Response(JSON.stringify(clipsegResult), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Both models failed — return a structured error so client falls back gracefully

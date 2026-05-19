@@ -387,9 +387,8 @@ export default function PaintVestimator() {
         // Pre-load mask image so canvas effect can fire
         const maskImg = new Image();
         maskImg.crossOrigin = "anonymous";
-        maskImg.onload = () => setVisMaskImg(maskImg);
-        maskImg.onerror = () =>
-          setVisSegmentError("Mask loaded but could not render. Using full overlay.");
+        maskImg.onload = () => { console.log("Mask loaded successfully, size:", maskImg.width, "x", maskImg.height); setVisMaskImg(maskImg); };
+        maskImg.onerror = (e) => { console.error("Mask image load error:", e, "URL prefix:", maskUrl?.substring(0, 100)); setVisSegmentError("Mask loaded but could not render. Using full overlay."); }
         maskImg.src = maskUrl;
       } else {
         setVisSegmentError(

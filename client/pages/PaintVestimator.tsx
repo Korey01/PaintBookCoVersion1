@@ -174,9 +174,26 @@ function applyMaskedOverlay(
   const maskData = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
+  // Load exclusion mask if available
+  const exclusionImg = (window as any).__paintbookExclusionMask as HTMLImageElement | undefined;
+  let exclusionData: ImageData | null = null;
+  if (exclusionImg && exclusionImg.complete && exclusionImg.naturalWidth > 0) {
+    const excCanvas = document.createElement("canvas");
+    excCanvas.width = canvas.width;
+    excCanvas.height = canvas.height;
+    const excCtx = excCanvas.getContext("2d")!;
+    excCtx.drawImage(exclusionImg, 0, 0, canvas.width, canvas.height);
+    exclusionData = excCtx.getImageData(0, 0, canvas.width, canvas.height);
+  }
+
   for (let i = 0; i < maskData.data.length; i += 4) {
     const brightness = (maskData.data[i] + maskData.data[i + 1] + maskData.data[i + 2]) / 3;
     if (brightness > 150) {
+      // Check if this pixel is in the exclusion zone (detected as non-wall object)
+      if (exclusionData) {
+        const excBrightness = (exclusionData.data[i] + exclusionData.data[i+1] + exclusionData.data[i+2]) / 3;
+        if (excBrightness > 100) continue; // Skip — this is a window/door/furniture etc
+      }
       // Wall pixel — blend paint colour
       imgData.data[i] = Math.round(imgData.data[i] * (1 - opacity) + r * opacity);
       imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);
@@ -379,18 +396,29 @@ export default function PaintVestimator() {
         return;
       }
 
-      const maskUrl: string | null = data.output
-        ? (Array.isArray(data.output) ? data.output[0] : data.output)
-        : null;
+      const maskUrl: string | null = data.output || null;
+      const exclusionUrl: string | null = data.exclusion_mask || null;
 
       if (maskUrl) {
         setVisMaskUrl(maskUrl);
-        // Pre-load mask image so canvas effect can fire
         const maskImg = new Image();
-        maskImg.crossOrigin = "anonymous";
-        maskImg.onload = () => { console.log("Mask loaded successfully, size:", maskImg.width, "x", maskImg.height); setVisMaskImg(maskImg); };
-        maskImg.onerror = (e) => { console.error("Mask image load error:", e, "URL prefix:", maskUrl?.substring(0, 100)); setVisSegmentError("Mask loaded but could not render. Using full overlay."); }
+        maskImg.onload = () => {
+          console.log("Wall mask loaded:", maskImg.width, "x", maskImg.height);
+          setVisMaskImg(maskImg);
+          setVisSegmentError("✓ Walls detected — colour applied to walls only");
+        };
+        maskImg.onerror = () => setVisSegmentError("Mask loaded but could not render. Using full overlay.");
         maskImg.src = maskUrl;
+
+        // Load exclusion mask if available
+        if (exclusionUrl) {
+          const excImg = new Image();
+          excImg.onload = () => {
+            console.log("Exclusion mask loaded");
+            (window as any).__paintbookExclusionMask = excImg;
+          };
+          excImg.src = exclusionUrl;
+        }
       } else {
         setVisSegmentError(
           "Wall detection returned no mask. Applying colour to the full image."

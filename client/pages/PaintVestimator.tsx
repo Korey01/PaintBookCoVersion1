@@ -396,8 +396,27 @@ export default function PaintVestimator() {
         return;
       }
 
-      const maskUrl: string | null = data.output || null;
-      const exclusionUrl: string | null = data.exclusion_mask || null;
+      // Handle both HuggingFace format (wall_masks array) and Replicate format (output string)
+      let maskUrl: string | null = null;
+      let exclusionUrl: string | null = null;
+
+      if (data.wall_masks && data.wall_masks.length > 0) {
+        // HuggingFace SegFormer format — masks are base64 PNG strings
+        maskUrl = data.wall_masks[0].startsWith("data:") 
+          ? data.wall_masks[0] 
+          : `data:image/png;base64,${data.wall_masks[0]}`;
+        
+        // Combine excluded masks into one
+        if (data.excluded_masks && data.excluded_masks.length > 0) {
+          exclusionUrl = data.excluded_masks[0].startsWith("data:")
+            ? data.excluded_masks[0]
+            : `data:image/png;base64,${data.excluded_masks[0]}`;
+        }
+      } else if (data.output) {
+        // Replicate SAM2 format
+        maskUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+        exclusionUrl = data.exclusion_mask || null;
+      }
 
       if (maskUrl) {
         setVisMaskUrl(maskUrl);
@@ -410,7 +429,6 @@ export default function PaintVestimator() {
         maskImg.onerror = () => setVisSegmentError("Mask loaded but could not render. Using full overlay.");
         maskImg.src = maskUrl;
 
-        // Load exclusion mask if available
         if (exclusionUrl) {
           const excImg = new Image();
           excImg.onload = () => {

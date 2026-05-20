@@ -147,7 +147,7 @@ function applyFullOverlay(
   canvas.height = img.naturalHeight;
   ctx.drawImage(img, 0, 0);
   const [r, g, b] = hexToRgb(hex);
-  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity * 0.65})`;
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -176,7 +176,7 @@ function applyMaskedOverlay(
 
   for (let i = 0; i < maskData.data.length; i += 4) {
     const brightness = (maskData.data[i] + maskData.data[i + 1] + maskData.data[i + 2]) / 3;
-    if (brightness > 100) {
+    if (brightness > 150) {
       // Wall pixel — blend paint colour
       imgData.data[i] = Math.round(imgData.data[i] * (1 - opacity) + r * opacity);
       imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);
@@ -230,7 +230,7 @@ export default function PaintVestimator() {
   const [visSegmentError, setVisSegmentError] = useState("");
   const [visColourHex, setVisColourHex] = useState("#FFFFFF");
   const [visColourName, setVisColourName] = useState("Select a colour");
-  const [visOpacity, setVisOpacity] = useState(0.6);
+  const [visOpacity, setVisOpacity] = useState(0.8);
   const [visBrandFilter, setVisBrandFilter] = useState("All");
   const [visSearch, setVisSearch] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -1021,10 +1021,10 @@ export default function PaintVestimator() {
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-xl">
                           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3" />
                           <p className="text-white text-sm font-medium">
-                            AI is detecting walls…
+                            Analysing room with AI
                           </p>
                           <p className="text-white/60 text-xs mt-1">
-                            This takes 10–20 seconds
+                            This may take 15–30 seconds on first use
                           </p>
                         </div>
                       )}

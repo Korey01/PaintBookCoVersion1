@@ -10,7 +10,9 @@ import {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "calculator" | "colours" | "visualiser" | "quote";
+type Tab = "calculator" | "colours" | "visualiser" | "wallpaper" | "quote";
+
+type VisTool = "ai" | "brush" | "eraser" | "lasso" | "polygon";
 
 type RoomShape = "rectangular" | "l-shaped" | "other";
 
@@ -46,6 +48,23 @@ interface QuoteItem {
   timestamp: number;
 }
 
+interface Wallpaper {
+  id: string;
+  name: string;
+  brand: string;
+  style: "Geometric" | "Floral" | "Stripe" | "Plain" | "Textured" | "Feature" | "Abstract" | "Nature";
+  colourFamily: string;
+  description: string;
+  pricePerRoll: number;
+  coverageSqmPerRoll: number;
+  patternRepeat?: number;
+  imageUrl: string;
+  amazonUrl: string;
+  bqUrl?: string;
+  awinUrl?: string;
+  isAffiliate: boolean;
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const ROOM_TYPES = [
@@ -69,6 +88,284 @@ const SURFACE_TYPES = [
 const PAINT_TYPES = Object.keys(COVERAGE_RATES);
 
 const STORAGE_KEY = "paintbookco_quote";
+
+// ── Wallpaper data ────────────────────────────────────────────────────────────
+
+const WALLPAPERS: Wallpaper[] = [
+  {
+    id: "gb-superfresco-paste-white",
+    name: "Superfresco Easy White Trellis",
+    brand: "Graham & Brown",
+    style: "Geometric",
+    colourFamily: "White",
+    description: "Classic trellis pattern on easy-paste backing. Ideal for living rooms and bedrooms.",
+    pricePerRoll: 18,
+    coverageSqmPerRoll: 5.5,
+    patternRepeat: 26,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=graham+brown+superfresco+trellis+white+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=graham+brown+superfresco+trellis",
+    isAffiliate: true,
+  },
+  {
+    id: "gb-superfresco-sage",
+    name: "Superfresco Easy Sage Floral",
+    brand: "Graham & Brown",
+    style: "Floral",
+    colourFamily: "Green",
+    description: "Delicate floral pattern in calming sage tones. Easy to hang and remove.",
+    pricePerRoll: 22,
+    coverageSqmPerRoll: 5.5,
+    patternRepeat: 53,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=graham+brown+superfresco+sage+floral+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=graham+brown+superfresco+sage+floral",
+    isAffiliate: true,
+  },
+  {
+    id: "gb-paste-navy-stripe",
+    name: "Navy Stripe Wallpaper",
+    brand: "Graham & Brown",
+    style: "Stripe",
+    colourFamily: "Blue",
+    description: "Bold navy and white stripe. Makes a great feature wall in any room.",
+    pricePerRoll: 20,
+    coverageSqmPerRoll: 5.5,
+    patternRepeat: 12,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=graham+brown+navy+stripe+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=graham+brown+navy+stripe",
+    isAffiliate: true,
+  },
+  {
+    id: "arthouse-marble-grey",
+    name: "Marble Effect Grey Wallpaper",
+    brand: "Arthouse",
+    style: "Textured",
+    colourFamily: "Grey",
+    description: "Luxurious marble effect in cool grey tones. Perfect for feature walls.",
+    pricePerRoll: 16,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=arthouse+marble+grey+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=arthouse+marble+grey+wallpaper",
+    isAffiliate: true,
+  },
+  {
+    id: "arthouse-tropical-green",
+    name: "Tropical Leaf Green Wallpaper",
+    brand: "Arthouse",
+    style: "Nature",
+    colourFamily: "Green",
+    description: "Bold tropical leaf pattern. Statement feature wall for living rooms.",
+    pricePerRoll: 18,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=arthouse+tropical+leaf+green+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=arthouse+tropical+leaf",
+    isAffiliate: true,
+  },
+  {
+    id: "arthouse-geometric-gold",
+    name: "Geometric Gold Wallpaper",
+    brand: "Arthouse",
+    style: "Geometric",
+    colourFamily: "Yellow",
+    description: "Modern geometric pattern with gold metallic accents.",
+    pricePerRoll: 20,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=arthouse+geometric+gold+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=arthouse+geometric+gold",
+    isAffiliate: true,
+  },
+  {
+    id: "holden-botanical-pink",
+    name: "Botanical Pink Wallpaper",
+    brand: "Holden Decor",
+    style: "Floral",
+    colourFamily: "Pink",
+    description: "Elegant botanical print in soft pink. Ideal for bedrooms.",
+    pricePerRoll: 14,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=holden+decor+botanical+pink+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=holden+botanical+pink",
+    isAffiliate: true,
+  },
+  {
+    id: "holden-concrete-grey",
+    name: "Concrete Effect Grey Wallpaper",
+    brand: "Holden Decor",
+    style: "Textured",
+    colourFamily: "Grey",
+    description: "Industrial concrete effect. Modern and versatile.",
+    pricePerRoll: 14,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=holden+concrete+grey+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=holden+concrete+grey",
+    isAffiliate: true,
+  },
+  {
+    id: "bq-fine-decor-white-brick",
+    name: "White Brick Effect Wallpaper",
+    brand: "Fine Décor",
+    style: "Textured",
+    colourFamily: "White",
+    description: "Realistic brick effect in white. Great for kitchen and living areas.",
+    pricePerRoll: 12,
+    coverageSqmPerRoll: 5.5,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=fine+decor+white+brick+effect+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=fine+decor+white+brick+wallpaper",
+    isAffiliate: true,
+  },
+  {
+    id: "bq-fine-decor-geo-teal",
+    name: "Geometric Teal Wallpaper",
+    brand: "Fine Décor",
+    style: "Geometric",
+    colourFamily: "Blue",
+    description: "Contemporary geometric pattern in teal. Statement feature wall.",
+    pricePerRoll: 14,
+    coverageSqmPerRoll: 5.5,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=fine+decor+geometric+teal+wallpaper&tag=paintbookco-21",
+    bqUrl: "https://www.diy.com/search?term=fine+decor+geometric+teal",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-floral-mural-blue",
+    name: "Blue Floral Mural Wallpaper",
+    brand: "Various",
+    style: "Feature",
+    colourFamily: "Blue",
+    description: "Full wall floral mural in blue tones. Creates a dramatic focal point.",
+    pricePerRoll: 28,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=blue+floral+mural+wallpaper+feature+wall&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-abstract-terracotta",
+    name: "Abstract Terracotta Wallpaper",
+    brand: "Various",
+    style: "Abstract",
+    colourFamily: "Orange",
+    description: "Warm terracotta abstract pattern. On-trend earth tones.",
+    pricePerRoll: 22,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=abstract+terracotta+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-grasscloth-natural",
+    name: "Natural Grasscloth Effect Wallpaper",
+    brand: "Various",
+    style: "Textured",
+    colourFamily: "Beige",
+    description: "Textured grasscloth effect in natural tones. Adds warmth and texture.",
+    pricePerRoll: 24,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=grasscloth+effect+natural+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-dark-floral-green",
+    name: "Dark Floral Green Wallpaper",
+    brand: "Various",
+    style: "Floral",
+    colourFamily: "Green",
+    description: "Moody dark botanical print. Striking bedroom feature wall.",
+    pricePerRoll: 26,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=dark+floral+green+botanical+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-herringbone-grey",
+    name: "Grey Herringbone Wallpaper",
+    brand: "Various",
+    style: "Geometric",
+    colourFamily: "Grey",
+    description: "Classic herringbone pattern in mid grey. Timeless and versatile.",
+    pricePerRoll: 18,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=grey+herringbone+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-blush-stripe",
+    name: "Blush Pink Stripe Wallpaper",
+    brand: "Various",
+    style: "Stripe",
+    colourFamily: "Pink",
+    description: "Soft blush and cream stripe. Elegant and versatile.",
+    pricePerRoll: 16,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=blush+pink+stripe+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-navy-floral",
+    name: "Navy Floral Wallpaper",
+    brand: "Various",
+    style: "Floral",
+    colourFamily: "Blue",
+    description: "Classic navy floral print. Perfect for traditional and modern rooms.",
+    pricePerRoll: 20,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=navy+floral+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-white-woodchip",
+    name: "White Woodchip Wallpaper",
+    brand: "Various",
+    style: "Textured",
+    colourFamily: "White",
+    description: "Classic white woodchip. Easy to paint over in any colour.",
+    pricePerRoll: 8,
+    coverageSqmPerRoll: 6.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=white+woodchip+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-mustard-geometric",
+    name: "Mustard Yellow Geometric Wallpaper",
+    brand: "Various",
+    style: "Geometric",
+    colourFamily: "Yellow",
+    description: "Bold mustard geometric. Makes a vibrant feature wall.",
+    pricePerRoll: 18,
+    coverageSqmPerRoll: 5.0,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=mustard+yellow+geometric+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+  {
+    id: "amazon-silver-plain",
+    name: "Plain Silver Wallpaper",
+    brand: "Various",
+    style: "Plain",
+    colourFamily: "Grey",
+    description: "Subtle silver sheen plain wallpaper. Elegant and understated.",
+    pricePerRoll: 14,
+    coverageSqmPerRoll: 5.5,
+    imageUrl: "",
+    amazonUrl: "https://www.amazon.co.uk/s?k=plain+silver+wallpaper&tag=paintbookco-21",
+    isAffiliate: true,
+  },
+];
 
 // ── Calculation helpers ───────────────────────────────────────────────────────
 
@@ -191,8 +488,8 @@ function applyMaskedOverlay(
     if (brightness > 150) {
       // Check if this pixel is in the exclusion zone (detected as non-wall object)
       if (exclusionData) {
-        const excBrightness = (exclusionData.data[i] + exclusionData.data[i+1] + exclusionData.data[i+2]) / 3;
-        if (excBrightness > 100) continue; // Skip — this is a window/door/furniture etc
+        const excBrightness = (exclusionData.data[i] + exclusionData.data[i + 1] + exclusionData.data[i + 2]) / 3;
+        if (excBrightness > 100) continue; // Skip — window/door/furniture etc
       }
       // Wall pixel — blend paint colour
       imgData.data[i] = Math.round(imgData.data[i] * (1 - opacity) + r * opacity);
@@ -250,8 +547,22 @@ export default function PaintVestimator() {
   const [visOpacity, setVisOpacity] = useState(0.8);
   const [visBrandFilter, setVisBrandFilter] = useState("All");
   const [visSearch, setVisSearch] = useState("");
+
+  // Visualiser masking tools
+  const [visTool, setVisTool] = useState<VisTool>("ai");
+  const [brushSize, setBrushSize] = useState(20);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [lassoPoints, setLassoPoints] = useState<{ x: number; y: number }[]>([]);
+  const [polygonPoints, setPolygonPoints] = useState<{ x: number; y: number }[]>([]);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Wallpaper filter state
+  const [wpStyleFilter, setWpStyleFilter] = useState("all");
+  const [wpColourFilter, setWpColourFilter] = useState("all");
+  const [wpSearch, setWpSearch] = useState("");
 
   // Quote state
   const [quote, setQuote] = useState<QuoteItem[]>(() => {
@@ -309,20 +620,153 @@ export default function PaintVestimator() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(quote));
   }, [quote]);
 
-  // ── Visualiser canvas redraw ─────────────────────────────────────────────────
-  // Re-runs whenever the colour, opacity, original image, or mask changes
+  // ── Canvas drawing helpers ──────────────────────────────────────────────────
 
-  useEffect(() => {
+  function getCanvasPoint(canvas: HTMLCanvasElement, e: React.MouseEvent) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }
+
+  function redrawMainCanvas() {
     const canvas = canvasRef.current;
-    const maskCanvas = maskCanvasRef.current;
-    if (!canvas || !visOriginalImg || visColourHex === "#FFFFFF") return;
+    const overlayCanvas = overlayCanvasRef.current;
+    if (!canvas || !visOriginalImg) return;
 
-    if (visMaskImg && maskCanvas) {
-      applyMaskedOverlay(canvas, maskCanvas, visOriginalImg, visMaskImg, visColourHex, visOpacity);
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = visOriginalImg.naturalWidth;
+    canvas.height = visOriginalImg.naturalHeight;
+
+    // Sync overlay canvas size
+    if (overlayCanvas) {
+      overlayCanvas.width = canvas.width;
+      overlayCanvas.height = canvas.height;
+    }
+
+    ctx.drawImage(visOriginalImg, 0, 0);
+
+    if (!visColourHex || visColourHex === "#FFFFFF") return;
+
+    const r = parseInt(visColourHex.slice(1, 3), 16);
+    const g = parseInt(visColourHex.slice(3, 5), 16);
+    const b = parseInt(visColourHex.slice(5, 7), 16);
+
+    // Get manual mask from overlay canvas
+    let manualMaskData: ImageData | null = null;
+    if (overlayCanvas && visTool !== "ai") {
+      const overlayCtx = overlayCanvas.getContext("2d")!;
+      manualMaskData = overlayCtx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    if (visTool === "ai" && visMaskImg) {
+      // Use AI mask with exclusion
+      applyMaskedOverlay(canvas, maskCanvasRef.current!, visOriginalImg, visMaskImg, visColourHex, visOpacity);
+    } else if (manualMaskData) {
+      // Use manual mask
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < manualMaskData.data.length; i += 4) {
+        const brightness =
+          (manualMaskData.data[i] + manualMaskData.data[i + 1] + manualMaskData.data[i + 2]) / 3;
+        if (brightness > 50) {
+          imgData.data[i] = Math.round(imgData.data[i] * (1 - visOpacity) + r * visOpacity);
+          imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - visOpacity) + g * visOpacity);
+          imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - visOpacity) + b * visOpacity);
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
     } else {
+      // Full overlay fallback
       applyFullOverlay(canvas, visOriginalImg, visColourHex, visOpacity);
     }
-  }, [visOriginalImg, visColourHex, visOpacity, visMaskImg]);
+  }
+
+  function handleOverlayMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
+    if (visTool !== "brush" && visTool !== "eraser") return;
+    setIsDrawing(true);
+    const canvas = overlayCanvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    const pt = getCanvasPoint(canvas, e);
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = visTool === "eraser" ? "black" : "white";
+    ctx.fill();
+    redrawMainCanvas();
+  }
+
+  function handleOverlayMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
+    if (!isDrawing || (visTool !== "brush" && visTool !== "eraser")) return;
+    const canvas = overlayCanvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    const pt = getCanvasPoint(canvas, e);
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = visTool === "eraser" ? "black" : "white";
+    ctx.fill();
+    redrawMainCanvas();
+  }
+
+  function handleOverlayMouseUp() {
+    setIsDrawing(false);
+  }
+
+  function handlePolygonClick(e: React.MouseEvent<HTMLCanvasElement>) {
+    const canvas = overlayCanvasRef.current!;
+    const pt = getCanvasPoint(canvas, e);
+    const newPoints = [...polygonPoints, pt];
+    setPolygonPoints(newPoints);
+    // Draw polygon preview
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (newPoints.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(newPoints[0].x, newPoints[0].y);
+      newPoints.slice(1).forEach((p) => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    newPoints.forEach((p) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "white";
+      ctx.fill();
+    });
+  }
+
+  function closePolygon() {
+    if (polygonPoints.length < 3) return;
+    const canvas = overlayCanvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+    polygonPoints.slice(1).forEach((p) => ctx.lineTo(p.x, p.y));
+    ctx.closePath();
+    ctx.fillStyle = "white";
+    ctx.fill();
+    setPolygonPoints([]);
+    redrawMainCanvas();
+  }
+
+  function clearManualMask() {
+    const canvas = overlayCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    redrawMainCanvas();
+  }
+
+  // ── Visualiser canvas redraw effect ─────────────────────────────────────────
+
+  useEffect(() => {
+    redrawMainCanvas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visOriginalImg, visColourHex, visOpacity, visMaskImg, visTool]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -402,10 +846,10 @@ export default function PaintVestimator() {
 
       if (data.wall_masks && data.wall_masks.length > 0) {
         // HuggingFace SegFormer format — masks are base64 PNG strings
-        maskUrl = data.wall_masks[0].startsWith("data:") 
-          ? data.wall_masks[0] 
+        maskUrl = data.wall_masks[0].startsWith("data:")
+          ? data.wall_masks[0]
           : `data:image/png;base64,${data.wall_masks[0]}`;
-        
+
         // Combine excluded masks into one
         if (data.excluded_masks && data.excluded_masks.length > 0) {
           exclusionUrl = data.excluded_masks[0].startsWith("data:")
@@ -426,7 +870,8 @@ export default function PaintVestimator() {
           setVisMaskImg(maskImg);
           setVisSegmentError("✓ Walls detected — colour applied to walls only");
         };
-        maskImg.onerror = () => setVisSegmentError("Mask loaded but could not render. Using full overlay.");
+        maskImg.onerror = () =>
+          setVisSegmentError("Mask loaded but could not render. Using full overlay.");
         maskImg.src = maskUrl;
 
         if (exclusionUrl) {
@@ -545,6 +990,7 @@ export default function PaintVestimator() {
               { id: "calculator", label: "Calculator" },
               { id: "colours", label: "Colour Browser" },
               { id: "visualiser", label: "Visualiser" },
+              { id: "wallpaper", label: "🏠 Wallpaper" },
               { id: "quote", label: `My Quote${quote.length ? ` (${quote.length})` : ""}` },
             ] as const
           ).map(({ id, label }) => (
@@ -1010,24 +1456,106 @@ export default function PaintVestimator() {
                   </label>
                 ) : (
                   <div className="space-y-4">
-                    {/* Canvas with loading overlay */}
+                    {/* Tool toolbar */}
+                    <div className="flex items-center gap-2 p-2 border border-border rounded-lg bg-background flex-wrap">
+                      {/* Tool selector */}
+                      <div className="flex gap-1">
+                        {[
+                          { id: "ai", icon: "🤖", label: "AI Auto" },
+                          { id: "brush", icon: "🖌️", label: "Brush" },
+                          { id: "eraser", icon: "⬜", label: "Eraser" },
+                          { id: "lasso", icon: "🔲", label: "Lasso" },
+                          { id: "polygon", icon: "⬡", label: "Polygon" },
+                        ].map((tool) => (
+                          <button
+                            key={tool.id}
+                            onClick={() => setVisTool(tool.id as VisTool)}
+                            title={tool.label}
+                            className={`px-2 py-1.5 rounded text-sm transition-colors ${
+                              visTool === tool.id
+                                ? "bg-foreground text-background"
+                                : "border border-border hover:bg-accent"
+                            }`}
+                          >
+                            {tool.icon} {tool.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Brush size (only show for brush/eraser) */}
+                      {(visTool === "brush" || visTool === "eraser") && (
+                        <div className="flex items-center gap-2 ml-2">
+                          <span className="text-xs text-muted-foreground">Size:</span>
+                          <input
+                            type="range"
+                            min="5"
+                            max="80"
+                            value={brushSize}
+                            onChange={(e) => setBrushSize(Number(e.target.value))}
+                            className="w-20"
+                          />
+                          <span className="text-xs">{brushSize}px</span>
+                        </div>
+                      )}
+
+                      {/* Clear manual mask */}
+                      {visTool !== "ai" && (
+                        <button
+                          onClick={clearManualMask}
+                          className="ml-auto text-xs border border-border px-2 py-1.5 rounded hover:bg-accent"
+                        >
+                          Clear mask
+                        </button>
+                      )}
+
+                      {/* Polygon close button */}
+                      {visTool === "polygon" && polygonPoints.length > 2 && (
+                        <button
+                          onClick={closePolygon}
+                          className="text-xs bg-foreground text-background px-2 py-1.5 rounded"
+                        >
+                          Close polygon
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Canvas with overlay */}
                     <div className="relative rounded-xl overflow-hidden border border-border bg-muted">
+                      {visIsSegmenting && (
+                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-20">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-3" />
+                          <p className="text-white text-sm font-medium">Analysing room with AI...</p>
+                          <p className="text-white/70 text-xs mt-1">
+                            This may take 15–30 seconds on first use
+                          </p>
+                        </div>
+                      )}
                       <canvas
                         ref={canvasRef}
                         className="w-full block"
                         style={{ maxHeight: "500px", objectFit: "contain" }}
                       />
-                      {visIsSegmenting && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-xl">
-                          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3" />
-                          <p className="text-white text-sm font-medium">
-                            Analysing room with AI
-                          </p>
-                          <p className="text-white/60 text-xs mt-1">
-                            This may take 15–30 seconds on first use
-                          </p>
-                        </div>
-                      )}
+                      {/* Overlay canvas for manual drawing */}
+                      <canvas
+                        ref={overlayCanvasRef}
+                        className="absolute inset-0 w-full h-full"
+                        style={{
+                          cursor:
+                            visTool === "eraser"
+                              ? "cell"
+                              : visTool === "ai"
+                              ? "default"
+                              : "crosshair",
+                          opacity: 0.6,
+                          pointerEvents: visTool === "ai" ? "none" : "auto",
+                        }}
+                        onMouseDown={handleOverlayMouseDown}
+                        onMouseMove={handleOverlayMouseMove}
+                        onMouseUp={handleOverlayMouseUp}
+                        onMouseLeave={handleOverlayMouseUp}
+                        onClick={visTool === "polygon" ? handlePolygonClick : undefined}
+                        onDoubleClick={visTool === "polygon" ? closePolygon : undefined}
+                      />
                     </div>
 
                     {/* Segmentation status messages */}
@@ -1046,7 +1574,10 @@ export default function PaintVestimator() {
                     <div className="flex items-center gap-3 text-sm text-foreground">
                       <div
                         className="w-6 h-6 rounded-full border border-border flex-shrink-0"
-                        style={{ backgroundColor: visColourHex === "#FFFFFF" ? "#e5e7eb" : visColourHex }}
+                        style={{
+                          backgroundColor:
+                            visColourHex === "#FFFFFF" ? "#e5e7eb" : visColourHex,
+                        }}
                       />
                       <span className="text-muted-foreground">{visColourName}</span>
                     </div>
@@ -1125,11 +1656,12 @@ export default function PaintVestimator() {
                 {/* Swatch grid */}
                 <div className="grid grid-cols-5 gap-2 max-h-[420px] overflow-y-auto pr-1">
                   {products
-                    .filter((p) =>
-                      (visBrandFilter === "All" || p.brand === visBrandFilter) &&
-                      (visSearch === "" ||
-                        p.name.toLowerCase().includes(visSearch.toLowerCase()) ||
-                        p.brand.toLowerCase().includes(visSearch.toLowerCase()))
+                    .filter(
+                      (p) =>
+                        (visBrandFilter === "All" || p.brand === visBrandFilter) &&
+                        (visSearch === "" ||
+                          p.name.toLowerCase().includes(visSearch.toLowerCase()) ||
+                          p.brand.toLowerCase().includes(visSearch.toLowerCase()))
                     )
                     .map((p) => (
                       <button
@@ -1150,6 +1682,150 @@ export default function PaintVestimator() {
                     ))}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── WALLPAPER TAB ────────────────────────────────────────────────── */}
+        {tab === "wallpaper" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-1">Wallpaper Finder</h2>
+              <p className="text-sm text-muted-foreground">
+                Browse wallpaper styles and buy directly from trusted retailers.
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                * Affiliate links — PaintBookCo may earn a small commission at no extra cost to you.
+              </p>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3">
+              <select
+                value={wpStyleFilter}
+                onChange={(e) => setWpStyleFilter(e.target.value)}
+                className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none"
+              >
+                <option value="all">All Styles</option>
+                {["Geometric", "Floral", "Stripe", "Plain", "Textured", "Feature", "Abstract", "Nature"].map(
+                  (s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  )
+                )}
+              </select>
+              <select
+                value={wpColourFilter}
+                onChange={(e) => setWpColourFilter(e.target.value)}
+                className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none"
+              >
+                <option value="all">All Colours</option>
+                {["White", "Grey", "Blue", "Green", "Pink", "Yellow", "Orange", "Beige", "Brown"].map(
+                  (c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  )
+                )}
+              </select>
+              <input
+                type="text"
+                placeholder="Search wallpapers..."
+                value={wpSearch}
+                onChange={(e) => setWpSearch(e.target.value)}
+                className="border border-border bg-background text-sm rounded-md px-3 py-2 flex-1 min-w-[180px] focus:outline-none"
+              />
+            </div>
+
+            {/* Wallpaper grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {WALLPAPERS.filter(
+                (w) => wpStyleFilter === "all" || w.style === wpStyleFilter
+              )
+                .filter(
+                  (w) => wpColourFilter === "all" || w.colourFamily === wpColourFilter
+                )
+                .filter(
+                  (w) =>
+                    !wpSearch ||
+                    w.name.toLowerCase().includes(wpSearch.toLowerCase()) ||
+                    w.brand.toLowerCase().includes(wpSearch.toLowerCase())
+                )
+                .map((wallpaper) => (
+                  <div
+                    key={wallpaper.id}
+                    className="border border-border rounded-xl overflow-hidden hover:border-foreground/30 transition-colors"
+                  >
+                    {/* Pattern preview */}
+                    <div
+                      className="h-32 flex items-center justify-center text-4xl"
+                      style={{
+                        background:
+                          wallpaper.style === "Stripe"
+                            ? "repeating-linear-gradient(90deg, #f0f0f0 0px, #f0f0f0 20px, #e0e0e0 20px, #e0e0e0 40px)"
+                            : wallpaper.style === "Geometric"
+                            ? "repeating-linear-gradient(45deg, #f0f0f0 0px, #f0f0f0 10px, #e0e0e0 10px, #e0e0e0 20px)"
+                            : wallpaper.style === "Textured"
+                            ? `url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23999' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E")`
+                            : "#f5f5f5",
+                      }}
+                    >
+                      {wallpaper.style === "Floral"
+                        ? "🌸"
+                        : wallpaper.style === "Nature"
+                        ? "🌿"
+                        : wallpaper.style === "Feature"
+                        ? "🎨"
+                        : "🏠"}
+                    </div>
+
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <p className="font-medium text-sm">{wallpaper.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {wallpaper.brand} · {wallpaper.style}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {wallpaper.description}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>~£{wallpaper.pricePerRoll}/roll</span>
+                        <span>{wallpaper.coverageSqmPerRoll}m² per roll</span>
+                        {wallpaper.patternRepeat && (
+                          <span>{wallpaper.patternRepeat}cm repeat</span>
+                        )}
+                      </div>
+
+                      {/* Buy buttons */}
+                      <div className="flex gap-2 flex-wrap">
+                        <a
+                          href={wallpaper.amazonUrl}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="flex items-center gap-1.5 bg-[#FF9900] text-black px-3 py-2 rounded text-xs font-medium hover:bg-[#FFB84D] transition-colors flex-1 justify-center"
+                        >
+                          🛒 Amazon
+                        </a>
+                        {wallpaper.bqUrl && (
+                          <a
+                            href={wallpaper.bqUrl}
+                            target="_blank"
+                            rel="noopener noreferrer sponsored"
+                            className="flex items-center gap-1.5 bg-[#006B3F] text-white px-3 py-2 rounded text-xs font-medium hover:bg-[#005530] transition-colors flex-1 justify-center"
+                          >
+                            🏪 B&Q
+                          </a>
+                        )}
+                      </div>
+
+                      {wallpaper.isAffiliate && (
+                        <p className="text-xs text-muted-foreground/60">Affiliate link</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
         )}

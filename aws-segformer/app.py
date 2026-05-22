@@ -96,7 +96,7 @@ def segment():
 
         print(f"Wall coverage: {wall_coverage:.1f}%, Image size: {original_size}")
 
-        if wall_coverage < 2.0:
+        if wall_coverage < 0.5:
             return jsonify({
                 "error": "segmentation_unavailable",
                 "detail": f"No walls detected (wall coverage: {wall_coverage:.1f}%)"

@@ -1628,7 +1628,7 @@ export default function PaintVestimator() {
 
                 {/* Brand filter pills */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  {["All", ...BRANDS].map((b) => (
+                  {BRANDS.map((b) => (
                     <button
                       key={b}
                       onClick={() => setVisBrandFilter(b)}

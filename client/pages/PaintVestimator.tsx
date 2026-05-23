@@ -705,8 +705,10 @@ export default function PaintVestimator() {
     setIsDrawing(true);
     syncOverlaySize();
     const canvas = overlayCanvasRef.current!;
+    console.log("Brush mousedown - canvas size:", canvas.width, "x", canvas.height, "visTool:", visTool);
     const ctx = canvas.getContext("2d")!;
     const pt = getCanvasPoint(canvas, e);
+    console.log("Point:", pt.x, pt.y, "brushSize:", brushSize);
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
     ctx.fillStyle = visTool === "eraser" ? "black" : "white";

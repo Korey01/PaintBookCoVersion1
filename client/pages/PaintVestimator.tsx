@@ -632,6 +632,22 @@ export default function PaintVestimator() {
     };
   }
 
+  function syncOverlaySize() {
+    const canvas = canvasRef.current;
+    const overlayCanvas = overlayCanvasRef.current;
+    if (!canvas || !overlayCanvas) return;
+    if (overlayCanvas.width !== canvas.width || overlayCanvas.height !== canvas.height) {
+      // Save existing overlay content
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = overlayCanvas.width;
+      tempCanvas.height = overlayCanvas.height;
+      tempCanvas.getContext("2d")!.drawImage(overlayCanvas, 0, 0);
+      overlayCanvas.width = canvas.width;
+      overlayCanvas.height = canvas.height;
+      overlayCanvas.getContext("2d")!.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+    }
+  }
+
   function redrawMainCanvas() {
     const canvas = canvasRef.current;
     const overlayCanvas = overlayCanvasRef.current;

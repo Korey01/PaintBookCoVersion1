@@ -654,13 +654,23 @@ export default function PaintVestimator() {
     if (!canvas || !visOriginalImg) return;
 
     const ctx = canvas.getContext("2d")!;
+
+    // Save overlay content BEFORE resizing canvas (resizing clears it)
+    let savedOverlayData: ImageData | null = null;
+    if (overlayCanvas && overlayCanvas.width > 0 && overlayCanvas.height > 0) {
+      savedOverlayData = overlayCanvas.getContext("2d")!.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height);
+    }
+
     canvas.width = visOriginalImg.naturalWidth;
     canvas.height = visOriginalImg.naturalHeight;
 
-    // Sync overlay canvas size
+    // Restore overlay content after resize
     if (overlayCanvas) {
       overlayCanvas.width = canvas.width;
       overlayCanvas.height = canvas.height;
+      if (savedOverlayData) {
+        overlayCanvas.getContext("2d")!.putImageData(savedOverlayData, 0, 0);
+      }
     }
 
     ctx.drawImage(visOriginalImg, 0, 0);

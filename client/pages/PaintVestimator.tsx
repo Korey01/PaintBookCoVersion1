@@ -785,6 +785,20 @@ export default function PaintVestimator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visOriginalImg, visColourHex, visOpacity, visMaskImg, visTool]);
 
+  // Sync overlay canvas dimensions when image loads
+  useEffect(() => {
+    if (!visOriginalImg || !overlayCanvasRef.current || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const overlay = overlayCanvasRef.current;
+    // Set canvas dimensions first
+    canvas.width = visOriginalImg.naturalWidth;
+    canvas.height = visOriginalImg.naturalHeight;
+    // Match overlay to canvas
+    overlay.width = visOriginalImg.naturalWidth;
+    overlay.height = visOriginalImg.naturalHeight;
+    console.log("Overlay sized:", overlay.width, "x", overlay.height);
+  }, [visOriginalImg]);
+
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   function handleCalculate() {

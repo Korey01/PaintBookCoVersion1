@@ -703,6 +703,7 @@ export default function PaintVestimator() {
   function handleOverlayMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
     if (visTool !== "brush" && visTool !== "eraser") return;
     setIsDrawing(true);
+    syncOverlaySize();
     const canvas = overlayCanvasRef.current!;
     const ctx = canvas.getContext("2d")!;
     const pt = getCanvasPoint(canvas, e);

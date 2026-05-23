@@ -1553,7 +1553,7 @@ export default function PaintVestimator() {
                     </div>
 
                     {/* Canvas with overlay */}
-                    <div className="relative rounded-xl overflow-hidden border border-border bg-muted">
+                    <div className="relative rounded-xl overflow-hidden border border-border bg-muted" style={{ lineHeight: 0 }}>
                       {visIsSegmenting && (
                         <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-20">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-3" />
@@ -1571,7 +1571,8 @@ export default function PaintVestimator() {
                       {/* Overlay canvas for manual drawing */}
                       <canvas
                         ref={overlayCanvasRef}
-                        className="absolute inset-0 w-full h-full"
+                        className="absolute top-0 left-0 w-full"
+                        style={{ height: "100%", display: "block" }}
                         style={{
                           cursor:
                             visTool === "eraser"

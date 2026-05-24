@@ -682,30 +682,49 @@ export default function PaintVestimator() {
     const b = parseInt(visColourHex.slice(5, 7), 16);
 
     // Get manual mask from overlay canvas
+    // Always get manual overlay data regardless of tool
     let manualMaskData: ImageData | null = null;
-    if (overlayCanvas && visTool !== "ai") {
+    if (overlayCanvas && overlayCanvas.width > 0) {
       const overlayCtx = overlayCanvas.getContext("2d")!;
       manualMaskData = overlayCtx.getImageData(0, 0, canvas.width, canvas.height);
     }
 
-    if (visTool === "ai" && visMaskImg) {
-      // Use AI mask with exclusion
+    // Step 1: Always apply AI mask first if available
+    if (visMaskImg) {
       applyMaskedOverlay(canvas, maskCanvasRef.current!, visOriginalImg, visMaskImg, visColourHex, visOpacity);
-    } else if (manualMaskData) {
-      // Use manual mask
+    } else {
+      // No AI mask — start from original image (already drawn above)
+    }
+
+    // Step 2: Apply brush strokes on top of AI mask (additive)
+    if (manualMaskData) {
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const origCanvas = document.createElement("canvas");
+      origCanvas.width = canvas.width;
+      origCanvas.height = canvas.height;
+      origCanvas.getContext("2d")!.drawImage(visOriginalImg, 0, 0, canvas.width, canvas.height);
+      const origData = origCanvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
+
       for (let i = 0; i < manualMaskData.data.length; i += 4) {
-        const brightness =
-          (manualMaskData.data[i] + manualMaskData.data[i + 1] + manualMaskData.data[i + 2]) / 3;
-        if (brightness > 50) {
-          imgData.data[i] = Math.round(imgData.data[i] * (1 - visOpacity) + r * visOpacity);
-          imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - visOpacity) + g * visOpacity);
-          imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - visOpacity) + b * visOpacity);
+        const alpha = manualMaskData.data[i + 3];
+        if (alpha > 10) {
+          // Brush stroke — apply paint colour
+          imgData.data[i] = Math.round(origData.data[i] * (1 - visOpacity) + r * visOpacity);
+          imgData.data[i + 1] = Math.round(origData.data[i + 1] * (1 - visOpacity) + g * visOpacity);
+          imgData.data[i + 2] = Math.round(origData.data[i + 2] * (1 - visOpacity) + b * visOpacity);
         }
       }
       ctx.putImageData(imgData, 0, 0);
-    } else {
-      // Full overlay fallback
+    }
+
+    // Step 3: Apply eraser — restore original pixels where erased
+    if (overlayCanvas && overlayCanvas.width > 0) {
+      // Eraser is handled via destination-out on overlay canvas
+      // Areas erased from overlay simply show the Step 1 AI result
+    }
+
+    // Fallback if no AI mask and no brush strokes
+    if (!visMaskImg && (!manualMaskData || !Array.from(manualMaskData.data).some((v, i) => i % 4 === 3 && v > 10))) {
       applyFullOverlay(canvas, visOriginalImg, visColourHex, visOpacity);
     }
   }
@@ -838,7 +857,7 @@ export default function PaintVestimator() {
   useEffect(() => {
     redrawMainCanvas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visOriginalImg, visColourHex, visOpacity, visMaskImg, visTool]);
+  }, [visOriginalImg, visColourHex, visOpacity, visMaskImg]);
 
   // Sync overlay canvas dimensions when image loads
   useEffect(() => {

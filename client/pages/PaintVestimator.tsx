@@ -14,6 +14,16 @@ type Tab = "calculator" | "colours" | "visualiser" | "wallpaper" | "quote";
 
 type VisTool = "ai" | "brush" | "eraser" | "lasso" | "polygon";
 
+interface PaintLayer {
+  id: string
+  label: string
+  tool: "ai" | "brush" | "lasso" | "polygon"
+  colour: string
+  opacity: number
+  maskDataUrl: string | null
+  visible: boolean
+}
+
 type RoomShape = "rectangular" | "l-shaped" | "other";
 
 interface RoomInputs {
@@ -424,6 +434,10 @@ function calcCans(litres: number): { qty: number; size: number }[] {
 
 // ── Canvas helpers ────────────────────────────────────────────────────────────
 
+function generateId(): string {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
 function hexToRgb(hex: string): [number, number, number] {
   return [
     parseInt(hex.slice(1, 3), 16),
@@ -501,6 +515,58 @@ function applyMaskedOverlay(
   ctx.putImageData(imgData, 0, 0);
 }
 
+/** Apply a committed PaintLayer onto the canvas ctx (already shows base image) */
+function applyLayerToCanvas(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  maskImg: HTMLImageElement,
+  colour: string,
+  opacity: number,
+  mode: "ai" | "manual"
+) {
+  const off = document.createElement("canvas");
+  off.width = canvas.width;
+  off.height = canvas.height;
+  const offCtx = off.getContext("2d")!;
+  offCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+  const maskData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const [r, g, b] = hexToRgb(colour);
+
+  let exclusionData: ImageData | null = null;
+  if (mode === "ai") {
+    const excImg = (window as any).__paintbookExclusionMask as HTMLImageElement | undefined;
+    if (excImg && excImg.complete && excImg.naturalWidth > 0) {
+      const excOff = document.createElement("canvas");
+      excOff.width = canvas.width;
+      excOff.height = canvas.height;
+      const excCtx = excOff.getContext("2d")!;
+      excCtx.drawImage(excImg, 0, 0, canvas.width, canvas.height);
+      exclusionData = excCtx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  for (let i = 0; i < maskData.data.length; i += 4) {
+    let paint = false;
+    if (mode === "ai") {
+      const brightness = (maskData.data[i] + maskData.data[i + 1] + maskData.data[i + 2]) / 3;
+      paint = brightness > 150;
+      if (paint && exclusionData) {
+        const excBri = (exclusionData.data[i] + exclusionData.data[i + 1] + exclusionData.data[i + 2]) / 3;
+        if (excBri > 100) paint = false;
+      }
+    } else {
+      paint = maskData.data[i + 3] > 10;
+    }
+    if (paint) {
+      imgData.data[i]     = Math.round(imgData.data[i]     * (1 - opacity) + r * opacity);
+      imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);
+      imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - opacity) + b * opacity);
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function PaintVestimator() {
@@ -542,9 +608,11 @@ export default function PaintVestimator() {
   const [visMaskImg, setVisMaskImg] = useState<HTMLImageElement | null>(null);
   const [visIsSegmenting, setVisIsSegmenting] = useState(false);
   const [visSegmentError, setVisSegmentError] = useState("");
-  const [visColourHex, setVisColourHex] = useState("#FFFFFF");
+  const [paintLayers, setPaintLayers] = useState<PaintLayer[]>([]);
+  const [activeLayerColour, setActiveLayerColour] = useState("#4A90E2");
+  const [activeLayerOpacity, setActiveLayerOpacity] = useState(0.8);
+  const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
   const [visColourName, setVisColourName] = useState("Select a colour");
-  const [visOpacity, setVisOpacity] = useState(0.8);
   const [visBrandFilter, setVisBrandFilter] = useState("All");
   const [visSearch, setVisSearch] = useState("");
 
@@ -558,6 +626,14 @@ export default function PaintVestimator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const brushCountRef = useRef(0);
+  const lassoCountRef = useRef(0);
+  const polygonCountRef = useRef(0);
+  const layerMaskImgsRef = useRef<Map<string, HTMLImageElement>>(new Map());
+  const paintLayersRef = useRef<PaintLayer[]>([]);
+  const activeLayerIdRef = useRef<string | null>(null);
+  const activeLayerColourRef = useRef("#4A90E2");
+  const activeLayerOpacityRef = useRef(0.8);
 
   // Wallpaper filter state
   const [wpStyleFilter, setWpStyleFilter] = useState("all");
@@ -653,9 +729,7 @@ export default function PaintVestimator() {
     const overlayCanvas = overlayCanvasRef.current;
     if (!canvas || !visOriginalImg) return;
 
-    const ctx = canvas.getContext("2d")!;
-
-    // Save overlay content BEFORE resizing canvas (resizing clears it)
+    // Preserve overlay content across canvas resize
     let savedOverlayData: ImageData | null = null;
     if (overlayCanvas && overlayCanvas.width > 0 && overlayCanvas.height > 0) {
       savedOverlayData = overlayCanvas.getContext("2d")!.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height);
@@ -664,7 +738,6 @@ export default function PaintVestimator() {
     canvas.width = visOriginalImg.naturalWidth;
     canvas.height = visOriginalImg.naturalHeight;
 
-    // Restore overlay content after resize
     if (overlayCanvas) {
       overlayCanvas.width = canvas.width;
       overlayCanvas.height = canvas.height;
@@ -673,59 +746,50 @@ export default function PaintVestimator() {
       }
     }
 
+    const ctx = canvas.getContext("2d")!;
     ctx.drawImage(visOriginalImg, 0, 0);
 
-    if (!visColourHex || visColourHex === "#FFFFFF") return;
+    // Composite all committed layers in order
+    const layers = paintLayersRef.current;
+    let pendingLoad = false;
+    for (const layer of layers) {
+      if (!layer.visible || !layer.maskDataUrl) continue;
+      let maskImg = layerMaskImgsRef.current.get(layer.id);
+      if (!maskImg) {
+        maskImg = new Image();
+        const capturedId = layer.id;
+        const capturedUrl = layer.maskDataUrl;
+        maskImg.onload = () => {
+          layerMaskImgsRef.current.set(capturedId, maskImg!);
+          redrawMainCanvas();
+        };
+        maskImg.src = capturedUrl;
+        pendingLoad = true;
+        continue;
+      }
+      applyLayerToCanvas(ctx, canvas, maskImg, layer.colour, layer.opacity, layer.tool === "ai" ? "ai" : "manual");
+    }
+    if (pendingLoad) return;
 
-    const r = parseInt(visColourHex.slice(1, 3), 16);
-    const g = parseInt(visColourHex.slice(3, 5), 16);
-    const b = parseInt(visColourHex.slice(5, 7), 16);
-
-    // Get manual mask from overlay canvas
-    // Always get manual overlay data regardless of tool
-    let manualMaskData: ImageData | null = null;
+    // Live preview: apply current in-progress overlay stroke
     if (overlayCanvas && overlayCanvas.width > 0) {
       const overlayCtx = overlayCanvas.getContext("2d")!;
-      manualMaskData = overlayCtx.getImageData(0, 0, canvas.width, canvas.height);
-    }
-
-    // Step 1: Always apply AI mask first if available
-    if (visMaskImg) {
-      applyMaskedOverlay(canvas, maskCanvasRef.current!, visOriginalImg, visMaskImg, visColourHex, visOpacity);
-    } else {
-      // No AI mask — start from original image (already drawn above)
-    }
-
-    // Step 2: Apply brush strokes on top of AI mask (additive)
-    if (manualMaskData) {
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const origCanvas = document.createElement("canvas");
-      origCanvas.width = canvas.width;
-      origCanvas.height = canvas.height;
-      origCanvas.getContext("2d")!.drawImage(visOriginalImg, 0, 0, canvas.width, canvas.height);
-      const origData = origCanvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
-
-      for (let i = 0; i < manualMaskData.data.length; i += 4) {
-        const alpha = manualMaskData.data[i + 3];
-        if (alpha > 10) {
-          // Brush stroke — apply paint colour
-          imgData.data[i] = Math.round(origData.data[i] * (1 - visOpacity) + r * visOpacity);
-          imgData.data[i + 1] = Math.round(origData.data[i + 1] * (1 - visOpacity) + g * visOpacity);
-          imgData.data[i + 2] = Math.round(origData.data[i + 2] * (1 - visOpacity) + b * visOpacity);
+      const overlayData = overlayCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const hasStrokes = overlayData.data.some((v, i) => i % 4 === 3 && v > 10);
+      if (hasStrokes) {
+        const colour = activeLayerColourRef.current;
+        const opacity = activeLayerOpacityRef.current;
+        const [r, g, b] = hexToRgb(colour);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < overlayData.data.length; i += 4) {
+          if (overlayData.data[i + 3] > 10) {
+            imgData.data[i]     = Math.round(imgData.data[i]     * (1 - opacity) + r * opacity);
+            imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);
+            imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - opacity) + b * opacity);
+          }
         }
+        ctx.putImageData(imgData, 0, 0);
       }
-      ctx.putImageData(imgData, 0, 0);
-    }
-
-    // Step 3: Apply eraser — restore original pixels where erased
-    if (overlayCanvas && overlayCanvas.width > 0) {
-      // Eraser is handled via destination-out on overlay canvas
-      // Areas erased from overlay simply show the Step 1 AI result
-    }
-
-    // Fallback if no AI mask and no brush strokes
-    if (!visMaskImg && (!manualMaskData || !Array.from(manualMaskData.data).some((v, i) => i % 4 === 3 && v > 10))) {
-      applyFullOverlay(canvas, visOriginalImg, visColourHex, visOpacity);
     }
   }
 
@@ -742,11 +806,40 @@ export default function PaintVestimator() {
       return;
     }
 
-    if (visTool !== "brush" && visTool !== "eraser") return;
+    if (visTool === "eraser") {
+      setIsDrawing(true);
+      // Load the active layer's mask into the overlay so we can erase from it
+      const activeId = activeLayerIdRef.current;
+      const activeLayer = paintLayersRef.current.find(l => l.id === activeId);
+      if (activeLayer?.maskDataUrl) {
+        const draw = (img: HTMLImageElement) => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(0,0,0,1)";
+          ctx.fill();
+          ctx.globalCompositeOperation = "source-over";
+          redrawMainCanvas();
+        };
+        const cached = layerMaskImgsRef.current.get(activeLayer.id);
+        if (cached) {
+          draw(cached);
+        } else {
+          const img = new Image();
+          img.onload = () => { layerMaskImgsRef.current.set(activeLayer.id, img); draw(img); };
+          img.src = activeLayer.maskDataUrl;
+        }
+      }
+      return;
+    }
+
+    if (visTool !== "brush") return;
     setIsDrawing(true);
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = visTool === "eraser" ? "black" : "white";
+    ctx.fillStyle = "white";
     ctx.fill();
     redrawMainCanvas();
   }
@@ -760,7 +853,6 @@ export default function PaintVestimator() {
     if (visTool === "lasso") {
       const newPoints = [...lassoPoints, pt];
       setLassoPoints(newPoints);
-      // Draw lasso preview
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.beginPath();
       ctx.moveTo(newPoints[0].x, newPoints[0].y);
@@ -771,7 +863,6 @@ export default function PaintVestimator() {
       return;
     }
 
-    if (visTool !== "brush" && visTool !== "eraser") return;
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
     if (visTool === "eraser") {
@@ -786,11 +877,35 @@ export default function PaintVestimator() {
     redrawMainCanvas();
   }
 
+  function commitOverlayAsLayer(tool: "brush" | "lasso" | "polygon") {
+    const overlayCanvas = overlayCanvasRef.current;
+    if (!overlayCanvas) return;
+    const dataUrl = overlayCanvas.toDataURL("image/png");
+    let label: string;
+    if (tool === "brush") { brushCountRef.current += 1; label = `Brush ${brushCountRef.current}`; }
+    else if (tool === "lasso") { lassoCountRef.current += 1; label = `Lasso ${lassoCountRef.current}`; }
+    else { polygonCountRef.current += 1; label = `Polygon ${polygonCountRef.current}`; }
+    const newLayer: PaintLayer = {
+      id: generateId(),
+      label,
+      tool,
+      colour: activeLayerColourRef.current,
+      opacity: activeLayerOpacityRef.current,
+      maskDataUrl: dataUrl,
+      visible: true,
+    };
+    setPaintLayers(prev => { const next = [...prev, newLayer]; paintLayersRef.current = next; return next; });
+    setActiveLayerId(newLayer.id);
+    activeLayerIdRef.current = newLayer.id;
+    overlayCanvas.getContext("2d")!.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+  }
+
   function handleOverlayMouseUp() {
-    if (visTool === "lasso" && isDrawing && lassoPoints.length > 2) {
-      // Close and fill lasso
-      const canvas = overlayCanvasRef.current!;
-      const ctx = canvas.getContext("2d")!;
+    if (!isDrawing) return;
+    const canvas = overlayCanvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+
+    if (visTool === "lasso" && lassoPoints.length > 2) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.beginPath();
       ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
@@ -799,8 +914,37 @@ export default function PaintVestimator() {
       ctx.fillStyle = "white";
       ctx.fill();
       setLassoPoints([]);
+      commitOverlayAsLayer("lasso");
+      setIsDrawing(false);
       redrawMainCanvas();
+      return;
     }
+
+    if (visTool === "eraser") {
+      // Save erased mask back to the active layer
+      const activeId = activeLayerIdRef.current;
+      if (activeId) {
+        const dataUrl = canvas.toDataURL("image/png");
+        layerMaskImgsRef.current.delete(activeId);
+        setPaintLayers(prev => {
+          const next = prev.map(l => l.id === activeId ? { ...l, maskDataUrl: dataUrl } : l);
+          paintLayersRef.current = next;
+          return next;
+        });
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      setIsDrawing(false);
+      redrawMainCanvas();
+      return;
+    }
+
+    if (visTool === "brush") {
+      commitOverlayAsLayer("brush");
+      setIsDrawing(false);
+      redrawMainCanvas();
+      return;
+    }
+
     setIsDrawing(false);
   }
 
@@ -840,6 +984,7 @@ export default function PaintVestimator() {
     ctx.fillStyle = "white";
     ctx.fill();
     setPolygonPoints([]);
+    commitOverlayAsLayer("polygon");
     redrawMainCanvas();
   }
 
@@ -852,12 +997,19 @@ export default function PaintVestimator() {
     redrawMainCanvas();
   }
 
+  // ── Keep refs in sync with state ───────────────────────────────────────────
+
+  useEffect(() => { paintLayersRef.current = paintLayers; }, [paintLayers]);
+  useEffect(() => { activeLayerIdRef.current = activeLayerId; }, [activeLayerId]);
+  useEffect(() => { activeLayerColourRef.current = activeLayerColour; }, [activeLayerColour]);
+  useEffect(() => { activeLayerOpacityRef.current = activeLayerOpacity; }, [activeLayerOpacity]);
+
   // ── Visualiser canvas redraw effect ─────────────────────────────────────────
 
   useEffect(() => {
     redrawMainCanvas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visOriginalImg, visColourHex, visOpacity, visMaskImg]);
+  }, [visOriginalImg, paintLayers]);
 
   // Sync overlay canvas dimensions when image loads
   useEffect(() => {
@@ -900,6 +1052,14 @@ export default function PaintVestimator() {
     setVisMaskUrl(null);
     setVisMaskImg(null);
     setVisImageType(file.type);
+    setPaintLayers([]);
+    paintLayersRef.current = [];
+    setActiveLayerId(null);
+    activeLayerIdRef.current = null;
+    layerMaskImgsRef.current.clear();
+    brushCountRef.current = 0;
+    lassoCountRef.current = 0;
+    polygonCountRef.current = 0;
 
     const reader = new FileReader();
     reader.onload = async (ev) => {
@@ -973,6 +1133,25 @@ export default function PaintVestimator() {
         maskImg.onload = () => {
           console.log("Wall mask loaded:", maskImg.width, "x", maskImg.height);
           setVisMaskImg(maskImg);
+          // Create or update the AI layer
+          layerMaskImgsRef.current.set("ai", maskImg);
+          const aiLayer: PaintLayer = {
+            id: "ai",
+            label: "AI Walls",
+            tool: "ai",
+            colour: activeLayerColourRef.current,
+            opacity: activeLayerOpacityRef.current,
+            maskDataUrl: maskUrl,
+            visible: true,
+          };
+          setPaintLayers(prev => {
+            const without = prev.filter(l => l.id !== "ai");
+            const next = [aiLayer, ...without];
+            paintLayersRef.current = next;
+            return next;
+          });
+          setActiveLayerId("ai");
+          activeLayerIdRef.current = "ai";
           setVisSegmentError("✓ Walls detected — colour applied to walls only");
         };
         maskImg.onerror = () =>
@@ -1506,7 +1685,8 @@ export default function PaintVestimator() {
                     <button
                       onClick={() => {
                         setSelectedColour(detailProduct);
-                        setVisColourHex(detailProduct.hex);
+                        setActiveLayerColour(detailProduct.hex);
+                        activeLayerColourRef.current = detailProduct.hex;
                         setVisColourName(`${detailProduct.brand} — ${detailProduct.name}`);
                         setTab("calculator");
                       }}
@@ -1644,8 +1824,9 @@ export default function PaintVestimator() {
                       <canvas
                         ref={overlayCanvasRef}
                         className="absolute top-0 left-0 w-full"
-                        style={{ height: "100%", display: "block" }}
                         style={{
+                          height: "100%",
+                          display: "block",
                           cursor:
                             visTool === "eraser"
                               ? "cell"
@@ -1676,38 +1857,133 @@ export default function PaintVestimator() {
                       </p>
                     )}
 
-                    {/* Selected colour badge */}
+                    {/* Current colour indicator */}
                     <div className="flex items-center gap-3 text-sm text-foreground">
                       <div
                         className="w-6 h-6 rounded-full border border-border flex-shrink-0"
-                        style={{
-                          backgroundColor:
-                            visColourHex === "#FFFFFF" ? "#e5e7eb" : visColourHex,
-                        }}
+                        style={{ backgroundColor: activeLayerColour }}
                       />
-                      <span className="text-muted-foreground">{visColourName}</span>
+                      <span className="text-muted-foreground">
+                        Next stroke: {visColourName !== "Select a colour" ? visColourName : activeLayerColour}
+                      </span>
                     </div>
 
                     {/* Opacity slider */}
                     <div>
                       <label className="text-sm text-muted-foreground mb-2 block">
-                        Colour intensity: {Math.round(visOpacity * 100)}%
+                        Colour intensity: {Math.round(activeLayerOpacity * 100)}%
                       </label>
                       <input
                         type="range"
                         min={0.1}
                         max={0.85}
                         step={0.05}
-                        value={visOpacity}
-                        onChange={(e) => setVisOpacity(parseFloat(e.target.value))}
+                        value={activeLayerOpacity}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          setActiveLayerOpacity(v);
+                          activeLayerOpacityRef.current = v;
+                          // Update active layer opacity in real time
+                          if (activeLayerId) {
+                            setPaintLayers(prev => {
+                              const next = prev.map(l => l.id === activeLayerId ? { ...l, opacity: v } : l);
+                              paintLayersRef.current = next;
+                              return next;
+                            });
+                          }
+                        }}
                         className="w-full"
                       />
                     </div>
 
+                    {/* Layers panel */}
+                    {paintLayers.length > 0 && (
+                      <div className="border border-border rounded-lg p-3 space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Layers</p>
+                        {[...paintLayers].reverse().map(layer => (
+                          <div
+                            key={layer.id}
+                            onClick={() => {
+                              setActiveLayerId(layer.id);
+                              activeLayerIdRef.current = layer.id;
+                              setActiveLayerColour(layer.colour);
+                              activeLayerColourRef.current = layer.colour;
+                              setActiveLayerOpacity(layer.opacity);
+                              activeLayerOpacityRef.current = layer.opacity;
+                            }}
+                            className={[
+                              "flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-colors",
+                              activeLayerId === layer.id
+                                ? "bg-primary/10 border border-primary/30"
+                                : "hover:bg-muted border border-transparent",
+                            ].join(" ")}
+                          >
+                            {/* Colour swatch — click to change colour */}
+                            <input
+                              type="color"
+                              value={layer.colour}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                const colour = e.target.value;
+                                setPaintLayers(prev => {
+                                  const next = prev.map(l => l.id === layer.id ? { ...l, colour } : l);
+                                  paintLayersRef.current = next;
+                                  return next;
+                                });
+                                if (activeLayerId === layer.id) {
+                                  setActiveLayerColour(colour);
+                                  activeLayerColourRef.current = colour;
+                                }
+                              }}
+                              className="w-5 h-5 rounded border border-border cursor-pointer flex-shrink-0 p-0"
+                              style={{ backgroundColor: layer.colour }}
+                              title="Change layer colour"
+                            />
+                            <span className="text-sm text-foreground flex-1 truncate">{layer.label}</span>
+                            {/* Visibility toggle */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPaintLayers(prev => {
+                                  const next = prev.map(l => l.id === layer.id ? { ...l, visible: !l.visible } : l);
+                                  paintLayersRef.current = next;
+                                  return next;
+                                });
+                              }}
+                              className="text-muted-foreground hover:text-foreground transition-colors w-5 text-center flex-shrink-0"
+                              title={layer.visible ? "Hide" : "Show"}
+                            >
+                              {layer.visible ? "●" : "○"}
+                            </button>
+                            {/* Delete */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                layerMaskImgsRef.current.delete(layer.id);
+                                setPaintLayers(prev => {
+                                  const next = prev.filter(l => l.id !== layer.id);
+                                  paintLayersRef.current = next;
+                                  return next;
+                                });
+                                if (activeLayerId === layer.id) {
+                                  setActiveLayerId(null);
+                                  activeLayerIdRef.current = null;
+                                }
+                              }}
+                              className="text-muted-foreground hover:text-destructive transition-colors w-5 text-center flex-shrink-0 text-xs"
+                              title="Delete layer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex gap-3">
                       <button
                         onClick={handleVisDownload}
-                        disabled={visColourHex === "#FFFFFF"}
+                        disabled={paintLayers.length === 0}
                         className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
                       >
                         Download Preview
@@ -1728,8 +2004,13 @@ export default function PaintVestimator() {
 
               {/* Right: compact colour picker */}
               <div className="w-full lg:w-72 flex-shrink-0">
-                <p className="text-sm font-medium text-foreground mb-3">
-                  Select a colour to preview
+                <p className="text-sm font-medium text-foreground mb-1">
+                  Select a colour
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {activeLayerId
+                    ? "Updates selected layer. New strokes use this colour."
+                    : "Will be used for the next stroke."}
                 </p>
 
                 {/* Brand filter pills */}
@@ -1774,12 +2055,23 @@ export default function PaintVestimator() {
                         key={p.id}
                         title={`${p.brand} — ${p.name}`}
                         onClick={() => {
-                          setVisColourHex(p.hex);
+                          setActiveLayerColour(p.hex);
+                          activeLayerColourRef.current = p.hex;
                           setVisColourName(`${p.brand} — ${p.name}`);
+                          // Update the active layer's colour in real time
+                          if (activeLayerIdRef.current) {
+                            setPaintLayers(prev => {
+                              const next = prev.map(l =>
+                                l.id === activeLayerIdRef.current ? { ...l, colour: p.hex } : l
+                              );
+                              paintLayersRef.current = next;
+                              return next;
+                            });
+                          }
                         }}
                         className={[
                           "w-10 h-10 rounded-full border-2 transition-all mx-auto block",
-                          visColourHex === p.hex
+                          activeLayerColour === p.hex
                             ? "border-primary scale-110 shadow-md"
                             : "border-border hover:border-primary/50",
                         ].join(" ")}

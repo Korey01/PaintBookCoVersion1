@@ -753,13 +753,17 @@ export default function PaintVestimator() {
     }
 
     if (visTool !== "brush" && visTool !== "eraser") return;
-    const canvas = overlayCanvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-    const pt = getCanvasPoint(canvas, e);
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = visTool === "eraser" ? "black" : "white";
+    if (visTool === "eraser") {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+    } else {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = "white";
+    }
     ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
     redrawMainCanvas();
   }
 

@@ -711,14 +711,20 @@ export default function PaintVestimator() {
   }
 
   function handleOverlayMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
-    if (visTool !== "brush" && visTool !== "eraser") return;
-    setIsDrawing(true);
     syncOverlaySize();
     const canvas = overlayCanvasRef.current!;
-    console.log("Brush mousedown - canvas size:", canvas.width, "x", canvas.height, "visTool:", visTool);
     const ctx = canvas.getContext("2d")!;
     const pt = getCanvasPoint(canvas, e);
-    console.log("Point:", pt.x, pt.y, "brushSize:", brushSize);
+
+    if (visTool === "lasso") {
+      setIsDrawing(true);
+      setLassoPoints([pt]);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    if (visTool !== "brush" && visTool !== "eraser") return;
+    setIsDrawing(true);
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, brushSize / 2, 0, Math.PI * 2);
     ctx.fillStyle = visTool === "eraser" ? "black" : "white";
@@ -727,7 +733,26 @@ export default function PaintVestimator() {
   }
 
   function handleOverlayMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
-    if (!isDrawing || (visTool !== "brush" && visTool !== "eraser")) return;
+    if (!isDrawing) return;
+    const canvas = overlayCanvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    const pt = getCanvasPoint(canvas, e);
+
+    if (visTool === "lasso") {
+      const newPoints = [...lassoPoints, pt];
+      setLassoPoints(newPoints);
+      // Draw lasso preview
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.moveTo(newPoints[0].x, newPoints[0].y);
+      newPoints.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      return;
+    }
+
+    if (visTool !== "brush" && visTool !== "eraser") return;
     const canvas = overlayCanvasRef.current!;
     const ctx = canvas.getContext("2d")!;
     const pt = getCanvasPoint(canvas, e);
@@ -739,6 +764,20 @@ export default function PaintVestimator() {
   }
 
   function handleOverlayMouseUp() {
+    if (visTool === "lasso" && isDrawing && lassoPoints.length > 2) {
+      // Close and fill lasso
+      const canvas = overlayCanvasRef.current!;
+      const ctx = canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+      lassoPoints.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle = "white";
+      ctx.fill();
+      setLassoPoints([]);
+      redrawMainCanvas();
+    }
     setIsDrawing(false);
   }
 

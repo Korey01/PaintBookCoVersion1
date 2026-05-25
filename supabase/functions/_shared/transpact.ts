@@ -8,7 +8,7 @@
  */
 
 const TRANSPACT_ENDPOINT =
-  "https://www.transpact.com/SecurePartner/Partner.asmx";
+  "https://www.transpact.com/securepartner/partner.asmx";
 
 export function buildSoapEnvelope(
   method: string,
@@ -24,7 +24,7 @@ export function buildSoapEnvelope(
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
-    <${method} xmlns="https://www.transpact.com/">
+    <${method} xmlns="http://transpact.com/partners/">
       ${paramXml}
     </${method}>
   </soap:Body>
@@ -39,17 +39,23 @@ export async function callTranspact(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10_000);
     try {
+      const soapBody = buildSoapEnvelope(method, params);
+      console.log("SOAP body:", soapBody.replace(/<Password>[^<]+<\/Password>/g, "<Password>***</Password>").slice(0, 1000));
       const res = await fetch(TRANSPACT_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "text/xml; charset=utf-8",
-          "SOAPAction": `https://www.transpact.com/SecurePartner/Partner.asmx/${method}`,
+          "SOAPAction": `http://transpact.com/partners/${method}`,
         },
-        body: buildSoapEnvelope(method, params),
+        body: soapBody,
         signal: controller.signal,
       });
       clearTimeout(timer);
-      if (!res.ok) throw new Error(`Transpact HTTP ${res.status}`);
+      if (!res.ok) {
+        const body = await res.text();
+        console.error("Transpact error body:", body);
+        throw new Error(`Transpact HTTP ${res.status}: ${body.slice(0, 200)}`);
+      }
       return res.text();
     } catch (e) {
       clearTimeout(timer);
@@ -103,3 +109,10 @@ export function transpactErrorMessage(code: number): string {
     `Transpact returned an unexpected error (code ${code}). Please contact support.`
   );
 }
+ 
+ 
+ 
+ 
+ 
+ 
+ 

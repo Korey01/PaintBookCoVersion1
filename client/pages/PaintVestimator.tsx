@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { makeAwinLink, AFFILIATE_CONFIG } from "@/config/affiliates";
+import { getWallpaperPattern, svgToDataUrl } from "@/data/wallpaperPatterns";
 import {
   PAINT_PRODUCTS as STATIC_PRODUCTS,
   PaintProduct,
@@ -19,7 +20,10 @@ interface PaintLayer {
   id: string
   label: string
   tool: "ai" | "brush" | "lasso" | "polygon"
+  type: "paint" | "wallpaper"
   colour: string
+  wallpaperPattern?: string   // SVG data URL for wallpaper tiling
+  wallpaperScale?: number     // tile px size (default 60)
   opacity: number
   maskDataUrl: string | null
   visible: boolean
@@ -506,6 +510,75 @@ function applyMaskedOverlay(
   ctx.putImageData(imgData, 0, 0);
 }
 
+/** Tile a wallpaper pattern onto masked wall pixels (sync — patternImg already loaded). */
+function applyWallpaperLayerSync(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  maskImg: HTMLImageElement,
+  patternImg: HTMLImageElement,
+  scale: number,
+  opacity: number,
+  mode: "ai" | "manual"
+) {
+  // Render mask
+  const maskOff = document.createElement("canvas");
+  maskOff.width = canvas.width;
+  maskOff.height = canvas.height;
+  const maskCtx = maskOff.getContext("2d")!;
+  maskCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+  const maskData = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // Exclusion mask for AI mode
+  let exclusionData: ImageData | null = null;
+  if (mode === "ai") {
+    const excImg = (window as any).__paintbookExclusionMask as HTMLImageElement | undefined;
+    if (excImg && excImg.complete && excImg.naturalWidth > 0) {
+      const excOff = document.createElement("canvas");
+      excOff.width = canvas.width;
+      excOff.height = canvas.height;
+      const excCtx = excOff.getContext("2d")!;
+      excCtx.drawImage(excImg, 0, 0, canvas.width, canvas.height);
+      exclusionData = excCtx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  // Tile pattern across full canvas
+  const tileOff = document.createElement("canvas");
+  tileOff.width = canvas.width;
+  tileOff.height = canvas.height;
+  const tileCtx = tileOff.getContext("2d")!;
+  const tileCell = document.createElement("canvas");
+  tileCell.width = scale;
+  tileCell.height = scale;
+  tileCell.getContext("2d")!.drawImage(patternImg, 0, 0, scale, scale);
+  const pattern = tileCtx.createPattern(tileCell, "repeat")!;
+  tileCtx.fillStyle = pattern;
+  tileCtx.fillRect(0, 0, canvas.width, canvas.height);
+  const patternData = tileCtx.getImageData(0, 0, canvas.width, canvas.height);
+
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < maskData.data.length; i += 4) {
+    let paint = false;
+    if (mode === "ai") {
+      const bri = (maskData.data[i] + maskData.data[i + 1] + maskData.data[i + 2]) / 3;
+      paint = bri > 150;
+      if (paint && exclusionData) {
+        const excBri = (exclusionData.data[i] + exclusionData.data[i + 1] + exclusionData.data[i + 2]) / 3;
+        if (excBri > 100) paint = false;
+      }
+    } else {
+      paint = maskData.data[i + 3] > 10;
+    }
+    if (paint) {
+      imgData.data[i]     = Math.round(imgData.data[i]     * (1 - opacity) + patternData.data[i]     * opacity);
+      imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + patternData.data[i + 1] * opacity);
+      imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - opacity) + patternData.data[i + 2] * opacity);
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
 /** Apply a committed PaintLayer onto the canvas ctx (already shows base image) */
 function applyLayerToCanvas(
   ctx: CanvasRenderingContext2D,
@@ -606,6 +679,9 @@ export default function PaintVestimator() {
   const [visColourName, setVisColourName] = useState("Select a colour");
   const [visBrandFilter, setVisBrandFilter] = useState("All");
   const [visSearch, setVisSearch] = useState("");
+  const [visMode, setVisMode] = useState<"paint" | "wallpaper">("paint");
+  const [selectedWallpaper, setSelectedWallpaper] = useState<typeof WALLPAPERS[0] | null>(null);
+  const [wallpaperScale, setWallpaperScale] = useState(60);
 
   // Visualiser masking tools
   const [visTool, setVisTool] = useState<VisTool>("ai");
@@ -625,6 +701,10 @@ export default function PaintVestimator() {
   const activeLayerIdRef = useRef<string | null>(null);
   const activeLayerColourRef = useRef("#4A90E2");
   const activeLayerOpacityRef = useRef(0.8);
+  const visModeRef = useRef<"paint" | "wallpaper">("paint");
+  const selectedWallpaperRef = useRef<typeof WALLPAPERS[0] | null>(null);
+  const wallpaperScaleRef = useRef(60);
+  const wallpaperPatternImgsRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
   // Wallpaper filter state
   const [wpStyleFilter, setWpStyleFilter] = useState("all");
@@ -745,6 +825,8 @@ export default function PaintVestimator() {
     let pendingLoad = false;
     for (const layer of layers) {
       if (!layer.visible || !layer.maskDataUrl) continue;
+
+      // Ensure mask image is loaded
       let maskImg = layerMaskImgsRef.current.get(layer.id);
       if (!maskImg) {
         maskImg = new Image();
@@ -758,7 +840,28 @@ export default function PaintVestimator() {
         pendingLoad = true;
         continue;
       }
-      applyLayerToCanvas(ctx, canvas, maskImg, layer.colour, layer.opacity, layer.tool === "ai" ? "ai" : "manual");
+
+      const maskMode = layer.tool === "ai" ? "ai" : "manual";
+
+      if (layer.type === "wallpaper" && layer.wallpaperPattern) {
+        // Ensure pattern image is loaded
+        const patternKey = layer.id + "_pattern";
+        let patternImg = wallpaperPatternImgsRef.current.get(patternKey);
+        if (!patternImg) {
+          patternImg = new Image();
+          const captured = { key: patternKey, url: layer.wallpaperPattern };
+          patternImg.onload = () => {
+            wallpaperPatternImgsRef.current.set(captured.key, patternImg!);
+            redrawMainCanvas();
+          };
+          patternImg.src = layer.wallpaperPattern;
+          pendingLoad = true;
+          continue;
+        }
+        applyWallpaperLayerSync(ctx, canvas, maskImg, patternImg, layer.wallpaperScale ?? 60, layer.opacity, maskMode);
+      } else {
+        applyLayerToCanvas(ctx, canvas, maskImg, layer.colour, layer.opacity, maskMode);
+      }
     }
     if (pendingLoad) return;
 
@@ -768,15 +871,53 @@ export default function PaintVestimator() {
       const overlayData = overlayCtx.getImageData(0, 0, canvas.width, canvas.height);
       const hasStrokes = overlayData.data.some((v, i) => i % 4 === 3 && v > 10);
       if (hasStrokes) {
-        const colour = activeLayerColourRef.current;
         const opacity = activeLayerOpacityRef.current;
-        const [r, g, b] = hexToRgb(colour);
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < overlayData.data.length; i += 4) {
-          if (overlayData.data[i + 3] > 10) {
-            imgData.data[i]     = Math.round(imgData.data[i]     * (1 - opacity) + r * opacity);
-            imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);
-            imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - opacity) + b * opacity);
+
+        const mode = visModeRef.current;
+        const wp = selectedWallpaperRef.current;
+        const scale = wallpaperScaleRef.current;
+
+        if (mode === "wallpaper" && wp) {
+          // Tile wallpaper pattern for live preview
+          const patternKey = `preview_${wp.id}`;
+          const patternImg = wallpaperPatternImgsRef.current.get(patternKey);
+          if (patternImg) {
+            const tileOff = document.createElement("canvas");
+            tileOff.width = canvas.width;
+            tileOff.height = canvas.height;
+            const tileCtx = tileOff.getContext("2d")!;
+            const tileCell = document.createElement("canvas");
+            tileCell.width = scale;
+            tileCell.height = scale;
+            tileCell.getContext("2d")!.drawImage(patternImg, 0, 0, scale, scale);
+            const pat = tileCtx.createPattern(tileCell, "repeat")!;
+            tileCtx.fillStyle = pat;
+            tileCtx.fillRect(0, 0, canvas.width, canvas.height);
+            const patData = tileCtx.getImageData(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < overlayData.data.length; i += 4) {
+              if (overlayData.data[i + 3] > 10) {
+                imgData.data[i]     = Math.round(imgData.data[i]     * (1 - opacity) + patData.data[i]     * opacity);
+                imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + patData.data[i + 1] * opacity);
+                imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - opacity) + patData.data[i + 2] * opacity);
+              }
+            }
+          } else {
+            // Pattern not yet loaded — trigger load then redraw
+            const svgUrl = svgToDataUrl(getWallpaperPattern(wp.style, wp.colourFamily));
+            const img = new Image();
+            img.onload = () => { wallpaperPatternImgsRef.current.set(patternKey, img); redrawMainCanvas(); };
+            img.src = svgUrl;
+          }
+        } else {
+          const colour = activeLayerColourRef.current;
+          const [r, g, b] = hexToRgb(colour);
+          for (let i = 0; i < overlayData.data.length; i += 4) {
+            if (overlayData.data[i + 3] > 10) {
+              imgData.data[i]     = Math.round(imgData.data[i]     * (1 - opacity) + r * opacity);
+              imgData.data[i + 1] = Math.round(imgData.data[i + 1] * (1 - opacity) + g * opacity);
+              imgData.data[i + 2] = Math.round(imgData.data[i + 2] * (1 - opacity) + b * opacity);
+            }
           }
         }
         ctx.putImageData(imgData, 0, 0);
@@ -872,15 +1013,29 @@ export default function PaintVestimator() {
     const overlayCanvas = overlayCanvasRef.current;
     if (!overlayCanvas) return;
     const dataUrl = overlayCanvas.toDataURL("image/png");
+    const mode = visModeRef.current;
+    const wp = selectedWallpaperRef.current;
+
     let label: string;
-    if (tool === "brush") { brushCountRef.current += 1; label = `Brush ${brushCountRef.current}`; }
+    if (mode === "wallpaper" && wp) {
+      polygonCountRef.current += 1; // reuse counter for ordering
+      label = `Wallpaper — ${wp.name.split(" ").slice(0, 2).join(" ")} ${paintLayersRef.current.filter(l => l.type === "wallpaper").length + 1}`;
+    } else if (tool === "brush") { brushCountRef.current += 1; label = `Brush ${brushCountRef.current}`; }
     else if (tool === "lasso") { lassoCountRef.current += 1; label = `Lasso ${lassoCountRef.current}`; }
     else { polygonCountRef.current += 1; label = `Polygon ${polygonCountRef.current}`; }
+
     const newLayer: PaintLayer = {
       id: generateId(),
       label,
       tool,
+      type: mode,
       colour: activeLayerColourRef.current,
+      ...(mode === "wallpaper" && wp
+        ? {
+            wallpaperPattern: svgToDataUrl(getWallpaperPattern(wp.style, wp.colourFamily)),
+            wallpaperScale: wallpaperScaleRef.current,
+          }
+        : {}),
       opacity: activeLayerOpacityRef.current,
       maskDataUrl: dataUrl,
       visible: true,
@@ -994,6 +1149,9 @@ export default function PaintVestimator() {
   useEffect(() => { activeLayerIdRef.current = activeLayerId; }, [activeLayerId]);
   useEffect(() => { activeLayerColourRef.current = activeLayerColour; }, [activeLayerColour]);
   useEffect(() => { activeLayerOpacityRef.current = activeLayerOpacity; }, [activeLayerOpacity]);
+  useEffect(() => { visModeRef.current = visMode; }, [visMode]);
+  useEffect(() => { selectedWallpaperRef.current = selectedWallpaper; }, [selectedWallpaper]);
+  useEffect(() => { wallpaperScaleRef.current = wallpaperScale; }, [wallpaperScale]);
 
   // ── Visualiser canvas redraw effect ─────────────────────────────────────────
 
@@ -1130,6 +1288,7 @@ export default function PaintVestimator() {
             id: "ai",
             label: "AI Walls",
             tool: "ai",
+            type: "paint",
             colour: activeLayerColourRef.current,
             opacity: activeLayerOpacityRef.current,
             maskDataUrl: maskUrl,
@@ -2031,83 +2190,191 @@ export default function PaintVestimator() {
                 )}
               </div>
 
-              {/* Right: compact colour picker */}
+              {/* Right: colour / wallpaper picker */}
               <div className="w-full lg:w-72 flex-shrink-0">
-                <p className="text-sm font-medium text-foreground mb-1">
-                  Select a colour
-                </p>
-                <p className="text-xs text-muted-foreground mb-3">
-                  {activeLayerId
-                    ? "Updates selected layer. New strokes use this colour."
-                    : "Will be used for the next stroke."}
-                </p>
-
-                {/* Brand filter pills */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {BRANDS.map((b) => (
-                    <button
-                      key={b}
-                      onClick={() => setVisBrandFilter(b)}
-                      className={[
-                        "text-xs px-2.5 py-1 rounded-full border transition-colors",
-                        visBrandFilter === b
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "border-border text-muted-foreground hover:border-primary/50",
-                      ].join(" ")}
-                    >
-                      {b}
-                    </button>
-                  ))}
+                {/* Mode toggle */}
+                <div className="flex gap-2 border-b border-border pb-3 mb-3">
+                  <button
+                    onClick={() => { setVisMode("paint"); visModeRef.current = "paint"; }}
+                    className={`flex-1 py-2 text-sm rounded-lg transition-colors ${visMode === "paint" ? "bg-foreground text-background" : "border border-border hover:bg-accent"}`}
+                  >
+                    Paint
+                  </button>
+                  <button
+                    onClick={() => { setVisMode("wallpaper"); visModeRef.current = "wallpaper"; }}
+                    className={`flex-1 py-2 text-sm rounded-lg transition-colors ${visMode === "wallpaper" ? "bg-foreground text-background" : "border border-border hover:bg-accent"}`}
+                  >
+                    Wallpaper
+                  </button>
                 </div>
 
-                {/* Search */}
-                <input
-                  type="text"
-                  placeholder="Search colours…"
-                  value={visSearch}
-                  onChange={(e) => setVisSearch(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-3"
-                />
+                {visMode === "paint" && (
+                  <>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {activeLayerId
+                        ? "Updates selected layer. New strokes use this colour."
+                        : "Will be used for the next stroke."}
+                    </p>
 
-                {/* Swatch grid */}
-                <div className="grid grid-cols-5 gap-2 max-h-[420px] overflow-y-auto pr-1">
-                  {products
-                    .filter(
-                      (p) =>
-                        (visBrandFilter === "All" || p.brand === visBrandFilter) &&
-                        (visSearch === "" ||
-                          p.name.toLowerCase().includes(visSearch.toLowerCase()) ||
-                          p.brand.toLowerCase().includes(visSearch.toLowerCase()))
-                    )
-                    .map((p) => (
-                      <button
-                        key={p.id}
-                        title={`${p.brand} — ${p.name}`}
-                        onClick={() => {
-                          setActiveLayerColour(p.hex);
-                          activeLayerColourRef.current = p.hex;
-                          setVisColourName(`${p.brand} — ${p.name}`);
-                          // Update the active layer's colour in real time
-                          if (activeLayerIdRef.current) {
-                            setPaintLayers(prev => {
-                              const next = prev.map(l =>
-                                l.id === activeLayerIdRef.current ? { ...l, colour: p.hex } : l
-                              );
-                              paintLayersRef.current = next;
-                              return next;
-                            });
-                          }
+                    {/* Brand filter pills */}
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {BRANDS.map((b) => (
+                        <button
+                          key={b}
+                          onClick={() => setVisBrandFilter(b)}
+                          className={[
+                            "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                            visBrandFilter === b
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "border-border text-muted-foreground hover:border-primary/50",
+                          ].join(" ")}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search */}
+                    <input
+                      type="text"
+                      placeholder="Search colours…"
+                      value={visSearch}
+                      onChange={(e) => setVisSearch(e.target.value)}
+                      className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-3"
+                    />
+
+                    {/* Colour swatch grid */}
+                    <div className="grid grid-cols-5 gap-2 max-h-[420px] overflow-y-auto pr-1">
+                      {products
+                        .filter(
+                          (p) =>
+                            (visBrandFilter === "All" || p.brand === visBrandFilter) &&
+                            (visSearch === "" ||
+                              p.name.toLowerCase().includes(visSearch.toLowerCase()) ||
+                              p.brand.toLowerCase().includes(visSearch.toLowerCase()))
+                        )
+                        .map((p) => (
+                          <button
+                            key={p.id}
+                            title={`${p.brand} — ${p.name}`}
+                            onClick={() => {
+                              setActiveLayerColour(p.hex);
+                              activeLayerColourRef.current = p.hex;
+                              setVisColourName(`${p.brand} — ${p.name}`);
+                              if (activeLayerIdRef.current) {
+                                setPaintLayers(prev => {
+                                  const next = prev.map(l =>
+                                    l.id === activeLayerIdRef.current ? { ...l, colour: p.hex } : l
+                                  );
+                                  paintLayersRef.current = next;
+                                  return next;
+                                });
+                              }
+                            }}
+                            className={[
+                              "w-10 h-10 rounded-full border-2 transition-all mx-auto block",
+                              activeLayerColour === p.hex
+                                ? "border-primary scale-110 shadow-md"
+                                : "border-border hover:border-primary/50",
+                            ].join(" ")}
+                            style={{ backgroundColor: p.hex }}
+                          />
+                        ))}
+                    </div>
+                  </>
+                )}
+
+                {visMode === "wallpaper" && (
+                  <>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Choose a wallpaper, then brush/lasso/polygon the wall area.
+                    </p>
+
+                    {/* Pattern size slider */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">Pattern size:</span>
+                      <input
+                        type="range"
+                        min="20"
+                        max="150"
+                        value={wallpaperScale}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setWallpaperScale(v);
+                          wallpaperScaleRef.current = v;
                         }}
-                        className={[
-                          "w-10 h-10 rounded-full border-2 transition-all mx-auto block",
-                          activeLayerColour === p.hex
-                            ? "border-primary scale-110 shadow-md"
-                            : "border-border hover:border-primary/50",
-                        ].join(" ")}
-                        style={{ backgroundColor: p.hex }}
+                        className="flex-1"
                       />
-                    ))}
-                </div>
+                      <span className="text-xs w-8 text-right">{wallpaperScale}px</span>
+                    </div>
+
+                    {/* Wallpaper swatch grid */}
+                    <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-1">
+                      {WALLPAPERS.map(wallpaper => (
+                        <button
+                          key={wallpaper.id}
+                          onClick={() => {
+                            setSelectedWallpaper(wallpaper);
+                            selectedWallpaperRef.current = wallpaper;
+                            // Preload pattern image for live preview
+                            const key = `preview_${wallpaper.id}`;
+                            if (!wallpaperPatternImgsRef.current.has(key)) {
+                              const img = new Image();
+                              img.onload = () => { wallpaperPatternImgsRef.current.set(key, img); };
+                              img.src = svgToDataUrl(getWallpaperPattern(wallpaper.style, wallpaper.colourFamily));
+                            }
+                          }}
+                          title={wallpaper.name}
+                          className={[
+                            "aspect-square rounded-lg border-2 overflow-hidden transition-all",
+                            selectedWallpaper?.id === wallpaper.id
+                              ? "border-foreground scale-105 shadow-lg"
+                              : "border-transparent hover:border-border",
+                          ].join(" ")}
+                          style={{
+                            backgroundImage: `url("${svgToDataUrl(getWallpaperPattern(wallpaper.style, wallpaper.colourFamily))}")`,
+                            backgroundRepeat: "repeat",
+                            backgroundSize: "30px 30px",
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Selected wallpaper buy card */}
+                    {selectedWallpaper && (
+                      <div className="mt-3 border border-border rounded-lg p-3 flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded border border-border flex-shrink-0"
+                          style={{
+                            backgroundImage: `url("${svgToDataUrl(getWallpaperPattern(selectedWallpaper.style, selectedWallpaper.colourFamily))}")`,
+                            backgroundRepeat: "repeat",
+                            backgroundSize: "20px 20px",
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{selectedWallpaper.name}</p>
+                          <p className="text-xs text-muted-foreground">{selectedWallpaper.brand} · ~£{selectedWallpaper.pricePerRoll}/roll</p>
+                        </div>
+                        <a
+                          href={selectedWallpaper.amazonUrl}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="text-xs bg-[#FF9900] text-black px-3 py-1.5 rounded font-medium hover:bg-[#FFB84D] flex-shrink-0"
+                        >
+                          Buy
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Pattern disclaimer */}
+                    <div className="mt-3 p-2 border border-border/50 rounded-lg bg-muted/30">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        <span className="font-medium">Preview notice:</span> Patterns are
+                        AI-generated recreations and may differ from actual products.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -2186,25 +2453,17 @@ export default function PaintVestimator() {
                   >
                     {/* Pattern preview */}
                     <div
-                      className="h-32 flex items-center justify-center text-4xl"
+                      className="h-32 w-full relative overflow-hidden"
                       style={{
-                        background:
-                          wallpaper.style === "Stripe"
-                            ? "repeating-linear-gradient(90deg, #f0f0f0 0px, #f0f0f0 20px, #e0e0e0 20px, #e0e0e0 40px)"
-                            : wallpaper.style === "Geometric"
-                            ? "repeating-linear-gradient(45deg, #f0f0f0 0px, #f0f0f0 10px, #e0e0e0 10px, #e0e0e0 20px)"
-                            : wallpaper.style === "Textured"
-                            ? `url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23999' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E")`
-                            : "#f5f5f5",
+                        backgroundImage: `url("${svgToDataUrl(getWallpaperPattern(wallpaper.style, wallpaper.colourFamily))}")`,
+                        backgroundRepeat: "repeat",
+                        backgroundSize: "60px 60px",
                       }}
                     >
-                      {wallpaper.style === "Floral"
-                        ? "🌸"
-                        : wallpaper.style === "Nature"
-                        ? "🌿"
-                        : wallpaper.style === "Feature"
-                        ? "🎨"
-                        : "🏠"}
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10" />
+                      <span className="absolute top-2 right-2 text-xs bg-white/80 text-foreground px-2 py-0.5 rounded-full font-medium shadow-sm">
+                        {wallpaper.style}
+                      </span>
                     </div>
 
                     <div className="p-4 space-y-3">
@@ -2256,6 +2515,16 @@ export default function PaintVestimator() {
                     </div>
                   </div>
                 ))}
+            </div>
+
+            {/* Pattern disclaimer */}
+            <div className="mt-2 p-3 border border-border/50 rounded-lg bg-muted/30">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <span className="font-medium">Pattern Preview Notice:</span> Wallpaper patterns shown are
+                AI-generated recreations designed to represent each style. They may differ from the actual
+                product. We are constantly refining our visualisation technology to improve accuracy.
+                Always check the seller&apos;s listing for the original pattern before purchasing.
+              </p>
             </div>
           </div>
         )}

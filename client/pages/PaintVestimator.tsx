@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { makeAwinLink, AFFILIATE_CONFIG } from "@/config/affiliates";
 import {
   PAINT_PRODUCTS as STATIC_PRODUCTS,
   PaintProduct,
@@ -114,7 +115,6 @@ const WALLPAPERS: Wallpaper[] = [
     patternRepeat: 26,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=graham+brown+superfresco+trellis+white+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=graham+brown+superfresco+trellis",
     isAffiliate: true,
   },
   {
@@ -129,7 +129,6 @@ const WALLPAPERS: Wallpaper[] = [
     patternRepeat: 53,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=graham+brown+superfresco+sage+floral+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=graham+brown+superfresco+sage+floral",
     isAffiliate: true,
   },
   {
@@ -144,7 +143,6 @@ const WALLPAPERS: Wallpaper[] = [
     patternRepeat: 12,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=graham+brown+navy+stripe+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=graham+brown+navy+stripe",
     isAffiliate: true,
   },
   {
@@ -158,7 +156,6 @@ const WALLPAPERS: Wallpaper[] = [
     coverageSqmPerRoll: 5.0,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=arthouse+marble+grey+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=arthouse+marble+grey+wallpaper",
     isAffiliate: true,
   },
   {
@@ -172,7 +169,6 @@ const WALLPAPERS: Wallpaper[] = [
     coverageSqmPerRoll: 5.0,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=arthouse+tropical+leaf+green+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=arthouse+tropical+leaf",
     isAffiliate: true,
   },
   {
@@ -186,7 +182,6 @@ const WALLPAPERS: Wallpaper[] = [
     coverageSqmPerRoll: 5.0,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=arthouse+geometric+gold+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=arthouse+geometric+gold",
     isAffiliate: true,
   },
   {
@@ -200,7 +195,6 @@ const WALLPAPERS: Wallpaper[] = [
     coverageSqmPerRoll: 5.0,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=holden+decor+botanical+pink+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=holden+botanical+pink",
     isAffiliate: true,
   },
   {
@@ -214,7 +208,6 @@ const WALLPAPERS: Wallpaper[] = [
     coverageSqmPerRoll: 5.0,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=holden+concrete+grey+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=holden+concrete+grey",
     isAffiliate: true,
   },
   {
@@ -228,7 +221,6 @@ const WALLPAPERS: Wallpaper[] = [
     coverageSqmPerRoll: 5.5,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=fine+decor+white+brick+effect+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=fine+decor+white+brick+wallpaper",
     isAffiliate: true,
   },
   {
@@ -242,7 +234,6 @@ const WALLPAPERS: Wallpaper[] = [
     coverageSqmPerRoll: 5.5,
     imageUrl: "",
     amazonUrl: "https://www.amazon.co.uk/s?k=fine+decor+geometric+teal+wallpaper&tag=paintbookco-21",
-    bqUrl: "https://www.diy.com/search?term=fine+decor+geometric+teal",
     isAffiliate: true,
   },
   {
@@ -1659,24 +1650,64 @@ export default function PaintVestimator() {
                           <span>🛒</span> Buy on Amazon
                         </a>
                       )}
-                      {detailProduct.affiliateLinks.bq && (
+
+                      {/* Farrow & Ball — Awin direct link (pending approval) */}
+                      {detailProduct.brand === "Farrow & Ball" && (
                         <a
-                          href={detailProduct.affiliateLinks.bq}
+                          href={makeAwinLink(
+                            AFFILIATE_CONFIG.awin.merchants.farrowAndBall.id,
+                            `https://www.farrow-ball.com/paint-colours/${detailProduct.name.toLowerCase().replace(/ /g, "-")}`
+                          )}
                           target="_blank"
                           rel="noopener noreferrer sponsored"
-                          className="flex items-center gap-2 bg-[#006B3F] text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-[#005530] transition-colors w-full justify-center"
+                          className="flex items-center gap-2 bg-[#2C2C2C] text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-[#1a1a1a] transition-colors w-full justify-center"
                         >
-                          <span>🏪</span> Buy at B&Q
+                          <span>🎨</span> Buy from Farrow &amp; Ball
                         </a>
                       )}
-                      {detailProduct.affiliateLinks.wickes && (
+
+                      {/* Dulux Decorator Centre — Awin link (pending approval) */}
+                      {detailProduct.brand === "Dulux" && (
                         <a
-                          href={detailProduct.affiliateLinks.wickes}
+                          href={makeAwinLink(
+                            AFFILIATE_CONFIG.awin.merchants.duluxDecoratorCentre.id,
+                            `https://www.duluxdecoratorcentre.co.uk/search?q=${encodeURIComponent(detailProduct.name)}`
+                          )}
                           target="_blank"
                           rel="noopener noreferrer sponsored"
-                          className="flex items-center gap-2 bg-[#E40000] text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-[#B30000] transition-colors w-full justify-center"
+                          className="flex items-center gap-2 bg-[#007DC3] text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-[#005a8e] transition-colors w-full justify-center"
+                        >
+                          <span>🎨</span> Buy from Dulux Decorator Centre
+                        </a>
+                      )}
+
+                      {/* Wickes via Awin — Crown, Valspar, Little Greene (pending approval) */}
+                      {["Crown", "Valspar", "Little Greene"].includes(detailProduct.brand) && (
+                        <a
+                          href={makeAwinLink(
+                            AFFILIATE_CONFIG.awin.merchants.wickes.id,
+                            `https://www.wickes.co.uk/search?term=${encodeURIComponent(detailProduct.name + " paint")}`
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="flex items-center gap-2 bg-[#E31837] text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-[#B01229] transition-colors w-full justify-center"
                         >
                           <span>🏠</span> Buy at Wickes
+                        </a>
+                      )}
+
+                      {/* Wilko — Awin link (pending approval; merchant ID TBD) */}
+                      {AFFILIATE_CONFIG.awin.merchants.wilko.id && (
+                        <a
+                          href={makeAwinLink(
+                            AFFILIATE_CONFIG.awin.merchants.wilko.id,
+                            `https://www.wilko.com/search?q=${encodeURIComponent(detailProduct.name + " paint")}`
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="flex items-center gap-2 bg-[#E31837] text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-[#B01229] transition-colors w-full justify-center"
+                        >
+                          <span>🛒</span> Wilko
                         </a>
                       )}
                     </div>
@@ -1696,9 +1727,7 @@ export default function PaintVestimator() {
                     </button>
 
                     <p className="mt-3 text-[10px] text-muted-foreground">
-                      PaintBookCo participates in affiliate programmes. We may
-                      earn a commission when you click through and make a
-                      purchase. This doesn't affect our recommendations.
+                      Affiliate links — we may earn commission at no extra cost to you
                     </p>
                   </div>
                 </div>
@@ -2206,20 +2235,23 @@ export default function PaintVestimator() {
                         >
                           🛒 Amazon
                         </a>
-                        {wallpaper.bqUrl && (
-                          <a
-                            href={wallpaper.bqUrl}
-                            target="_blank"
-                            rel="noopener noreferrer sponsored"
-                            className="flex items-center gap-1.5 bg-[#006B3F] text-white px-3 py-2 rounded text-xs font-medium hover:bg-[#005530] transition-colors flex-1 justify-center"
-                          >
-                            🏪 B&Q
-                          </a>
-                        )}
+                        <a
+                          href={makeAwinLink(
+                            AFFILIATE_CONFIG.awin.merchants.wickes.id,
+                            `https://www.wickes.co.uk/search?term=${encodeURIComponent(wallpaper.name + " wallpaper")}`
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="flex items-center gap-1.5 bg-[#E31837] text-white px-3 py-2 rounded text-xs font-medium hover:bg-[#B01229] transition-colors flex-1 justify-center"
+                        >
+                          🏠 Wickes
+                        </a>
                       </div>
 
                       {wallpaper.isAffiliate && (
-                        <p className="text-xs text-muted-foreground/60">Affiliate link</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">
+                          Affiliate links — we may earn commission at no extra cost to you
+                        </p>
                       )}
                     </div>
                   </div>
@@ -2381,9 +2413,10 @@ export default function PaintVestimator() {
       <footer className="border-t border-border mt-16 py-6 px-6 text-center">
         <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
           PaintBookCo participates in affiliate programmes including Amazon
-          Associates and Awin (B&Q, Wickes). We may earn a commission when you
-          click through and make a purchase at no extra cost to you. This
-          doesn't affect our recommendations. Prices shown are approximate RRP
+          Associates (tag: paintbookco-21) and Awin (publisher: 2909131) — programmes
+          include Dulux Decorator Centre, Farrow &amp; Ball, and Wickes. We may earn a
+          commission when you click through and make a purchase at no extra cost to you.
+          This doesn't affect our recommendations. Prices shown are approximate RRP
           and may differ at point of sale.
         </p>
       </footer>

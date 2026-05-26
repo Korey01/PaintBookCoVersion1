@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { makeAwinLink, AFFILIATE_CONFIG } from "@/config/affiliates";
-import { getWallpaperPattern, svgToDataUrl } from "@/data/wallpaperPatterns";
 import {
   PAINT_PRODUCTS as STATIC_PRODUCTS,
   PaintProduct,
@@ -371,6 +370,38 @@ const WALLPAPERS: Wallpaper[] = [
     isAffiliate: true,
   },
 ];
+
+// ── Wallpaper S3 pattern image URLs ───────────────────────────────────────────
+
+const S3_BASE = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/wallpaper-patterns/";
+const S3_FALLBACK = `${S3_BASE}textured-woodchip.png`;
+
+const WALLPAPER_PATTERN_URLS: Record<string, string> = {
+  "gb-superfresco-paste-white":  `${S3_BASE}geometric-white-trellis.png`,
+  "gb-superfresco-sage":         `${S3_BASE}floral-sage.png`,
+  "gb-paste-navy-stripe":        `${S3_BASE}stripe-navy.png`,
+  "arthouse-marble-grey":        `${S3_BASE}textured-marble-grey.png`,
+  "arthouse-tropical-green":     `${S3_BASE}nature-tropical.png`,
+  "arthouse-geometric-gold":     `${S3_BASE}geometric-gold.png`,
+  "holden-botanical-pink":       `${S3_BASE}floral-pink.png`,
+  "holden-concrete-grey":        `${S3_BASE}textured-concrete.png`,
+  "bq-fine-decor-white-brick":   `${S3_BASE}textured-white-brick.png`,
+  "bq-fine-decor-geo-teal":      `${S3_BASE}geometric-teal.png`,
+  "amazon-floral-mural-blue":    `${S3_BASE}feature-blue-floral.png`,
+  "amazon-abstract-terracotta":  `${S3_BASE}abstract-terracotta.png`,
+  "amazon-grasscloth-natural":   `${S3_BASE}textured-grasscloth.png`,
+  "amazon-dark-floral-green":    `${S3_BASE}floral-dark-green.png`,
+  "amazon-herringbone-grey":     `${S3_BASE}geometric-herringbone.png`,
+  "amazon-blush-stripe":         `${S3_BASE}stripe-blush.png`,
+  "amazon-navy-floral":          `${S3_BASE}floral-navy.png`,
+  "amazon-white-woodchip":       `${S3_BASE}textured-woodchip.png`,
+  "amazon-mustard-geometric":    `${S3_BASE}geometric-mustard.png`,
+  "amazon-silver-plain":         `${S3_BASE}plain-silver.png`,
+};
+
+function getPatternUrl(id: string): string {
+  return WALLPAPER_PATTERN_URLS[id] ?? S3_FALLBACK;
+}
 
 // ── Calculation helpers ───────────────────────────────────────────────────────
 
@@ -849,6 +880,7 @@ export default function PaintVestimator() {
         let patternImg = wallpaperPatternImgsRef.current.get(patternKey);
         if (!patternImg) {
           patternImg = new Image();
+          patternImg.crossOrigin = "anonymous";
           const captured = { key: patternKey, url: layer.wallpaperPattern };
           patternImg.onload = () => {
             wallpaperPatternImgsRef.current.set(captured.key, patternImg!);
@@ -904,10 +936,10 @@ export default function PaintVestimator() {
             }
           } else {
             // Pattern not yet loaded — trigger load then redraw
-            const svgUrl = svgToDataUrl(getWallpaperPattern(wp.style, wp.colourFamily));
             const img = new Image();
+            img.crossOrigin = "anonymous";
             img.onload = () => { wallpaperPatternImgsRef.current.set(patternKey, img); redrawMainCanvas(); };
-            img.src = svgUrl;
+            img.src = getPatternUrl(wp.id);
           }
         } else {
           const colour = activeLayerColourRef.current;
@@ -1032,7 +1064,7 @@ export default function PaintVestimator() {
       colour: activeLayerColourRef.current,
       ...(mode === "wallpaper" && wp
         ? {
-            wallpaperPattern: svgToDataUrl(getWallpaperPattern(wp.style, wp.colourFamily)),
+            wallpaperPattern: getPatternUrl(wp.id),
             wallpaperScale: wallpaperScaleRef.current,
           }
         : {}),
@@ -2290,23 +2322,53 @@ export default function PaintVestimator() {
                       Choose a wallpaper, then brush/lasso/polygon the wall area.
                     </p>
 
-                    {/* Pattern size slider */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">Pattern size:</span>
-                      <input
-                        type="range"
-                        min="20"
-                        max="150"
-                        value={wallpaperScale}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          setWallpaperScale(v);
-                          wallpaperScaleRef.current = v;
-                        }}
-                        className="flex-1"
-                      />
-                      <span className="text-xs w-8 text-right">{wallpaperScale}px</span>
-                    </div>
+                    {/* Pattern size slider — show thumbnail when wallpaper selected */}
+                    {selectedWallpaper ? (
+                      <div className="flex items-center gap-3 p-2 border border-border rounded-lg mb-3">
+                        <img
+                          src={getPatternUrl(selectedWallpaper.id)}
+                          alt={selectedWallpaper.name}
+                          className="w-10 h-10 rounded object-cover flex-shrink-0 border border-border"
+                          loading="lazy"
+                        />
+                        <div className="flex-1">
+                          <p className="text-xs font-medium truncate mb-1">{selectedWallpaper.name}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Scale:</span>
+                            <input
+                              type="range"
+                              min="40"
+                              max="200"
+                              value={wallpaperScale}
+                              onChange={(e) => {
+                                const v = Number(e.target.value);
+                                setWallpaperScale(v);
+                                wallpaperScaleRef.current = v;
+                              }}
+                              className="flex-1"
+                            />
+                            <span className="text-xs text-muted-foreground w-8 text-right">{wallpaperScale}px</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">Pattern size:</span>
+                        <input
+                          type="range"
+                          min="40"
+                          max="200"
+                          value={wallpaperScale}
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            setWallpaperScale(v);
+                            wallpaperScaleRef.current = v;
+                          }}
+                          className="flex-1"
+                        />
+                        <span className="text-xs w-8 text-right">{wallpaperScale}px</span>
+                      </div>
+                    )}
 
                     {/* Wallpaper swatch grid */}
                     <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-1">
@@ -2316,12 +2378,13 @@ export default function PaintVestimator() {
                           onClick={() => {
                             setSelectedWallpaper(wallpaper);
                             selectedWallpaperRef.current = wallpaper;
-                            // Preload pattern image for live preview
+                            // Preload S3 pattern image for canvas tiling
                             const key = `preview_${wallpaper.id}`;
                             if (!wallpaperPatternImgsRef.current.has(key)) {
                               const img = new Image();
+                              img.crossOrigin = "anonymous";
                               img.onload = () => { wallpaperPatternImgsRef.current.set(key, img); };
-                              img.src = svgToDataUrl(getWallpaperPattern(wallpaper.style, wallpaper.colourFamily));
+                              img.src = getPatternUrl(wallpaper.id);
                             }
                           }}
                           title={wallpaper.name}
@@ -2331,25 +2394,25 @@ export default function PaintVestimator() {
                               ? "border-foreground scale-105 shadow-lg"
                               : "border-transparent hover:border-border",
                           ].join(" ")}
-                          style={{
-                            backgroundImage: `url("${svgToDataUrl(getWallpaperPattern(wallpaper.style, wallpaper.colourFamily))}")`,
-                            backgroundRepeat: "repeat",
-                            backgroundSize: "30px 30px",
-                          }}
-                        />
+                        >
+                          <img
+                            src={getPatternUrl(wallpaper.id)}
+                            alt={wallpaper.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </button>
                       ))}
                     </div>
 
                     {/* Selected wallpaper buy card */}
                     {selectedWallpaper && (
                       <div className="mt-3 border border-border rounded-lg p-3 flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded border border-border flex-shrink-0"
-                          style={{
-                            backgroundImage: `url("${svgToDataUrl(getWallpaperPattern(selectedWallpaper.style, selectedWallpaper.colourFamily))}")`,
-                            backgroundRepeat: "repeat",
-                            backgroundSize: "20px 20px",
-                          }}
+                        <img
+                          src={getPatternUrl(selectedWallpaper.id)}
+                          alt={selectedWallpaper.name}
+                          className="w-12 h-12 rounded object-cover flex-shrink-0 border border-border"
+                          loading="lazy"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate">{selectedWallpaper.name}</p>
@@ -2359,9 +2422,9 @@ export default function PaintVestimator() {
                           href={selectedWallpaper.amazonUrl}
                           target="_blank"
                           rel="noopener noreferrer sponsored"
-                          className="text-xs bg-[#FF9900] text-black px-3 py-1.5 rounded font-medium hover:bg-[#FFB84D] flex-shrink-0"
+                          className="text-xs bg-[#FF9900] text-black px-3 py-1.5 rounded font-medium hover:bg-[#FFB84D] flex-shrink-0 whitespace-nowrap"
                         >
-                          Buy
+                          🛒 Buy
                         </a>
                       </div>
                     )}
@@ -2369,8 +2432,10 @@ export default function PaintVestimator() {
                     {/* Pattern disclaimer */}
                     <div className="mt-3 p-2 border border-border/50 rounded-lg bg-muted/30">
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        <span className="font-medium">Preview notice:</span> Patterns are
-                        AI-generated recreations and may differ from actual products.
+                        <span className="font-medium">Pattern Preview Notice:</span> Wallpaper
+                        patterns shown are AI-generated representations designed to reflect each
+                        style. They may differ from the actual product. Always check the
+                        seller&apos;s listing before purchasing.
                       </p>
                     </div>
                   </>
@@ -2452,16 +2517,15 @@ export default function PaintVestimator() {
                     className="border border-border rounded-xl overflow-hidden hover:border-foreground/30 transition-colors"
                   >
                     {/* Pattern preview */}
-                    <div
-                      className="h-32 w-full relative overflow-hidden"
-                      style={{
-                        backgroundImage: `url("${svgToDataUrl(getWallpaperPattern(wallpaper.style, wallpaper.colourFamily))}")`,
-                        backgroundRepeat: "repeat",
-                        backgroundSize: "60px 60px",
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10" />
-                      <span className="absolute top-2 right-2 text-xs bg-white/80 text-foreground px-2 py-0.5 rounded-full font-medium shadow-sm">
+                    <div className="h-32 w-full relative overflow-hidden rounded-t-xl">
+                      <img
+                        src={getPatternUrl(wallpaper.id)}
+                        alt={`${wallpaper.name} pattern preview`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
+                      <span className="absolute top-2 right-2 text-xs bg-white/80 text-black px-2 py-0.5 rounded-full font-medium">
                         {wallpaper.style}
                       </span>
                     </div>
@@ -2520,10 +2584,10 @@ export default function PaintVestimator() {
             {/* Pattern disclaimer */}
             <div className="mt-2 p-3 border border-border/50 rounded-lg bg-muted/30">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                <span className="font-medium">Pattern Preview Notice:</span> Wallpaper patterns shown are
-                AI-generated recreations designed to represent each style. They may differ from the actual
-                product. We are constantly refining our visualisation technology to improve accuracy.
-                Always check the seller&apos;s listing for the original pattern before purchasing.
+                <span className="font-medium">Pattern Preview Notice:</span> Wallpaper patterns shown
+                are AI-generated representations designed to reflect each style. They may differ from
+                the actual product. We are constantly refining our visualisation technology to improve
+                accuracy. Always check the seller&apos;s listing for the original pattern before purchasing.
               </p>
             </div>
           </div>

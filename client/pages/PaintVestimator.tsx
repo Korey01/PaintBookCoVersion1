@@ -1320,6 +1320,7 @@ export default function PaintVestimator() {
           // Create or update the AI layer
           layerMaskImgsRef.current.set("ai", maskImg);
           const aiMode = visModeRef.current;
+          console.log("AI layer creating - mode:", aiMode, "wp:", selectedWallpaperRef.current?.id);
           const aiWp = selectedWallpaperRef.current;
           const aiLayer: PaintLayer = {
             id: "ai",

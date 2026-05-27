@@ -1319,15 +1319,21 @@ export default function PaintVestimator() {
           setVisMaskImg(maskImg);
           // Create or update the AI layer
           layerMaskImgsRef.current.set("ai", maskImg);
+          const aiMode = visModeRef.current;
+          const aiWp = selectedWallpaperRef.current;
           const aiLayer: PaintLayer = {
             id: "ai",
-            label: "AI Walls",
+            label: aiMode === "wallpaper" && aiWp ? `AI Walls — ${aiWp.name.split(" ").slice(0,2).join(" ")}` : "AI Walls",
             tool: "ai",
-            type: "paint",
+            type: aiMode,
             colour: activeLayerColourRef.current,
             opacity: activeLayerOpacityRef.current,
             maskDataUrl: maskUrl,
             visible: true,
+            ...(aiMode === "wallpaper" && aiWp ? {
+              wallpaperPattern: getPatternUrl(aiWp.id),
+              wallpaperScale: wallpaperScaleRef.current,
+            } : {}),
           };
           setPaintLayers(prev => {
             const without = prev.filter(l => l.id !== "ai");

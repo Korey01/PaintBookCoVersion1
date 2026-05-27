@@ -709,10 +709,11 @@ export default function PaintVestimator() {
   const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
   const [visColourName, setVisColourName] = useState("Select a colour");
   const [visBrandFilter, setVisBrandFilter] = useState("All");
-  const [visSearch, setVisSearch] = useState("");
   const [visMode, setVisMode] = useState<"paint" | "wallpaper">("paint");
   const [selectedWallpaper, setSelectedWallpaper] = useState<typeof WALLPAPERS[0] | null>(null);
-  const [wallpaperScale, setWallpaperScale] = useState(60);
+  const [wallpaperScale, setWallpaperScale] = useState(120);
+
+  const [visSearch, setVisSearch] = useState("");
 
   // Visualiser masking tools
   const [visTool, setVisTool] = useState<VisTool>("ai");
@@ -1178,6 +1179,8 @@ export default function PaintVestimator() {
   // ── Keep refs in sync with state ───────────────────────────────────────────
 
   useEffect(() => { paintLayersRef.current = paintLayers; }, [paintLayers]);
+  useEffect(() => { visModeRef.current = visMode; }, [visMode]);
+  useEffect(() => { wallpaperScaleRef.current = wallpaperScale; }, [wallpaperScale]);
   useEffect(() => { activeLayerIdRef.current = activeLayerId; }, [activeLayerId]);
   useEffect(() => { activeLayerColourRef.current = activeLayerColour; }, [activeLayerColour]);
   useEffect(() => { activeLayerOpacityRef.current = activeLayerOpacity; }, [activeLayerOpacity]);

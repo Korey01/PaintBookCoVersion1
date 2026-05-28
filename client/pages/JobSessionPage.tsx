@@ -87,14 +87,12 @@ export default function JobSessionPage() {
       }
       setSession(sess);
 
-      if (sess.transaction_id) {
-        const { data: tx } = await supabase
-          .from("transactions")
-          .select("*, painters(first_name, last_name)")
-          .eq("id", sess.transaction_id)
-          .single();
-        setTransaction(tx);
-      }
+      const { data: tx } = await supabase
+        .from("transactions")
+        .select("*, painters(first_name, last_name)")
+        .eq("session_id", sess.id)
+        .maybeSingle();
+      if (tx) setTransaction(tx);
 
       // Check for existing review
       const { data: existingReview } = await supabase

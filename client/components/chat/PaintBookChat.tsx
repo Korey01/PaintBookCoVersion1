@@ -341,7 +341,7 @@ export function PaintBookChat({
   }
 
   // ── Custom PII-filtered message input ────────────────────────────────────────
-  const CustomInput = React.useCallback(() => {
+  function CustomInput() {
     const [text, setText] = React.useState("");
     const [blocked, setBlocked] = React.useState("");
 
@@ -392,7 +392,7 @@ export function PaintBookChat({
         </div>
       </div>
     );
-  }, [channelRef]);
+  }
 
   // ── Full chat UI ──────────────────────────────────────────────────────────
   return (

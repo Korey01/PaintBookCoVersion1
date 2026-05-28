@@ -131,6 +131,7 @@ export function PaintBookChat({
         );
 
         const data = await res.json().catch(() => ({}));
+        console.log("generate-stream-token response:", res.status, JSON.stringify(data).slice(0, 200));
 
         if (!mounted) return;
 

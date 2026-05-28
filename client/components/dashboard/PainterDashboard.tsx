@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { PaintBookChat } from "@/components/chat/PaintBookChat";
+import { DisputeModal } from "@/components/dispute/DisputeModal";
 import {
   BarChart3,
   CheckCircle2,
@@ -788,6 +789,7 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: a
   const [invoiceNavigating, setInvoiceNavigating] = React.useState<string | null>(null)
   const [passOnConfirm, setPassOnConfirm] = React.useState<string | null>(null)
   const [viewInvoiceJob, setViewInvoiceJob] = React.useState<{session: any, tx: any} | null>(null)
+  const [disputeJob, setDisputeJob] = React.useState<{session: any, tx: any} | null>(null)
   const [unreadCounts, setUnreadCounts] = React.useState<Record<string, number>>({})
   const highlightRef = React.useRef<HTMLDivElement | null>(null)
 
@@ -1058,6 +1060,29 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: a
                               Pass on Job
                             </button>
                           )
+                        )}
+
+                        {["funded", "in_progress", "completion_requested"].includes(session.status) && (
+                          <button
+                            onClick={() => setDisputeJob({ session, tx })}
+                            className="w-full border border-destructive/50 text-destructive py-2 rounded-md text-sm hover:bg-destructive/10 transition-colors mt-2"
+                          >
+                            ⚠️ Raise Dispute
+                          </button>
+                        )}
+
+                        {disputeJob?.session.id === session.id && disputeJob.tx && (
+                          <DisputeModal
+                            transactionId={disputeJob.tx.id}
+                            sessionId={disputeJob.session.id}
+                            raisedBy="painter"
+                            onClose={() => setDisputeJob(null)}
+                            onSuccess={() => {
+                              setDisputeJob(null);
+                              loadSessions();
+                            }}
+                            supabase={supabase}
+                          />
                         )}
                       </div>
                       {isOpen && session.chat_channel_id && (

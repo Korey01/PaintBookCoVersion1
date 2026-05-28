@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabase";
 import { PaintBookChat } from "@/components/chat/PaintBookChat";
+import { DisputeModal } from "@/components/dispute/DisputeModal";
 import { CheckCircle2, Clock, MessageSquare, Shield, AlertTriangle, XCircle, ChevronRight, Loader2, Star } from "lucide-react";
 
 const STATUS_STEPS = [
@@ -57,6 +58,7 @@ export default function JobSessionPage() {
   const [payLoading, setPayLoading] = useState(false);
   const [showFindAnotherPainterConfirm, setShowFindAnotherPainterConfirm] = useState(false);
   const [findingAnotherPainter, setFindingAnotherPainter] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
 
   // Review state
   const [review, setReview] = useState<any>(null);
@@ -442,12 +444,27 @@ export default function JobSessionPage() {
 
             {["funded", "in_progress", "completion_requested"].includes(status) && status !== "disputed" && (
               <button
-                onClick={() => handleAction("raise-dispute")}
-                disabled={!!actionLoading}
-                className="w-full border border-destructive text-destructive py-3 rounded-md text-sm font-medium hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                onClick={() => setShowDisputeModal(true)}
+                className="w-full border border-destructive/50 text-destructive py-3 rounded-xl text-sm hover:bg-destructive/10 transition-colors"
               >
-                {actionLoading === "raise-dispute" ? "Processing..." : "Raise a Dispute"}
+                ⚠️ Raise a Dispute
               </button>
+            )}
+
+            {showDisputeModal && transaction && (
+              <DisputeModal
+                transactionId={transaction.id}
+                sessionId={session?.id || ""}
+                raisedBy="customer"
+                customerToken={token || ""}
+                onClose={() => setShowDisputeModal(false)}
+                onSuccess={() => {
+                  setShowDisputeModal(false);
+                  setActionMessage("Dispute raised. Our team will contact you within 24 hours.");
+                  loadSession();
+                }}
+                supabase={supabase}
+              />
             )}
 
             {["job_posted", "painter_contacted", "invoice_sent"].includes(status) && status !== "disputed" && (

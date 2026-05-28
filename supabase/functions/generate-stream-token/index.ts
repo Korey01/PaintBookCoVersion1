@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     // Painter validation
     const { data: painter } = await serviceClient
       .from("painters")
-      .select("id, first_name, last_name, kyc_status, is_active")
+      .select("id, user_id, first_name, last_name, kyc_status, is_active")
       .eq("user_id", user.id)
       .single();
 
@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     // Also check session.painter_id — stored as auth UUID (painter.user_id)
+    console.log("painter check - session.painter_id:", session.painter_id, "painter.id:", painter.id, "painter.user_id:", painter.user_id);
     const sessionPainterMatch = session.painter_id === painter.user_id || session.painter_id === painter.id;
 
     if (!tx && !sessionPainterMatch) {
@@ -199,3 +200,5 @@ function json(data: unknown, status = 200): Response {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+ 
+ 

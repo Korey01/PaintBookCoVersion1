@@ -18,15 +18,18 @@ export function buildSoapEnvelope(
     .map(([k, v]) => `<${k}>${v}</${k}>`)
     .join("\n      ");
 
+  const paramXmlM = Object.entries(params)
+    .map(([k, v]) => `<m:${k}>${v}</m:${k}>`)
+    .join("\n      ");
+
   return `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:m="http://transpact.com/partners">
   <soap:Body>
-    <${method} xmlns="http://transpact.com/partners/">
-      ${paramXml}
-    </${method}>
+    <m:${method}>
+      ${paramXmlM}
+    </m:${method}>
   </soap:Body>
 </soap:Envelope>`;
 }
@@ -109,6 +112,8 @@ export function transpactErrorMessage(code: number): string {
     `Transpact returned an unexpected error (code ${code}). Please contact support.`
   );
 }
+ 
+ 
  
  
  

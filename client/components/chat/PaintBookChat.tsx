@@ -435,10 +435,10 @@ export function PaintBookChat({
         <div className="flex-1 overflow-hidden">
           <Chat client={chatClient}>
             <Channel channel={streamChannel}>
-              <Window>
+              <Window hideOnThread>
                 <MessageList />
-                <CustomInput />
               </Window>
+              <CustomInput />
             </Channel>
           </Chat>
         </div>

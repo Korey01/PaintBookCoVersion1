@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     const adminCustomerChannelId = `dispute-customer-${sessionId}`;
     const adminPainterChannelId = `dispute-painter-${sessionId}`;
 
-    const { data: dispute } = await serviceClient.from("disputes").insert({
+    const { data: dispute, error: disputeError } = await serviceClient.from("disputes").insert({
       transaction_id,
       session_id: sessionId,
       raised_by,
@@ -65,13 +65,20 @@ Deno.serve(async (req) => {
       admin_customer_channel_id: adminCustomerChannelId,
       admin_painter_channel_id: adminPainterChannelId,
     }).select().single();
+    if (disputeError) console.error("Dispute insert error:", JSON.stringify(disputeError));
+    else console.log("Dispute created:", dispute?.id);
 
     // Create Stream dispute channels
     const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
     const streamApiSecret = Deno.env.get("STREAM_API_SECRET")!;
     const streamClient = new StreamChat(streamApiKey, streamApiSecret);
 
-    const adminUserId = "admin";
+    // Get admin user ID from auth
+    const adminEmail = Deno.env.get("ADMIN_EMAIL") ?? "";
+    const { data: adminUser } = await serviceClient.auth.admin.listUsers();
+    const admin = adminUser?.users?.find((u: any) => u.email === adminEmail);
+    const adminUserId = admin?.id ?? "admin";
+    console.log("Admin user ID:", adminUserId);
     const customerId = `customer-${sessionId}`;
     const painterId = transaction.painters?.user_id || transaction.painter_id;
 
@@ -153,3 +160,4 @@ Deno.serve(async (req) => {
     return json({ error: "An unexpected error occurred" }, 500);
   }
 });
+ 

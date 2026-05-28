@@ -379,14 +379,42 @@ export default function AdminDashboard() {
     if (!messageText.trim()) return;
     try {
       const { StreamChat } = await import("stream-chat");
-      const streamClient = StreamChat.getInstance(import.meta.env.VITE_STREAM_API_KEY);
+      const streamApiKey = import.meta.env.VITE_STREAM_API_KEY;
+      const streamClient = StreamChat.getInstance(streamApiKey);
+
+      // Connect admin if not already connected
+      if (!streamClient.userID) {
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        const tokenRes = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+              "Authorization": `Bearer ${authSession?.access_token}`,
+            },
+            body: JSON.stringify({ session_id: "admin", role: "admin" }),
+          }
+        );
+        const tokenData = await tokenRes.json();
+        if (tokenData.token && tokenData.user_id) {
+          await streamClient.connectUser(
+            { id: tokenData.user_id, name: "PaintBookCo Admin", role: "admin" },
+            tokenData.token
+          );
+        }
+      }
+
       const channel = streamClient.channel("messaging", channelId);
-      await channel.sendMessage({ text: messageText });
+      await channel.watch();
+      await channel.sendMessage({ text: messageText, user_id: "admin" });
       setMessage({ text: "Message sent successfully", type: "success" });
       setMessagingId(null);
       setAdminMessage("");
-    } catch {
-      setMessage({ text: "Failed to send message. Ensure admin is connected to Stream.", type: "error" });
+    } catch (err) {
+      console.error("Admin message error:", err);
+      setMessage({ text: "Failed to send message. Please try again.", type: "error" });
     }
     setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };

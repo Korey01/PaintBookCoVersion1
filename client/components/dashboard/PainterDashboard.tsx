@@ -350,9 +350,7 @@ function AvailableJobsTab({
         }
       )
       const result = await res.json()
-      if (result.success && result.channel_id) {
-        navigate(`/chat/${result.channel_id}?token=${result.painter_token}&user=${painter.id}&role=painter`)
-      } else if (result.success) {
+      if (result.success) {
         onTabChange("my-jobs")
       } else {
         setChatError(result.error || "Failed to start chat. Please try again.")
@@ -828,29 +826,12 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: a
   const [passOnLoading, setPassOnLoading] = React.useState(false)
 
   const openChatWithInvoice = async (session: any) => {
-    setInvoiceNavigating(session.id)
-    try {
-      const { data: { session: authSession } } = await supabase.auth.getSession()
-      if (!authSession) return
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${authSession.access_token}`,
-          },
-          body: JSON.stringify({ session_id: session.id }),
-        }
-      )
-      const data = await res.json()
-      if (data.token) {
-        navigate(`/chat/${session.chat_channel_id}?token=${data.token}&user=${painter.id}&role=painter&openInvoice=true`)
-      }
-    } finally {
-      setInvoiceNavigating(null)
-    }
+    // Open chat in job pane and show invoice modal
+    setActiveChatId(session.id)
+    // Scroll to the job
+    setTimeout(() => {
+      document.getElementById(`job-${session.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }, 100)
   }
 
   const handlePassOnJob = async (sessionId: string) => {

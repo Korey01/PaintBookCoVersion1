@@ -340,6 +340,60 @@ export function PaintBookChat({
     );
   }
 
+  // ── Custom PII-filtered message input ────────────────────────────────────────
+  const CustomInput = React.useCallback(() => {
+    const [text, setText] = React.useState("");
+    const [blocked, setBlocked] = React.useState("");
+
+    const onSend = async () => {
+      const content = text.trim();
+      if (!content) return;
+      console.log("CustomInput onSend:", content);
+
+      const hasPII = PII_PATTERNS.some(p => {
+        p.lastIndex = 0;
+        return p.test(content);
+      }) || containsHiddenPhone(content);
+
+      if (hasPII) {
+        setBlocked("⚠️ Contact details cannot be shared before payment is secured.");
+        setTimeout(() => setBlocked(""), 4000);
+        return;
+      }
+
+      setText("");
+      setBlocked("");
+      await channelRef.current?.sendMessage({ text: content });
+    };
+
+    return (
+      <div className="p-3 border-t border-border">
+        {blocked && (
+          <div className="mb-2 px-3 py-1.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded">
+            {blocked}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(); } }}
+            placeholder="Type a message…"
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:border-foreground"
+          />
+          <button
+            onClick={onSend}
+            disabled={!text.trim()}
+            className="px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-foreground/90 transition-colors"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    );
+  }, [channelRef]);
+
   // ── Full chat UI ──────────────────────────────────────────────────────────
   return (
     <>
@@ -383,7 +437,7 @@ export function PaintBookChat({
             <Channel channel={streamChannel}>
               <Window>
                 <MessageList />
-                <MessageInput overrideSubmitHandler={handleSubmit} disableAttachments />
+                <CustomInput />
               </Window>
             </Channel>
           </Chat>

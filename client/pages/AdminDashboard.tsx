@@ -385,6 +385,7 @@ export default function AdminDashboard() {
       // Connect admin if not already connected
       if (!streamClient.userID) {
         const { data: { session: authSession } } = await supabase.auth.getSession();
+        if (!authSession?.access_token) throw new Error("No auth session");
         const tokenRes = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-stream-token`,
           {
@@ -392,18 +393,19 @@ export default function AdminDashboard() {
             headers: {
               "Content-Type": "application/json",
               "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${authSession?.access_token}`,
+              "Authorization": `Bearer ${authSession.access_token}`,
             },
-            body: JSON.stringify({ session_id: "admin", role: "admin" }),
+            body: JSON.stringify({ session_id: "admin" }),
           }
         );
         const tokenData = await tokenRes.json();
-        if (tokenData.token && tokenData.user_id) {
-          await streamClient.connectUser(
-            { id: tokenData.user_id, name: "PaintBookCo Admin", role: "admin" },
-            tokenData.token
-          );
-        }
+        console.log("Admin Stream token response:", tokenRes.status, JSON.stringify(tokenData).slice(0, 100));
+        if (!tokenData.token || !tokenData.user_id) throw new Error(`Token fetch failed: ${JSON.stringify(tokenData)}`);
+        await streamClient.connectUser(
+          { id: tokenData.user_id, name: "PaintBookCo Admin", role: "admin" },
+          tokenData.token
+        );
+        console.log("Admin connected to Stream as:", tokenData.user_id);
       }
 
       const channel = streamClient.channel("messaging", channelId);

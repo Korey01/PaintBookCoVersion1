@@ -225,6 +225,7 @@ export default function AdminDashboard() {
   const [messagingId, setMessagingId] = useState<string | null>(null);
   const [adminMessage, setAdminMessage] = useState("");
   const [messageRecipient, setMessageRecipient] = useState<"customer" | "painter">("customer");
+  const [activeDisputeChannel, setActiveDisputeChannel] = useState<{id: string; type: "customer" | "painter"} | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -263,7 +264,7 @@ export default function AdminDashboard() {
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=eq.approved&insurance_verified=eq.true&is_active=eq.false&select=*&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/sessions?select=*,transactions(id,invoice_id,amount,commission_rate,painter_payout,status,invoice_html,funded_at,completed_at,disputed_at,invoice_sent_at,session_id,painter_id,customer_first_name,customer_last_name,customer_email,customer_phone,customer_postcode)&order=created_at.desc&limit=50`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/transactions?select=*&order=created_at.desc&limit=50`, { headers }),
-        fetch(`${SUPABASE_URL}/rest/v1/transactions?status=eq.disputed&select=*,painters(id,first_name,last_name,email,phone)&order=disputed_at.desc`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/disputes?select=*,transactions(id,amount,painter_id,customer_email,customer_first_name,customer_last_name,disputed_at,painters(id,first_name,last_name,email,phone))&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?is_active=eq.true&select=id`, { headers }),
       ]);
 
@@ -289,7 +290,7 @@ export default function AdminDashboard() {
         pendingInsurance: (insurance || []).length,
         readyToActivate: (activate || []).length,
         activePainters: (active || []).length,
-        openDisputes: (disp || []).length,
+        openDisputes: (disp || []).filter((d: any) => d.status !== "resolved").length,
         jobsToday: todayJobs,
       });
     } catch (err) {
@@ -374,29 +375,52 @@ export default function AdminDashboard() {
     setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
 
-  const sendAdminMessage = async (dispute: any) => {
+  const sendAdminMessage = async (channelId: string, messageText: string) => {
+    if (!messageText.trim()) return;
     try {
-      await fetch(`${SUPABASE_URL}/functions/v1/admin-action`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
-          "apikey": ANON_KEY,
-        },
-        body: JSON.stringify({
-          action: "send_dispute_message",
-          painter_email: dispute.painter_email || dispute.painters?.email,
-          transaction_id: dispute.id,
-          customer_email: dispute.customer_email,
-          message: adminMessage,
-          recipient: messageRecipient,
-        }),
-      });
+      const { StreamChat } = await import("stream-chat");
+      const streamClient = StreamChat.getInstance(import.meta.env.VITE_STREAM_API_KEY);
+      const channel = streamClient.channel("messaging", channelId);
+      await channel.sendMessage({ text: messageText });
       setMessage({ text: "Message sent successfully", type: "success" });
       setMessagingId(null);
       setAdminMessage("");
     } catch {
-      setMessage({ text: "Failed to send message", type: "error" });
+      setMessage({ text: "Failed to send message. Ensure admin is connected to Stream.", type: "error" });
+    }
+    setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+  };
+
+  const openDisputeChannel = (channelId: string, type: "customer" | "painter") => {
+    setActiveDisputeChannel({ id: channelId, type });
+    setMessagingId(channelId);
+    setAdminMessage("");
+  };
+
+  const resolveDispute = async (disputeId: string) => {
+    const notes = prompt("Enter resolution notes:");
+    if (!notes) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/disputes?id=eq.${disputeId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+          "apikey": ANON_KEY,
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify({
+          status: "resolved",
+          resolution_notes: notes,
+          resolved_by: "admin",
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+      });
+      setMessage({ text: "Dispute marked as resolved", type: "success" });
+      await loadAll(session.access_token);
+    } catch {
+      setMessage({ text: "Failed to resolve dispute", type: "error" });
     }
     setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
@@ -872,86 +896,112 @@ export default function AdminDashboard() {
                 {disputes.length === 0 ? (
                   <div className="border border-border rounded-xl p-8 text-center text-muted-foreground">
                     <AlertTriangle className="h-8 w-8 mx-auto mb-3 opacity-40" />
-                    <p>No open disputes</p>
+                    <p>No disputes</p>
                   </div>
                 ) : disputes.map(d => (
-                  <div key={d.id} className={cardClass}>
+                  <div key={d.id} className="border border-border rounded-xl p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-mono text-xs text-muted-foreground">{d.invoice_id}</p>
-                        <p className="font-medium mt-1">£{d.amount}</p>
+                        <p className="font-medium text-sm">Dispute #{d.id.slice(-6).toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Raised by {d.raised_by} · {new Date(d.created_at).toLocaleDateString("en-GB")}
+                        </p>
+                        {d.transactions?.amount && (
+                          <p className="text-xs text-muted-foreground">Amount: £{d.transactions.amount}</p>
+                        )}
+                        <p className="text-xs mt-1 border border-border rounded px-2 py-1 inline-block">
+                          {d.reason.slice(0, 120)}{d.reason.length > 120 ? "..." : ""}
+                        </p>
                       </div>
-                      <StatusBadge status={d.status} />
+                      <span className={`text-xs px-2 py-1 rounded border ${
+                        d.status === "open" ? "text-red-400 bg-red-900/20 border-red-800/40" :
+                        d.status === "investigating" ? "text-amber-400 bg-amber-900/20 border-amber-800/40" :
+                        "text-green-400 bg-green-900/20 border-green-800/40"
+                      }`}>
+                        {d.status}
+                      </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Customer</p>
-                        <p>{d.customer_first_name} {d.customer_last_name}</p>
-                        <p className="text-muted-foreground">{d.customer_email}</p>
-                        <p className="text-muted-foreground">{d.customer_phone}</p>
+
+                    {d.resolution_notes && (
+                      <div className="text-xs bg-green-900/20 border border-green-800/40 rounded px-3 py-2 text-green-400">
+                        Resolution: {d.resolution_notes}
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Job Address</p>
-                        <p>{d.customer_address}</p>
-                        <p className="text-muted-foreground">{d.customer_postcode}</p>
-                      </div>
-                    </div>
-                    {d.job_summary && (
-                      <p className="text-sm text-muted-foreground border-t border-border pt-3">
-                        {d.job_summary}
-                      </p>
                     )}
-                    <p className="text-xs text-muted-foreground">
-                      Disputed: {d.disputed_at ? new Date(d.disputed_at).toLocaleDateString("en-GB") : "—"}
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        onClick={() => updateTransactionStatus(d.id, "completed", d)}
-                        disabled={actionLoading === d.id}
-                        className={btnGreen}>
-                        Release to Painter
-                      </button>
-                      <button
-                        onClick={() => updateTransactionStatus(d.id, "cancelled", d)}
-                        disabled={actionLoading === d.id}
-                        className={btnRed}>
-                        Refund Customer
-                      </button>
-                      <button
-                        onClick={() => { setMessagingId(d.id); setAdminMessage(""); setMessageRecipient("customer"); }}
-                        className="px-4 py-2 border border-border text-foreground rounded text-sm hover:bg-accent transition-colors">
-                        Message Parties
-                      </button>
+
+                    <div className="flex gap-2">
+                      {d.admin_customer_channel_id && (
+                        <button
+                          onClick={() => openDisputeChannel(d.admin_customer_channel_id, "customer")}
+                          className="flex-1 border border-border text-xs py-2 rounded hover:bg-accent transition-colors"
+                        >
+                          💬 Message Customer
+                        </button>
+                      )}
+                      {d.admin_painter_channel_id && (
+                        <button
+                          onClick={() => openDisputeChannel(d.admin_painter_channel_id, "painter")}
+                          className="flex-1 border border-border text-xs py-2 rounded hover:bg-accent transition-colors"
+                        >
+                          💬 Message Painter
+                        </button>
+                      )}
                     </div>
-                    {messagingId === d.id && (
-                      <div className="space-y-2 mt-3">
-                        <select
-                          value={messageRecipient}
-                          onChange={e => setMessageRecipient(e.target.value as "customer" | "painter")}
-                          className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm">
-                          <option value="customer">Message Customer</option>
-                          <option value="painter">Message Painter</option>
-                        </select>
-                        <textarea
-                          value={adminMessage}
-                          onChange={e => setAdminMessage(e.target.value)}
-                          placeholder="Type your message..."
-                          rows={3}
-                          className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => sendAdminMessage(d)}
-                            disabled={!adminMessage.trim()}
-                            className="flex-1 bg-foreground text-background py-2 rounded-md text-sm font-medium disabled:opacity-50">
-                            Send Message
-                          </button>
-                          <button
-                            onClick={() => setMessagingId(null)}
-                            className="flex-1 border border-border py-2 rounded-md text-sm">
-                            Cancel
-                          </button>
+
+                    {messagingId === d.admin_customer_channel_id || messagingId === d.admin_painter_channel_id ? (
+                      activeDisputeChannel && (messagingId === d.admin_customer_channel_id || messagingId === d.admin_painter_channel_id) && (
+                        <div className="space-y-2 border border-border rounded-lg p-3">
+                          <p className="text-xs text-muted-foreground font-medium">
+                            Messaging {activeDisputeChannel.type} via dispute channel
+                          </p>
+                          <textarea
+                            value={adminMessage}
+                            onChange={e => setAdminMessage(e.target.value)}
+                            placeholder="Type your message..."
+                            rows={3}
+                            className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => sendAdminMessage(messagingId!, adminMessage)}
+                              disabled={!adminMessage.trim()}
+                              className="flex-1 bg-foreground text-background py-2 rounded-md text-sm font-medium disabled:opacity-50"
+                            >
+                              Send
+                            </button>
+                            <button
+                              onClick={() => { setMessagingId(null); setActiveDisputeChannel(null); setAdminMessage(""); }}
+                              className="flex-1 border border-border py-2 rounded-md text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
+                      )
+                    ) : null}
+
+                    {d.status !== "resolved" && (
+                      <button
+                        onClick={() => resolveDispute(d.id)}
+                        className="w-full bg-green-700 text-white text-xs py-2 rounded hover:bg-green-600 transition-colors"
+                      >
+                        ✓ Mark as Resolved
+                      </button>
+                    )}
+
+                    {d.transactions && (
+                      <div className="flex gap-2 pt-1 border-t border-border">
+                        <button
+                          onClick={() => updateTransactionStatus(d.transactions.id, "completed", d.transactions)}
+                          disabled={actionLoading === d.transactions.id}
+                          className={btnGreen + " text-xs py-1.5"}>
+                          Release to Painter
+                        </button>
+                        <button
+                          onClick={() => updateTransactionStatus(d.transactions.id, "cancelled", d.transactions)}
+                          disabled={actionLoading === d.transactions.id}
+                          className={btnRed + " text-xs py-1.5"}>
+                          Refund Customer
+                        </button>
                       </div>
                     )}
                   </div>

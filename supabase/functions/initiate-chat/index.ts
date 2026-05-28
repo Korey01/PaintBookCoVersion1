@@ -117,8 +117,9 @@ Deno.serve(async (req) => {
 
     // Create chat link for both parties
     const baseUrl = "https://www.paintbookco.co.uk";
-    const painterChatLink = `${baseUrl}/chat/${channelId}?token=${painterToken}&user=${painter.id}&role=painter`;
-    const customerChatLink = `${baseUrl}/chat/${channelId}?customer_token=${session.customer_token}&session_id=${session_id}`;
+    const painterChatLink = `${baseUrl}/dashboard?tab=jobs&highlight=${session_id}`;
+    const customerTrackLink = `${baseUrl}/job/${session.customer_token}`;
+    const customerChatLink = customerTrackLink; // Keep for backwards compat
 
     // Job reference
     const jobRef = `PBC-${session_id.slice(-6).toUpperCase()}`;
@@ -136,6 +137,7 @@ Deno.serve(async (req) => {
             customer_email: session.email,
             customer_first_name: session.first_name || "",
             customer_token: session.customer_token || "",
+            track_job_link: customerTrackLink,
             chat_link: customerChatLink,
             job_ref: jobRef,
             job_type: session.job_type,

@@ -782,7 +782,7 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
   )
 }
 
-function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supabase: any }) {
+function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: any, user: any, supabase: any, highlightSessionId?: string }) {
   const navigate = useNavigate()
   const [sessions, setSessions] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -790,6 +790,41 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
   const [invoiceNavigating, setInvoiceNavigating] = React.useState<string | null>(null)
   const [passOnConfirm, setPassOnConfirm] = React.useState<string | null>(null)
   const [viewInvoiceJob, setViewInvoiceJob] = React.useState<{session: any, tx: any} | null>(null)
+  const [unreadCounts, setUnreadCounts] = React.useState<Record<string, number>>({})
+  const highlightRef = React.useRef<HTMLDivElement | null>(null)
+
+  // Scroll to highlighted job on load
+  React.useEffect(() => {
+    if (highlightSessionId && highlightRef.current) {
+      setTimeout(() => {
+        highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+        setActiveChatId(highlightSessionId)
+      }, 500)
+    }
+  }, [highlightSessionId, sessions])
+
+  // Fetch unread counts from Stream
+  React.useEffect(() => {
+    const fetchUnread = async () => {
+      const streamApiKey = import.meta.env.VITE_STREAM_API_KEY
+      if (!streamApiKey || !sessions.length) return
+      try {
+        const { StreamChat } = await import("stream-chat")
+        const client = StreamChat.getInstance(streamApiKey)
+        if (!client.userID) return
+        const counts: Record<string, number> = {}
+        for (const s of sessions) {
+          if (s.chat_channel_id) {
+            const ch = client.channel("messaging", s.chat_channel_id)
+            await ch.watch()
+            counts[s.id] = ch.countUnread()
+          }
+        }
+        setUnreadCounts(counts)
+      } catch {}
+    }
+    fetchUnread()
+  }, [sessions])
   const [passOnLoading, setPassOnLoading] = React.useState(false)
 
   const openChatWithInvoice = async (session: any) => {
@@ -947,18 +982,47 @@ function MyJobsTab({ painter, user, supabase }: { painter: any, user: any, supab
                 {activeSessions.map(session => {
                   const tx = Array.isArray(session.transactions) ? session.transactions[0] : session.transactions
                   const isOpen = activeChatId === session.id
+                  const isHighlighted = highlightSessionId === session.id
+                  const unread = unreadCounts[session.id] || 0
+                  const jobRef = `PBC-${session.id.slice(-6).toUpperCase()}`
+
+                  // Action indicator
+                  const actionNeeded =
+                    session.status === "painter_contacted" ? { label: "Send Invoice", color: "text-blue-400 bg-blue-900/20 border-blue-800/40" } :
+                    session.status === "funded" ? { label: "Start Job", color: "text-green-400 bg-green-900/20 border-green-800/40" } :
+                    session.status === "completion_requested" ? { label: "Confirm Complete", color: "text-amber-400 bg-amber-900/20 border-amber-800/40" } :
+                    session.status === "disputed" ? { label: "Dispute Active", color: "text-red-400 bg-red-900/20 border-red-800/40" } :
+                    null
+
                   return (
-                    <div key={session.id} className="border border-border rounded-xl overflow-hidden">
+                    <div
+                      key={session.id}
+                      ref={isHighlighted ? highlightRef : null}
+                      className={`border rounded-xl overflow-hidden transition-all ${isHighlighted ? "border-primary shadow-lg shadow-primary/20" : "border-border"}`}
+                    >
                       <div className="p-5 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="font-medium">{session.job_type}</p>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <p className="font-medium">{session.job_type}</p>
+                              {unread > 0 && (
+                                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full">
+                                  {unread > 9 ? "9+" : unread}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground font-mono">{jobRef}</p>
                             <p className="text-sm text-muted-foreground">📍 {session.postcode?.split(" ")[0]}</p>
                           </div>
                           <div className="text-right space-y-1">
                             <span className={`inline-block text-xs px-2 py-0.5 rounded border ${statusColor[session.status] || "text-muted-foreground bg-muted border-border"}`}>
                               {statusLabel[session.status] || session.status}
                             </span>
+                            {actionNeeded && (
+                              <span className={`block text-xs px-2 py-0.5 rounded border ${actionNeeded.color}`}>
+                                ⚡ {actionNeeded.label}
+                              </span>
+                            )}
                             {tx?.amount && (
                               <p className="text-sm font-medium">£{Number(tx.amount).toFixed(2)}</p>
                             )}
@@ -1265,6 +1329,7 @@ export function PainterDashboard() {
     const tabParam = searchParams.get("tab")
     if (tabParam === "insurance") return "profile"
     if (tabParam === "progress") return "registration"
+    if (tabParam === "jobs") return "my-jobs"
     const validTabs = ["overview","registration","available-jobs","my-jobs","gallery","availability","profile","notifications"]
     if (tabParam && validTabs.includes(tabParam)) return tabParam
     return "overview"
@@ -1646,7 +1711,7 @@ export function PainterDashboard() {
 
             {/* TAB 4: My Jobs */}
             {activeTab === "my-jobs" && (
-              <MyJobsTab painter={painter} user={user} supabase={supabase} />
+              <MyJobsTab painter={painter} user={user} supabase={supabase} highlightSessionId={searchParams.get("highlight") || undefined} />
             )}
 
             {/* TAB 5: Gallery */}

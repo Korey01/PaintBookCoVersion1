@@ -291,7 +291,7 @@ function AvailableJobsTab({
 }: {
   painter: any;
   supabase: any;
-  onTabChange: (tab: string) => void;
+  onTabChange: (tab: string, highlightId?: string) => void;
 }) {
   const navigate = useNavigate()
   const [jobs, setJobs] = React.useState<any[]>([])
@@ -351,7 +351,7 @@ function AvailableJobsTab({
       )
       const result = await res.json()
       if (result.success) {
-        onTabChange("my-jobs")
+        onTabChange("my-jobs", job.id)
       } else {
         setChatError(result.error || "Failed to start chat. Please try again.")
       }
@@ -978,6 +978,7 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: a
                   return (
                     <div
                       key={session.id}
+                      id={`job-${session.id}`}
                       ref={isHighlighted ? highlightRef : null}
                       className={`border rounded-xl overflow-hidden transition-all ${isHighlighted ? "border-primary shadow-lg shadow-primary/20" : "border-border"}`}
                     >
@@ -1686,7 +1687,20 @@ export function PainterDashboard() {
               <AvailableJobsTab
                 painter={painter}
                 supabase={supabase}
-                onTabChange={setActiveTab}
+                onTabChange={(tab, highlightId) => {
+                  setActiveTab(tab);
+                  if (highlightId) {
+                    setTimeout(() => {
+                      document.getElementById(`job-${highlightId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      // Add highlight class temporarily
+                      const el = document.getElementById(`job-${highlightId}`);
+                      if (el) {
+                        el.classList.add("ring-2", "ring-primary", "ring-offset-2");
+                        setTimeout(() => el.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 3000);
+                      }
+                    }, 400);
+                  }
+                }}
               />
             )}
 

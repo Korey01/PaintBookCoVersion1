@@ -113,8 +113,8 @@ Deno.serve(async (req) => {
       .eq("painter_id", painter.id)
       .maybeSingle();
 
-    // Also check session.painter_id for jobs where transaction hasn't been created yet
-    const sessionPainterMatch = session.painter_id === painter.id;
+    // Also check session.painter_id — stored as auth UUID (painter.user_id)
+    const sessionPainterMatch = session.painter_id === painter.user_id || session.painter_id === painter.id;
 
     if (!tx && !sessionPainterMatch) {
       return json({ error: "Chat not available for this job", code: "not_assigned" }, 403);

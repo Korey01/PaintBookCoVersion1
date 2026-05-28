@@ -99,7 +99,6 @@ export function PaintBookChat({
   const canSendInvoice =
     userRole === "painter" &&
     !invoiceSent &&
-    transactionId &&
     ["painter_contacted", "invoice_sent"].includes(jobStatus ?? "");
 
   // ── Connect to Stream Chat ────────────────────────────────────────────────
@@ -243,7 +242,7 @@ export function PaintBookChat({
   const invoiceTotal = invoiceLines.reduce((s, l) => s + (l.amount || 0), 0);
 
   async function handleSendInvoice() {
-    if (!transactionId) return;
+    if (!transactionId && !sessionId) return;
     setInvoiceSending(true);
     setInvoiceError("");
     try {

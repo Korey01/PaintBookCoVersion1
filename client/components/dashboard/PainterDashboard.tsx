@@ -1095,6 +1095,7 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId, onNotification
                             userRole="painter"
                             jobStatus={session.status}
                             transactionId={tx?.id}
+                            disputeChannelId={session.status === "disputed" ? `dispute-painter-${session.id}` : undefined}
                           />
                         </div>
                       )}

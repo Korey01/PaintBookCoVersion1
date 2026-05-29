@@ -781,7 +781,7 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
   )
 }
 
-function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: any, user: any, supabase: any, highlightSessionId?: string }) {
+function MyJobsTab({ painter, user, supabase, highlightSessionId, onNotificationDot }: { painter: any, user: any, supabase: any, highlightSessionId?: string, onNotificationDot?: () => void }) {
   const navigate = useNavigate()
   const [sessions, setSessions] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -1126,7 +1126,7 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: a
                                 disputeChannelId={`dispute-painter-${session.id}`}
                                 onUnreadChange={(count) => {
                                   setAdminUnreadCounts(prev => ({ ...prev, [session.id]: count }));
-                                  if (count > 0) setNotificationDot(true);
+                                  if (count > 0) onNotificationDot?.();
                                 }}
                               />
                             </div>
@@ -1774,7 +1774,7 @@ export function PainterDashboard() {
 
             {/* TAB 4: My Jobs */}
             {activeTab === "my-jobs" && (
-              <MyJobsTab painter={painter} user={user} supabase={supabase} highlightSessionId={searchParams.get("highlight") || undefined} />
+              <MyJobsTab painter={painter} user={user} supabase={supabase} highlightSessionId={searchParams.get("highlight") || undefined} onNotificationDot={() => setNotificationDot(true)} />
             )}
 
             {/* TAB 5: Gallery */}

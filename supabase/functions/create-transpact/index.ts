@@ -89,58 +89,6 @@ Deno.serve(async (req) => {
       return json({ success: true, payment_url: paymentUrl });
     }
 
-    // Temporary mock for testing — remove when Transpact credentials verified
-    if (Deno.env.get("TRANSPACT_IS_TEST") === "true") {
-      const mockUrl = `https://paintbookco.co.uk/job/${transaction.customer_token}?payment_success=true`;
-
-      await serviceClient.from("transactions")
-        .update({ status: "funded", funded_at: new Date().toISOString() })
-        .eq("id", transaction_id);
-      await serviceClient.from("sessions")
-        .update({ status: "funded" })
-        .eq("id", transaction.session_id);
-
-      const escrowWebhook = Deno.env.get("MAKE_ESCROW_FUNDED_WEBHOOK");
-      const contactWebhook = Deno.env.get("MAKE_CONTACT_SHARED_WEBHOOK");
-      const jobRef = `PBC-${transaction_id.slice(-6).toUpperCase()}`;
-
-      if (escrowWebhook) {
-        await fetch(escrowWebhook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            transaction_id,
-            session_id: transaction.session_id,
-            customer_email: transaction.customer_email,
-            customer_first_name: transaction.customer_first_name,
-            amount: transaction.amount,
-            job_ref: jobRef,
-            painter_email: transaction.painters?.email,
-            painter_name: `${transaction.painters?.first_name} ${transaction.painters?.last_name}`,
-          }),
-        }).catch(console.error);
-      }
-
-      if (contactWebhook) {
-        await fetch(contactWebhook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            transaction_id,
-            session_id: transaction.session_id,
-            customer_email: transaction.customer_email,
-            customer_first_name: transaction.customer_first_name,
-            customer_last_name: transaction.customer_last_name,
-            customer_phone: transaction.customer_phone,
-            customer_address: transaction.customer_postcode,
-            painter_email: transaction.painters?.email,
-            amount: transaction.amount,
-          }),
-        }).catch(console.error);
-      }
-
-      return json({ success: true, payment_url: mockUrl });
-    }
 
     if (!["invoice_sent"].includes(transaction.status)) {
       return json({ error: "Payment can only be initiated for invoice_sent transactions" }, 400);
@@ -152,6 +100,7 @@ Deno.serve(async (req) => {
     const amount = Number(transaction.amount);
     const customerEmail = transaction.customer_email;
     const painterEmail = painter.email;
+    console.log("Transpact emails - customer:", customerEmail, "painter:", painterEmail);
 
     const rate = commissionRate(painter.completed_jobs ?? 0);
     const commissionAmount = parseFloat((amount * rate).toFixed(2));
@@ -180,13 +129,25 @@ Deno.serve(async (req) => {
       Conditions: conditions,
       ConditionsConsumerClause: true,
       CanTransactorsChangeConditions: false,
+      TranspactNominatedReferee: true,
+      OriginatorFixedCommisionOnReceive: 0,
+      OriginatorPcntCommisionOnReceive: 0,
+      OriginatorFixedCommisionOnSendToRcpnt: 0,
       OriginatorPcntCommisionOnSendToRcpnt: rate,
+      OriginatorFixedCommisionOnSendToAll: 0,
+      OriginatorPcntCommisionOnSendToAll: 0,
+      CharityNo: 0,
+      OriginatorFixedCommisionAddBeforeStart: 0,
+      OriginatorPcntCommisionAddBeforeStart: 0,
+      IsFixedOnSendToRcpntFirst: false,
       PartnerReference: partnerRef,
       PayerRealName: customerEmail,
       PayeeRealName: painterFullName,
     });
 
+    console.log("Transpact raw SOAP response:", soapXml.slice(0, 500));
     const rawId = parseTranspactResponse(soapXml, "CreateTranspactResult");
+    console.log("Transpact raw ID:", rawId);
     const transpactId = parseInt(rawId, 10);
 
     if (isNaN(transpactId) || transpactId <= 0) {
@@ -259,4 +220,9 @@ function json(data: unknown, status = 200) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+ 
+ 
+ 
+ 
+ 
  

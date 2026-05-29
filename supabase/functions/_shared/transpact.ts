@@ -43,7 +43,6 @@ export async function callTranspact(
     const timer = setTimeout(() => controller.abort(), 10_000);
     try {
       const soapBody = buildSoapEnvelope(method, params);
-      console.log("SOAP body:", soapBody.replace(/<Password>[^<]+<\/Password>/g, "<Password>***</Password>").slice(0, 1000));
       const res = await fetch(TRANSPACT_ENDPOINT, {
         method: "POST",
         headers: {
@@ -112,6 +111,7 @@ export function transpactErrorMessage(code: number): string {
     `Transpact returned an unexpected error (code ${code}). Please contact support.`
   );
 }
+ 
  
  
  

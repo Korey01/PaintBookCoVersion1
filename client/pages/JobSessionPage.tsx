@@ -60,6 +60,10 @@ export default function JobSessionPage() {
   const [findingAnotherPainter, setFindingAnotherPainter] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
 
+  const [disputeChannelId, setDisputeChannelId] = useState<string | null>(null);
+  const [adminUnread, setAdminUnread] = useState(0);
+  const [showAdminChat, setShowAdminChat] = useState(false);
+
   // Review state
   const [review, setReview] = useState<any>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -88,6 +92,9 @@ export default function JobSessionPage() {
         return;
       }
       setSession(sess);
+      if (sess.status === "disputed") {
+        setDisputeChannelId(`dispute-customer-${sess.id}`);
+      }
 
       const { data: tx } = await supabase
         .from("transactions")
@@ -420,6 +427,39 @@ export default function JobSessionPage() {
                 customerToken={token}
               />
             </div>
+          </div>
+        )}
+
+        {/* Admin Messages panel — shown when disputed */}
+        {disputeChannelId && (
+          <div className="border border-amber-800/40 bg-amber-900/10 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowAdminChat(!showAdminChat)}
+              className="w-full flex items-center justify-between p-4"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">💬 Messages from PaintBookCo Support</span>
+                {adminUnread > 0 && (
+                  <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full">
+                    {adminUnread > 9 ? "9+" : adminUnread}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">{showAdminChat ? "Hide" : "Show"}</span>
+            </button>
+            {showAdminChat && (
+              <div className="border-t border-amber-800/40 h-80">
+                <PaintBookChat
+                  sessionId={session!.id}
+                  userId={`customer-${session!.id}`}
+                  userRole="customer"
+                  customerToken={token || ""}
+                  jobStatus={session!.status}
+                  disputeChannelId={disputeChannelId}
+                  onUnreadChange={setAdminUnread}
+                />
+              </div>
+            )}
           </div>
         )}
 

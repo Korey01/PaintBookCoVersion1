@@ -781,7 +781,7 @@ function AvailabilityTab({ painter, supabase, onRefresh }: { painter: any, supab
   )
 }
 
-function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: any, user: any, supabase: any, highlightSessionId?: string }) {
+function MyJobsTab({ painter, user, supabase, highlightSessionId, onNotificationDot }: { painter: any, user: any, supabase: any, highlightSessionId?: string, onNotificationDot?: () => void }) {
   const navigate = useNavigate()
   const [sessions, setSessions] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -791,6 +791,8 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: a
   const [viewInvoiceJob, setViewInvoiceJob] = React.useState<{session: any, tx: any} | null>(null)
   const [disputeJob, setDisputeJob] = React.useState<{session: any, tx: any} | null>(null)
   const [unreadCounts, setUnreadCounts] = React.useState<Record<string, number>>({})
+  const [activeAdminChatId, setActiveAdminChatId] = React.useState<string | null>(null)
+  const [adminUnreadCounts, setAdminUnreadCounts] = React.useState<Record<string, number>>({})
   const highlightRef = React.useRef<HTMLDivElement | null>(null)
 
   // Scroll to highlighted job on load
@@ -1096,6 +1098,41 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId }: { painter: a
                           />
                         </div>
                       )}
+                      {session.status === "disputed" && session.chat_channel_id && (
+                        <div className="border-t border-amber-800/40 bg-amber-900/10">
+                          <button
+                            onClick={() => setActiveAdminChatId(activeAdminChatId === session.id ? null : session.id)}
+                            className="w-full flex items-center justify-between p-3"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-amber-400">💬 PaintBookCo Support</span>
+                              {(adminUnreadCounts[session.id] || 0) > 0 && (
+                                <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-bold bg-red-500 text-white rounded-full">
+                                  {adminUnreadCounts[session.id]}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {activeAdminChatId === session.id ? "Hide" : "Show"}
+                            </span>
+                          </button>
+                          {activeAdminChatId === session.id && (
+                            <div className="h-72">
+                              <PaintBookChat
+                                sessionId={session.id}
+                                userId={user?.id}
+                                userRole="painter"
+                                jobStatus={session.status}
+                                disputeChannelId={`dispute-painter-${session.id}`}
+                                onUnreadChange={(count) => {
+                                  setAdminUnreadCounts(prev => ({ ...prev, [session.id]: count }));
+                                  if (count > 0) onNotificationDot?.();
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -1357,6 +1394,7 @@ export function PainterDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteInputVal, setDeleteInputVal] = useState("")
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const [notificationDot, setNotificationDot] = useState(false)
 
   useEffect(() => {
     loadDashboard();
@@ -1525,14 +1563,19 @@ export function PainterDashboard() {
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id)}
+                onClick={() => { setActiveTab(id); if (id === "notifications") setNotificationDot(false); }}
                 className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium flex items-center gap-3 transition-colors ${
                   activeTab === id
                     ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 }`}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
+                <span className="relative flex-shrink-0">
+                  <Icon className="h-4 w-4" />
+                  {id === "notifications" && notificationDot && (
+                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </span>
                 {label}
               </button>
             ))}
@@ -1731,7 +1774,7 @@ export function PainterDashboard() {
 
             {/* TAB 4: My Jobs */}
             {activeTab === "my-jobs" && (
-              <MyJobsTab painter={painter} user={user} supabase={supabase} highlightSessionId={searchParams.get("highlight") || undefined} />
+              <MyJobsTab painter={painter} user={user} supabase={supabase} highlightSessionId={searchParams.get("highlight") || undefined} onNotificationDot={() => setNotificationDot(true)} />
             )}
 
             {/* TAB 5: Gallery */}
@@ -1880,14 +1923,19 @@ export function PainterDashboard() {
           {TABS.map(({ id, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
+              onClick={() => { setActiveTab(id); if (id === "notifications") setNotificationDot(false); }}
               className={`flex-shrink-0 flex items-center justify-center px-3 min-w-[56px] min-h-[56px] transition-colors ${
                 activeTab === id
                   ? "text-foreground"
                   : "text-muted-foreground"
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <span className="relative">
+                <Icon className="h-5 w-5" />
+                {id === "notifications" && notificationDot && (
+                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </span>
             </button>
           ))}
         </div>

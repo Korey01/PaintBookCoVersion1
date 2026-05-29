@@ -63,8 +63,6 @@ export default function JobSessionPage() {
   const [adminUnread, setAdminUnread] = useState(0);
 
   const [disputeChannelId, setDisputeChannelId] = useState<string | null>(null);
-  const [adminUnread, setAdminUnread] = useState(0);
-  const [showAdminChat, setShowAdminChat] = useState(false);
 
   // Review state
   const [review, setReview] = useState<any>(null);

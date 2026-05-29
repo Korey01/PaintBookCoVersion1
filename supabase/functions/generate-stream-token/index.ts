@@ -38,6 +38,25 @@ Deno.serve(async (req) => {
 
     if (!session_id) return json({ error: "session_id is required" }, 400);
 
+    // ── Admin bypass — check admin before session lookup ──────────────────────
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (authHeader.startsWith("Bearer ")) {
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      const adminEmail = Deno.env.get("ADMIN_EMAIL") ?? "";
+      if (user && user.email === adminEmail) {
+        const streamApiKey = Deno.env.get("STREAM_API_KEY")!;
+        const streamApiSecret = Deno.env.get("STREAM_API_SECRET")!;
+        const exp = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60);
+        const token = await generateStreamUserToken(user.id, streamApiSecret, exp);
+        await upsertStreamUser({ id: user.id, name: "PaintBookCo Admin", role: "admin" }, streamApiKey, streamApiSecret);
+        return json({ token, user_id: user.id, channel_id: null });
+      }
+    }
+
     // Get session
     const { data: session, error: sessErr } = await serviceClient
       .from("sessions")
@@ -70,7 +89,6 @@ Deno.serve(async (req) => {
     }
 
     // ── Painter path (requires valid Supabase JWT) ─────────────────────────────
-    const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return json({ error: "Unauthorized" }, 401);
     }
@@ -200,5 +218,8 @@ function json(data: unknown, status = 200): Response {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+ 
+ 
+ 
  
  

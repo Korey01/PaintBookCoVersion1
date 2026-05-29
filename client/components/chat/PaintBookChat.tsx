@@ -58,6 +58,8 @@ interface PaintBookChatProps {
   transactionId?: string;          // Required for invoice generation
   jobStatus?: string;              // Current job status
   onInvoiceSent?: () => void;      // Called after invoice successfully sent
+  disputeChannelId?: string;       // If set, connect to this channel instead of job channel
+  onUnreadChange?: (count: number) => void; // Notify parent of unread count
 }
 
 interface InvoiceLineItem {
@@ -75,6 +77,8 @@ export function PaintBookChat({
   transactionId,
   jobStatus,
   onInvoiceSent,
+  disputeChannelId,
+  onUnreadChange,
 }: PaintBookChatProps) {
   const [chatClient, setChatClient] = useState<StreamChat | null>(null);
   const [streamChannel, setStreamChannel] = useState<StreamChannelType | null>(null);
@@ -96,7 +100,10 @@ export function PaintBookChat({
   const channelRef = useRef<StreamChannelType | null>(null);
   const clientRef = useRef<StreamChat | null>(null);
 
+  const isDisputeMode = !!disputeChannelId;
+
   const canSendInvoice =
+    !isDisputeMode &&
     userRole === "painter" &&
     !invoiceSent &&
     ["painter_contacted", "invoice_sent"].includes(jobStatus ?? "");
@@ -145,13 +152,14 @@ export function PaintBookChat({
           token: string; user_id: string; channel_id: string;
         };
         const apiKey = import.meta.env.VITE_STREAM_API_KEY ?? "";
+        const targetChannelId = disputeChannelId || channel_id;
 
         if (!isRefresh) {
           const client = StreamChat.getInstance(apiKey);
           clientRef.current = client;
           await client.connectUser({ id: user_id }, token);
 
-          const channel = client.channel("messaging", channel_id, {
+          const channel = client.channel("messaging", targetChannelId, {
             name: "Job Chat",
             created_by_id: user_id,
           });
@@ -161,6 +169,16 @@ export function PaintBookChat({
           channelRef.current = channel;
           setChatClient(client);
           setStreamChannel(channel);
+
+          onUnreadChange?.(channel.countUnread());
+          channel.on("message.new", (event) => {
+            if (event.message?.user?.id !== user_id) {
+              onUnreadChange?.(channel.countUnread());
+            }
+          });
+          channel.on("message.read", () => {
+            onUnreadChange?.(0);
+          });
         } else {
           await clientRef.current?.updateToken(token);
         }
@@ -183,7 +201,7 @@ export function PaintBookChat({
       clearTimeout(refreshTimer);
       clientRef.current?.disconnectUser().catch(console.error);
     };
-  }, [sessionId, customerToken, userRole]);
+  }, [sessionId, customerToken, userRole, disputeChannelId]);
 
   // ── PII-filtered message send ─────────────────────────────────────────────
   const handleSubmit = async (message: any) => {

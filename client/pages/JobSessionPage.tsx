@@ -59,6 +59,8 @@ export default function JobSessionPage() {
   const [showFindAnotherPainterConfirm, setShowFindAnotherPainterConfirm] = useState(false);
   const [findingAnotherPainter, setFindingAnotherPainter] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showAdminChat, setShowAdminChat] = useState(false);
+  const [adminUnread, setAdminUnread] = useState(0);
 
   const [disputeChannelId, setDisputeChannelId] = useState<string | null>(null);
   const [adminUnread, setAdminUnread] = useState(0);
@@ -316,6 +318,38 @@ export default function JobSessionPage() {
               Our team is reviewing this dispute and will contact both parties within 10 working days.
               Once resolved, this page will update with the outcome.
             </p>
+          </div>
+        )}
+
+        {status === "disputed" && session && (
+          <div className="border border-amber-800/40 bg-amber-900/10 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowAdminChat(prev => !prev)}
+              className="w-full flex items-center justify-between p-4"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-amber-400">💬 Messages from PaintBookCo Support</span>
+                {adminUnread > 0 && (
+                  <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full">
+                    {adminUnread > 9 ? "9+" : adminUnread}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">{showAdminChat ? "Hide" : "Show"}</span>
+            </button>
+            {showAdminChat && (
+              <div className="border-t border-amber-800/40 h-80">
+                <PaintBookChat
+                  sessionId={session.id}
+                  userId={`customer-${session.id}`}
+                  userRole="customer"
+                  customerToken={token || ""}
+                  jobStatus={status}
+                  disputeChannelId={`dispute-customer-${session.id}`}
+                  onUnreadChange={setAdminUnread}
+                />
+              </div>
+            )}
           </div>
         )}
 

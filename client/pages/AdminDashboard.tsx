@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2, RefreshCw, CheckCircle2, XCircle, LogOut, Shield, Briefcase, AlertTriangle, Users, BarChart3 } from "lucide-react";
 import DOMPurify from "dompurify";
+import { PaintBookChatAdmin } from "@/components/chat/PaintBookChatAdmin";
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -225,7 +226,14 @@ export default function AdminDashboard() {
   const [messagingId, setMessagingId] = useState<string | null>(null);
   const [adminMessage, setAdminMessage] = useState("");
   const [messageRecipient, setMessageRecipient] = useState<"customer" | "painter">("customer");
-  const [activeDisputeChannel, setActiveDisputeChannel] = useState<{id: string; type: "customer" | "painter"} | null>(null);
+  const [activeDisputeChannel, setActiveDisputeChannel] = useState<{
+    id: string;
+    painterChannelId: string;
+    sessionId: string;
+    type: "customer" | "painter";
+  } | null>(null);
+  const [disputeChatTab, setDisputeChatTab] = useState<string>("customer");
+  const [disputeUnread, setDisputeUnread] = useState<Record<string, number>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -421,9 +429,15 @@ export default function AdminDashboard() {
     setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
 
-  const openDisputeChannel = (channelId: string, type: "customer" | "painter") => {
-    setActiveDisputeChannel({ id: channelId, type });
-    setMessagingId(channelId);
+  const openDisputeChannel = (dispute: any) => {
+    setActiveDisputeChannel({
+      id: dispute.admin_customer_channel_id,
+      painterChannelId: dispute.admin_painter_channel_id,
+      sessionId: dispute.session_id,
+      type: "customer",
+    });
+    setDisputeChatTab("customer");
+    setMessagingId(dispute.admin_customer_channel_id);
     setAdminMessage("");
   };
 
@@ -958,56 +972,80 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      {d.admin_customer_channel_id && (
+                    {(d.admin_customer_channel_id || d.admin_painter_channel_id) && (
+                      <div>
                         <button
-                          onClick={() => openDisputeChannel(d.admin_customer_channel_id, "customer")}
-                          className="flex-1 border border-border text-xs py-2 rounded hover:bg-accent transition-colors"
+                          onClick={() =>
+                            activeDisputeChannel?.id === d.admin_customer_channel_id
+                              ? (setActiveDisputeChannel(null), setMessagingId(null))
+                              : openDisputeChannel(d)
+                          }
+                          className="w-full border border-border text-xs py-2 rounded hover:bg-accent transition-colors"
                         >
-                          💬 Message Customer
+                          {activeDisputeChannel?.id === d.admin_customer_channel_id
+                            ? "Hide Chat Channels"
+                            : "💬 Open Dispute Channels"}
                         </button>
-                      )}
-                      {d.admin_painter_channel_id && (
-                        <button
-                          onClick={() => openDisputeChannel(d.admin_painter_channel_id, "painter")}
-                          className="flex-1 border border-border text-xs py-2 rounded hover:bg-accent transition-colors"
-                        >
-                          💬 Message Painter
-                        </button>
-                      )}
-                    </div>
 
-                    {messagingId === d.admin_customer_channel_id || messagingId === d.admin_painter_channel_id ? (
-                      activeDisputeChannel && (messagingId === d.admin_customer_channel_id || messagingId === d.admin_painter_channel_id) && (
-                        <div className="space-y-2 border border-border rounded-lg p-3">
-                          <p className="text-xs text-muted-foreground font-medium">
-                            Messaging {activeDisputeChannel.type} via dispute channel
-                          </p>
-                          <textarea
-                            value={adminMessage}
-                            onChange={e => setAdminMessage(e.target.value)}
-                            placeholder="Type your message..."
-                            rows={3}
-                            className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground"
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => sendAdminMessage(messagingId!, adminMessage)}
-                              disabled={!adminMessage.trim()}
-                              className="flex-1 bg-foreground text-background py-2 rounded-md text-sm font-medium disabled:opacity-50"
-                            >
-                              Send
-                            </button>
-                            <button
-                              onClick={() => { setMessagingId(null); setActiveDisputeChannel(null); setAdminMessage(""); }}
-                              className="flex-1 border border-border py-2 rounded-md text-sm"
-                            >
-                              Cancel
-                            </button>
+                        {activeDisputeChannel?.id === d.admin_customer_channel_id && (
+                          <div className="mt-3 border border-border rounded-xl overflow-hidden">
+                            <div className="flex border-b border-border">
+                              {[
+                                { id: "job", label: "Job Chat (read-only)" },
+                                { id: "customer", label: "Customer Channel" },
+                                { id: "painter", label: "Painter Channel" },
+                              ].map(tab => (
+                                <button
+                                  key={tab.id}
+                                  onClick={() => setDisputeChatTab(tab.id)}
+                                  className={`flex-1 py-2 text-xs font-medium border-r last:border-r-0 border-border transition-colors ${
+                                    disputeChatTab === tab.id
+                                      ? "bg-foreground text-background"
+                                      : "hover:bg-accent"
+                                  }`}
+                                >
+                                  {tab.label}
+                                  {(disputeUnread[tab.id] || 0) > 0 && (
+                                    <span className="ml-1 inline-flex items-center justify-center w-4 h-4 text-xs font-bold bg-red-500 text-white rounded-full">
+                                      {disputeUnread[tab.id]}
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="h-96">
+                              {disputeChatTab === "job" && (
+                                <PaintBookChatAdmin
+                                  channelId={`job-${activeDisputeChannel.sessionId}`}
+                                  readOnly={true}
+                                  supabase={supabase}
+                                />
+                              )}
+                              {disputeChatTab === "customer" && (
+                                <PaintBookChatAdmin
+                                  channelId={activeDisputeChannel.id}
+                                  readOnly={false}
+                                  supabase={supabase}
+                                  onUnreadChange={(count) =>
+                                    setDisputeUnread(prev => ({ ...prev, customer: count }))
+                                  }
+                                />
+                              )}
+                              {disputeChatTab === "painter" && (
+                                <PaintBookChatAdmin
+                                  channelId={activeDisputeChannel.painterChannelId}
+                                  readOnly={false}
+                                  supabase={supabase}
+                                  onUnreadChange={(count) =>
+                                    setDisputeUnread(prev => ({ ...prev, painter: count }))
+                                  }
+                                />
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )
-                    ) : null}
+                        )}
+                      </div>
+                    )}
 
                     {d.status !== "resolved" && (
                       <button

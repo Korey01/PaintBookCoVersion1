@@ -887,7 +887,7 @@ function MyJobsTab({ painter, user, supabase, highlightSessionId, onNotification
 
   const [stageFilter, setStageFilter] = React.useState<string>("all")
 
-  const activeStatuses = ["painter_contacted", "invoice_sent", "funded", "in_progress", "completion_requested"]
+  const activeStatuses = ["painter_contacted", "invoice_sent", "funded", "in_progress", "completion_requested", "disputed"]
   const filteredSessions = stageFilter === "all" ? sessions
     : stageFilter === "negotiating" ? sessions.filter(s => ["painter_contacted", "invoice_sent"].includes(s.status))
     : stageFilter === "active" ? sessions.filter(s => ["funded", "in_progress", "completion_requested"].includes(s.status))

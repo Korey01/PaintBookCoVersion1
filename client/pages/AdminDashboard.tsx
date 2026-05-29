@@ -4,6 +4,199 @@ import { Loader2, RefreshCw, CheckCircle2, XCircle, LogOut, Shield, Briefcase, A
 import DOMPurify from "dompurify";
 import { PaintBookChatAdmin } from "@/components/chat/PaintBookChatAdmin";
 
+interface DisputeResolutionModalProps {
+  dispute: any;
+  onClose: () => void;
+  onResolved: () => void;
+  session: any;
+  SUPABASE_URL: string;
+  ANON_KEY: string;
+}
+
+function DisputeResolutionModal({ dispute, onClose, onResolved, session, SUPABASE_URL, ANON_KEY }: DisputeResolutionModalProps) {
+  const [resolutionType, setResolutionType] = useState<"mutual" | "release" | "refund">("mutual");
+  const [notes, setNotes] = useState("");
+  const [amount, setAmount] = useState<number>(dispute.transactions?.amount || 0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const originalAmount = dispute.transactions?.amount || 0;
+
+  const handleResolve = async () => {
+    if (!notes.trim()) { setError("Please enter resolution notes."); return; }
+    if ((resolutionType === "release" || resolutionType === "refund") && (!amount || amount <= 0)) {
+      setError("Please enter a valid amount."); return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/disputes?id=eq.${dispute.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+          "apikey": ANON_KEY,
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify({
+          status: "resolved",
+          resolution_notes: `[${resolutionType.toUpperCase()}] ${notes}`,
+          resolved_by: "admin",
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+      });
+
+      const transactionId = dispute.transaction_id;
+      const sessionId = dispute.session_id;
+
+      if (resolutionType === "mutual") {
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${transactionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: "completion_requested", disputed_at: null }),
+        });
+        await fetch(`${SUPABASE_URL}/rest/v1/sessions?id=eq.${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: "completion_requested" }),
+        });
+      } else if (resolutionType === "release") {
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${transactionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: "completed", amount, resolution_type: "admin_release" }),
+        });
+        await fetch(`${SUPABASE_URL}/rest/v1/sessions?id=eq.${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: "completed" }),
+        });
+      } else if (resolutionType === "refund") {
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${transactionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: "cancelled", amount, resolution_type: "admin_refund" }),
+        });
+        await fetch(`${SUPABASE_URL}/rest/v1/sessions?id=eq.${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+          body: JSON.stringify({ status: "cancelled" }),
+        });
+      }
+
+      onResolved();
+    } catch {
+      setError("Failed to resolve dispute. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-background border border-border rounded-xl max-w-lg w-full p-6 space-y-5" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Resolve Dispute</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Dispute #{dispute.id.slice(-6).toUpperCase()} · £{originalAmount} at stake</p>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Resolution Type</label>
+          <div className="space-y-2">
+            <label className="flex items-start gap-3 border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/20 transition-colors">
+              <input type="radio" name="resolution" value="mutual" checked={resolutionType === "mutual"} onChange={() => setResolutionType("mutual")} className="mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">✅ Mutual Resolution — Return to Completion</p>
+                <p className="text-xs text-muted-foreground">Painter and customer have agreed. Job returns to "Pending Completion" so customer can confirm and release payment.</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/20 transition-colors">
+              <input type="radio" name="resolution" value="release" checked={resolutionType === "release"} onChange={() => setResolutionType("release")} className="mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">💰 Release to Painter</p>
+                <p className="text-xs text-muted-foreground">Admin releases escrow funds to painter. Use when painter has completed work satisfactorily.</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/20 transition-colors">
+              <input type="radio" name="resolution" value="refund" checked={resolutionType === "refund"} onChange={() => setResolutionType("refund")} className="mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">↩️ Refund to Customer</p>
+                <p className="text-xs text-muted-foreground">Admin refunds customer. Use when painter has not completed work or breached agreement.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {(resolutionType === "release" || resolutionType === "refund") && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              {resolutionType === "release" ? "Amount to Release to Painter" : "Amount to Refund to Customer"} (£)
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">£</span>
+              <input
+                type="number"
+                min="0"
+                max={originalAmount}
+                step="0.01"
+                value={amount}
+                onChange={e => setAmount(Number(e.target.value))}
+                className="flex-1 border border-border bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-foreground"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Original amount: £{originalAmount}. You can adjust this for partial resolutions.</p>
+            {amount !== originalAmount && (
+              <p className="text-xs text-amber-400">⚠️ Adjusted amount differs from original escrow amount of £{originalAmount}</p>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Resolution Notes *</label>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Describe the resolution and any actions taken..."
+            rows={3}
+            className="w-full border border-border bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-foreground resize-none"
+          />
+        </div>
+
+        {error && (
+          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-xs text-destructive">{error}</p>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 border border-border py-2.5 rounded-lg text-sm hover:bg-accent transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={handleResolve}
+            disabled={loading || !notes.trim()}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+              resolutionType === "refund" ? "bg-red-600 text-white hover:bg-red-700" :
+              resolutionType === "release" ? "bg-green-600 text-white hover:bg-green-700" :
+              "bg-foreground text-background hover:bg-foreground/90"
+            }`}
+          >
+            {loading ? "Processing..." :
+              resolutionType === "mutual" ? "Return to Completion" :
+              resolutionType === "release" ? `Release £${amount} to Painter` :
+              `Refund £${amount} to Customer`
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -221,6 +414,9 @@ export default function AdminDashboard() {
 
   // Job detail modal
   const [selectedJob, setSelectedJob] = useState<any>(null);
+
+  // Dispute resolution modal
+  const [resolvingDispute, setResolvingDispute] = useState<any | null>(null);
 
   // Dispute messaging state
   const [messagingId, setMessagingId] = useState<string | null>(null);
@@ -441,32 +637,8 @@ export default function AdminDashboard() {
     setAdminMessage("");
   };
 
-  const resolveDispute = async (disputeId: string) => {
-    const notes = prompt("Enter resolution notes:");
-    if (!notes) return;
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/disputes?id=eq.${disputeId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
-          "apikey": ANON_KEY,
-          "Prefer": "return=minimal",
-        },
-        body: JSON.stringify({
-          status: "resolved",
-          resolution_notes: notes,
-          resolved_by: "admin",
-          resolved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }),
-      });
-      setMessage({ text: "Dispute marked as resolved", type: "success" });
-      await loadAll(session.access_token);
-    } catch {
-      setMessage({ text: "Failed to resolve dispute", type: "error" });
-    }
-    setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+  const resolveDispute = (dispute: any) => {
+    setResolvingDispute(dispute);
   };
 
   const tabs = [
@@ -1049,10 +1221,10 @@ export default function AdminDashboard() {
 
                     {d.status !== "resolved" && (
                       <button
-                        onClick={() => resolveDispute(d.id)}
-                        className="w-full bg-green-700 text-white text-xs py-2 rounded hover:bg-green-600 transition-colors"
+                        onClick={() => resolveDispute(d)}
+                        className="w-full bg-green-600 text-white text-xs py-2 rounded hover:bg-green-700 transition-colors"
                       >
-                        ✓ Mark as Resolved
+                        ✓ Resolve Dispute
                       </button>
                     )}
 
@@ -1085,6 +1257,22 @@ export default function AdminDashboard() {
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
           onUpdateStatus={updateTransactionStatus}
+        />
+      )}
+
+      {resolvingDispute && (
+        <DisputeResolutionModal
+          dispute={resolvingDispute}
+          onClose={() => setResolvingDispute(null)}
+          onResolved={async () => {
+            setResolvingDispute(null);
+            setMessage({ text: "Dispute resolved successfully", type: "success" });
+            await loadAll(session.access_token);
+            setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+          }}
+          session={session}
+          SUPABASE_URL={SUPABASE_URL}
+          ANON_KEY={ANON_KEY}
         />
       )}
     </div>

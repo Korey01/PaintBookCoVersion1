@@ -61,6 +61,10 @@ export default function PostJob() {
 
   // Step 5 - Paint Details
   const [paintChoice, setPaintChoice] = useState("");
+  const [useVestimator, setUseVestimator] = useState(false);
+  const [vestimatorEstimate, setVestimatorEstimate] = useState<number | null>(null);
+  const [vestimatorColour, setVestimatorColour] = useState("");
+  const [vestimatorNotes, setVestimatorNotes] = useState("");
 
   // Step 6 - Contact & Submit
   const [firstName, setFirstName] = useState("");
@@ -179,7 +183,9 @@ export default function PostJob() {
         structural_issues: hasStructuralIssues,
         structural_details: structuralDetails.trim() || null,
         rooms: rooms.length > 0 ? rooms : null,
-        paint_choice: paintChoice.trim() || null,
+        paint_choice: vestimatorColour.trim() || paintChoice.trim() || null,
+        vestimator_estimate: vestimatorEstimate,
+        vestimator_notes: vestimatorNotes.trim() || null,
         customer_first_name: firstName.trim(),
         customer_last_name: lastName.trim(),
         customer_phone: phone.trim(),
@@ -530,65 +536,124 @@ export default function PostJob() {
                   <Palette className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Paint details</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">Paint details</h1>
-                    <p className="text-xs text-muted-foreground mt-1">Optional — helps painters quote accurately</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">Paint & Colour</h1>
+                    <p className="text-xs text-muted-foreground mt-1">Optional — use our Paint Vestimator to estimate paint usage, visualise colours and get product recommendations</p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
-                    Paint choice
-                  </label>
-                  <input
-                    type="text"
-                    value={paintChoice}
-                    onChange={(e) => setPaintChoice(e.target.value)}
-                    className={fieldClass}
-                    placeholder="e.g. Dulux Brilliant White Matt"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Photos</label>
-                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={onFiles} className="hidden" />
+              {/* Vestimator toggle */}
+              <div className="border border-border rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Use Paint Vestimator</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Estimate paint usage, visualise wall colours and browse products</p>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors flex items-center justify-center gap-2"
+                    onClick={() => setUseVestimator(v => !v)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${useVestimator ? "bg-foreground" : "bg-muted"}`}
                   >
-                    <Upload className="h-4 w-4" /> Add Photos
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useVestimator ? "translate-x-6" : "translate-x-1"}`} />
                   </button>
-                  {images.length > 0 && (
-                    <div className="mt-3 grid grid-cols-3 gap-2">
-                      {images.map((src, i) => (
-                        <img key={i} src={src} className="h-24 w-full rounded object-cover" />
-                      ))}
+                </div>
+
+                {useVestimator && (
+                  <div className="space-y-4">
+                    <div className="border border-border/50 rounded-lg p-3 bg-muted/20">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        <span className="font-medium">Estimates only:</span> Paint quantities and costs shown are estimates. Actual usage may vary depending on surface condition, number of coats and application method. Always check product coverage rates before purchasing.
+                      </p>
                     </div>
-                  )}
-                </div>
 
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => setStep(4)}
-                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={() => handleStep5()}
-                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
-                  >
-                    Continue →
-                  </button>
-                </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                          Estimated paint cost (£)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={vestimatorEstimate ?? ""}
+                          onChange={e => setVestimatorEstimate(e.target.value ? Number(e.target.value) : null)}
+                          className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground"
+                          placeholder="e.g. 45.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                          Chosen colour / paint
+                        </label>
+                        <input
+                          type="text"
+                          value={vestimatorColour}
+                          onChange={e => setVestimatorColour(e.target.value)}
+                          className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground"
+                          placeholder="e.g. Farrow & Ball Elephant's Breath"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                          Additional notes
+                        </label>
+                        <textarea
+                          value={vestimatorNotes}
+                          onChange={e => setVestimatorNotes(e.target.value)}
+                          rows={2}
+                          className="w-full border border-border bg-background rounded-md px-3 py-2 text-sm focus:outline-none focus:border-foreground resize-none"
+                          placeholder="e.g. 2 coats needed, customer supplying paint"
+                        />
+                      </div>
+                    </div>
 
-                <p className="text-center">
-                  <button onClick={() => handleStep5()} className="text-sm text-muted-foreground hover:text-foreground">
-                    Skip this step →
-                  </button>
-                </p>
+                    <a
+                      href="/vestimator"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full border border-border py-2.5 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                    >
+                      <Palette className="h-4 w-4" />
+                      Open Full Paint Vestimator →
+                    </a>
+                    <p className="text-xs text-muted-foreground text-center">Opens in a new tab — come back here to continue</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Photo upload */}
+              <div className="space-y-3">
+                <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider">Photos (optional)</label>
+                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={onFiles} className="hidden" />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors flex items-center justify-center gap-2"
+                >
+                  <Upload className="h-4 w-4" /> Add Photos
+                </button>
+                {images.length > 0 && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {images.map((src, i) => (
+                      <img key={i} src={src} className="h-24 w-full rounded object-cover" />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setStep(4)}
+                  className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => handleStep5()}
+                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
+                >
+                  {useVestimator && (vestimatorEstimate || vestimatorColour) ? "Continue →" : "Skip →"}
+                </button>
               </div>
             </div>
           )}
@@ -680,7 +745,16 @@ export default function PostJob() {
                     <span className="text-muted-foreground">Rooms</span>
                     <span className="font-medium">{rooms.length} room{rooms.length !== 1 ? "s" : ""}</span>
                   </div>
-                  {paintChoice && (
+                  {(vestimatorColour || vestimatorEstimate) && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Paint:</span>
+                      <span className="font-medium">
+                        {vestimatorColour && <span>{vestimatorColour}</span>}
+                        {vestimatorEstimate && <span className="ml-2">~£{vestimatorEstimate}</span>}
+                      </span>
+                    </div>
+                  )}
+                  {!vestimatorColour && !vestimatorEstimate && paintChoice && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Paint</span>
                       <span className="font-medium">{paintChoice}</span>

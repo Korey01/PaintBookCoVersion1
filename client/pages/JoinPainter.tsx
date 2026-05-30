@@ -800,7 +800,31 @@ export default function JoinPainter() {
                 <p className="text-xs text-muted-foreground italic">Powered by Didit — GDPR compliant. Documents are encrypted and never stored by PaintBookCo.</p>
 
                 <button
-                  onClick={() => setKycStarted(true)}
+                  onClick={async () => {
+                    setKycStarted(true);
+                    try {
+                      const { data: { session: authSession } } = await supabase.auth.getSession();
+                      if (!authSession?.access_token) return;
+                      const res = await fetch(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-kyc`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                            "Authorization": `Bearer ${authSession.access_token}`,
+                          },
+                          body: JSON.stringify({}),
+                        }
+                      );
+                      const result = await res.json();
+                      if (result.verification_url) {
+                        window.open(result.verification_url, "_blank");
+                      }
+                    } catch (err) {
+                      console.error("KYC error:", err);
+                    }
+                  }}
                   className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
                 >
                   Start Identity Verification

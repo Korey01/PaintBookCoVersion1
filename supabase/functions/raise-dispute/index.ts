@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     const adminUserId = admin?.id ?? "admin";
     console.log("Admin user ID:", adminUserId);
     const customerId = `customer-${sessionId}`;
-    const painterId = transaction.painters?.user_id || transaction.painter_id;
+    const painterId = transaction.painters?.id || transaction.painter_id;
 
     // Upsert users so they exist in Stream
     await streamClient.upsertUsers([
@@ -96,23 +96,24 @@ Deno.serve(async (req) => {
     // Create admin-customer dispute channel
     const customerChannel = streamClient.channel("messaging", adminCustomerChannelId, {
       name: `Dispute: Customer — ${transaction.sessions?.first_name || "Customer"}`,
-      members: painterId ? [adminUserId, customerId] : [adminUserId, customerId],
       created_by_id: adminUserId,
       dispute_id: dispute?.id,
       dispute_type: "customer",
     });
     await customerChannel.create();
+    await customerChannel.addMembers([adminUserId, customerId]);
 
     // Create admin-painter dispute channel
     if (painterId) {
       const painterChannel = streamClient.channel("messaging", adminPainterChannelId, {
         name: `Dispute: Painter — ${transaction.painters?.first_name || "Painter"}`,
-        members: [adminUserId, painterId],
         created_by_id: adminUserId,
         dispute_id: dispute?.id,
         dispute_type: "painter",
       });
       await painterChannel.create();
+      await painterChannel.addMembers([adminUserId, painterId]);
+      console.log("Dispute channels created - painterId:", painterId, "customerId:", customerId);
 
       // Send initial message in painter channel
       await painterChannel.sendMessage({
@@ -160,4 +161,5 @@ Deno.serve(async (req) => {
     return json({ error: "An unexpected error occurred" }, 500);
   }
 });
+ 
  

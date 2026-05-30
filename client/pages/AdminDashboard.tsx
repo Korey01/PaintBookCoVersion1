@@ -386,13 +386,20 @@ export default function AdminDashboard() {
   const [jobStatusFilter, setJobStatusFilter] = useState("all");
   const [jobSortBy, setJobSortBy] = useState("newest");
 
+  const [jobDateFrom, setJobDateFrom] = React.useState("");
+  const [jobDateTo, setJobDateTo] = React.useState("");
+  const [jobTypeFilter, setJobTypeFilter] = React.useState("all");
+
   const filteredJobs = sessions
     .filter(s => {
       if (jobStatusFilter !== "all" && s.status !== jobStatusFilter) return false;
+      if (jobTypeFilter !== "all" && (s.job_type || "") !== jobTypeFilter) return false;
+      if (jobDateFrom && new Date(s.created_at) < new Date(jobDateFrom)) return false;
+      if (jobDateTo && new Date(s.created_at) > new Date(jobDateTo + "T23:59:59")) return false;
       if (jobSearch) {
         const q = jobSearch.toLowerCase();
         const ref = `pbc-${s.id.slice(-6).toLowerCase()}`;
-        return ref.includes(q) || (s.postcode || "").toLowerCase().includes(q) || (s.email || "").toLowerCase().includes(q);
+        return ref.includes(q) || (s.postcode || "").toLowerCase().includes(q) || (s.email || "").toLowerCase().includes(q) || (s.job_type || "").toLowerCase().includes(q);
       }
       return true;
     })
@@ -1015,9 +1022,36 @@ export default function AdminDashboard() {
                       <option value="status">By Status</option>
                       <option value="postcode">By Postcode</option>
                     </select>
-                    {(jobSearch || jobStatusFilter !== "all") && (
+                    <select
+                      value={jobTypeFilter}
+                      onChange={e => setJobTypeFilter(e.target.value)}
+                      className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                    >
+                      <option value="all">All Job Types</option>
+                      <option value="interior-painting">Interior Painting</option>
+                      <option value="exterior-painting">Exterior Painting</option>
+                      <option value="wallpaper">Wallpaper</option>
+                      <option value="feature-wall">Feature Wall</option>
+                      <option value="tv-wall">TV Wall</option>
+                      <option value="commercial">Commercial</option>
+                    </select>
+                    <input
+                      type="date"
+                      value={jobDateFrom}
+                      onChange={e => setJobDateFrom(e.target.value)}
+                      className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                      title="From date"
+                    />
+                    <input
+                      type="date"
+                      value={jobDateTo}
+                      onChange={e => setJobDateTo(e.target.value)}
+                      className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                      title="To date"
+                    />
+                    {(jobSearch || jobStatusFilter !== "all" || jobTypeFilter !== "all" || jobDateFrom || jobDateTo) && (
                       <button
-                        onClick={() => { setJobSearch(""); setJobStatusFilter("all"); }}
+                        onClick={() => { setJobSearch(""); setJobStatusFilter("all"); setJobTypeFilter("all"); setJobDateFrom(""); setJobDateTo(""); }}
                         className="border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors text-muted-foreground"
                       >
                         Clear filters

@@ -137,7 +137,6 @@ export function PaintBookChat({
         );
 
         const data = await res.json().catch(() => ({}));
-        console.log("generate-stream-token response:", res.status, JSON.stringify(data).slice(0, 200));
 
         if (!mounted) return;
 
@@ -205,7 +204,6 @@ export function PaintBookChat({
 
   // ── PII-filtered message send ─────────────────────────────────────────────
   const handleSubmit = async (message: any) => {
-    console.log("PII handleSubmit called:", JSON.stringify(message));
     const content = (message?.text ?? message?.message?.text ?? "").trim();
     if (!content) return;
 
@@ -366,7 +364,6 @@ export function PaintBookChat({
     const onSend = async () => {
       const content = text.trim();
       if (!content) return;
-      console.log("CustomInput onSend:", content);
 
       const hasPII = PII_PATTERNS.some(p => {
         p.lastIndex = 0;

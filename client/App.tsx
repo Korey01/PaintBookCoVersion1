@@ -9,6 +9,7 @@ import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
+import { IdleTimeout } from "./components/auth/IdleTimeout";
 
 // ── Layout ──────────────────────────────────────────────────────────────────────
 import Layout from "@/components/site/Layout";
@@ -67,6 +68,7 @@ function LegacyLayout() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <IdleTimeout />
       <TooltipProvider>
         <Toaster />
         <Sonner />

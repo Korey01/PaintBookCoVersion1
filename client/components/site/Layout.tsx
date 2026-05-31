@@ -23,7 +23,7 @@ export default function Layout({ children }: PropsWithChildren) {
             muted
             loop
             playsInline
-            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/hero-background.mp4"
           />
         </div>
       )}

@@ -606,3 +606,41 @@
     color: hsl(220 10% 58%);
   }
 }
+
+/* ── Brush stroke reveal ── */
+@keyframes brushStroke {
+  from { stroke-dashoffset: 300; }
+  to   { stroke-dashoffset: 0; }
+}
+.brush-stroke-path {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: brushStroke 1.2s 0.8s cubic-bezier(0.25,0.1,0.25,1) forwards;
+}
+
+/* ── Paint reveal (clip wipe) ── */
+@keyframes paintReveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0% 0 0); }
+}
+.paint-reveal {
+  animation: paintReveal 1s cubic-bezier(0.25,0.1,0.25,1) both;
+}
+
+/* ── Paint drip ── */
+@keyframes paintDrip {
+  0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
+  70%  { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
+.paint-drip {
+  animation: paintDrip 0.6s ease-out forwards;
+}
+
+/* ── Chameleon transition ── */
+.chameleon-accent {
+  transition: background 0.8s ease, color 0.8s ease, border-color 0.8s ease;
+}
+.chameleon-text {
+  transition: color 0.8s ease;
+}

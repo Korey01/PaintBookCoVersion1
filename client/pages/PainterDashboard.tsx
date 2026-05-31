@@ -213,201 +213,219 @@ export default function PainterDashboard() {
     }
   };
 
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  }
+
+  const UK_HOLIDAYS: Record<string, string> = {
+    "01-01": "Happy New Year! 🎉",
+    "12-25": "Merry Christmas! 🎄",
+    "12-26": "Happy Boxing Day! 🎁",
+    "04-18": "Happy Good Friday! 🌿",
+    "04-21": "Happy Easter Monday! 🐣",
+    "05-05": "Happy Early May Bank Holiday! 🌸",
+    "05-26": "Happy Spring Bank Holiday! ☀️",
+    "08-25": "Happy Summer Bank Holiday! 🌞",
+  };
+  const todayKey = new Date().toLocaleDateString("en-GB", { month: "2-digit", day: "2-digit" }).split("/").reverse().join("-");
+  const holidayMsg = UK_HOLIDAYS[todayKey];
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen" style={{ background: "#FBF7F0" }}>
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#D85A30" }} />
       </div>
     );
   }
 
-  return (
-    <div className="container mx-auto py-8 px-4 md:py-12 md:px-6">
-      {/* Header */}
-      <div className="mb-12 space-y-3">
-        <h1>Painter Dashboard</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
-          Browse available jobs and manage your quotes
-        </p>
-      </div>
+  const pendingPayout = myQuotes.filter(q => q.status === "accepted").reduce((s, q) => s + (q.totalPrice || 0), 0);
+  const activeJobs = myQuotes.filter(q => q.status === "accepted").length;
+  const completedJobs = myQuotes.filter(q => q.status === "completed").length;
+  const newJobsCount = availableJobs.filter(j => !myQuotes.some(q => q.jobId === j.id)).length;
 
-      {/* Notifications Badge */}
-      {unreadCount > 0 && (
-        <Card className="mb-6 bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-blue-600" />
-                <span className="text-blue-900">
-                  You have {unreadCount} new notification
-                  {unreadCount !== 1 ? "s" : ""}
-                </span>
-              </div>
-              <Button variant="outline" size="sm">
-                View All
-              </Button>
+  return (
+    <div className="min-h-screen" style={{ background: "#FBF7F0" }}>
+      {/* Topbar */}
+      <header style={{ background: "#fff", borderBottom: "1px solid rgba(180,150,100,0.18)" }} className="px-6 py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <img
+            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+            alt="PaintBookCo"
+            className="h-6 w-auto"
+          />
+          <span className="text-xs" style={{ color: "#9B8A75" }}>Painter/Decorator Portal</span>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+
+        {/* Greeting */}
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: "#3A3228" }}>
+            {getGreeting()} 👋
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "#9B8A75" }}>
+            {holidayMsg || "Browse available jobs and manage your quotes."}
+          </p>
+        </div>
+
+        {/* New jobs alert */}
+        {newJobsCount > 0 && (
+          <div style={{ background: "#D85A30", color: "#fff" }} className="rounded-xl px-5 py-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">🔔 {newJobsCount} new job{newJobsCount > 1 ? "s" : ""} in your area</p>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Check the Available Jobs tab to submit quotes.</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
+
+        {/* Notifications Badge */}
+        {unreadCount > 0 && (
+          <div style={{ background: "rgba(26,92,138,0.08)", border: "1px solid rgba(26,92,138,0.2)" }} className="rounded-xl px-5 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" style={{ color: "#1A5C8A" }} />
+              <span className="text-sm" style={{ color: "#1A5C8A" }}>
+                You have {unreadCount} new notification{unreadCount !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <Button variant="outline" size="sm">View All</Button>
+          </div>
+        )}
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-4">
+          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-4 text-center">
+            <p className="text-xs font-medium" style={{ color: "#9B8A75" }}>Pending Payout</p>
+            <p className="text-2xl font-bold mt-1" style={{ color: "#2D5A3D" }}>£{pendingPayout.toFixed(0)}</p>
+          </div>
+          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-4 text-center">
+            <p className="text-xs font-medium" style={{ color: "#9B8A75" }}>Active Jobs</p>
+            <p className="text-2xl font-bold mt-1" style={{ color: "#1A5C8A" }}>{activeJobs}</p>
+          </div>
+          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-4 text-center">
+            <p className="text-xs font-medium" style={{ color: "#9B8A75" }}>Completed</p>
+            <p className="text-2xl font-bold mt-1" style={{ color: "#3A3228" }}>{completedJobs}</p>
+          </div>
+        </div>
 
       {/* Tabs */}
       <Tabs defaultValue="available" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="available">
+        <TabsList className="grid w-full grid-cols-2" style={{ background: "rgba(180,150,100,0.12)" }}>
+          <TabsTrigger value="available" style={{ fontWeight: 500 }}>
             Available Jobs ({availableJobs.length})
           </TabsTrigger>
-          <TabsTrigger value="quotes">
+          <TabsTrigger value="quotes" style={{ fontWeight: 500 }}>
             My Quotes ({myQuotes.length})
           </TabsTrigger>
         </TabsList>
 
         {/* Available Jobs Tab */}
-        <TabsContent value="available" className="mt-6 space-y-4">
+        <TabsContent value="available" className="mt-5 space-y-4">
           {availableJobs.length === 0 ? (
-            <Card>
-              <CardContent className="pt-12 text-center">
-                <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-gray-600 mb-4">
-                  No jobs available in your area right now
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/painter-onboarding")}
-                >
-                  Update Your Profile
-                </Button>
-              </CardContent>
-            </Card>
+            <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-12 text-center">
+              <Briefcase className="mx-auto h-10 w-10 mb-4" style={{ color: "#C4B5A5" }} />
+              <p className="mb-4" style={{ color: "#9B8A75" }}>No jobs available in your area right now</p>
+              <Button variant="outline" onClick={() => navigate("/painter-onboarding")}>
+                Update Your Profile
+              </Button>
+            </div>
           ) : (
             availableJobs.map((job) => (
-              <Card key={job.id} className="hover-lift">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle>{job.title}</CardTitle>
-                      <CardDescription className="mt-3 flex items-center gap-2">
-                        <MapPin className="h-4 w-4 flex-shrink-0" />
-                        {job.postcode}
-                      </CardDescription>
-                    </div>
-                    <Badge className="ml-4">{job.jobType}</Badge>
+              <div key={job.id} style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="font-semibold" style={{ color: "#3A3228" }}>{job.title}</p>
+                    <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: "#9B8A75" }}>
+                      <MapPin className="h-3.5 w-3.5" />
+                      {job.postcode}
+                    </p>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {job.description && (
-                      <p className="text-base text-muted-foreground leading-relaxed">
-                        {job.description}
+                  <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "rgba(216,90,48,0.1)", color: "#D85A30" }}>{job.jobType}</span>
+                </div>
+
+                {job.description && (
+                  <p className="text-sm leading-relaxed" style={{ color: "#9B8A75" }}>{job.description}</p>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  {job.budgetMin && (
+                    <div>
+                      <p className="text-xs" style={{ color: "#9B8A75" }}>Budget</p>
+                      <p className="text-lg font-bold mt-0.5" style={{ color: "#2D5A3D" }}>
+                        £{job.budgetMin}{job.budgetMax && ` – £${job.budgetMax}`}
                       </p>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-6">
-                      {job.budgetMin && (
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Budget
-                          </p>
-                          <p className="text-lg font-bold mt-1">
-                            £{job.budgetMin}
-                            {job.budgetMax && ` - £${job.budgetMax}`}
-                          </p>
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Posted
-                        </p>
-                        <p className="font-semibold text-lg mt-1">
-                          {new Date(job.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
                     </div>
-
-                    {/* Check if already quoted */}
-                    {myQuotes.some((q) => q.jobId === job.id) ? (
-                      <Button disabled className="w-full">
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Already Quoted
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => {
-                          setSelectedJob(job);
-                          setQuoteDialogOpen(true);
-                        }}
-                        className="w-full"
-                      >
-                        Submit Quote
-                      </Button>
-                    )}
+                  )}
+                  <div>
+                    <p className="text-xs" style={{ color: "#9B8A75" }}>Posted</p>
+                    <p className="font-semibold mt-0.5" style={{ color: "#3A3228" }}>{new Date(job.createdAt).toLocaleDateString()}</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {myQuotes.some((q) => q.jobId === job.id) ? (
+                  <button disabled className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 opacity-60" style={{ background: "rgba(45,90,61,0.1)", color: "#2D5A3D" }}>
+                    <CheckCircle2 className="h-4 w-4" /> Already Quoted
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setSelectedJob(job); setQuoteDialogOpen(true); }}
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                    style={{ background: "#D85A30" }}
+                  >
+                    Submit Quote
+                  </button>
+                )}
+              </div>
             ))
           )}
         </TabsContent>
 
         {/* My Quotes Tab */}
-        <TabsContent value="quotes" className="mt-6 space-y-4">
+        <TabsContent value="quotes" className="mt-5 space-y-4">
           {myQuotes.length === 0 ? (
-            <Card>
-              <CardContent className="pt-12 text-center">
-                <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-gray-600">
-                  You haven't submitted any quotes yet
-                </p>
-              </CardContent>
-            </Card>
+            <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-12 text-center">
+              <Briefcase className="mx-auto h-10 w-10 mb-4" style={{ color: "#C4B5A5" }} />
+              <p style={{ color: "#9B8A75" }}>You haven't submitted any quotes yet</p>
+            </div>
           ) : (
             myQuotes.map((quote) => (
-              <Card key={quote.id} className="hover-lift">
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-4">
-                    <CardTitle>Quote #{quote.id.slice(0, 8)}</CardTitle>
-                    <Badge className={getStatusColor(quote.status)}>
-                      {quote.status}
-                    </Badge>
+              <div key={quote.id} style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="font-semibold" style={{ color: "#3A3228" }}>Quote #{quote.id.slice(0, 8)}</p>
+                  <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{
+                    background: quote.status === "accepted" ? "rgba(45,90,61,0.1)" : quote.status === "pending" ? "rgba(180,150,100,0.15)" : "rgba(216,90,48,0.1)",
+                    color: quote.status === "accepted" ? "#2D5A3D" : quote.status === "pending" ? "#9B8A75" : "#D85A30",
+                  }}>{quote.status}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs" style={{ color: "#9B8A75" }}>Quote Price</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: "#2D5A3D" }}>£{quote.jobPrice}</p>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Quote Price
-                        </p>
-                        <p className="text-2xl sm:text-3xl font-bold mt-2">
-                          £{quote.jobPrice}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Total Price
-                        </p>
-                        <p className="text-2xl sm:text-3xl font-bold mt-2">
-                          £{quote.totalPrice}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground pt-2 border-t border-border/50">
-                      Submitted on{" "}
-                      {new Date(quote.createdAt).toLocaleDateString()}
-                    </div>
-                    {quote.status === "accepted" && (
-                      <div className="rounded-lg bg-green-50 p-4 border border-green-200">
-                        <p className="text-sm text-green-900 font-semibold">
-                          ✓ Quote accepted! Ready to start work
-                        </p>
-                      </div>
-                    )}
+                  <div>
+                    <p className="text-xs" style={{ color: "#9B8A75" }}>Total Price</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: "#2D5A3D" }}>£{quote.totalPrice}</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <p className="text-xs pt-2" style={{ borderTop: "1px solid rgba(180,150,100,0.15)", color: "#C4B5A5" }}>
+                  Submitted on {new Date(quote.createdAt).toLocaleDateString()}
+                </p>
+                {quote.status === "accepted" && (
+                  <div style={{ background: "rgba(45,90,61,0.08)", border: "1px solid rgba(45,90,61,0.2)" }} className="rounded-xl p-4">
+                    <p className="text-sm font-semibold" style={{ color: "#2D5A3D" }}>✓ Quote accepted! Ready to start work</p>
+                  </div>
+                )}
+              </div>
             ))
           )}
         </TabsContent>
       </Tabs>
+
+      </div>
 
       {/* Quote Submission Dialog */}
       <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>

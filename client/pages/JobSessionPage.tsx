@@ -194,17 +194,17 @@ export default function JobSessionPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-muted-foreground text-sm">Loading your job...</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "#FBF7F0" }}>
+      <p className="text-sm" style={{ color: "#9B8A75" }}>Loading your job...</p>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: "#FBF7F0" }}>
       <div className="text-center space-y-4 max-w-sm">
-        <XCircle className="h-10 w-10 text-destructive mx-auto" />
-        <h1 className="text-xl font-semibold">Link not found</h1>
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <XCircle className="h-10 w-10 mx-auto" style={{ color: "#D85A30" }} />
+        <h1 className="text-xl font-semibold" style={{ color: "#3A3228" }}>Link not found</h1>
+        <p className="text-sm" style={{ color: "#9B8A75" }}>{error}</p>
       </div>
     </div>
   );
@@ -286,33 +286,51 @@ export default function JobSessionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card px-6 py-4">
+    <div className="min-h-screen" style={{ background: "#FBF7F0" }}>
+      {/* Topbar */}
+      <header style={{ background: "#fff", borderBottom: "1px solid rgba(180,150,100,0.18)" }} className="px-6 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">PaintBookCo</p>
-            <p className="font-semibold text-sm">Job Tracker</p>
-          </div>
+          <img
+            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+            alt="PaintBookCo"
+            className="h-6 w-auto"
+          />
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Job reference</p>
-            <p className="font-mono text-xs font-medium">PBC-{session?.id?.slice(-6).toUpperCase()}</p>
+            <p className="text-xs" style={{ color: "#9B8A75" }}>Job reference</p>
+            <p className="font-mono text-xs font-semibold" style={{ color: "#2D5A3D" }}>PBC-{session?.id?.slice(-6).toUpperCase()}</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-2xl mx-auto px-6 py-8 space-y-5">
+
+        {/* Greeting banner */}
+        <div style={{ background: "#2D5A3D" }} className="rounded-xl px-5 py-4 text-white">
+          <p className="text-base font-semibold">Your space is in good hands 🎨</p>
+          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.7)" }}>
+            Secure escrow · Payment only released when you approve
+          </p>
+        </div>
+
+        {/* Payment protection banner */}
+        <div style={{ background: "#fff", border: "1px solid rgba(45,90,61,0.2)" }} className="rounded-xl px-5 py-3 flex items-center gap-3">
+          <span className="text-lg">🛡️</span>
+          <div>
+            <p className="text-xs font-semibold" style={{ color: "#2D5A3D" }}>Payment Protection Active</p>
+            <p className="text-xs" style={{ color: "#9B8A75" }}>Funds held safely until you confirm the job is complete.</p>
+          </div>
+        </div>
 
         {isReadOnly && (
-          <div className="bg-accent/20 border border-border rounded-md p-3 text-sm text-center text-muted-foreground">
-            This job is <strong>{status}</strong>. This page is now read-only and kept for your records.
+          <div style={{ background: "rgba(180,150,100,0.1)", border: "1px solid rgba(180,150,100,0.3)" }} className="rounded-xl p-3 text-sm text-center" style={{ color: "#9B8A75" }}>
+            This job is <strong style={{ color: "#2D5A3D" }}>{status}</strong>. This page is now read-only and kept for your records.
           </div>
         )}
 
         {status === "disputed" && (
-          <div className="bg-amber-900/20 border border-amber-800/40 rounded-lg p-4">
-            <p className="text-amber-400 font-medium">⚖️ Dispute Under Review</p>
-            <p className="text-sm text-muted-foreground mt-1">
+          <div style={{ background: "rgba(216,90,48,0.08)", border: "1px solid rgba(216,90,48,0.3)" }} className="rounded-xl p-4">
+            <p className="font-semibold text-sm" style={{ color: "#D85A30" }}>⚖️ Dispute Under Review</p>
+            <p className="text-sm mt-1" style={{ color: "#9B8A75" }}>
               Our team is reviewing this dispute and will contact both parties within 10 working days.
               Once resolved, this page will update with the outcome.
             </p>
@@ -320,23 +338,23 @@ export default function JobSessionPage() {
         )}
 
         {status === "disputed" && session && (
-          <div className="border border-amber-800/40 bg-amber-900/10 rounded-xl overflow-hidden">
+          <div style={{ background: "#fff", border: "1px solid rgba(216,90,48,0.25)" }} className="rounded-xl overflow-hidden">
             <button
               onClick={() => setShowAdminChat(prev => !prev)}
               className="w-full flex items-center justify-between p-4"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-amber-400">💬 Messages from PaintBookCo Support</span>
+                <span className="text-sm font-semibold" style={{ color: "#D85A30" }}>💬 Messages from PaintBookCo Support</span>
                 {adminUnread > 0 && (
                   <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full">
                     {adminUnread > 9 ? "9+" : adminUnread}
                   </span>
                 )}
               </div>
-              <span className="text-xs text-muted-foreground">{showAdminChat ? "Hide" : "Show"}</span>
+              <span className="text-xs" style={{ color: "#9B8A75" }}>{showAdminChat ? "Hide" : "Show"}</span>
             </button>
             {showAdminChat && (
-              <div className="border-t border-amber-800/40 h-80">
+              <div style={{ borderTop: "1px solid rgba(216,90,48,0.2)" }} className="h-80">
                 <PaintBookChat
                   sessionId={session.id}
                   userId={`customer-${session.id}`}
@@ -352,31 +370,37 @@ export default function JobSessionPage() {
         )}
 
         {/* Status tracker */}
-        <div className="bg-card border border-border rounded-lg p-5">
-          <h2 className="text-sm font-medium mb-4">Job Progress</h2>
-          <div className="space-y-3">
+        <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-5" style={{ color: "#3A3228" }}>Job Progress</h2>
+          <div className="space-y-0">
             {STATUS_STEPS.map((step, i) => {
               const done = i < stepIndex;
               const current = i === stepIndex;
+              const isLast = i === STATUS_STEPS.length - 1;
               return (
-                <div key={step.key} className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    done ? "bg-green-500" : current ? "bg-foreground" : "bg-muted"
-                  }`}>
-                    {done ? (
-                      <CheckCircle2 className="h-4 w-4 text-white" />
-                    ) : current ? (
-                      <Clock className="h-3 w-3 text-background" />
-                    ) : (
-                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                    )}
+                <div key={step.key} className="flex items-start gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      done ? "" : current ? "" : ""
+                    }`} style={{
+                      background: done ? "#2D5A3D" : current ? "#D85A30" : "rgba(180,150,100,0.2)",
+                    }}>
+                      {done ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                      ) : current ? (
+                        <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                      ) : (
+                        <div className="w-2 h-2 rounded-full" style={{ background: "rgba(180,150,100,0.5)" }} />
+                      )}
+                    </div>
+                    {!isLast && <div className="w-px h-6 mt-1" style={{ background: done ? "#2D5A3D" : "rgba(180,150,100,0.2)" }} />}
                   </div>
-                  <span className={`text-sm ${
-                    done ? "text-muted-foreground line-through" :
-                    current ? "font-medium text-foreground" :
-                    "text-muted-foreground"
-                  }`}>{step.label}</span>
-                  {current && <span className="text-xs bg-foreground text-background px-2 py-0.5 rounded-full">Current</span>}
+                  <div className="pb-5">
+                    <span className="text-sm font-medium" style={{ color: done ? "#9B8A75" : current ? "#3A3228" : "#C4B5A5" }}>
+                      {step.label}
+                    </span>
+                    {current && <span className="ml-2 text-xs px-2 py-0.5 rounded-full text-white" style={{ background: "#D85A30" }}>Current</span>}
+                  </div>
                 </div>
               );
             })}
@@ -384,29 +408,29 @@ export default function JobSessionPage() {
         </div>
 
         {/* Job details */}
-        <div className="bg-card border border-border rounded-lg p-5 space-y-3">
-          <h2 className="text-sm font-medium">Job Details</h2>
+        <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-3">
+          <h2 className="text-sm font-semibold" style={{ color: "#3A3228" }}>Job Details</h2>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-muted-foreground">Type</span>
-            <span>{session?.job_type?.replace(/_/g, " ")}</span>
-            <span className="text-muted-foreground">Location</span>
-            <span>{session?.city}, {session?.postcode?.split(" ")[0]}</span>
+            <span style={{ color: "#9B8A75" }}>Type</span>
+            <span style={{ color: "#3A3228" }}>{session?.job_type?.replace(/_/g, " ")}</span>
+            <span style={{ color: "#9B8A75" }}>Location</span>
+            <span style={{ color: "#3A3228" }}>{session?.city}, {session?.postcode?.split(" ")[0]}</span>
             {painterName && <>
-              <span className="text-muted-foreground">Painter</span>
-              <span>{painterName}</span>
+              <span style={{ color: "#9B8A75" }}>Painter/decorator</span>
+              <span style={{ color: "#3A3228" }}>{painterName}</span>
             </>}
             {transaction?.amount && <>
-              <span className="text-muted-foreground">Amount</span>
-              <span className="font-medium">£{transaction.amount.toFixed(2)}</span>
+              <span style={{ color: "#9B8A75" }}>Amount</span>
+              <span className="font-semibold" style={{ color: "#2D5A3D" }}>£{transaction.amount.toFixed(2)}</span>
             </>}
           </div>
         </div>
 
         {/* Invoice + Pay Now */}
         {transaction?.invoice_html && status === "invoice_sent" && !isReadOnly && status !== "disputed" && (
-          <div className="bg-card border border-border rounded-lg p-5 space-y-4">
-            <h2 className="text-sm font-medium flex items-center gap-2">
-              <Shield className="h-4 w-4" /> Invoice
+          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-4">
+            <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: "#3A3228" }}>
+              <Shield className="h-4 w-4" style={{ color: "#2D5A3D" }} /> Invoice
             </h2>
             <div
               className="text-sm"
@@ -414,13 +438,14 @@ export default function JobSessionPage() {
             />
 
             {actionMessage && (
-              <p className="text-sm text-destructive text-center">{actionMessage}</p>
+              <p className="text-sm text-center" style={{ color: "#D85A30" }}>{actionMessage}</p>
             )}
 
             <button
               onClick={handlePayNow}
               disabled={payLoading}
-              className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-white"
+              style={{ background: "#2D5A3D" }}
             >
               {payLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               Pay Now — Secure Escrow
@@ -430,16 +455,17 @@ export default function JobSessionPage() {
 
         {/* Milestones */}
         {transaction?.milestones?.length > 0 && (
-          <div className="bg-card border border-border rounded-lg p-5 space-y-3">
-            <h2 className="text-sm font-medium">Milestones</h2>
+          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-3">
+            <h2 className="text-sm font-semibold" style={{ color: "#3A3228" }}>Milestones</h2>
             {transaction.milestones.map((m: any) => (
-              <div key={m.id} className="flex items-center justify-between text-sm border-b border-border pb-2 last:border-0 last:pb-0">
-                <span>{m.title}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  m.status === "completed" ? "bg-green-100 text-green-700" :
-                  m.status === "in_progress" ? "bg-blue-100 text-blue-700" :
-                  "bg-muted text-muted-foreground"
-                }`}>{m.status}</span>
+              <div key={m.id} className="flex items-center justify-between text-sm pb-2 last:pb-0" style={{ borderBottom: "1px solid rgba(180,150,100,0.15)" }}>
+                <span style={{ color: "#3A3228" }}>{m.title}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{
+                  background: m.status === "completed" ? "rgba(45,90,61,0.12)" :
+                               m.status === "in_progress" ? "rgba(26,92,138,0.12)" : "rgba(180,150,100,0.15)",
+                  color: m.status === "completed" ? "#2D5A3D" :
+                         m.status === "in_progress" ? "#1A5C8A" : "#9B8A75",
+                }}>{m.status}</span>
               </div>
             ))}
           </div>
@@ -447,9 +473,9 @@ export default function JobSessionPage() {
 
         {/* Chat — embedded for customer */}
         {(transaction?.chat_channel_id || session?.chat_channel_id) && !isReadOnly && status !== "disputed" && (
-          <div className="bg-card border border-border rounded-lg p-5">
-            <h2 className="text-sm font-medium flex items-center gap-2 mb-3">
-              <MessageSquare className="h-4 w-4" /> Chat with your painter
+          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5">
+            <h2 className="text-sm font-semibold flex items-center gap-2 mb-3" style={{ color: "#3A3228" }}>
+              <MessageSquare className="h-4 w-4" style={{ color: "#D85A30" }} /> Chat with your painter/decorator
             </h2>
             <div className="h-96">
               <PaintBookChat
@@ -464,7 +490,7 @@ export default function JobSessionPage() {
 
         {/* Admin Messages panel — shown when disputed */}
         {disputeChannelId && (
-          <div className="border border-amber-800/40 bg-amber-900/10 rounded-xl overflow-hidden">
+          <div style={{ background: "#fff", border: "1px solid rgba(216,90,48,0.25)" }} className="rounded-xl overflow-hidden">
             <button
               onClick={() => setShowAdminChat(!showAdminChat)}
               className="w-full flex items-center justify-between p-4"
@@ -499,7 +525,7 @@ export default function JobSessionPage() {
         {!isReadOnly && transaction && (
           <div className="space-y-3">
             {actionMessage && (
-              <div className="bg-accent/20 border border-border rounded-md p-3 text-sm text-center">
+              <div style={{ background: "rgba(180,150,100,0.1)", border: "1px solid rgba(180,150,100,0.3)" }} className="rounded-xl p-3 text-sm text-center" style={{ color: "#9B8A75" }}>
                 {actionMessage}
               </div>
             )}
@@ -508,7 +534,8 @@ export default function JobSessionPage() {
               <button
                 onClick={() => handleAction("confirm-completion")}
                 disabled={!!actionLoading}
-                className="w-full bg-green-600 text-white py-3 rounded-md text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+                style={{ background: "#2D5A3D" }}
               >
                 {actionLoading === "confirm-completion" ? "Processing..." : "Confirm Job Complete — Release Payment"}
               </button>
@@ -517,7 +544,8 @@ export default function JobSessionPage() {
             {["funded", "in_progress", "completion_requested"].includes(status) && status !== "disputed" && (
               <button
                 onClick={() => setShowDisputeModal(true)}
-                className="w-full border border-destructive/50 text-destructive py-3 rounded-xl text-sm hover:bg-destructive/10 transition-colors"
+                className="w-full py-3 rounded-xl text-sm font-medium transition-all"
+                style={{ border: "1px solid rgba(216,90,48,0.4)", color: "#D85A30" }}
               >
                 ⚠️ Raise a Dispute
               </button>
@@ -543,7 +571,8 @@ export default function JobSessionPage() {
               <button
                 onClick={() => handleAction("cancel-job")}
                 disabled={!!actionLoading}
-                className="w-full border border-border text-muted-foreground py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors disabled:opacity-50"
+                className="w-full py-3 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+                style={{ border: "1px solid rgba(180,150,100,0.3)", color: "#9B8A75" }}
               >
                 {actionLoading === "cancel-job" ? "Processing..." : "Cancel Job"}
               </button>
@@ -551,32 +580,35 @@ export default function JobSessionPage() {
           </div>
         )}
 
-        {/* Find Another Painter — available before payment, no transaction required */}
+        {/* Find Another Painter/decorator — available before payment, no transaction required */}
         {!isReadOnly && ["painter_contacted", "invoice_sent"].includes(status) && (
           <div className="space-y-2">
             {!showFindAnotherPainterConfirm ? (
               <button
                 onClick={() => setShowFindAnotherPainterConfirm(true)}
-                className="w-full border border-border text-muted-foreground py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                className="w-full py-3 rounded-xl text-sm font-medium transition-all"
+                style={{ border: "1px solid rgba(180,150,100,0.3)", color: "#9B8A75" }}
               >
-                Find Another Painter
+                Find Another Painter/Decorator
               </button>
             ) : (
-              <div className="border border-amber-500/30 bg-amber-900/10 rounded-md p-4 space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  This will remove the current painter and put your job back in the queue.
+              <div style={{ background: "rgba(216,90,48,0.05)", border: "1px solid rgba(216,90,48,0.2)" }} className="rounded-xl p-4 space-y-3">
+                <p className="text-sm" style={{ color: "#9B8A75" }}>
+                  This will remove the current painter/decorator and put your job back in the queue.
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={handleFindAnotherPainter}
                     disabled={findingAnotherPainter}
-                    className="flex-1 bg-amber-600 text-white py-2 rounded-md text-sm font-medium hover:bg-amber-700 transition-colors disabled:opacity-50"
+                    className="flex-1 py-2 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-50"
+                    style={{ background: "#D85A30" }}
                   >
                     {findingAnotherPainter ? "Processing..." : "Confirm"}
                   </button>
                   <button
                     onClick={() => setShowFindAnotherPainterConfirm(false)}
-                    className="flex-1 border border-border py-2 rounded-md text-sm text-muted-foreground hover:bg-accent transition-colors"
+                    className="flex-1 py-2 rounded-xl text-sm transition-all"
+                    style={{ border: "1px solid rgba(180,150,100,0.3)", color: "#9B8A75" }}
                   >
                     Cancel
                   </button>
@@ -588,26 +620,26 @@ export default function JobSessionPage() {
 
         {/* Review section — only when completed */}
         {status === "completed" && (
-          <div className="bg-card border border-border rounded-lg p-5 space-y-4">
-            <h2 className="text-sm font-medium flex items-center gap-2">
-              <Star className="h-4 w-4" /> Rate Your Painter
+          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-4">
+            <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: "#3A3228" }}>
+              <Star className="h-4 w-4" style={{ color: "#D85A30" }} /> Rate Your Painter/Decorator
             </h2>
 
             {review ? (
               <div className="space-y-3">
                 {reviewSubmitted && (
-                  <p className="text-sm text-green-600 font-medium">Thank you for your review!</p>
+                  <p className="text-sm font-semibold" style={{ color: "#2D5A3D" }}>Thank you for your review!</p>
                 )}
                 <StarRating value={review.rating} />
-                <p className="text-sm text-foreground">{review.review_text}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm" style={{ color: "#3A3228" }}>{review.review_text}</p>
+                <p className="text-xs" style={{ color: "#9B8A75" }}>
                   Reviewed on {new Date(review.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmitReview} className="space-y-4">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">How would you rate your painter?</p>
+                  <p className="text-xs mb-2" style={{ color: "#9B8A75" }}>How would you rate your painter/decorator?</p>
                   <StarRating value={reviewRating} onChange={setReviewRating} />
                 </div>
                 <div>
@@ -617,17 +649,23 @@ export default function JobSessionPage() {
                     placeholder="Tell us about your experience (min 20 characters)…"
                     maxLength={500}
                     rows={4}
-                    className="w-full border border-border bg-transparent text-sm text-foreground rounded-md p-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground resize-none transition-colors"
+                    className="w-full text-sm rounded-xl p-3 resize-none transition-colors focus:outline-none"
+                    style={{
+                      background: "#FBF7F0",
+                      border: "1px solid rgba(180,150,100,0.3)",
+                      color: "#3A3228",
+                    }}
                   />
-                  <p className="text-xs text-muted-foreground text-right mt-1">{reviewText.length}/500</p>
+                  <p className="text-xs text-right mt-1" style={{ color: "#C4B5A5" }}>{reviewText.length}/500</p>
                 </div>
                 {reviewError && (
-                  <p className="text-sm text-destructive">{reviewError}</p>
+                  <p className="text-sm" style={{ color: "#D85A30" }}>{reviewError}</p>
                 )}
                 <button
                   type="submit"
                   disabled={reviewLoading}
-                  className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  style={{ background: "#2D5A3D" }}
                 >
                   {reviewLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Submit Review

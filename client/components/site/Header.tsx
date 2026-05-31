@@ -10,7 +10,8 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggedIn, setLoggedIn]     = useState(false);
   const loc      = useLocation();
-  const { search } = loc;
+  const { search, pathname } = loc;
+  const isHome   = pathname === "/";
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,7 +64,9 @@ export default function Header() {
             <img
               src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
               alt="PaintBookCo"
-              className="h-7 w-auto"
+              className="h-7 w-auto transition-all duration-300"
+              style={{ filter: isHome ? "brightness(0) invert(1)" : "none" }}
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
           </Link>
 
@@ -189,7 +192,7 @@ export default function Header() {
                   onClick={() => setMobileOpen(false)}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Painter Login
+                  Painter/Decorator Login
                 </Link>
               </div>
             )}

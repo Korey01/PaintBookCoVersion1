@@ -93,7 +93,7 @@ export default function Footer() {
         <div className="h-px bg-white/10" />
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-6 text-xs text-white/25">
           <span>© {new Date().getFullYear()} The PaintBook Company Ltd. All rights reserved.</span>
-          <span>Built for painters, by painters.</span>
+          <span>Built for painters/decorators, by painters/decorators.</span>
         </div>
       </div>
     </footer>

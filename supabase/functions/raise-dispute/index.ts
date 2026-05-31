@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { transaction_id, customer_token, painter_token, raised_by, reason } = await req.json();
+    const { transaction_id, customer_token, painter_token, raised_by, reason, attachments } = await req.json();
 
     if (!transaction_id || !reason || !raised_by) {
       return json({ error: "transaction_id, reason and raised_by are required" }, 400);
@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
       session_id: sessionId,
       raised_by,
       reason,
+      attachments: attachments || [],
       status: "open",
       admin_customer_channel_id: adminCustomerChannelId,
       admin_painter_channel_id: adminPainterChannelId,

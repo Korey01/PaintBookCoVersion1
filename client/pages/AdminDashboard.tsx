@@ -1162,6 +1162,23 @@ export default function AdminDashboard() {
                         <p className="text-xs mt-1 border border-border rounded px-2 py-1 inline-block">
                           {d.reason.slice(0, 120)}{d.reason.length > 120 ? "..." : ""}
                         </p>
+                        {d.attachments && d.attachments.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {d.attachments.map((url: string, i: number) => (
+                              <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                                className="block border border-border rounded overflow-hidden hover:opacity-80 transition-opacity"
+                              >
+                                {url.match(/\.(mp4|mov|webm)$/i) ? (
+                                  <div className="w-20 h-16 bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                                    🎥 Video
+                                  </div>
+                                ) : (
+                                  <img src={url} alt={`Attachment ${i+1}`} className="w-20 h-16 object-cover" />
+                                )}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <span className={`text-xs px-2 py-1 rounded border ${
                         d.status === "open" ? "text-red-400 bg-red-900/20 border-red-800/40" :

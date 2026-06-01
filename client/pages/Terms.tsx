@@ -1,6 +1,6 @@
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen" style={{ background: '#FBF7F0', color: '#1A1A14' }}>
       <div className="page-container section-gap">
         {/* Header */}
         <div className="mb-12 animate-fade-in">

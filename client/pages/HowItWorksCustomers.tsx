@@ -18,7 +18,7 @@ export default function HowItWorksCustomers() {
   const ctaRef = useScrollAnimation();
 
   return (
-    <div>
+    <div style={{ background: '#FBF7F0', minHeight: '100vh' }}>
       <div className="h-16" />
 
       {/* Hero */}

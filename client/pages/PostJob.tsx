@@ -5,20 +5,20 @@ import { MapPin, Paintbrush, FileText, Home, Palette, Mail, CheckCircle2, Upload
 import { z } from "zod";
 
 const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
-const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
+const fieldClass = "w-full text-sm py-3 placeholder:text-[#C4C2BA] focus:outline-none transition-colors duration-200 bg-transparent";
 
 const JOB_TYPES = [
-  { id: "interior", label: "🏠 Interior Painting", emoji: "🏠" },
-  { id: "exterior", label: "🏡 Exterior Painting", emoji: "🏡" },
-  { id: "wallpaper", label: "📋 Wallpapering", emoji: "📋" },
-  { id: "feature-wall", label: "✨ Feature Wall", emoji: "✨" },
-  { id: "tv-wall", label: "📺 TV/Media Wall", emoji: "📺" },
-  { id: "commercial", label: "🏢 Commercial Painting", emoji: "🏢" },
-  { id: "interior-refurb", label: "🔨 Full Interior Refurb", emoji: "🔨" },
-  { id: "exterior-refurb", label: "🔧 Full Exterior Refurb", emoji: "🔧" },
-  { id: "new-build", label: "🏗️ New Build Decoration", emoji: "🏗️" },
-  { id: "landlord", label: "🔑 Landlord Refresh", emoji: "🔑" },
-  { id: "specialist", label: "🎨 Specialist/Other", emoji: "🎨" },
+  { id: "interior", label: "Interior Painting", emoji: "🏠" },
+  { id: "exterior", label: "Exterior Painting", emoji: "🏡" },
+  { id: "wallpaper", label: "Wallpapering", emoji: "📋" },
+  { id: "feature-wall", label: "Feature Wall", emoji: "✨" },
+  { id: "tv-wall", label: "TV/Media Wall", emoji: "📺" },
+  { id: "commercial", label: "Commercial Painting", emoji: "🏢" },
+  { id: "interior-refurb", label: "Full Interior Refurb", emoji: "🔨" },
+  { id: "exterior-refurb", label: "Full Exterior Refurb", emoji: "🔧" },
+  { id: "new-build", label: "New Build Decoration", emoji: "🏗️" },
+  { id: "landlord", label: "Landlord Refresh", emoji: "🔑" },
+  { id: "specialist", label: "Specialist / Other", emoji: "🎨" },
 ];
 
 const ROOM_TYPES = ["Bedroom", "Living Room", "Kitchen", "Bathroom", "Hallway", "Office", "Garage", "Other"];
@@ -227,19 +227,18 @@ export default function PostJob() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: '#FBF7F0' }}>
       {/* Header */}
-      <header className="px-6 py-5 border-b border-border">
+      <header className="px-6 py-5" style={{ background: '#FFFFFF', borderBottom: '0.5px solid rgba(180,150,100,0.18)' }}>
         <a href="/">
           <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
         </a>
       </header>
 
       {/* Progress bar */}
-      <div className="h-0.5 bg-border">
+      <div className="h-0.5" style={{ background: 'rgba(180,150,100,0.2)' }}>
         <div
-          className="h-full bg-foreground transition-all duration-500"
-          style={{ width: `${(step / 6) * 100}%` }}
+          className="h-full transition-all duration-500" style={{ background: '#D85A30', width: `${(step / 6) * 100}%` }}
         />
       </div>
 
@@ -254,7 +253,7 @@ export default function PostJob() {
                   <MapPin className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Your location</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">Where is the job?</h1>
+                    <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Where is the job?</h1>
                   </div>
                 </div>
               </div>
@@ -267,7 +266,7 @@ export default function PostJob() {
                 className="space-y-6"
               >
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                  <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                     Postcode *
                   </label>
                   <input
@@ -281,7 +280,7 @@ export default function PostJob() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                  <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                     City/Area *
                   </label>
                   <input
@@ -296,7 +295,7 @@ export default function PostJob() {
 
                 <button
                   type="submit"
-                  className="w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-lg text-sm font-medium transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 w-full" style={{ background: '#D85A30', color: '#F5F0E8' }}
                 >
                   Continue →
                 </button>
@@ -312,7 +311,7 @@ export default function PostJob() {
                   <Paintbrush className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Type of work</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">What needs painting?</h1>
+                    <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: 1.2 }}>What needs painting?</h1>
                   </div>
                 </div>
               </div>
@@ -326,11 +325,10 @@ export default function PostJob() {
                         setJobType(type.id);
                         setErrors({});
                       }}
-                      className={`p-3 border rounded-md text-sm text-left transition-colors ${
-                        jobType === type.id
-                          ? "border-foreground bg-foreground/5"
-                          : "border-border hover:border-foreground/40"
-                      }`}
+                      className="p-3 text-sm text-left transition-all rounded-lg"
+                      style={jobType === type.id
+                        ? { border: '0.5px solid #D85A30', background: 'rgba(216,90,48,0.06)', color: '#1A1A14' }
+                        : { border: '0.5px solid rgba(180,150,100,0.25)', background: '#FFFFFF', color: '#1A1A14' }}
                     >
                       {type.label}
                     </button>
@@ -341,13 +339,13 @@ export default function PostJob() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setStep(1)}
-                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all" style={{ background: 'transparent', border: '0.5px solid rgba(180,150,100,0.3)', color: '#1A1A14' }}
                   >
                     Back
                   </button>
                   <button
                     onClick={() => handleStep2()}
-                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2" style={{ background: '#D85A30', color: '#F5F0E8' }}
                   >
                     Continue →
                   </button>
@@ -364,7 +362,7 @@ export default function PostJob() {
                   <FileText className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Job details</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">Describe the job</h1>
+                    <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Describe the job</h1>
                   </div>
                 </div>
               </div>
@@ -379,7 +377,7 @@ export default function PostJob() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                  <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                     Description *
                   </label>
                   <textarea
@@ -419,13 +417,13 @@ export default function PostJob() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setStep(2)}
-                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all" style={{ background: 'transparent', border: '0.5px solid rgba(180,150,100,0.3)', color: '#1A1A14' }}
                   >
                     Back
                   </button>
                   <button
                     onClick={() => handleStep3()}
-                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2" style={{ background: '#D85A30', color: '#F5F0E8' }}
                   >
                     Continue →
                   </button>
@@ -442,7 +440,7 @@ export default function PostJob() {
                   <Home className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Rooms</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">How many rooms?</h1>
+                    <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: 1.2 }}>How many rooms?</h1>
                   </div>
                 </div>
               </div>
@@ -462,7 +460,7 @@ export default function PostJob() {
 
                         <div className="space-y-3 pr-8">
                           <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                            <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                               Room type
                             </label>
                             <select
@@ -479,7 +477,7 @@ export default function PostJob() {
                           </div>
 
                           <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                            <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                               Custom name (optional)
                             </label>
                             <input
@@ -499,7 +497,7 @@ export default function PostJob() {
                 {/* Add room button */}
                 <button
                   onClick={addRoom}
-                  className="w-full border border-dashed border-border hover:border-foreground/40 hover:text-foreground text-muted-foreground py-3 rounded-md text-sm font-medium transition-colors"
+                  className="w-full py-3 rounded-lg text-sm font-medium transition-all" style={{ border: '0.5px dashed rgba(180,150,100,0.4)', color: '#9B8A75', background: 'transparent' }}
                 >
                   + Add a room
                 </button>
@@ -512,14 +510,14 @@ export default function PostJob() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setStep(3)}
-                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all" style={{ background: 'transparent', border: '0.5px solid rgba(180,150,100,0.3)', color: '#1A1A14' }}
                   >
                     Back
                   </button>
                   <button
                     onClick={() => handleStep4()}
                     disabled={rooms.length === 0}
-                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50" style={{ background: '#D85A30', color: '#F5F0E8' }}
                   >
                     Continue →
                   </button>
@@ -536,7 +534,7 @@ export default function PostJob() {
                   <Palette className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Paint details</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">Paint & Colour</h1>
+                    <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Paint & Colour</h1>
                     <p className="text-xs text-muted-foreground mt-1">Optional — use our Paint Vestimator to estimate paint usage, visualise colours and get product recommendations</p>
                   </div>
                 </div>
@@ -568,7 +566,7 @@ export default function PostJob() {
 
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                        <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                           Estimated paint cost (£)
                         </label>
                         <input
@@ -582,7 +580,7 @@ export default function PostJob() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                        <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                           Chosen colour / paint
                         </label>
                         <input
@@ -594,7 +592,7 @@ export default function PostJob() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">
+                        <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>
                           Additional notes
                         </label>
                         <textarea
@@ -623,7 +621,7 @@ export default function PostJob() {
 
               {/* Photo upload */}
               <div className="space-y-3">
-                <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider">Photos (optional)</label>
+                <label className="block uppercase tracking-wider" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>Photos (optional)</label>
                 <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={onFiles} className="hidden" />
                 <button
                   type="button"
@@ -644,13 +642,13 @@ export default function PostJob() {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setStep(4)}
-                  className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                  className="flex-1 py-3 rounded-lg text-sm font-medium transition-all" style={{ background: 'transparent', border: '0.5px solid rgba(180,150,100,0.3)', color: '#1A1A14' }}
                 >
                   Back
                 </button>
                 <button
                   onClick={() => handleStep5()}
-                  className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
+                  className="flex-1 py-3 rounded-lg text-sm font-medium transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2" style={{ background: '#D85A30', color: '#F5F0E8' }}
                 >
                   {useVestimator && (vestimatorEstimate || vestimatorColour) ? "Continue →" : "Skip →"}
                 </button>
@@ -666,7 +664,7 @@ export default function PostJob() {
                   <Mail className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Almost done</p>
-                    <h1 className="text-2xl font-semibold tracking-tight">Stay updated on your job</h1>
+                    <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Stay updated on your job</h1>
                     <p className="text-xs text-muted-foreground mt-1">We'll send painter quotes and your invoice</p>
                   </div>
                 </div>
@@ -675,7 +673,7 @@ export default function PostJob() {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">First Name</label>
+                    <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>First Name</label>
                     <input
                       type="text"
                       value={firstName}
@@ -686,7 +684,7 @@ export default function PostJob() {
                     {errors.firstName && <p className="text-xs text-destructive mt-1">{errors.firstName}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Last Name</label>
+                    <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>Last Name</label>
                     <input
                       type="text"
                       value={lastName}
@@ -698,7 +696,7 @@ export default function PostJob() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Phone Number</label>
+                  <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>Phone Number</label>
                   <input
                     type="tel"
                     value={phone}
@@ -709,7 +707,7 @@ export default function PostJob() {
                   {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Email</label>
+                  <label className="block uppercase tracking-wider mb-1" style={{ fontSize: '10px', color: '#9B8A75', fontWeight: 500, letterSpacing: '0.1em' }}>Email</label>
                   <input
                     type="email"
                     value={email}
@@ -732,7 +730,7 @@ export default function PostJob() {
                 </label>
 
                 {/* Job summary */}
-                <div className="border border-border rounded-md p-4 space-y-3">
+                <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(180,150,100,0.07)', border: '0.5px solid rgba(180,150,100,0.18)' }}>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Location</span>
                     <span className="font-medium">{city}, {postcode}</span>
@@ -767,14 +765,14 @@ export default function PostJob() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setStep(5)}
-                    className="flex-1 border border-border py-3 rounded-md text-sm font-medium hover:bg-accent transition-colors"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all" style={{ background: 'transparent', border: '0.5px solid rgba(180,150,100,0.3)', color: '#1A1A14' }}
                   >
                     Back
                   </button>
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting || !email.trim()}
-                    className="flex-1 bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2" style={{ background: '#D85A30', color: '#F5F0E8' }}
                   >
                     <CheckCircle2 className="h-4 w-4" />
                     {isSubmitting ? "Posting..." : "Post Job"}
@@ -796,8 +794,8 @@ export function PostJobConfirmation() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-6 py-5 border-b border-border">
+    <div className="min-h-screen flex flex-col" style={{ background: '#FBF7F0' }}>
+      <header className="px-6 py-5" style={{ background: '#FFFFFF', borderBottom: '0.5px solid rgba(180,150,100,0.18)' }}>
         <a href="/">
           <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />
         </a>
@@ -805,27 +803,27 @@ export function PostJobConfirmation() {
 
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm text-center space-y-6">
-          <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-            <CheckCircle2 className="h-7 w-7 text-green-600" />
+          <div className="mx-auto w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'rgba(45,90,61,0.1)' }}>
+            <CheckCircle2 className="h-7 w-7" style={{ color: '#2D5A3D' }} />
           </div>
 
           <div>
-            <h1 className="text-2xl font-semibold mb-2">Job Posted!</h1>
+            <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: 1.2 }}>Job Posted!</h1>
             <p className="text-sm text-muted-foreground">Painters near your area have been notified.</p>
           </div>
 
-          <div className="bg-card border border-border rounded-md p-4">
+          <div className="rounded-xl p-4" style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)' }}>
             <p className="text-xs text-muted-foreground mb-1">Your job reference</p>
             <p className="font-mono text-sm font-medium">{jobRef}</p>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 text-sm space-y-2">
-            <p className="font-medium text-blue-900">Check your email</p>
-            <p className="text-xs text-blue-700">We have sent a job tracking link to <strong>{email}</strong>. Use it to track progress, chat with your painter, approve milestones and release payment.</p>
-            <p className="text-xs text-blue-600">No password needed — keep the link safe.</p>
+          <div className="rounded-xl p-4 text-sm space-y-2" style={{ background: 'rgba(45,90,61,0.06)', border: '0.5px solid rgba(45,90,61,0.2)' }}>
+            <p className="font-medium" style={{ color: '#2D5A3D' }}>Check your email</p>
+            <p className="text-xs" style={{ color: '#4A7A5A' }}>We have sent a job tracking link to <strong>{email}</strong>. Use it to track progress, chat with your painter, approve milestones and release payment.</p>
+            <p className="text-xs" style={{ color: '#4A7A5A' }}>No password needed — keep the link safe.</p>
           </div>
 
-          <div className="bg-accent/20 border border-border rounded-md p-4 text-sm space-y-2">
+          <div className="rounded-xl p-4 text-sm space-y-2" style={{ background: 'rgba(180,150,100,0.08)', border: '0.5px solid rgba(180,150,100,0.2)' }}>
             <p className="font-medium">What happens next</p>
             <ol className="text-xs text-muted-foreground space-y-1 text-left">
               <li>1. A verified painter reviews your job and makes contact</li>

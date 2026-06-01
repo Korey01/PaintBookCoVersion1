@@ -285,34 +285,40 @@ const STEPS = [
 function HowItWorks() {
   const ref = useScrollAnimationList();
   return (
-    <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#111109" }}
-    >
+    <section className="py-28 px-6" style={{ background: '#111109' }}>
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
-          <Label>Simple process</Label>
-          <h2 className="font-display text-foreground max-w-lg">
-            From estimate to booking, in three steps.
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-6" style={{ background: '#D85A30' }} />
+            <span className="editorial-label" style={{ color: '#C4A882' }}>Simple process</span>
+          </div>
+          <h2 className="font-display max-w-lg" style={{ color: '#F5F0E8', fontFamily: 'DM Serif Display, serif', fontSize: '42px', fontWeight: 400, letterSpacing: '-0.02em', lineHeight: '1.1' }}>
+            From estimate to booking,<br />in three steps.
           </h2>
         </div>
-        <div ref={ref} className="grid md:grid-cols-3 gap-0 border border-border/50 scroll-stagger">
+        <div ref={ref} className="grid md:grid-cols-3 gap-0 scroll-stagger" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
           {STEPS.map(({ number, title, description }) => (
             <div
               key={number}
-              className="scroll-animate group flex flex-col p-10 border-b md:border-b-0 md:border-r border-gray-300/40 last:border-0 hover:bg-white/50 transition-colors duration-300"
-              style={{ background: "rgba(255, 255, 255, 0.50)" }}
+              className="scroll-animate group flex flex-col p-10 transition-colors duration-300"
+              style={{ borderRight: '0.5px solid rgba(255,255,255,0.08)', background: 'transparent' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              <span className="editorial-label text-primary mb-8">{number}</span>
-              <h3 className="font-display text-xl font-normal text-foreground mb-4">{title}</h3>
-              <p className="text-sm text-muted-foreground leading-[1.8] flex-1">{description}</p>
+              <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: '36px', color: '#D85A30', opacity: 0.45, marginBottom: '20px', lineHeight: 1 }}>{number}</span>
+              <h3 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '20px', fontWeight: 400, color: '#F5F0E8', marginBottom: '12px' }}>{title}</h3>
+              <p style={{ fontSize: '13px', color: '#6B6860', lineHeight: '1.75', flex: 1 }}>{description}</p>
+              <div style={{ height: '1px', width: 0, background: '#D85A30', marginTop: '20px', transition: 'width 0.4s ease' }} className="step-bar" />
             </div>
           ))}
         </div>
         <div className="mt-10 scroll-animate" ref={useScrollAnimation()}>
-          <Link to="/how-it-works/customers" className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors duration-200 group">
+          <Link to="/how-it-works/customers" className="inline-flex items-center gap-2 text-sm font-medium transition-colors duration-200" style={{ color: '#C4A882' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#F5F0E8')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#C4A882')}
+          >
             See the full process
-            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>
@@ -331,29 +337,29 @@ const TRUST_ITEMS = [
 function TrustSignals() {
   const ref = useScrollAnimationList();
   return (
-    <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#1A1A14" }}
-    >
+    <section className="py-28 px-6" style={{ background: '#1A1A14' }}>
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
-          <Label>Built on trust</Label>
-          <h2 className="font-display text-foreground max-w-lg">
-            Why customers choose PaintBookCo
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-6" style={{ background: '#D85A30' }} />
+            <span className="editorial-label" style={{ color: '#C4A882' }}>Built on trust</span>
+          </div>
+          <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '42px', fontWeight: 400, color: '#F5F0E8', letterSpacing: '-0.02em', lineHeight: '1.1', maxWidth: '480px' }}>
+            Why customers choose<br />PaintBookCo
           </h2>
         </div>
-        <div ref={ref} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 scroll-stagger">
+        <div ref={ref} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 scroll-stagger">
           {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="scroll-animate rounded-lg border-0 p-8 flex flex-col transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:-translate-y-1"
-              style={{ background: "rgba(255, 255, 255, 0.75)" }}
+              className="scroll-animate flex flex-col p-8 transition-all duration-300 hover:-translate-y-1"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '8px' }}
             >
-              <div className="w-10 h-10 flex items-center justify-center mb-6" style={{ background: "rgba(255, 160, 100, 0.15)" }}>
-                <Icon className="h-5 w-5 text-primary" />
+              <div className="w-10 h-10 flex items-center justify-center mb-6 rounded-full" style={{ background: 'rgba(216,90,48,0.12)', border: '0.5px solid rgba(216,90,48,0.3)' }}>
+                <Icon className="h-5 w-5" style={{ color: '#D85A30' }} />
               </div>
-              <h3 className="font-semibold text-sm text-foreground mb-3">{title}</h3>
-              <p className="text-xs text-muted-foreground leading-[1.8]">{description}</p>
+              <h3 style={{ fontSize: '14px', fontWeight: 500, color: '#F5F0E8', marginBottom: '8px' }}>{title}</h3>
+              <p style={{ fontSize: '12px', color: '#6B6860', lineHeight: '1.75' }}>{description}</p>
             </div>
           ))}
         </div>
@@ -372,41 +378,48 @@ const PAINTER_BENEFITS = [
 function ForPainters() {
   const ref = useScrollAnimation();
   return (
-    <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#2D5A3D" }}
-    >
+    <section className="py-28 px-6" style={{ background: '#2D5A3D' }}>
       <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
-        <div className="grid md:grid-cols-2 gap-20 items-center">
+        <div className="grid md:grid-cols-2 gap-20 items-start">
           <div>
-            <Label>
-              <span className="text-white/35">For decorators</span>
-            </Label>
-            <h2 className="font-display text-white mb-8">Grow your decorating business</h2>
-            <p className="text-white/50 leading-[1.8] mb-10 max-w-md">
-              Join thousands of professional decorators who use PaintBookCo to
-              fill their diary with matched, verified jobs — and get paid
-              securely every time.
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px w-6" style={{ background: '#97C459' }} />
+              <span className="editorial-label" style={{ color: '#97C459' }}>For painters/decorators</span>
+            </div>
+            <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '42px', fontWeight: 400, color: '#F5F0E8', letterSpacing: '-0.02em', lineHeight: '1.1', marginBottom: '24px' }}>
+              Grow your decorating<br />business with us
+            </h2>
+            <p style={{ fontSize: '14px', color: '#9FE1CB', lineHeight: '1.8', marginBottom: '32px', maxWidth: '360px' }}>
+              Join the UK's only painter-exclusive marketplace. Get matched to quality jobs, receive protected payments, and build your reputation with verified reviews.
             </p>
             <Link
-              to="/join-decorator"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-8 py-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_hsl(18_88%_52%_/_0.4)] group"
+              to="/join-painter"
+              className="inline-flex items-center gap-2 font-medium px-8 py-4 transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: '#F5F0E8', color: '#1A1A14', fontSize: '13px', borderRadius: '3px' }}
             >
-              Join as a Decorator
-              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+              Apply to join
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
-          <div
-            className="space-y-0 border border-gray-300/40"
-            style={{ background: "rgba(255, 255, 255, 0.60)" }}
-          >
-            {PAINTER_BENEFITS.map(({ title, description }) => (
-              <div key={title} className="flex gap-5 p-8 border-b border-gray-300/30 last:border-0 hover:bg-white/30 transition-colors duration-200" style={{ background: "rgba(255, 255, 255, 0.40)" }}>
-                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+          <div style={{ border: '0.5px solid rgba(255,255,255,0.12)', borderRadius: '8px', overflow: 'hidden' }}>
+            {PAINTER_BENEFITS.map(({ title, description }, i) => (
+              <div
+                key={title}
+                className="flex gap-4 p-6 transition-colors duration-200"
+                style={{
+                  borderBottom: i < PAINTER_BENEFITS.length - 1 ? '0.5px solid rgba(255,255,255,0.08)' : 'none',
+                  background: 'rgba(255,255,255,0.06)'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+              >
+                <div className="w-5 h-5 flex-shrink-0 mt-0.5">
+                  <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#97C459" strokeWidth="1.5"/><path d="M6 10l3 3 5-5" stroke="#97C459" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-foreground mb-1.5">{title}</h4>
-                  <p className="text-sm text-muted-foreground leading-[1.7]">{description}</p>
+                  <h4 style={{ fontSize: '13px', fontWeight: 500, color: '#F5F0E8', marginBottom: '4px' }}>{title}</h4>
+                  <p style={{ fontSize: '12px', color: '#9FE1CB', lineHeight: '1.7' }}>{description}</p>
                 </div>
               </div>
             ))}
@@ -421,25 +434,47 @@ function ForPainters() {
 function VestimatorCTA() {
   const ref = useScrollAnimation();
   return (
-    <section className="py-20 px-6" style={{ background: "#EEE8E0" }}>
-      <div ref={ref} className="mx-auto max-w-4xl scroll-animate">
-        <div className="rounded-xl border border-border/50 p-10 flex flex-col md:flex-row items-center gap-8" style={{ background: "rgba(255,255,255,0.7)" }}>
-          <div className="text-5xl flex-shrink-0">🎨</div>
-          <div className="flex-1 text-center md:text-left">
-            <Label>Free tool</Label>
-            <h3 className="font-display text-2xl text-foreground mb-3">
-              Try the Paint Vestimator
-            </h3>
-            <p className="text-muted-foreground text-sm leading-[1.8] mb-6 max-w-md">
-              Calculate exactly how much paint you need, browse 30+ UK paint colours with real hex values, visualise colours on your walls, and buy direct from Amazon or B&Q.
+    <section className="py-24 px-6" style={{ background: '#F5F0E8' }}>
+      <div ref={ref} className="mx-auto max-w-5xl scroll-animate">
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px w-6" style={{ background: '#D85A30' }} />
+              <span className="editorial-label" style={{ color: '#D85A30' }}>Free tool</span>
+            </div>
+            <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '38px', fontWeight: 400, color: '#1A1A14', letterSpacing: '-0.02em', lineHeight: '1.1', marginBottom: '16px' }}>
+              See it before<br />you paint it
+            </h2>
+            <p style={{ fontSize: '13px', color: '#6B6860', lineHeight: '1.8', marginBottom: '24px', maxWidth: '360px' }}>
+              Upload a photo of your room. Our AI detects walls and lets you visualise any colour in seconds — before committing to a single tin.
+            </p>
+            <p style={{ fontSize: '11px', color: '#B4B2A9', lineHeight: '1.6', marginBottom: '24px', paddingTop: '12px', borderTop: '0.5px solid rgba(180,150,100,0.25)' }}>
+              Estimates only — actual paint usage may vary depending on surface condition, number of coats and application method.
             </p>
             <Link
               to="/vestimator"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-medium px-6 py-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_24px_hsl(18_88%_52%_/_0.3)] group"
+              className="inline-flex items-center gap-2 font-medium px-8 py-4 transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: '#1A1A14', color: '#F5F0E8', fontSize: '13px', borderRadius: '3px' }}
             >
-              Open Paint Vestimator
-              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+              Try the Vestimator
+              <ArrowRight className="h-4 w-4" />
             </Link>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { bg: '#2D5A3D', label: 'Forest green', text: 'rgba(255,255,255,0.55)' },
+              { bg: '#C4A882', label: 'Sand dune', text: 'rgba(70,45,15,0.65)' },
+              { bg: '#8B1A1A', label: 'Deep red', text: 'rgba(255,200,200,0.55)' },
+              { bg: '#D85A30', label: 'Coral flame', text: 'rgba(255,235,215,0.65)' },
+              { bg: '#1A1A14', label: 'Ink black', text: 'rgba(255,255,255,0.25)' },
+              { bg: '#F5F0E8', label: 'Warm ivory', text: '#888780' },
+            ].map(s => (
+              <div key={s.label} style={{ aspectRatio: '1', background: s.bg, borderRadius: '4px', border: s.bg === '#F5F0E8' ? '0.5px solid #D3D1C7' : 'none', display: 'flex', alignItems: 'flex-end', padding: '10px', cursor: 'pointer', transition: 'transform 0.25s' }}
+                onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.06)')}
+                onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}>
+                <span style={{ fontSize: '10px', lineHeight: '1.3', color: s.text, fontFamily: 'DM Sans, sans-serif' }}>{s.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -451,31 +486,27 @@ function VestimatorCTA() {
 function CTABand() {
   const ref = useScrollAnimation();
   return (
-    <section
-      className="py-28 sm:py-36 px-6 text-foreground"
-      style={{ background: "#F5F0EB" }}
-    >
+    <section className="py-28 px-6" style={{ background: '#111109' }}>
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
-        <Label>Ready to begin</Label>
-        <h2 className="font-display text-foreground mb-6">
-          Your perfect painter is one click away.
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="h-px w-6" style={{ background: '#D85A30' }} />
+          <span className="editorial-label" style={{ color: '#C4A882' }}>Ready to begin</span>
+          <div className="h-px w-6" style={{ background: '#D85A30' }} />
+        </div>
+        <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '42px', fontWeight: 400, color: '#F5F0E8', letterSpacing: '-0.02em', lineHeight: '1.1', marginBottom: '20px' }}>
+          Your perfect painter/decorator<br />is one click away.
         </h2>
-        <p className="text-muted-foreground leading-[1.8] mb-10 max-w-md mx-auto">
-          Post your job for free. No commitment. Verified painters send
-          quotes — you choose the best fit.
+        <p style={{ fontSize: '14px', color: '#6B6860', lineHeight: '1.8', maxWidth: '400px', margin: '0 auto 40px' }}>
+          Post your job for free. No commitment. Verified painters/decorators send quotes — you choose the best fit.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            to="/post-job"
-            className="group inline-flex items-center gap-2 bg-foreground text-background font-medium px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:bg-foreground/85 hover:scale-[1.02]"
-          >
-            Get Started Now
-            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+          <Link to="/post-job" className="inline-flex items-center gap-2 font-medium px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200 hover:-translate-y-0.5"
+            style={{ background: '#D85A30', color: '#F5F0E8', fontSize: '13px', borderRadius: '3px' }}>
+            Get free quotes
+            <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link
-            to="/how-it-works/customers"
-            className="inline-flex items-center gap-2 border border-foreground/30 text-foreground font-medium px-8 py-4 w-full sm:w-auto justify-center hover:border-foreground/60 transition-all duration-200"
-          >
+          <Link to="/how-it-works/customers" className="inline-flex items-center gap-2 font-medium px-8 py-4 w-full sm:w-auto justify-center transition-all duration-200"
+            style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.2)', fontSize: '13px', borderRadius: '3px' }}>
             Learn how it works
           </Link>
         </div>

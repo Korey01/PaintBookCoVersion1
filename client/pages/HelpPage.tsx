@@ -79,11 +79,11 @@ export default function HelpPage() {
   const ctaRef = useScrollAnimation();
 
   return (
-    <div>
+    <div style={{ background: '#FBF7F0', minHeight: '100vh' }}>
       <div className="h-16" />
 
       {/* Hero */}
-      <section className="section-light py-28 px-6 text-center">
+      <section className="py-28 px-6 text-center" style={{ background: '#F5F0E8' }}>
         <div className="mx-auto max-w-2xl">
           <p className="editorial-label text-primary mb-6 animate-editorial-up flex items-center justify-center gap-3" style={{ animationFillMode: "both" }}>
             <span className="inline-block h-px w-8 bg-current" />

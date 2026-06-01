@@ -52,6 +52,20 @@ interface Quote {
   acceptedAt?: string;
 }
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if(h>=5&&h<12) return 'Good morning';
+  if(h>=12&&h<17) return 'Good afternoon';
+  if(h>=17&&h<21) return 'Good evening';
+  return 'Evening';
+}
+
+const UK_HOLIDAYS: Record<string,string> = {
+  '01-01':'Happy New Year!','04-03':'Happy Good Friday.','04-06':'Happy Easter Monday!',
+  '05-04':'Happy May Bank Holiday!','05-25':'Happy Spring Bank Holiday!',
+  '08-31':'Happy Summer Bank Holiday!','12-25':'Happy Christmas.','12-26':'Happy Boxing Day!'
+};
+
 export default function PainterDashboard() {
   const navigate = useNavigate();
   const [unreadCount] = useState(0); // TODO: Implement real-time notifications with socket.io
@@ -200,63 +214,32 @@ export default function PainterDashboard() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return "bg-green-100 text-green-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  function getGreeting() {
-    const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 17) return "Good afternoon";
-    return "Good evening";
-  }
-
-  const UK_HOLIDAYS: Record<string, string> = {
-    "01-01": "Happy New Year! 🎉",
-    "12-25": "Merry Christmas! 🎄",
-    "12-26": "Happy Boxing Day! 🎁",
-    "04-18": "Happy Good Friday! 🌿",
-    "04-21": "Happy Easter Monday! 🐣",
-    "05-05": "Happy Early May Bank Holiday! 🌸",
-    "05-26": "Happy Spring Bank Holiday! ☀️",
-    "08-25": "Happy Summer Bank Holiday! 🌞",
-  };
-  const todayKey = new Date().toLocaleDateString("en-GB", { month: "2-digit", day: "2-digit" }).split("/").reverse().join("-");
+  const todayKey = `${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
   const holidayMsg = UK_HOLIDAYS[todayKey];
+  const pendingPayout = myQuotes.filter(q => q.status === 'accepted').reduce((s, q) => s + (q.totalPrice || 0), 0);
+  const activeJobsCount = myQuotes.filter(q => q.status === 'accepted').length;
+  const completedJobsCount = myQuotes.filter(q => q.status === 'completed' || q.status === 'rejected').length;
+  const availableJobsCount = availableJobs.length;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: "#FBF7F0" }}>
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#D85A30" }} />
+      <div className="flex items-center justify-center min-h-screen" style={{ background: '#FBF7F0' }}>
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#D85A30' }} />
       </div>
     );
   }
 
-  const pendingPayout = myQuotes.filter(q => q.status === "accepted").reduce((s, q) => s + (q.totalPrice || 0), 0);
-  const activeJobs = myQuotes.filter(q => q.status === "accepted").length;
-  const completedJobs = myQuotes.filter(q => q.status === "completed").length;
-  const newJobsCount = availableJobs.filter(j => !myQuotes.some(q => q.jobId === j.id)).length;
-
   return (
-    <div className="min-h-screen" style={{ background: "#FBF7F0" }}>
+    <div className="min-h-screen" style={{ background: '#FBF7F0' }}>
       {/* Topbar */}
-      <header style={{ background: "#fff", borderBottom: "1px solid rgba(180,150,100,0.18)" }} className="px-6 py-4">
+      <header style={{ background: '#F5F0E8', borderBottom: '0.5px solid rgba(180,150,100,0.2)' }} className="px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <img
             src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
             alt="PaintBookCo"
-            className="h-6 w-auto"
+            style={{ height: '24px', width: 'auto' }}
           />
-          <span className="text-xs" style={{ color: "#9B8A75" }}>Painter/Decorator Portal</span>
+          <span style={{ fontSize: '11px', color: '#B4B2A9' }}>Painter/Decorator Portal</span>
         </div>
       </header>
 
@@ -264,170 +247,179 @@ export default function PainterDashboard() {
 
         {/* Greeting */}
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "#3A3228" }}>
-            {getGreeting()} 👋
+          <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', color: '#1A1A14', letterSpacing: '-0.01em', fontWeight: 400 }}>
+            {getGreeting()}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#9B8A75" }}>
-            {holidayMsg || "Browse available jobs and manage your quotes."}
-          </p>
+          <p style={{ fontSize: '11px', color: '#B4B2A9', marginTop: '3px' }}>Here's what's waiting for you today</p>
+          {holidayMsg && (
+            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: 'rgba(45,90,61,0.06)', border: '0.5px solid rgba(45,90,61,0.18)', borderRadius: '6px', fontSize: '11px', color: '#2D5A3D' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#2D5A3D" strokeWidth="1.2"/><path d="M7 4v3l2 1" stroke="#2D5A3D" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              {holidayMsg}
+            </div>
+          )}
         </div>
 
         {/* New jobs alert */}
-        {newJobsCount > 0 && (
-          <div style={{ background: "#D85A30", color: "#fff" }} className="rounded-xl px-5 py-4 flex items-center justify-between">
+        {availableJobsCount > 0 && (
+          <div style={{ background: '#FFF4EF', border: '0.5px solid rgba(216,90,48,0.3)', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: '32px', color: '#D85A30', lineHeight: 1 }}>{availableJobsCount}</span>
             <div>
-              <p className="text-sm font-semibold">🔔 {newJobsCount} new job{newJobsCount > 1 ? "s" : ""} in your area</p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Check the Available Jobs tab to submit quotes.</p>
+              <p style={{ fontSize: '13px', fontWeight: 500, color: '#1A1A14', marginBottom: '2px' }}>New jobs near you</p>
+              <span style={{ fontSize: '11px', color: '#9E9A8E' }}>View and quote below</span>
             </div>
+            <svg style={{ marginLeft: 'auto', color: '#D85A30' }} width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.75 9h10.5M9 3.75L14.25 9 9 14.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
         )}
 
-        {/* Notifications Badge */}
+        {/* Notifications */}
         {unreadCount > 0 && (
-          <div style={{ background: "rgba(26,92,138,0.08)", border: "1px solid rgba(26,92,138,0.2)" }} className="rounded-xl px-5 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" style={{ color: "#1A5C8A" }} />
-              <span className="text-sm" style={{ color: "#1A5C8A" }}>
-                You have {unreadCount} new notification{unreadCount !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <Button variant="outline" size="sm">View All</Button>
+          <div style={{ background: 'rgba(26,92,138,0.06)', border: '0.5px solid rgba(26,92,138,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertCircle className="h-5 w-5" style={{ color: '#1A5C8A' }} />
+            <span style={{ fontSize: '13px', color: '#1A5C8A' }}>
+              You have {unreadCount} new notification{unreadCount !== 1 ? 's' : ''}
+            </span>
           </div>
         )}
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-4">
-          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-4 text-center">
-            <p className="text-xs font-medium" style={{ color: "#9B8A75" }}>Pending Payout</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: "#2D5A3D" }}>£{pendingPayout.toFixed(0)}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px' }}>
+          <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '6px', padding: '12px 14px' }}>
+            <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: '22px', color: '#2D5A3D', lineHeight: 1, marginBottom: '3px' }}>£{pendingPayout.toFixed(0)}</div>
+            <div style={{ fontSize: '10px', color: '#B4B2A9' }}>Pending payout</div>
           </div>
-          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-4 text-center">
-            <p className="text-xs font-medium" style={{ color: "#9B8A75" }}>Active Jobs</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: "#1A5C8A" }}>{activeJobs}</p>
+          <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '6px', padding: '12px 14px' }}>
+            <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: '22px', color: '#1A5C8A', lineHeight: 1, marginBottom: '3px' }}>{activeJobsCount}</div>
+            <div style={{ fontSize: '10px', color: '#B4B2A9' }}>Active jobs</div>
           </div>
-          <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-4 text-center">
-            <p className="text-xs font-medium" style={{ color: "#9B8A75" }}>Completed</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: "#3A3228" }}>{completedJobs}</p>
+          <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '6px', padding: '12px 14px' }}>
+            <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: '22px', color: '#1A1A14', lineHeight: 1, marginBottom: '3px' }}>{completedJobsCount}</div>
+            <div style={{ fontSize: '10px', color: '#B4B2A9' }}>Completed</div>
           </div>
         </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="available" className="w-full">
-        <TabsList className="grid w-full grid-cols-2" style={{ background: "rgba(180,150,100,0.12)" }}>
-          <TabsTrigger value="available" style={{ fontWeight: 500 }}>
-            Available Jobs ({availableJobs.length})
-          </TabsTrigger>
-          <TabsTrigger value="quotes" style={{ fontWeight: 500 }}>
-            My Quotes ({myQuotes.length})
-          </TabsTrigger>
-        </TabsList>
+        {/* Tabs */}
+        <Tabs defaultValue="available" className="w-full">
+          <TabsList className="grid w-full grid-cols-2" style={{ background: 'rgba(180,150,100,0.1)', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '8px' }}>
+            <TabsTrigger value="available" style={{ fontSize: '13px', fontWeight: 500 }}>
+              Available Jobs ({availableJobs.length})
+            </TabsTrigger>
+            <TabsTrigger value="quotes" style={{ fontSize: '13px', fontWeight: 500 }}>
+              My Quotes ({myQuotes.length})
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Available Jobs Tab */}
-        <TabsContent value="available" className="mt-5 space-y-4">
-          {availableJobs.length === 0 ? (
-            <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-12 text-center">
-              <Briefcase className="mx-auto h-10 w-10 mb-4" style={{ color: "#C4B5A5" }} />
-              <p className="mb-4" style={{ color: "#9B8A75" }}>No jobs available in your area right now</p>
-              <Button variant="outline" onClick={() => navigate("/painter-onboarding")}>
-                Update Your Profile
-              </Button>
-            </div>
-          ) : (
-            availableJobs.map((job) => (
-              <div key={job.id} style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="font-semibold" style={{ color: "#3A3228" }}>{job.title}</p>
-                    <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: "#9B8A75" }}>
-                      <MapPin className="h-3.5 w-3.5" />
-                      {job.postcode}
-                    </p>
-                  </div>
-                  <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "rgba(216,90,48,0.1)", color: "#D85A30" }}>{job.jobType}</span>
-                </div>
-
-                {job.description && (
-                  <p className="text-sm leading-relaxed" style={{ color: "#9B8A75" }}>{job.description}</p>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  {job.budgetMin && (
-                    <div>
-                      <p className="text-xs" style={{ color: "#9B8A75" }}>Budget</p>
-                      <p className="text-lg font-bold mt-0.5" style={{ color: "#2D5A3D" }}>
-                        £{job.budgetMin}{job.budgetMax && ` – £${job.budgetMax}`}
+          {/* Available Jobs Tab */}
+          <TabsContent value="available" className="mt-5 space-y-4">
+            {availableJobs.length === 0 ? (
+              <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '8px', padding: '48px 24px', textAlign: 'center' }}>
+                <Briefcase className="mx-auto h-10 w-10 mb-4" style={{ color: '#C4B5A5' }} />
+                <p style={{ color: '#9B8A75', marginBottom: '16px' }}>No jobs available in your area right now</p>
+                <Button variant="outline" onClick={() => navigate('/painter-onboarding')}>
+                  Update Your Profile
+                </Button>
+              </div>
+            ) : (
+              availableJobs.map((job) => (
+                <div
+                  key={job.id}
+                  style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '8px', padding: '20px', transition: 'border-color 0.2s, box-shadow 0.2s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(216,90,48,0.25)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(216,90,48,0.06)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(180,150,100,0.18)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
+                >
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1">
+                      <p style={{ fontWeight: 600, color: '#1A1A14', marginBottom: '4px' }}>{job.title}</p>
+                      <p className="flex items-center gap-1.5" style={{ fontSize: '13px', color: '#9B8A75' }}>
+                        <MapPin className="h-3.5 w-3.5" />
+                        {job.postcode}
                       </p>
                     </div>
+                    <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', background: '#FFF4EF', color: '#D85A30', border: '0.5px solid rgba(216,90,48,0.3)', whiteSpace: 'nowrap' }}>{job.jobType}</span>
+                  </div>
+                  {job.description && (
+                    <p style={{ fontSize: '13px', color: '#9B8A75', lineHeight: 1.6, marginBottom: '12px' }}>{job.description}</p>
                   )}
-                  <div>
-                    <p className="text-xs" style={{ color: "#9B8A75" }}>Posted</p>
-                    <p className="font-semibold mt-0.5" style={{ color: "#3A3228" }}>{new Date(job.createdAt).toLocaleDateString()}</p>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    {job.budgetMin && (
+                      <div>
+                        <p style={{ fontSize: '11px', color: '#B4B2A9' }}>Budget</p>
+                        <p style={{ fontSize: '18px', fontWeight: 700, color: '#2D5A3D', marginTop: '2px' }}>
+                          £{job.budgetMin}{job.budgetMax && ` – £${job.budgetMax}`}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <p style={{ fontSize: '11px', color: '#B4B2A9' }}>Posted</p>
+                      <p style={{ fontWeight: 600, color: '#1A1A14', marginTop: '2px' }}>{new Date(job.createdAt).toLocaleDateString()}</p>
+                    </div>
                   </div>
+                  {myQuotes.some((q) => q.jobId === job.id) ? (
+                    <button disabled style={{ width: '100%', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, background: 'rgba(45,90,61,0.08)', color: '#2D5A3D', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.7 }}>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Already Quoted
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setSelectedJob(job); setQuoteDialogOpen(true); }}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, background: '#D85A30', color: '#F5F0E8', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s' }}
+                    >
+                      Submit Quote
+                    </button>
+                  )}
                 </div>
+              ))
+            )}
+          </TabsContent>
 
-                {myQuotes.some((q) => q.jobId === job.id) ? (
-                  <button disabled className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 opacity-60" style={{ background: "rgba(45,90,61,0.1)", color: "#2D5A3D" }}>
-                    <CheckCircle2 className="h-4 w-4" /> Already Quoted
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => { setSelectedJob(job); setQuoteDialogOpen(true); }}
-                    className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-                    style={{ background: "#D85A30" }}
-                  >
-                    Submit Quote
-                  </button>
-                )}
+          {/* My Quotes Tab */}
+          <TabsContent value="quotes" className="mt-5 space-y-4">
+            {myQuotes.length === 0 ? (
+              <div style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '8px', padding: '48px 24px', textAlign: 'center' }}>
+                <Briefcase className="mx-auto h-10 w-10 mb-4" style={{ color: '#C4B5A5' }} />
+                <p style={{ color: '#9B8A75' }}>You haven't submitted any quotes yet</p>
               </div>
-            ))
-          )}
-        </TabsContent>
-
-        {/* My Quotes Tab */}
-        <TabsContent value="quotes" className="mt-5 space-y-4">
-          {myQuotes.length === 0 ? (
-            <div style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-12 text-center">
-              <Briefcase className="mx-auto h-10 w-10 mb-4" style={{ color: "#C4B5A5" }} />
-              <p style={{ color: "#9B8A75" }}>You haven't submitted any quotes yet</p>
-            </div>
-          ) : (
-            myQuotes.map((quote) => (
-              <div key={quote.id} style={{ background: "#fff", border: "1px solid rgba(180,150,100,0.18)" }} className="rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="font-semibold" style={{ color: "#3A3228" }}>Quote #{quote.id.slice(0, 8)}</p>
-                  <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{
-                    background: quote.status === "accepted" ? "rgba(45,90,61,0.1)" : quote.status === "pending" ? "rgba(180,150,100,0.15)" : "rgba(216,90,48,0.1)",
-                    color: quote.status === "accepted" ? "#2D5A3D" : quote.status === "pending" ? "#9B8A75" : "#D85A30",
-                  }}>{quote.status}</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs" style={{ color: "#9B8A75" }}>Quote Price</p>
-                    <p className="text-2xl font-bold mt-1" style={{ color: "#2D5A3D" }}>£{quote.jobPrice}</p>
+            ) : (
+              myQuotes.map((quote) => {
+                const badgeStyle =
+                  quote.status === 'accepted'
+                    ? { background: '#F0F9F4', color: '#2D5A3D', border: '0.5px solid rgba(45,90,61,0.3)' }
+                    : quote.status === 'rejected'
+                    ? { background: '#FFF4EF', color: '#D85A30', border: '0.5px solid rgba(216,90,48,0.3)' }
+                    : { background: '#EFF6FF', color: '#1A5C8A', border: '0.5px solid rgba(26,92,138,0.25)' };
+                return (
+                  <div key={quote.id} style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '8px', padding: '20px' }}>
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      <p style={{ fontWeight: 600, color: '#1A1A14' }}>Quote #{quote.id.slice(0, 8)}</p>
+                      <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', ...badgeStyle }}>{quote.status}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <p style={{ fontSize: '11px', color: '#B4B2A9' }}>Quote Price</p>
+                        <p style={{ fontSize: '22px', fontWeight: 700, color: '#2D5A3D', marginTop: '2px' }}>£{quote.jobPrice}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '11px', color: '#B4B2A9' }}>Total Price</p>
+                        <p style={{ fontSize: '22px', fontWeight: 700, color: '#2D5A3D', marginTop: '2px' }}>£{quote.totalPrice}</p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '11px', color: '#C4B5A5', paddingTop: '10px', borderTop: '0.5px solid rgba(180,150,100,0.15)' }}>
+                      Submitted {new Date(quote.createdAt).toLocaleDateString()}
+                    </p>
+                    {quote.status === 'accepted' && (
+                      <div style={{ marginTop: '10px', background: 'rgba(45,90,61,0.06)', border: '0.5px solid rgba(45,90,61,0.2)', borderRadius: '6px', padding: '10px 12px' }}>
+                        <p style={{ fontSize: '13px', fontWeight: 500, color: '#2D5A3D' }}>Quote accepted — ready to start work</p>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-xs" style={{ color: "#9B8A75" }}>Total Price</p>
-                    <p className="text-2xl font-bold mt-1" style={{ color: "#2D5A3D" }}>£{quote.totalPrice}</p>
-                  </div>
-                </div>
-                <p className="text-xs pt-2" style={{ borderTop: "1px solid rgba(180,150,100,0.15)", color: "#C4B5A5" }}>
-                  Submitted on {new Date(quote.createdAt).toLocaleDateString()}
-                </p>
-                {quote.status === "accepted" && (
-                  <div style={{ background: "rgba(45,90,61,0.08)", border: "1px solid rgba(45,90,61,0.2)" }} className="rounded-xl p-4">
-                    <p className="text-sm font-semibold" style={{ color: "#2D5A3D" }}>✓ Quote accepted! Ready to start work</p>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
+                );
+              })
+            )}
+          </TabsContent>
+        </Tabs>
 
       </div>
 
-      {/* Quote Submission Dialog */}
+      {/* Quote Submission Dialog — unchanged */}
       <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -453,22 +445,14 @@ export default function PainterDashboard() {
             </div>
             {selectedJob?.budgetMin && selectedJob?.budgetMax && (
               <p className="text-sm text-gray-600">
-                Customer budget: £{selectedJob.budgetMin} - £
-                {selectedJob.budgetMax}
+                Customer budget: £{selectedJob.budgetMin} - £{selectedJob.budgetMax}
               </p>
             )}
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setQuoteDialogOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setQuoteDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={submittingQuote === selectedJob?.id}
-              >
+              <Button type="submit" disabled={submittingQuote === selectedJob?.id}>
                 {submittingQuote === selectedJob?.id ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

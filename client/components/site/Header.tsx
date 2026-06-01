@@ -47,11 +47,18 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-          scrolled
-            ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-[0_1px_0_0_hsl(var(--border)/0.5)]"
-            : "bg-transparent border-b border-transparent"
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+        style={{
+          background: scrolled
+            ? (isHome ? 'rgba(17,16,9,0.96)' : 'rgba(251,247,240,0.97)')
+            : isHome
+              ? 'linear-gradient(to bottom, rgba(17,16,9,0.7) 0%, transparent 100%)'
+              : 'rgba(251,247,240,0.97)',
+          borderBottom: scrolled
+            ? (isHome ? '0.5px solid rgba(255,255,255,0.08)' : '0.5px solid rgba(180,150,100,0.18)')
+            : 'none',
+          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        }}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
 
@@ -77,12 +84,11 @@ export default function Header() {
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `nav-underline text-sm font-medium pb-0.5 transition-colors duration-200 ${
-                    isActive
-                      ? "text-foreground active"
-                      : "text-foreground/60 hover:text-foreground"
+                  `text-sm font-medium pb-0.5 transition-colors duration-200 ${
+                    isActive ? "opacity-100" : "opacity-60 hover:opacity-100"
                   }`
                 }
+                style={{ color: isHome ? '#F5F0E8' : '#1A1A14' }}
               >
                 {label}
               </NavLink>
@@ -94,36 +100,36 @@ export default function Header() {
             {/* Mobile toggle */}
             <button
               onClick={() => setMobileOpen(true)}
-              className="md:hidden p-2 text-foreground/70 hover:text-foreground transition-colors"
+              className="md:hidden p-2 transition-colors"
+              style={{ color: isHome ? 'rgba(245,240,232,0.7)' : 'rgba(26,26,20,0.7)' }}
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
             </button>
 
             {/* Join as a Decorator */}
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden lg:inline-flex text-foreground/70 hover:text-foreground"
+            <Link
+              to="/join-painter"
+              className="hidden lg:inline-flex text-sm font-medium transition-colors duration-200"
+              style={{ color: isHome ? 'rgba(245,240,232,0.55)' : 'rgba(26,26,20,0.55)' }}
             >
-              <Link to="/join-decorator">Join as a Decorator</Link>
-            </Button>
+              Join as a Decorator
+            </Link>
 
             {/* Post a Job — primary CTA */}
-            <Button
-              asChild
-              variant="default"
-              size="sm"
-              className="hidden sm:inline-flex"
+            <Link
+              to="/post-job"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: '#D85A30', color: '#F5F0E8', borderRadius: '4px' }}
             >
-              <Link to="/post-job">Post a Job</Link>
-            </Button>
+              Post a Job
+            </Link>
 
             {loggedIn && (
               <button
                 onClick={handleLogout}
-                className="hidden sm:flex items-center gap-1.5 text-sm text-foreground/50 hover:text-foreground transition-colors"
+                className="hidden sm:flex items-center gap-1.5 text-sm transition-colors"
+                style={{ color: isHome ? 'rgba(245,240,232,0.4)' : 'rgba(26,26,20,0.4)' }}
               >
                 <LogOut className="h-4 w-4" />
               </button>

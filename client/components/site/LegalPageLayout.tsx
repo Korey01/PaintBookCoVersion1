@@ -24,7 +24,7 @@ export default function LegalPageLayout({
   children,
 }: LegalPageLayoutProps) {
   return (
-    <div className="w-full bg-background text-foreground">
+    <div className="w-full" style={{ background: '#FBF7F0', color: '#1A1A14' }}>
 
       {/* ── Page header ── */}
       <div className="section-dark py-14 px-6">

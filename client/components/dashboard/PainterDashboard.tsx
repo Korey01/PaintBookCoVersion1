@@ -1622,8 +1622,8 @@ export function PainterDashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '20px' }}>
                   {[
                     { label: 'Pending payout', value: `£0`, color: '#2D5A3D' },
-                    { label: 'Active jobs', value: sessions?.filter((s: any) => ['funded','in_progress','completion_requested'].includes(s.status)).length || 0, color: '#1A5C8A' },
-                    { label: 'Completed', value: sessions?.filter((s: any) => s.status === 'completed').length || 0, color: '#1A1A14' },
+                    { label: 'Active jobs', value: painter.active_jobs_count || 0, color: '#1A5C8A' },
+                    { label: 'Completed', value: painter.completed_jobs || 0, color: '#1A1A14' },
                   ].map(stat => (
                     <div key={stat.label} style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '6px', padding: '12px 14px' }}>
                       <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: '22px', color: stat.color, lineHeight: 1, marginBottom: '3px' }}>{stat.value}</div>
@@ -1987,3 +1987,4 @@ export function PainterDashboard() {
 }
 
 export default PainterDashboard;
+ 

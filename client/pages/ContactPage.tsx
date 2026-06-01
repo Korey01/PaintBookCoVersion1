@@ -32,7 +32,7 @@ export default function ContactPage() {
       if (res.ok) { setSubmitted(true); return; }
     } catch { /* fall through */ }
     const body = `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\n${message}`;
-    window.location.href = `mailto:o.a.alashe@paintbookco.co.uk?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:hello@paintbookco.co.uk?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setSubmitting(false);
   }
 
@@ -57,8 +57,8 @@ export default function ContactPage() {
           <div ref={detailsRef} className="scroll-animate space-y-8">
             <div>
               <p className="editorial-label text-muted-foreground mb-4">Email</p>
-              <a href="mailto:o.a.alashe@paintbookco.co.uk" className="text-sm text-foreground hover:text-primary transition-colors duration-200 break-all">
-                o.a.alashe@paintbookco.co.uk
+              <a href="mailto:hello@paintbookco.co.uk" className="text-sm text-foreground hover:text-primary transition-colors duration-200 break-all">
+                hello@paintbookco.co.uk
               </a>
             </div>
             <div className="h-px bg-border/50" />

@@ -37,9 +37,10 @@ export default function Terms() {
                 <li>All payments go through Transpact, our FCA-authorised escrow partner. This protects both parties. PaintBookCo bears the Transpact escrow cost — this is not charged to painters or customers.</li>
                 <li>Commission is earned by PaintBookCo at the point of customer payment. It is deducted automatically before the job starts. Commission is only refunded where the reason for cancellation or refund is PaintBookCo's fault or the fault of our painter.</li>
                 <li>No automatic payments. Funds are only released when the customer logs into Transpact directly and confirms completion. PaintBookCo does not release funds on anyone's behalf.</li>
-                <li>Once payment is live in Transpact escrow, any cancellation — for any reason — must be resolved through the Transpact dispute process. This is the only way escrowed funds can be moved.</li>
+                <li>Once payment is live in Transpact escrow, any cancellation or refund — for any reason — requires the Transpact dispute process to move funds. PaintBookCo will guide both parties through this.</li>
                 <li>If a dispute is formally raised through Transpact, both parties pay a £20.00 dispute fee to Transpact. This fee is fully refunded to the winning party. If one party fails to pay within 14 days, the other party wins automatically.</li>
-                <li>PaintBookCo acts as the nominated referee for all Transpact disputes. Our decisions are binding under the Arbitration Act 1996.</li>
+                <li>Disputes are handled in two stages. First, raise a dispute on PaintBookCo — our team will try to help both parties reach a fair resolution at no cost. If this cannot be resolved, either party may escalate to formal Transpact arbitration at a cost of £20 per party, refunded to the winning party.</li>
+                <li>PaintBookCo does not act as a formal arbitrator. If escalated, Transpact appoints an independent referee who makes a binding decision under the Arbitration Act 1996.</li>
                 <li>Sharing contact details (phone numbers, email addresses, physical addresses) in the Platform chat is strictly prohibited. Doing so to transact off-platform is a serious breach of these Terms.</li>
                 <li>PaintBookCo is not liable for the quality of work performed by painters. Disputes are handled through our dispute resolution process.</li>
                 <li>These Terms are governed by the laws of England and Wales.</li>
@@ -516,27 +517,40 @@ export default function Terms() {
 
             <h3 className="text-xl mt-6 mb-4">9.4 — 48-Hour Non-Response</h3>
             <p>
-              If a customer does not log into Transpact to release funds or raise a dispute within <strong>48 hours</strong> of the painter marking the job as complete on PaintBookCo, PaintBookCo will notify the painter and advise them to initiate arbitration directly through Transpact.
+              If a customer does not log into Transpact to release funds or raise a dispute within <strong>48 hours</strong> of the painter marking the job as complete on PaintBookCo:
             </p>
-            <p>
-              The painter pays the <strong>£20.00 Transpact dispute fee</strong>. Transpact then notifies the customer, who has <strong>14 days</strong> to pay their own dispute fee.
-            </p>
-            <ul>
+            <ol className="list-decimal list-inside space-y-2">
+              <li>PaintBookCo will contact the customer to understand why they have not responded and attempt to resolve the situation informally.</li>
+              <li>If the customer remains unresponsive, PaintBookCo will advise the painter to initiate formal arbitration on Transpact.com directly.</li>
+              <li>The painter pays the <strong>£20.00 Transpact dispute fee</strong>. Transpact notifies the customer, who has <strong>14 days</strong> to pay their own £20.00 dispute fee.</li>
               <li>If the customer <strong>does not pay within 14 days</strong> — Transpact automatically awards the full payment to the painter and refunds the painter's dispute fee in full. The painter incurs no net cost.</li>
               <li>If the customer <strong>does pay within 14 days</strong> — formal arbitration begins with the Transpact-nominated referee making a binding decision.</li>
-            </ul>
-
-            <h3 className="text-xl mt-6 mb-4">9.5 — Quality Disputes</h3>
-            <p>If a customer raises a dispute on the grounds that the work has not been completed to a satisfactory standard:</p>
-            <ol className="list-decimal list-inside space-y-2">
-              <li>The disputing party raises a dispute on PaintBookCo with supporting evidence — photographs, descriptions, chat transcripts.</li>
-              <li>Both parties pay the <strong>£20.00 Transpact dispute fee</strong> to commence formal arbitration.</li>
-              <li>PaintBookCo submits all available evidence — including the agreed job conditions, Platform chat history, and milestone records — to support the Transpact referee's decision.</li>
-              <li>The Transpact-nominated referee reviews the evidence and makes a <strong>binding decision</strong> under the Arbitration Act 1996.</li>
-              <li>Transpact distributes funds in accordance with the referee's decision.</li>
-              <li>The dispute fee is refunded to the party in whose favour the decision is made.</li>
             </ol>
-            <p>The referee's decision is final. There is no appeal within the Transpact process, though parties retain the right to pursue legal remedies through the courts independently.</p>
+
+            <h3 className="text-xl mt-6 mb-4">9.5 — Dispute Resolution — Two Stages</h3>
+            <p>All disputes follow a two-stage process designed to resolve issues quickly and fairly, with formal arbitration only where necessary.</p>
+
+            <h4 className="text-lg font-semibold mt-4 mb-2">Stage 1 — PaintBookCo Mediation (Free)</h4>
+            <ol className="list-decimal list-inside space-y-2">
+              <li>Either party raises a dispute through their PaintBookCo dashboard with supporting evidence — photographs, descriptions, Platform chat transcripts.</li>
+              <li>PaintBookCo notifies both parties and opens a dedicated support channel for all three parties to communicate.</li>
+              <li>PaintBookCo reviews the evidence and works with both parties to reach a fair resolution. This stage is free of charge.</li>
+              <li>If a resolution is agreed, PaintBookCo advises the relevant party to action the agreed outcome on Transpact directly.</li>
+            </ol>
+
+            <h4 className="text-lg font-semibold mt-4 mb-2">Stage 2 — Transpact Formal Arbitration (£20 per party)</h4>
+            <p>If Stage 1 mediation does not resolve the dispute, PaintBookCo will advise both parties to escalate to formal Transpact arbitration.</p>
+            <ol className="list-decimal list-inside space-y-2">
+              <li>Either party initiates arbitration on Transpact.com directly.</li>
+              <li>Both parties pay a <strong>£20.00 dispute fee</strong> to Transpact to commence formal arbitration.</li>
+              <li>PaintBookCo submits all available evidence — including the agreed job conditions, Platform chat history, and milestone records — to support the referee's decision.</li>
+              <li>A Transpact-nominated independent referee reviews the evidence and makes a <strong>binding decision</strong> under the Arbitration Act 1996.</li>
+              <li>Transpact distributes funds in accordance with the referee's decision.</li>
+              <li>The £20.00 dispute fee is refunded in full to the party in whose favour the decision is made.</li>
+            </ol>
+            <p>
+              The referee's decision is final. There is no appeal within the Transpact process, though parties retain the right to pursue legal remedies through the courts independently. PaintBookCo does not act as a formal arbitrator and is not the appointed referee in Transpact arbitration.
+            </p>
 
             <h3 className="text-xl mt-6 mb-4">9.6 — Dispute Fees</h3>
             <p>

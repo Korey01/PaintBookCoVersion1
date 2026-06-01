@@ -36,7 +36,10 @@ export default function Terms() {
                 <li>There are no subscription fees. Painters pay commission only when a job is completed — 12% on the first 5 jobs, 10% on the next 5, and 8% thereafter.</li>
                 <li>All payments go through Transpact, our FCA-authorised escrow partner. This protects both parties. PaintBookCo bears the Transpact escrow cost — this is not charged to painters or customers.</li>
                 <li>Commission is earned by PaintBookCo at the point of customer payment. It is deducted automatically before the job starts. Commission is only refunded where the reason for cancellation or refund is PaintBookCo's fault or the fault of our painter.</li>
-                <li>No automatic payments. Funds are only released when the customer confirms completion on the Platform. Any reversal or cancellation requires manual PaintBookCo admin approval.</li>
+                <li>No automatic payments. Funds are only released when the customer logs into Transpact directly and confirms completion. PaintBookCo does not release funds on anyone's behalf.</li>
+                <li>Once payment is live in Transpact escrow, any cancellation — for any reason — must be resolved through the Transpact dispute process. This is the only way escrowed funds can be moved.</li>
+                <li>If a dispute is formally raised through Transpact, both parties pay a £20.00 dispute fee to Transpact. This fee is fully refunded to the winning party. If one party fails to pay within 14 days, the other party wins automatically.</li>
+                <li>PaintBookCo acts as the nominated referee for all Transpact disputes. Our decisions are binding under the Arbitration Act 1996.</li>
                 <li>Sharing contact details (phone numbers, email addresses, physical addresses) in the Platform chat is strictly prohibited. Doing so to transact off-platform is a serious breach of these Terms.</li>
                 <li>PaintBookCo is not liable for the quality of work performed by painters. Disputes are handled through our dispute resolution process.</li>
                 <li>These Terms are governed by the laws of England and Wales.</li>
@@ -269,37 +272,43 @@ export default function Terms() {
 
             <h3 className="text-xl mt-6 mb-4">Customer Payment and Escrow Funding</h3>
             <p>
-              Upon a painter accepting a job, the customer is directed to make payment of the full agreed job value through Transpact, PaintBookCo's FCA-authorised escrow partner. Payment must be made before the job commences.
+              Upon a painter accepting a job, the customer is directed to make payment of the full agreed job value through Transpact (Anpa Forward Ltd, FCA Ref: 546279), our regulated escrow partner. The customer will receive an email from Transpact with a secure link. The customer logs into Transpact directly and follows their secure process to fund the escrow. Payment must be made before the job commences.
             </p>
             <p>
-              At the point of customer payment:
+              At the point payment is received and cleared by Transpact, the escrow becomes live:
             </p>
             <ul>
               <li>PaintBookCo's commission is deducted automatically by Transpact in accordance with these Terms</li>
-              <li>The remaining balance (net of commission) is held in escrow by Transpact for the painter</li>
+              <li>The remaining balance (net of commission) is held securely in Transpact's client bank account for the painter</li>
               <li>The job is confirmed and the Platform chat channel opens between the painter and customer</li>
               <li>PaintBookCo sends both parties official contact details via a system-generated email — this is the only mechanism by which contact details are exchanged</li>
             </ul>
+            <p>
+              <strong>PaintBookCo does not hold, touch, or have custody of any customer funds at any point.</strong> All funds are held by Transpact under their own FCA regulatory obligations.
+            </p>
             <p>
               A Services Agreement between the customer and the painter is formed at the point of escrow funding. From this point, both parties have contractual obligations to each other in respect of the job.
             </p>
 
             <h3 className="text-xl mt-6 mb-4">Job Completion and Payment Release</h3>
             <p>
-              When the painter has completed the work, they mark the job as complete in their dashboard. The customer then reviews the work and, if satisfied, confirms completion on the Platform.
+              When the painter has completed the work, they mark the job as complete in their dashboard. The customer is notified and must log into Transpact directly to instruct the release of funds to the painter.
             </p>
             <p>
-              Customer confirmation triggers PaintBookCo to instruct Transpact to release the escrowed funds to the painter.
+              <strong>PaintBookCo does not release funds on anyone's behalf.</strong> Release is always instructed by the customer through Transpact's secure website. Once a Transpact is live, funds can only move in the following ways:
             </p>
+            <ul>
+              <li>The customer logs into Transpact and instructs payment to the painter</li>
+              <li>Both parties agree and the customer instructs Transpact to return funds</li>
+              <li>A formal dispute is raised and the appointed referee instructs Transpact on how to distribute the funds</li>
+            </ul>
 
             <div className="surface-card p-6 bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-900/50">
-              <h4 className="text-lg font-bold mb-3 text-red-900 dark:text-red-100">Critical Rule — No Automatic Payment Release</h4>
-              <p className="mb-2 font-semibold text-red-900 dark:text-red-100">If the customer neither confirms nor disputes within 48 hours of job completion being marked, funds are automatically released to the painter.</p>
+              <h4 className="text-lg font-bold mb-3 text-red-900 dark:text-red-100">Important — How Payment Release Works</h4>
               <ul className="list-disc list-inside space-y-1 text-sm text-red-800 dark:text-red-200">
-                <li>Escrowed funds are NEVER released automatically except after 48 hours.</li>
-                <li>Release requires explicit customer confirmation of job completion on the Platform.</li>
-                <li>Any reversal, cancellation, or dispute resolution requires manual approval from a PaintBookCo administrator.</li>
-                <li>PaintBookCo will not release funds without one of these two triggers: customer confirmation or admin-approved resolution.</li>
+                <li>Funds are released only when the customer logs into Transpact and instructs payment to the painter.</li>
+                <li>If the customer does not respond within 48 hours of the painter marking the job complete, PaintBookCo will notify the painter to initiate the Transpact dispute process.</li>
+                <li>Once a dispute is initiated, if the customer fails to pay the Transpact dispute fee within 14 days of being notified, the painter automatically receives the full payment and their dispute fee is refunded.</li>
                 <li>Painters must not pressure customers to confirm completion prematurely. Doing so is a breach of these Terms.</li>
               </ul>
             </div>
@@ -428,7 +437,7 @@ export default function Terms() {
               <li>Painter is notified that the job is funded and work may begin.</li>
               <li>Painter completes the work. Painter marks job complete on the Platform.</li>
               <li>Customer reviews and confirms job completion on the Platform.</li>
-              <li>PaintBookCo instructs Transpact to release escrowed funds to the painter's nominated bank account.</li>
+              <li>The customer logs into Transpact directly and instructs release of escrowed funds to the painter's nominated bank account.</li>
             </ol>
 
             <h3 className="text-xl mt-6 mb-4">Payment Responsibility</h3>
@@ -455,99 +464,94 @@ export default function Terms() {
             <h2>Cancellations, Reversals, and Dispute Resolution</h2>
 
             <div className="surface-card p-6 bg-yellow-50 dark:bg-yellow-950/30 border-2 border-yellow-200 dark:border-yellow-900/50 mb-6">
-              <h3 className="text-xl font-bold mb-3 text-yellow-900 dark:text-yellow-100">The Golden Rule — Admin Approval Required</h3>
+              <h3 className="text-xl font-bold mb-3 text-yellow-900 dark:text-yellow-100">The Golden Rule — Transpact Controls All Fund Movement</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-yellow-800 dark:text-yellow-200">
-                <li><strong>No automatic reversals or cancellations</strong></li>
-                <li>All reversals, cancellations, and dispute resolutions involving escrowed funds require manual approval from a PaintBookCo administrator.</li>
-                <li>There are no circumstances under which funds are returned or redirected automatically without PaintBookCo admin involvement.</li>
-                <li>This protects both parties and ensures that every financial decision is reviewed by a human.</li>
+                <li><strong>Once payment is live in Transpact escrow, funds can only move by instruction from a transacting party or the appointed referee.</strong></li>
+                <li>PaintBookCo cannot move, release, or refund funds directly. Every financial resolution — including cancellations — requires the Transpact process.</li>
+                <li>This protects both parties. Your money is held by an FCA-regulated independent third party, not by PaintBookCo.</li>
               </ul>
             </div>
 
-            <h3 className="text-xl mt-6 mb-4">Cancellation Before Job Commencement</h3>
+            <h3 className="text-xl mt-6 mb-4">9.1 — Cancellation Before Payment is Live</h3>
             <p>
-              A job may be cancelled before work commences only with the agreement of both parties or in the circumstances set out below. For the purposes of this clause, "job commencement" is defined as follows, depending on the materials arrangement agreed between the parties at the time of booking:
-            </p>
-            <ul>
-              <li><strong>Where materials are purchased solely by the customer:</strong> commencement is defined as the point at which the painter attends the property and begins any preparatory work (including surface preparation, masking, and moving furniture).</li>
-              <li><strong>Where materials are purchased by the painter on the customer's behalf:</strong> commencement is defined as the earlier of (a) when the painter places the order for materials, or (b) when the painter attends the property. Once materials have been ordered by the painter, the job is treated as having commenced regardless of whether the painter has attended the site.</li>
-              <li><strong>Where materials are purchased through the PaintBookCo platform:</strong> commencement is defined as the earlier of (a) when the platform order is placed and confirmed, or (b) when the painter attends the property. The customer bears any cancellation or return costs imposed by the supplier, and any delivery costs incurred, which will be deducted from the escrowed amount before any refund is processed.</li>
-            </ul>
-
-            <p className="mt-4">A pre-commencement cancellation may arise in the following circumstances:</p>
-            <ul>
-              <li>The painter fails to make contact with the customer within 48 hours of escrow being funded</li>
-              <li>The painter notifies the Platform that they are unable to proceed and the platform cannot provide another painter within 48 hours from that time.</li>
-              <li>Both parties mutually agree in writing through the Platform chat to cancel</li>
-            </ul>
-
-            <h4 className="text-lg font-semibold mt-4 mb-2">Customer-Initiated Withdrawal (Pre-Commencement)</h4>
-            <p>
-              Where a customer wishes to withdraw from a confirmed, escrow-funded job before commencement (as defined above), the following applies. <strong>PaintBookCo's commission is retained in full.</strong> The painter receives a compensation payment from the net escrowed amount (after commission) calculated by reference to the notice given before the agreed start date. The remainder is refunded to the customer. Any material costs already incurred (supplier cancellation charges, delivery costs) are deducted from the customer's refund before it is processed.
-            </p>
-            <p>
-              <strong>Painter compensation sliding scale</strong> (calculated as a percentage of the net job value after commission):
-            </p>
-            <ul>
-              <li><strong>More than 7 calendar days before the agreed start date:</strong> 10% of net job value to painter. Example: £500 job at 10% commission — painter receives £45, customer refunded £405.</li>
-              <li><strong>3 to 7 calendar days before the agreed start date:</strong> 20% of net job value to painter. Example: £500 job at 10% commission — painter receives £90, customer refunded £360.</li>
-              <li><strong>Less than 72 hours before the agreed start date:</strong> 30% of net job value to painter. Example: £500 job at 10% commission — painter receives £135, customer refunded £315.</li>
-            </ul>
-            <p>
-              These compensation payments are made from the escrowed net amount and do not affect PaintBookCo's retained commission. Material costs (supplier cancellation or return fees, delivery charges) are deducted before calculating the remaining refund to the customer.
+              If a job is cancelled before the customer's payment has been received and cleared by Transpact, no funds have been committed and no Transpact dispute is needed. The job is simply closed on PaintBookCo. No charges apply to either party.
             </p>
 
-            <h4 className="text-lg font-semibold mt-4 mb-2">Painter-Initiated or PaintBookCo-Fault Pre-Commencement Cancellation</h4>
-            <ul>
-              <li>The customer will receive a full refund of the escrowed net amount. Commission is also refunded to the customer in full. See Section 9.5 commission treatment table.</li>
-              <li>Painter receives nothing if they cancel or fail to commence without good reason</li>
-            </ul>
+            <h3 className="text-xl mt-6 mb-4">9.2 — Cancellation After Payment is Live</h3>
             <p>
-              The above is subject to whether the customer has acted in good faith.
+              Once payment is live in Transpact escrow, any cancellation — regardless of the reason — must be resolved through the Transpact dispute process. This is because Transpact can only move funds on instruction from a transacting party or a referee.
             </p>
-
-            <h3 className="text-xl mt-6 mb-4">Cancellation After Job Has Commenced — No Customer Refund</h3>
-            <p>
-              Once a job has commenced (as defined in Section 9.2 above), the customer is not entitled to a refund. The job must be completed, or the customer forfeits the full transaction amount paid. <strong>PaintBookCo's commission is retained in full.</strong> The only exception is where the reason for non-completion is attributable to irremediable incompetence by the painter, as set out in Section 9.3a below.
-            </p>
-            <p>
-              If a customer chooses not to approve completion of work that has been genuinely performed, or otherwise refuses to engage with the completion process, PaintBookCo reserves the right to release escrowed funds to the painter following review of the available evidence.
-            </p>
-
-            <h4 className="text-lg font-semibold mt-4 mb-2">Painter Incompetence — PaintBookCo Remedy</h4>
-            <p>
-              Where a customer raises a complaint that the painter's work is of unacceptable quality, PaintBookCo will apply the following staged process:
-            </p>
+            <p>The process is:</p>
             <ol className="list-decimal list-inside space-y-2">
-              <li>The customer raises a quality complaint through the Platform with supporting evidence (photographs, description of defects).</li>
-              <li>PaintBookCo reviews the complaint. If PaintBookCo determines the work materially departs from the agreed scope and falls below a reasonable professional standard, PaintBookCo will offer the original painter an opportunity to remedy the defective work within 2 - 5 working days at no additional cost to the customer.</li>
-              <li>If the original painter declines the remediation opportunity, fails to complete remediation within the stated period, or PaintBookCo determines the incompetence is irremediable, PaintBookCo will arrange for a replacement painter from the Platform's matching pool to complete or redo the work.</li>
-              <li>The cost of the replacement painter's work is a commercial cost borne by PaintBookCo. The original painter's fee for the incomplete or defective portion of the work may be withheld by PaintBookCo to offset this cost. PaintBookCo's commission is retained.</li>
+              <li>Either the customer or the painter raises a dispute through their PaintBookCo dashboard.</li>
+              <li>Both parties are required to pay a <strong>£20.00 dispute fee</strong> to Transpact to commence formal arbitration. This fee is fully refunded to the party in whose favour the decision is made.</li>
+              <li>PaintBookCo provides guidance to both parties on what each is entitled to based on the cancellation circumstances set out below.</li>
+              <li>The Transpact-nominated referee makes the final binding decision on how funds are distributed.</li>
             </ol>
 
-            <h4 className="text-lg font-semibold mt-4 mb-2">Property Damage by the Painter — Insurance</h4>
+            <h4 className="text-lg font-semibold mt-4 mb-2">Cancellation — Painter Fault or PaintBookCo Fault</h4>
+            <p>The customer is entitled to a full refund of the escrowed net amount. PaintBookCo's commission is also refunded in full. The painter receives nothing.</p>
+
+            <h4 className="text-lg font-semibold mt-4 mb-2">Cancellation at Customer's Request — Before Work Has Commenced</h4>
+            <p>PaintBookCo's commission is retained. The painter is entitled to compensation from the net escrowed amount based on notice given before the agreed start date:</p>
+            <ul>
+              <li><strong>More than 7 days notice:</strong> 10% of net job value to painter</li>
+              <li><strong>3 to 7 days notice:</strong> 20% of net job value to painter</li>
+              <li><strong>Less than 72 hours notice:</strong> 30% of net job value to painter</li>
+            </ul>
+            <p>The remainder is returned to the customer. PaintBookCo will provide evidence of the agreed compensation amounts to the Transpact referee to support the decision.</p>
+
+            <h4 className="text-lg font-semibold mt-4 mb-2">Cancellation After Work Has Commenced</h4>
             <p>
-              Where a painter causes physical damage to the customer's property during a job (for example, paint spillage on flooring, a broken fixture, or damage to an adjacent surface), this is a matter between the customer and the painter's public liability insurer. Public liability insurance covers accidental damage to third-party property during the course of the painter's work. It does not cover the quality of the paint job itself, the cost of a replacement painter, or the customer's loss of time or convenience. Customers should contact the painter directly to make a claim on their public liability insurance, and may request the painter's insurance details through PaintBookCo at <strong>hello@paintbookco.co.uk</strong>. PaintBookCo is not a party to any insurance claim and accepts no liability for property damage caused by painters.
+              Once work has commenced, the customer is not entitled to a refund unless the painter has demonstrably failed to perform the work to a reasonable professional standard. See Section 9.5 — Quality Disputes.
             </p>
 
-            <h3 className="text-xl mt-6 mb-4">Dispute Resolution Process</h3>
+            <h3 className="text-xl mt-6 mb-4">9.3 — Job Commencement — Definition</h3>
+            <p>For the purposes of these Terms, job commencement is defined as follows depending on the materials arrangement:</p>
+            <ul>
+              <li><strong>Materials purchased by customer:</strong> when the painter attends the property and begins any preparatory work.</li>
+              <li><strong>Materials purchased by painter on customer's behalf:</strong> the earlier of when the painter places the order for materials, or when the painter attends the property.</li>
+              <li><strong>Materials purchased through PaintBookCo platform:</strong> the earlier of when the platform order is confirmed, or when the painter attends the property.</li>
+            </ul>
+
+            <h3 className="text-xl mt-6 mb-4">9.4 — 48-Hour Non-Response</h3>
             <p>
-              Where a customer and painter cannot agree on whether a job has been completed satisfactorily, either party may raise a formal dispute through the Platform. The process is as follows:
+              If a customer does not log into Transpact to release funds or raise a dispute within <strong>48 hours</strong> of the painter marking the job as complete on PaintBookCo, PaintBookCo will notify the painter and advise them to initiate arbitration directly through Transpact.
             </p>
+            <p>
+              The painter pays the <strong>£20.00 Transpact dispute fee</strong>. Transpact then notifies the customer, who has <strong>14 days</strong> to pay their own dispute fee.
+            </p>
+            <ul>
+              <li>If the customer <strong>does not pay within 14 days</strong> — Transpact automatically awards the full payment to the painter and refunds the painter's dispute fee in full. The painter incurs no net cost.</li>
+              <li>If the customer <strong>does pay within 14 days</strong> — formal arbitration begins with the Transpact-nominated referee making a binding decision.</li>
+            </ul>
+
+            <h3 className="text-xl mt-6 mb-4">9.5 — Quality Disputes</h3>
+            <p>If a customer raises a dispute on the grounds that the work has not been completed to a satisfactory standard:</p>
             <ol className="list-decimal list-inside space-y-2">
-              <li>The disputing party raises a dispute via their dashboard. All escrowed funds are immediately frozen.</li>
-              <li>PaintBookCo notifies both parties that a dispute has been raised. Both parties are given 2 working days to submit evidence.</li>
-              <li>Evidence must be submitted through the Platform and may include: photographs, Platform chat transcripts, milestone completion records, and written statements.</li>
-              <li>PaintBookCo reviews the evidence and issues a decision within 10 working days of the evidence deadline.</li>
-              <li>PaintBookCo's decision may be: full release to painter, full refund to customer, or split — a proportionate allocation at PaintBookCo's discretion.</li>
-              <li>PaintBookCo instructs Transpact to release or refund funds in accordance with the decision.</li>
-              <li>Both parties are notified of the outcome and the reasons for the decision.</li>
+              <li>The disputing party raises a dispute on PaintBookCo with supporting evidence — photographs, descriptions, chat transcripts.</li>
+              <li>Both parties pay the <strong>£20.00 Transpact dispute fee</strong> to commence formal arbitration.</li>
+              <li>PaintBookCo submits all available evidence — including the agreed job conditions, Platform chat history, and milestone records — to support the Transpact referee's decision.</li>
+              <li>The Transpact-nominated referee reviews the evidence and makes a <strong>binding decision</strong> under the Arbitration Act 1996.</li>
+              <li>Transpact distributes funds in accordance with the referee's decision.</li>
+              <li>The dispute fee is refunded to the party in whose favour the decision is made.</li>
             </ol>
+            <p>The referee's decision is final. There is no appeal within the Transpact process, though parties retain the right to pursue legal remedies through the courts independently.</p>
+
+            <h3 className="text-xl mt-6 mb-4">9.6 — Dispute Fees</h3>
             <p>
-              PaintBookCo's dispute resolution decision is final for Platform purposes. It does not affect either party's right to pursue a legal remedy through the courts. PaintBookCo is not a formal arbitrator and our decisions do not constitute binding arbitration.
+              Transpact charges each party a dispute fee of <strong>£20.00 (GBP)</strong> per dispute when formal arbitration is invoked. This fee is charged by Transpact, not by PaintBookCo. PaintBookCo has no control over this fee and does not receive any part of it.
+            </p>
+            <p>
+              The fee is <strong>fully refunded to the party in whose favour the referee decides</strong>. If one party fails to pay their dispute fee within 14 days, Transpact automatically awards the full transaction amount to the other party and refunds that party's dispute fee.
             </p>
 
-            <h3 className="text-xl mt-6 mb-4">Commission in Dispute Situations</h3>
+            <h3 className="text-xl mt-6 mb-4">9.7 — Property Damage by the Painter</h3>
+            <p>
+              Where a painter causes physical damage to the customer's property during a job, this is a matter between the customer and the painter's public liability insurer. Customers may request the painter's insurance details through PaintBookCo at <strong>hello@paintbookco.co.uk</strong>. PaintBookCo is not a party to any insurance claim and accepts no liability for property damage caused by painters.
+            </p>
+
+            <h3 className="text-xl mt-6 mb-4">9.8 — Commission in Dispute and Cancellation Situations</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-sm">
                 <thead className="bg-muted">
@@ -559,31 +563,31 @@ export default function Terms() {
                 <tbody>
                   <tr>
                     <td className="border border-border p-3">Job completed and confirmed by customer</td>
-                    <td className="border border-border p-3">Commission retained by PaintBookCo — not refundable.</td>
+                    <td className="border border-border p-3">Retained by PaintBookCo — not refundable.</td>
                   </tr>
                   <tr>
-                    <td className="border border-border p-3">Pre-commencement cancellation — painter fault</td>
-                    <td className="border border-border p-3">Commission refunded in full to the customer. This is if PaintBookCo is unable to deliver the service through any of its other painters.</td>
+                    <td className="border border-border p-3">Cancellation — painter fault or PaintBookCo fault</td>
+                    <td className="border border-border p-3">Refunded in full to the customer.</td>
                   </tr>
                   <tr>
-                    <td className="border border-border p-3">Pre-commencement cancellation — customer fault</td>
-                    <td className="border border-border p-3">Commission retained by PaintBookCo in full. Painter receives a sliding scale compensation (10% / 20% / 30% of net job value) depending on notice period given. See Section 9.2 for full detail and worked examples.</td>
+                    <td className="border border-border p-3">Cancellation — customer fault, pre-commencement</td>
+                    <td className="border border-border p-3">Retained by PaintBookCo. Painter receives sliding scale compensation (10% / 20% / 30% of net job value). See Section 9.2.</td>
                   </tr>
                   <tr>
-                    <td className="border border-border p-3">Dispute — full release to painter</td>
-                    <td className="border border-border p-3">Commission retained by PaintBookCo.</td>
+                    <td className="border border-border p-3">Dispute — referee awards full payment to painter</td>
+                    <td className="border border-border p-3">Retained by PaintBookCo.</td>
                   </tr>
                   <tr>
-                    <td className="border border-border p-3">Dispute — full refund to customer</td>
-                    <td className="border border-border p-3">Commission retained by PaintBookCo unless PaintBookCo determines the dispute arose from painter fault or a failure on PaintBookCo's part. Commission is only refunded where PaintBookCo or its painter is responsible for the breakdown.</td>
+                    <td className="border border-border p-3">Dispute — referee awards full refund to customer</td>
+                    <td className="border border-border p-3">Retained by PaintBookCo unless PaintBookCo or its painter is at fault.</td>
                   </tr>
                   <tr>
-                    <td className="border border-border p-3">Dispute — partial split</td>
-                    <td className="border border-border p-3">Commission retained in full by PaintBookCo. Commission is earned at the point of payment regardless of split outcome, unless PaintBookCo determines painter fault warrants a refund.</td>
+                    <td className="border border-border p-3">Dispute — partial split by referee</td>
+                    <td className="border border-border p-3">Retained in full by PaintBookCo unless PaintBookCo or its painter is at fault.</td>
                   </tr>
                   <tr>
                     <td className="border border-border p-3">PaintBookCo unable to provide a painter / platform error</td>
-                    <td className="border border-border p-3">Commission refunded in full to customer. This is the primary scenario in which commission is refunded — where the failure to deliver is on PaintBookCo's side.</td>
+                    <td className="border border-border p-3">Refunded in full to customer.</td>
                   </tr>
                 </tbody>
               </table>
@@ -716,7 +720,7 @@ export default function Terms() {
 
             <h3 className="text-xl mt-6 mb-4">Timely Review and Confirmation</h3>
             <p>
-              When a painter marks a job or milestone as complete, customers must review and respond — either confirming completion or raising specific concerns — <strong>within 2 calendar days (48 Hours)</strong>. Failure to respond within this period, without good reason communicated through the Platform, may be treated by PaintBookCo as deemed acceptance of completion, and PaintBookCo reserves the right to release escrowed funds accordingly.
+              When a painter marks a job or milestone as complete, customers must log into Transpact and confirm completion or raise a dispute within <strong>48 hours</strong>. If you do not respond within this period, the painter is entitled to initiate the Transpact dispute process. If you then fail to pay the Transpact dispute fee within 14 days of being notified, the full payment will be automatically released to the painter. Failure to engage promptly protects neither party — please respond within 48 hours.
             </p>
 
             <h3 className="text-xl mt-6 mb-4">Genuine Reviews</h3>

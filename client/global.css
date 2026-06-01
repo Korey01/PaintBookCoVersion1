@@ -644,3 +644,85 @@
 .chameleon-text {
   transition: color 0.8s ease;
 }
+
+/* ── Ambient chameleon gradient ── */
+@keyframes ambientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.ambient-dark {
+  background: linear-gradient(
+    135deg,
+    #111109 0%,
+    #121410 25%,
+    #0E0E14 50%,
+    #100E0A 75%,
+    #111109 100%
+  );
+  background-size: 400% 400%;
+  animation: ambientShift 18s ease infinite;
+}
+
+.ambient-dark-mid {
+  background: linear-gradient(
+    135deg,
+    #1A1A14 0%,
+    #1A1C14 20%,
+    #14161A 40%,
+    #1A1410 60%,
+    #161A14 80%,
+    #1A1A14 100%
+  );
+  background-size: 400% 400%;
+  animation: ambientShift 22s ease infinite;
+}
+
+.ambient-forest {
+  background: linear-gradient(
+    135deg,
+    #2D5A3D 0%,
+    #2D5040 25%,
+    #355A35 50%,
+    #2A5A42 75%,
+    #2D5A3D 100%
+  );
+  background-size: 400% 400%;
+  animation: ambientShift 20s ease infinite;
+}
+
+/* ── Subtle white chameleon (off-white pages) ── */
+@keyframes subtleWhiteShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.ambient-ivory {
+  background: linear-gradient(
+    135deg,
+    #FBF7F0 0%,
+    #F9F5EF 20%,
+    #FBF8F2 40%,
+    #F8F4EE 60%,
+    #FAF6F0 80%,
+    #FBF7F0 100%
+  );
+  background-size: 400% 400%;
+  animation: subtleWhiteShift 28s ease infinite;
+}
+
+.ambient-white {
+  background: linear-gradient(
+    135deg,
+    #FFFFFF 0%,
+    #FEFDFB 20%,
+    #FFFEF9 40%,
+    #FDFCFA 60%,
+    #FEFEFE 80%,
+    #FFFFFF 100%
+  );
+  background-size: 400% 400%;
+  animation: subtleWhiteShift 32s ease infinite;
+}

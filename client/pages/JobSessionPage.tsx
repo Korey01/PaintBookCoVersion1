@@ -194,13 +194,13 @@ export default function JobSessionPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#FBF7F0" }}>
+    <div className="min-h-screen flex items-center justify-center ambient-ivory">
       <p className="text-sm" style={{ color: "#9B8A75" }}>Loading your job...</p>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: "#FBF7F0" }}>
+    <div className="min-h-screen flex items-center justify-center px-6 ambient-ivory">
       <div className="text-center space-y-4 max-w-sm">
         <XCircle className="h-10 w-10 mx-auto" style={{ color: "#D85A30" }} />
         <h1 className="text-xl font-semibold" style={{ color: "#3A3228" }}>Link not found</h1>
@@ -286,7 +286,7 @@ export default function JobSessionPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#FBF7F0" }}>
+    <div className="min-h-screen ambient-ivory">
       {/* Topbar */}
       <header style={{ background: "#fff", borderBottom: "1px solid rgba(180,150,100,0.18)" }} className="px-6 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">

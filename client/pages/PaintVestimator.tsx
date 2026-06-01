@@ -1440,7 +1440,7 @@ export default function PaintVestimator() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen ambient-ivory">
       {/* Hero */}
       <div className="bg-gradient-to-r from-background to-accent/20 border-b border-border py-8 px-6">
         <div className="max-w-4xl mx-auto">

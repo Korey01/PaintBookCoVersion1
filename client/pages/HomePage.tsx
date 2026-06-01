@@ -285,7 +285,7 @@ const STEPS = [
 function HowItWorks() {
   const ref = useScrollAnimationList();
   return (
-    <section className="py-28 px-6" style={{ background: '#111109' }}>
+    <section className="py-28 px-6 ambient-dark">
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
           <div className="flex items-center gap-3 mb-4">
@@ -337,7 +337,7 @@ const TRUST_ITEMS = [
 function TrustSignals() {
   const ref = useScrollAnimationList();
   return (
-    <section className="py-28 px-6" style={{ background: '#1A1A14' }}>
+    <section className="py-28 px-6 ambient-dark-mid">
       <div className="mx-auto max-w-6xl">
         <div ref={useScrollAnimation()} className="scroll-animate mb-20">
           <div className="flex items-center gap-3 mb-4">
@@ -378,7 +378,7 @@ const PAINTER_BENEFITS = [
 function ForPainters() {
   const ref = useScrollAnimation();
   return (
-    <section className="py-28 px-6" style={{ background: '#2D5A3D' }}>
+    <section className="py-28 px-6 ambient-forest">
       <div ref={ref} className="mx-auto max-w-6xl scroll-animate">
         <div className="grid md:grid-cols-2 gap-20 items-start">
           <div>
@@ -434,7 +434,7 @@ function ForPainters() {
 function VestimatorCTA() {
   const ref = useScrollAnimation();
   return (
-    <section className="py-24 px-6" style={{ background: '#F5F0E8' }}>
+    <section className="py-24 px-6 ambient-ivory">
       <div ref={ref} className="mx-auto max-w-5xl scroll-animate">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
@@ -486,7 +486,7 @@ function VestimatorCTA() {
 function CTABand() {
   const ref = useScrollAnimation();
   return (
-    <section className="py-28 px-6" style={{ background: '#111109' }}>
+    <section className="py-28 px-6 ambient-dark">
       <div ref={ref} className="mx-auto max-w-3xl text-center scroll-animate">
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="h-px w-6" style={{ background: '#D85A30' }} />

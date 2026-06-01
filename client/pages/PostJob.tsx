@@ -227,7 +227,7 @@ export default function PostJob() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#FBF7F0' }}>
+    <div className="min-h-screen flex flex-col ambient-ivory">
       {/* Header */}
       <header className="px-6 py-5" style={{ background: '#FFFFFF', borderBottom: '0.5px solid rgba(180,150,100,0.18)' }}>
         <a href="/">
@@ -794,7 +794,7 @@ export function PostJobConfirmation() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#FBF7F0' }}>
+    <div className="min-h-screen flex flex-col ambient-ivory">
       <header className="px-6 py-5" style={{ background: '#FFFFFF', borderBottom: '0.5px solid rgba(180,150,100,0.18)' }}>
         <a href="/">
           <img src={LOGO} alt="PaintBookCo" className="h-8 object-contain" />

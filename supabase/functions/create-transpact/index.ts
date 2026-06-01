@@ -28,24 +28,26 @@ function commissionRate(completedJobs: number): number {
   return 0.08;
 }
 
-function buildConditions(jobRef: string, amount: number): string {
+function buildConditions(jobRef: string, amount: number, jobDescription: string, jobAddress: string): string {
   return `PaintBookCo Job Reference: ${jobRef}
+Job Address: ${jobAddress}
+
+AGREED WORK:
+${jobDescription}
 
 PAYMENT CONDITIONS:
 Payment of £${amount.toFixed(2)} is held in escrow by Transpact.com on behalf of PaintBookCo (The PaintBook Company Ltd, Co. No. 16690724).
 
-Payment will be released to the painter when:
-1. The customer confirms the job is complete via their job tracking page, OR
-2. 48 hours elapses after the painter requests completion with no customer response.
+Payment will be released to the painter when the customer confirms the job is complete via their job tracking page. If the customer does not respond within 48 hours of the painter marking the job complete, PaintBookCo will advise the painter to initiate the Transpact dispute process.
 
 CANCELLATION TERMS:
-If customer cancels with more than 5 days notice: 10% of net job value paid to painter.
-If customer cancels with 2-5 days notice: 20% of net job value paid to painter.
-If customer cancels with less than 2 days notice: 30% of net job value paid to painter.
+If customer cancels with more than 7 days notice: 10% of net job value paid to painter.
+If customer cancels with 3-7 days notice: 20% of net job value paid to painter.
+If customer cancels with less than 72 hours notice: 30% of net job value paid to painter.
 
 DISPUTE RESOLUTION:
-PaintBookCo acts as referee. Painter has 5 working days to remedy any issues.
-These conditions are fixed and non-negotiable.`.trim();
+Disputes are handled first through PaintBookCo mediation at no cost. If unresolved, either party may escalate to formal Transpact arbitration (£20 per party, refunded to the winning party). The Transpact-nominated independent referee makes a binding decision under the Arbitration Act 1996.
+These conditions are fixed and agreed by both parties.`.trim();
 }
 
 Deno.serve(async (req) => {
@@ -69,7 +71,7 @@ Deno.serve(async (req) => {
     // Load transaction with painter details
     const { data: transaction } = await serviceClient
       .from("transactions")
-      .select("*, painters(first_name, last_name, email, completed_jobs), sessions(customer_token, status)")
+      .select("*, painters(first_name, last_name, email, completed_jobs), sessions(id, customer_token, status, description, job_type, city, postcode)")
       .eq("id", transaction_id)
       .single();
 
@@ -107,7 +109,11 @@ Deno.serve(async (req) => {
     const painterPayout = parseFloat((amount - commissionAmount).toFixed(2));
 
     const invoiceRef = transaction.invoice_id ?? `PBC-${transaction_id.slice(-6).toUpperCase()}`;
-    const conditions = buildConditions(invoiceRef, amount);
+    const jobDescription = transaction.sessions?.description?.trim() ||
+                           transaction.sessions?.job_type ||
+                           "Painting and decorating services as agreed between the parties.";
+    const jobAddress = `${transaction.sessions?.city || ""}${transaction.sessions?.city && transaction.sessions?.postcode ? ", " : ""}${transaction.sessions?.postcode || ""}`.trim() || "Address provided to painter upon escrow funding";
+    const conditions = buildConditions(invoiceRef, amount, jobDescription, jobAddress);
 
     const auth = getAuthParams();
     const isTest = Deno.env.get("TRANSPACT_IS_TEST") === "true";

@@ -1491,7 +1491,7 @@ export function PainterDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FBF7F0' }}>
         <div className="text-center">
           <div className="h-8 w-8 border-2 border-foreground border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-muted-foreground mt-4">Loading dashboard...</p>
@@ -1502,7 +1502,7 @@ export function PainterDashboard() {
 
   if (error || !painter) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#FBF7F0' }}>
         <div className="text-center max-w-md">
           <p className="text-destructive font-medium mb-4">{error || "Failed to load painter profile"}</p>
           <button
@@ -1517,9 +1517,9 @@ export function PainterDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+    <div className="min-h-screen flex flex-col overflow-x-hidden" style={{ background: '#FBF7F0' }}>
       {/* Header */}
-      <header className="border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+      <header className="px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0" style={{ background: '#F5F0E8', borderBottom: '0.5px solid rgba(180,150,100,0.2)' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <a href="/" className="flex-shrink-0">
             <img src={LOGO} alt="PaintBookCo" className="h-7 sm:h-8 object-contain max-w-[140px]" />
@@ -1544,10 +1544,10 @@ export function PainterDashboard() {
 
       {/* Toast notification */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg text-sm max-w-sm ${
+        <div style={{ background: '#FFFFFF' }} className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg text-sm max-w-sm ${
           toast.type === "error"
-            ? "bg-destructive/10 border-destructive/30 text-destructive"
-            : "bg-green-900/30 border-green-800/40 text-green-400"
+            ? "border-red-200 text-red-600"
+            : "border-green-200 text-green-700"
         }`}>
           <span className="flex-1">{toast.msg}</span>
           <button onClick={() => setToast(null)} className="flex-shrink-0 opacity-70 hover:opacity-100">
@@ -1558,7 +1558,7 @@ export function PainterDashboard() {
 
       <div className="flex-1 flex overflow-x-hidden">
         {/* Sidebar — desktop only */}
-        <aside className="w-56 border-r border-border hidden lg:flex flex-col bg-card/30 flex-shrink-0">
+        <aside className="w-56 hidden lg:flex flex-col flex-shrink-0" style={{ background: '#F5F0E8', borderRight: '0.5px solid rgba(180,150,100,0.2)' }}>
           <nav className="space-y-1 p-4">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
@@ -1566,9 +1566,10 @@ export function PainterDashboard() {
                 onClick={() => { setActiveTab(id); if (id === "notifications") setNotificationDot(false); }}
                 className={`w-full text-left px-4 py-3 rounded-md text-sm font-medium flex items-center gap-3 transition-colors ${
                   activeTab === id
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    ? "text-white"
+                    : "hover:bg-white/50"
                 }`}
+                style={activeTab === id ? { background: '#D85A30', color: '#fff' } : { color: '#6B6860' }}
               >
                 <span className="relative flex-shrink-0">
                   <Icon className="h-4 w-4" />
@@ -1590,6 +1591,47 @@ export function PainterDashboard() {
             {/* TAB 1: Overview */}
             {activeTab === "overview" && (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+                {/* Greeting */}
+                {(() => {
+                  const h = new Date().getHours();
+                  const greeting = h>=5&&h<12?'Good morning':h>=12&&h<17?'Good afternoon':h>=17&&h<21?'Good evening':'Evening';
+                  const UK_HOLIDAYS: Record<string,string> = {
+                    '01-01':'Happy New Year!','04-03':'Happy Good Friday.','04-06':'Happy Easter Monday!',
+                    '05-04':'Happy May Bank Holiday!','05-25':'Happy Spring Bank Holiday!',
+                    '08-31':'Happy Summer Bank Holiday!','12-25':'Happy Christmas.','12-26':'Happy Boxing Day!'
+                  };
+                  const todayKey = `${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+                  const holidayMsg = UK_HOLIDAYS[todayKey];
+                  return (
+                    <div style={{ marginBottom: '24px' }}>
+                      <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '26px', color: '#1A1A14', letterSpacing: '-0.01em', fontWeight: 400, marginBottom: '4px' }}>
+                        {greeting}, <span style={{ color: '#D85A30', fontStyle: 'italic' }}>{painter.first_name}</span>
+                      </h1>
+                      <p style={{ fontSize: '11px', color: '#B4B2A9' }}>Here's what's waiting for you today</p>
+                      {holidayMsg && (
+                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: 'rgba(45,90,61,0.06)', border: '0.5px solid rgba(45,90,61,0.18)', borderRadius: '6px', fontSize: '11px', color: '#2D5A3D' }}>
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#2D5A3D" strokeWidth="1.2"/><path d="M7 4v3l2 1" stroke="#2D5A3D" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                          {holidayMsg}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Stats row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '20px' }}>
+                  {[
+                    { label: 'Pending payout', value: `£0`, color: '#2D5A3D' },
+                    { label: 'Active jobs', value: sessions?.filter((s: any) => ['funded','in_progress','completion_requested'].includes(s.status)).length || 0, color: '#1A5C8A' },
+                    { label: 'Completed', value: sessions?.filter((s: any) => s.status === 'completed').length || 0, color: '#1A1A14' },
+                  ].map(stat => (
+                    <div key={stat.label} style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.18)', borderRadius: '6px', padding: '12px 14px' }}>
+                      <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: '22px', color: stat.color, lineHeight: 1, marginBottom: '3px' }}>{stat.value}</div>
+                      <div style={{ fontSize: '10px', color: '#B4B2A9' }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="flex items-center gap-4">
                   {painter.profile_picture_url ? (
                     <img src={painter.profile_picture_url} alt={painter.first_name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />

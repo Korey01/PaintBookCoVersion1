@@ -63,7 +63,7 @@ export default function AboutPage() {
   const ctaRef = useScrollAnimation();
 
   return (
-    <div style={{ background: '#FBF7F0', minHeight: '100vh' }}>
+    <div className="ambient-ivory" style={{ minHeight: '100vh' }}>
       <div className="h-16" />
 
       {/* Hero */}

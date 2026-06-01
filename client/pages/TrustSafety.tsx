@@ -9,7 +9,7 @@ export default function TrustSafety() {
   useEffect(() => { document.title = "Trust & Safety | PaintBook"; }, []);
 
   return (
-    <div className="w-full" style={{ background: '#FBF7F0', minHeight: '100vh' }}>
+    <div className="w-full ambient-ivory" style={{ minHeight: '100vh' }}>
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden">

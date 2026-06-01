@@ -26,7 +26,7 @@ export default function Support(){
   }
 
   return (
-    <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-[1fr_420px]" style={{ background: '#FBF7F0', minHeight: '100vh' }}>
+    <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-[1fr_420px] ambient-ivory" style={{ minHeight: '100vh' }}>
       <section>
         <h1 className="text-2xl font-bold">Help & Support</h1>
         <p className="text-sm text-muted-foreground">Articles and contact for jobs, onboarding, subscriptions, and escrow.</p>

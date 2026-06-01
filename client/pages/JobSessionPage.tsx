@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabase";
@@ -59,6 +60,7 @@ export default function JobSessionPage() {
   const [showFindAnotherPainterConfirm, setShowFindAnotherPainterConfirm] = useState(false);
   const [findingAnotherPainter, setFindingAnotherPainter] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showPayPrompt, setShowPayPrompt] = React.useState(false);
   const [showAdminChat, setShowAdminChat] = useState(false);
   const [adminUnread, setAdminUnread] = useState(0);
 
@@ -221,6 +223,12 @@ export default function JobSessionPage() {
 
   async function handlePayNow() {
     if (!transaction) return;
+    setShowPayPrompt(true);
+  }
+
+  async function handlePayNowConfirmed() {
+    if (!transaction) return;
+    setShowPayPrompt(false);
     setPayLoading(true);
     setActionMessage("");
     try {
@@ -676,6 +684,65 @@ export default function JobSessionPage() {
         )}
 
       </main>
+
+      {/* Customer pre-payment prompt */}
+      {showPayPrompt && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowPayPrompt(false)}>
+          <div className="rounded-xl max-w-md w-full p-6 space-y-5" style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div>
+              <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '20px', color: '#1A1A14', marginBottom: '8px', fontWeight: 400 }}>
+                Before you pay
+              </h2>
+              <p style={{ fontSize: '13px', color: '#6B6860', lineHeight: '1.6' }}>
+                Please read carefully — these are the legally binding conditions for your payment.
+              </p>
+            </div>
+
+            {transaction?.invoice_description && (
+              <div style={{ background: '#F0F9F4', border: '0.5px solid rgba(45,90,61,0.25)', borderRadius: '8px', padding: '14px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 500, color: '#2D5A3D', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Agreed work</p>
+                <p style={{ fontSize: '13px', color: '#1A1A14', lineHeight: '1.65' }}>{transaction.invoice_description}</p>
+              </div>
+            )}
+
+            <div style={{ background: '#FBF7F0', border: '0.5px solid rgba(180,150,100,0.2)', borderRadius: '8px', padding: '14px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 500, color: '#1A1A14', marginBottom: '8px' }}>What this means for you:</p>
+              <ul style={{ fontSize: '12px', color: '#6B6860', lineHeight: '1.7', paddingLeft: '16px', listStyleType: 'disc' }}>
+                <li>Your money is held securely by <strong style={{ color: '#1A1A14' }}>Transpact</strong> (FCA Ref: 546279) — not by PaintBookCo</li>
+                <li>You release payment to the painter by logging into <strong style={{ color: '#1A1A14' }}>Transpact directly</strong> once you are happy with the work</li>
+                <li>The job description above and your property address are the <strong style={{ color: '#1A1A14' }}>legally binding conditions</strong> — if anything is wrong, ask your painter to update the invoice before you pay</li>
+                <li>If anything goes wrong, raise a dispute on PaintBookCo first — our team will try to resolve it at no cost</li>
+                <li>If unresolved, formal Transpact arbitration costs £20 per party — refunded to the winning party</li>
+              </ul>
+            </div>
+
+            <div style={{ background: '#FFF4EF', border: '0.5px solid rgba(216,90,48,0.2)', borderRadius: '6px', padding: '12px' }}>
+              <p style={{ fontSize: '12px', color: '#D85A30', lineHeight: '1.6' }}>
+                If the job description above does not match what was agreed, do not pay — ask your painter to update the invoice first.
+              </p>
+            </div>
+
+            <p style={{ fontSize: '11px', color: '#B4B2A9', lineHeight: '1.6' }}>
+              By proceeding you agree to <a href="/terms" target="_blank" style={{ color: '#D85A30' }}>PaintBookCo's Terms of Service</a> and the Transpact escrow process.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowPayPrompt(false)}
+                style={{ flex: 1, padding: '11px', borderRadius: '4px', border: '0.5px solid rgba(180,150,100,0.3)', background: 'transparent', color: '#6B6860', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePayNowConfirmed}
+                style={{ flex: 1, padding: '11px', borderRadius: '4px', border: 'none', background: '#D85A30', color: '#F5F0E8', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
+              >
+                I understand — Pay securely
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

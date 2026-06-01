@@ -72,6 +72,7 @@ export default function PostJob() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -164,6 +165,7 @@ export default function PostJob() {
     if (!phone.trim()) errors.phone = "Phone number is required";
     if (!email.trim()) errors.email = "Email is required";
     else if (!email.includes("@")) errors.email = "Invalid email address";
+    if (!termsAccepted) { errors.terms = "You must accept the Terms of Service to post a job"; }
 
     if (Object.keys(errors).length > 0) {
       setErrors(errors);
@@ -722,6 +724,23 @@ export default function PostJob() {
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-border flex-shrink-0"
+                  />
+                  <span className="text-sm text-foreground">
+                    I have read and agree to PaintBookCo's{' '}
+                    <a href="/terms" target="_blank" style={{ color: '#D85A30', textDecoration: 'underline' }}>Terms of Service</a>
+                    {' '}and understand that payment for my job will be held in Transpact escrow, released only when I confirm completion. Disputes are handled first by PaintBookCo (free), then by Transpact arbitration (£20 per party) if needed. <strong>Required.</strong>
+                  </span>
+                </label>
+                {errors.terms && <p className="text-xs text-destructive mt-1">{errors.terms}</p>}
+
+                <div style={{ height: '1px', background: 'rgba(180,150,100,0.18)', margin: '4px 0' }} />
+
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
                     checked={marketingConsent}
                     onChange={(e) => setMarketingConsent(e.target.checked)}
                     className="mt-1 h-4 w-4 rounded border-border"
@@ -771,7 +790,7 @@ export default function PostJob() {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !email.trim()}
+                    disabled={isSubmitting || !email.trim() || !termsAccepted}
                     className="flex-1 py-3 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2" style={{ background: '#D85A30', color: '#F5F0E8' }}
                   >
                     <CheckCircle2 className="h-4 w-4" />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, PoundSterling, Clock, CheckCircle2, XCircle, Briefcase } from "lucide-react";
@@ -82,6 +82,9 @@ export default function AvailableJobs({ painterId, onJobAccepted }: AvailableJob
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" | "warn" } | null>(null);
+  const [pendingAcceptMatch, setPendingAcceptMatch] = React.useState<any | null>(null);
+  const [pendingAcceptJobId, setPendingAcceptJobId] = React.useState<string | null>(null);
+  const [showAcceptPrompt, setShowAcceptPrompt] = React.useState(false);
 
   useEffect(() => { fetchAll(); }, [painterId]);
 
@@ -119,6 +122,12 @@ export default function AvailableJobs({ painterId, onJobAccepted }: AvailableJob
   }
 
   async function acceptMatch(match: JobMatch) {
+    setPendingAcceptMatch(match);
+    setPendingAcceptJobId(null);
+    setShowAcceptPrompt(true);
+    return;
+  }
+  async function acceptMatchConfirmed(match: JobMatch) {
     setActing(match.id);
     try {
       const res = await supabase.functions.invoke("accept-job", {
@@ -141,6 +150,12 @@ export default function AvailableJobs({ painterId, onJobAccepted }: AvailableJob
   }
 
   async function acceptPlatformJob(jobId: string) {
+    setPendingAcceptJobId(jobId);
+    setPendingAcceptMatch(null);
+    setShowAcceptPrompt(true);
+    return;
+  }
+  async function acceptPlatformJobConfirmed(jobId: string) {
     setActing(jobId);
     try {
       const res = await supabase.functions.invoke("accept-job", {
@@ -361,6 +376,66 @@ export default function AvailableJobs({ painterId, onJobAccepted }: AvailableJob
             </div>
           )}
 
+        </div>
+      )}
+
+      {/* Painter pre-commitment prompt */}
+      {showAcceptPrompt && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowAcceptPrompt(false)}>
+          <div className="rounded-xl max-w-md w-full p-6 space-y-5" style={{ background: '#FFFFFF', border: '0.5px solid rgba(180,150,100,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div>
+              <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '20px', color: '#1A1A14', marginBottom: '8px', fontWeight: 400 }}>
+                Before you accept this job
+              </h2>
+              <p style={{ fontSize: '13px', color: '#6B6860', lineHeight: '1.6' }}>
+                Please read carefully — by accepting you are entering a binding agreement.
+              </p>
+            </div>
+
+            <div style={{ background: '#FBF7F0', border: '0.5px solid rgba(180,150,100,0.2)', borderRadius: '8px', padding: '16px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 500, color: '#1A1A14', marginBottom: '8px' }}>When you write the invoice:</p>
+              <ul style={{ fontSize: '12px', color: '#6B6860', lineHeight: '1.7', paddingLeft: '16px', listStyleType: 'disc' }}>
+                <li>Describe every agreed task clearly — e.g. "Paint living room walls Farrow &amp; Ball Elephant's Breath, two coats"</li>
+                <li>List every room, surface, and colour agreed with the customer</li>
+                <li>The job description you write <strong style={{ color: '#1A1A14' }}>becomes the legally binding conditions</strong> for this escrow transaction</li>
+                <li>The customer's property address is automatically included by PaintBookCo — you do not need to add it</li>
+                <li>Transpact's independent referee will use only these conditions if a dispute arises</li>
+              </ul>
+            </div>
+
+            <div style={{ background: '#FFF4EF', border: '0.5px solid rgba(216,90,48,0.25)', borderRadius: '8px', padding: '14px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 500, color: '#D85A30', marginBottom: '6px' }}>Payment &amp; disputes</p>
+              <ul style={{ fontSize: '12px', color: '#6B6860', lineHeight: '1.7', paddingLeft: '16px', listStyleType: 'disc' }}>
+                <li>Payment is held in Transpact escrow — you receive it only when the customer confirms completion</li>
+                <li>If the customer does not respond within 48 hours, PaintBookCo will guide you through the Transpact dispute process — at no net cost to you if the customer fails to engage</li>
+                <li>Any cancellation after payment is live requires the Transpact dispute process to resolve</li>
+                <li>Disputes are handled first by PaintBookCo at no charge, then by Transpact arbitration (£20 per party, refunded to the winner) if needed</li>
+              </ul>
+            </div>
+
+            <p style={{ fontSize: '11px', color: '#B4B2A9', lineHeight: '1.6' }}>
+              By accepting you agree to <a href="/terms" target="_blank" style={{ color: '#D85A30' }}>PaintBookCo's Terms of Service</a> and the Transpact escrow process.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowAcceptPrompt(false)}
+                style={{ flex: 1, padding: '11px', borderRadius: '4px', border: '0.5px solid rgba(180,150,100,0.3)', background: 'transparent', color: '#6B6860', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setShowAcceptPrompt(false);
+                  if (pendingAcceptMatch) await acceptMatchConfirmed(pendingAcceptMatch);
+                  else if (pendingAcceptJobId) await acceptPlatformJobConfirmed(pendingAcceptJobId);
+                }}
+                style={{ flex: 1, padding: '11px', borderRadius: '4px', border: 'none', background: '#D85A30', color: '#F5F0E8', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
+              >
+                I understand — Accept job
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

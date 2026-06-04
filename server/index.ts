@@ -24,8 +24,7 @@ export function createServer() {
 
   // Health check
   app.get("/api/ping", (_req, res) => {
-    const ping = process.env.PING_MESSAGE ?? "pong";
-    res.json({ message: ping });
+    res.json({ message: "pong" });
   });
 
   // Demo route

@@ -92,7 +92,15 @@ type AuthResult =
 export function authenticate(email: string, password: string): AuthResult {
   const account = findAccount(email);
   if (!account) return { status: "not_found" };
-  if (account.password !== password) return { status: "invalid_password" };
+  const encoder = new TextEncoder();
+  const aBytes = encoder.encode(account.password);
+  const bBytes = encoder.encode(password);
+  let mismatch = aBytes.length !== bBytes.length ? 1 : 0;
+  const len = Math.max(aBytes.length, bBytes.length);
+  for (let i = 0; i < len; i++) {
+    mismatch |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0);
+  }
+  if (mismatch !== 0) return { status: "invalid_password" };
   return { status: "ok", account };
 }
 

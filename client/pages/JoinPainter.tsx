@@ -721,14 +721,14 @@ export default function JoinPainter() {
                       className="mt-1 h-4 w-4 rounded border-border"
                     />
                     <span className="text-sm text-foreground">
-                      I agree to the <a href="/terms" target="_blank" className="underline hover:no-underline">Terms of Service</a>
+                      I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">Terms of Service</a>
                     </span>
                   </label>
 
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-border" />
                     <span className="text-sm text-foreground">
-                      I agree to the <a href="/privacy" target="_blank" className="underline hover:no-underline">Privacy Policy</a>
+                      I agree to the <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">Privacy Policy</a>
                     </span>
                   </label>
 

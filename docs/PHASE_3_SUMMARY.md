@@ -317,7 +317,7 @@ curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "oluwakorede@paintbookco.com",
-    "password": "AdminPass123!",
+    "password": "<YOUR_PASSWORD>",
     "userType": "customer"
   }'
 

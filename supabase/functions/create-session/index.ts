@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
               postcode: postcodeDistrict,
               room_count: (rooms || []).length,
               job_description: cleanDescription,
-              dashboard_url: "https://www.paintbookco.co.uk/dashboard/painter",
+              available_jobs_link: `https://www.paintbookco.co.uk/dashboard/painter?tab=available-jobs&highlight=${session.id}`,
             }),
           });
         } catch (err) {
@@ -191,11 +191,13 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customer_email: email.toLowerCase().trim(),
+            customer_first_name: customer_first_name?.trim() || "",
             job_ref: jobRef,
             job_type,
             postcode: postcode.trim().toUpperCase(),
             room_count: (rooms || []).length,
             job_description: cleanDescription,
+            track_job_link: `https://www.paintbookco.co.uk/job/${customerToken}`,
           }),
         });
       } catch (err) {

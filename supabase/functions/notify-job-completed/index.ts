@@ -47,10 +47,16 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          job_id, job_title, job_value,
-          customer_email, customer_name,
-          painter_email, painter_name, painter_payout,
-          transpact_transaction_id: "PENDING",
+          event: "job_completed",
+          job_title,
+          job_value,
+          job_ref: job_id ? `PBC-${job_id.slice(-6).toUpperCase()}` : "",
+          customer_email,
+          customer_name,
+          painter_email,
+          painter_name,
+          painter_payout,
+          my_jobs_link: "https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs",
         }),
       });
     }

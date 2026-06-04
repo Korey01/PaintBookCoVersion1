@@ -104,11 +104,15 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             event: "painter_passed",
             session_id,
+            job_ref: `PBC-${session_id.slice(-6).toUpperCase()}`,
             reason: reason ?? "painter_passed",
             customer_email: session.email,
             customer_first_name: session.first_name,
             job_type: session.job_type,
             postcode: session.postcode,
+            track_job_link: session.customer_token
+              ? `https://www.paintbookco.co.uk/job/${session.customer_token}`
+              : "",
           }),
         }).catch(console.error);
       }
@@ -155,12 +159,15 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             event: "customer_requested_new_painter",
             session_id,
+            job_ref: `PBC-${session_id.slice(-6).toUpperCase()}`,
             reason: reason ?? "customer_requested_new_painter",
             customer_email: session.email,
             customer_first_name: session.first_name,
             job_type: session.job_type,
             postcode: session.postcode,
-            painter_id: session.painter_id,
+            track_job_link: session.customer_token
+              ? `https://www.paintbookco.co.uk/job/${session.customer_token}`
+              : "",
           }),
         }).catch(console.error);
       }

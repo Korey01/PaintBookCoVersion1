@@ -108,13 +108,24 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            event: "job_completed",
             transaction_id,
+            job_ref: transaction.invoice_id || `PBC-${transaction_id.slice(-6).toUpperCase()}`,
             painter_email: transaction.painters?.email,
             painter_name: `${transaction.painters?.first_name} ${transaction.painters?.last_name}`,
+            painter_first_name: transaction.painters?.first_name,
             customer_email: transaction.customer_email,
+            customer_first_name: transaction.customer_first_name || "",
             amount: transaction.amount,
             painter_payout: transaction.painter_payout,
             job_summary: transaction.job_summary,
+            my_jobs_link: "https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs",
+            review_link: transaction.customer_token
+              ? `https://www.paintbookco.co.uk/job/${transaction.customer_token}#review`
+              : "",
+            track_job_link: transaction.customer_token
+              ? `https://www.paintbookco.co.uk/job/${transaction.customer_token}`
+              : "",
           }),
         });
       } catch (err) {

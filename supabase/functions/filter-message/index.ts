@@ -88,11 +88,11 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            job_id,
-            message_id,
-            reporter_id: reporter_id ?? user.id,
-            reason: reason ?? "",
             type: "message_report",
+            job_ref: `PBC-${job_id.slice(-6).toUpperCase()}`,
+            message_id,
+            reason: reason ?? "",
+            admin_link: "https://www.paintbookco.co.uk/admin",
           }),
         }).catch((e) => console.error("MAKE_DISPUTE_RAISED_WEBHOOK failed:", e));
       }
@@ -234,9 +234,9 @@ async function maybeFireViolationWebhook(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: userId,
-          job_id: jobId,
+          job_ref: `PBC-${jobId.slice(-6).toUpperCase()}`,
           violation_count: violationCount,
+          admin_link: "https://www.paintbookco.co.uk/admin",
         }),
       }).catch((e) => console.error("MAKE_PII_VIOLATION_WEBHOOK failed:", e));
     }

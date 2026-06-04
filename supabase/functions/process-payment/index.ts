@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             // Painter details
             painter_name: `${painter.first_name} ${painter.last_name}`,
+            painter_first_name: painter.first_name,
             painter_email: painter.email,
             painter_phone: painter.phone,
             painter_payout: painterPayout,
@@ -111,12 +112,14 @@ Deno.serve(async (req) => {
             customer_email: customer_email.toLowerCase().trim(),
             // Job details
             job_summary: transaction.job_summary,
-            invoice_id: transaction.invoice_id,
+            job_ref: transaction.invoice_id || `PBC-${transaction_id.slice(-6).toUpperCase()}`,
             transaction_id,
             amount: transaction.amount,
             // Links
             confirmation_url: confirmationUrl,
-            // Terms of job (included in both emails)
+            my_jobs_link: `https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs&session=${transaction.session_id}`,
+            track_job_link: `https://www.paintbookco.co.uk/job/${customerToken}`,
+            // Terms
             terms_of_job: [
               "Payment is held securely in Transpact escrow",
               "Funds are released ONLY when the customer confirms completion",
@@ -147,9 +150,10 @@ Deno.serve(async (req) => {
             painter_last_name: painter.last_name,
             painter_phone: painter.phone,
             painter_email: painter.email,
-            transaction_id,
+            job_ref: transaction.invoice_id || `PBC-${transaction_id.slice(-6).toUpperCase()}`,
             job_summary: transaction.job_summary,
             amount: transaction.amount,
+            track_job_link: `https://www.paintbookco.co.uk/job/${customerToken}`,
           }),
         });
       } catch (err) {

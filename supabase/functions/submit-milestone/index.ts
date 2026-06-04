@@ -121,10 +121,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             event: "milestone_submitted",
             milestone_id,
-            job_id: milestone.jobs.id,
             job_title: milestone.jobs.title,
-            customer_id: milestone.jobs.customer_id,
-            painter_id: painter.id,
             milestone_name: milestone.name,
             amount: milestone.amount,
             submitted_at: now,

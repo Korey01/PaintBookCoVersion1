@@ -192,11 +192,10 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             event: "no_match_found",
-            job_id,
             job_title: jobRecord.title,
             job_type: jobRecord.type,
-            customer_id: jobRecord.customer_id,
             timestamp: now,
+            admin_link: "https://www.paintbookco.co.uk/admin",
           }),
         }).catch((e) => console.error("Make.com no-match webhook failed:", e));
       }

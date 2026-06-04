@@ -163,10 +163,8 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             event: "job_accepted",
-            job_id,
+            job_ref: `PBC-${job_id.slice(-6).toUpperCase()}`,
             job_title: job.title,
-            painter_id: painter.id,
-            customer_id: job.customer_id,
             accepted_at: now,
           }),
         });

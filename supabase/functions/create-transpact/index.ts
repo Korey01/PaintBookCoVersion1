@@ -103,6 +103,8 @@ Deno.serve(async (req) => {
     const customerEmail = transaction.customer_email;
     const painterEmail = painter.email;
     console.log("Transpact emails - customer:", customerEmail, "painter:", painterEmail);
+    const _pw = Deno.env.get("TRANSPACT_PASSWORD") ?? "";
+    console.log("Transpact password length:", _pw.length, "first3:", _pw.slice(0,3));
 
     const rate = commissionRate(painter.completed_jobs ?? 0);
     const commissionAmount = parseFloat((amount * rate).toFixed(2));
@@ -139,7 +141,7 @@ Deno.serve(async (req) => {
       OriginatorFixedCommisionOnReceive: 0,
       OriginatorPcntCommisionOnReceive: 0,
       OriginatorFixedCommisionOnSendToRcpnt: 0,
-      OriginatorPcntCommisionOnSendToRcpnt: rate,
+      OriginatorPcntCommisionOnSendToRcpnt: rate * 100,
       OriginatorFixedCommisionOnSendToAll: 0,
       OriginatorPcntCommisionOnSendToAll: 0,
       CharityNo: 0,
@@ -226,6 +228,11 @@ function json(data: unknown, status = 200) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+ 
+ 
+ 
+ 
+ 
  
  
  

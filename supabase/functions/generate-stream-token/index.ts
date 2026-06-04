@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     // ── Admin bypass — check admin before session lookup ──────────────────────
     const authHeader = req.headers.get("Authorization") ?? "";
     if (authHeader.startsWith("Bearer ")) {
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const anonKey = Deno.env.get("ANON_KEY")!;
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const anonKey = Deno.env.get("ANON_KEY")!;
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });

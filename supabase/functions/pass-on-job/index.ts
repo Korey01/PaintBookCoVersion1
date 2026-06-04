@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         return json({ error: "Unauthorized" }, 401);
       }
 
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const anonKey = Deno.env.get("ANON_KEY")!;
       const userClient = createClient(
         Deno.env.get("SUPABASE_URL")!,
         anonKey,

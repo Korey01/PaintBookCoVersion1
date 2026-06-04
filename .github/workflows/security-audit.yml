@@ -12,10 +12,15 @@ on:
     # Every Monday at 09:00 London time (UTC+1 BST / UTC+0 GMT — use UTC+0 for cron)
     - cron: "0 9 * * 1"
 
+permissions:
+  contents: read
+
 jobs:
   npm-audit:
     name: npm audit (high+)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -39,6 +44,8 @@ jobs:
   secret-scan:
     name: Scan for accidental secrets
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository

@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
+    const contactEmail = Deno.env.get("CONTACT_EMAIL") ?? "hello@paintbookco.co.uk";
 
     const userClient = createClient(
       supabaseUrl,
@@ -246,7 +247,7 @@ async function sendDeletionEmail(
           "Financial transaction records are retained for 7 years as required by UK law.",
           "",
           "If you did not request this deletion please contact",
-          "o.a.alashe@paintbookco.co.uk immediately.",
+          `${contactEmail} immediately.`,
           "",
           "The PaintBookCo Team",
         ].join("\n"),
@@ -265,8 +266,8 @@ async function sendDeletionEmail(
        Financial transaction records are retained for 7 years as required by UK law.</p>
     <p style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; font-size: 13px;">
       If you did not request this deletion, please contact
-      <a href="mailto:o.a.alashe@paintbookco.co.uk" style="color: #1B3A5C;">
-        o.a.alashe@paintbookco.co.uk
+      <a href="mailto:${contactEmail}" style="color: #1B3A5C;">
+        ${contactEmail}
       </a> immediately.
     </p>
     <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e5e5;">

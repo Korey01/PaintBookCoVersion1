@@ -320,7 +320,7 @@ Deno.serve(async (req) => {
     }
 
     const sessionToken = customerToken;
-    const paymentUrl = `${Deno.env.get("SUPABASE_URL")?.replace("supabase.co", "paintbookco.co.uk") ?? "https://www.paintbookco.co.uk"}/job/${sessionToken ?? txId}`;
+    const paymentUrl = `https://www.paintbookco.co.uk/job/${sessionToken ?? txId}`;
 
     // Replace placeholder with actual customer job page URL
     const finalInvoiceHtml = invoiceHtml.replace(payLinkPlaceholder, paymentUrl);

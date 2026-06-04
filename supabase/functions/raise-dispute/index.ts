@@ -139,6 +139,7 @@ Deno.serve(async (req) => {
           dispute_id: dispute?.id,
           transaction_id,
           session_id: sessionId,
+          job_ref: `PBC-${sessionId.slice(-6).toUpperCase()}`,
           raised_by,
           reason,
           customer_email: transaction.sessions?.email,
@@ -147,6 +148,11 @@ Deno.serve(async (req) => {
           painter_name: `${transaction.painters?.first_name} ${transaction.painters?.last_name}`,
           admin_customer_channel: adminCustomerChannelId,
           admin_painter_channel: adminPainterChannelId,
+          track_job_link: transaction.sessions?.customer_token
+            ? `https://www.paintbookco.co.uk/job/${transaction.sessions.customer_token}`
+            : "",
+          my_jobs_link: `https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs&session=${sessionId}`,
+          admin_link: "https://www.paintbookco.co.uk/admin",
         }),
       }).catch(console.error);
     }

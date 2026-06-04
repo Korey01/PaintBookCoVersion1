@@ -81,8 +81,10 @@ Deno.serve(async (req) => {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 painter_email: painter.email,
+                painter_first_name: painter.first_name,
                 painter_name: `${painter.first_name} ${painter.last_name}`,
                 action: "kyc_approved",
+                dashboard_link: "https://www.paintbookco.co.uk/dashboard/painter?tab=profile",
               }),
             });
           } catch (e) { console.error("KYC webhook error:", e); }
@@ -110,8 +112,10 @@ Deno.serve(async (req) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               painter_email: painter.email,
+              painter_first_name: painter.first_name,
               painter_name: `${painter.first_name} ${painter.last_name}`,
               reason: reason || "Application unsuccessful.",
+              contact_email: "hello@paintbookco.co.uk",
             }),
           });
         } catch (e) { console.error("KYC rejected webhook error:", e); }
@@ -152,8 +156,11 @@ Deno.serve(async (req) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               painter_email: painter.email,
+              painter_first_name: painter.first_name,
               painter_name: `${painter.first_name} ${painter.last_name}`,
               reason: reason || "Insurance certificate not accepted.",
+              reupload_link: "https://www.paintbookco.co.uk/dashboard/painter?tab=profile",
+              contact_email: "hello@paintbookco.co.uk",
             }),
           });
         } catch (e) { console.error("Insurance rejected webhook error:", e); }
@@ -222,7 +229,12 @@ Deno.serve(async (req) => {
             await fetch(jobCompletedWebhook, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ type: "dispute_resolved_release", transaction_id }),
+              body: JSON.stringify({
+                type: "dispute_resolved_release",
+                transaction_id,
+                customer_email: transaction.customer_email,
+                admin_link: "https://www.paintbookco.co.uk/admin",
+              }),
             }).catch(console.error);
           }
         } else if (resolution === "refund") {

@@ -108,19 +108,27 @@ Deno.serve(async (req) => {
         await callWebhook(Deno.env.get("MAKE_ESCROW_FUNDED_WEBHOOK"), {
           event: "escrow_funded",
           transaction_id: tx.id,
+          job_ref: tx.invoice_id || `PBC-${tx.id.slice(-6).toUpperCase()}`,
+          painter_name: painter ? `${painter.first_name} ${painter.last_name}` : "",
           painter_email: painter?.email,
           customer_email: tx.customer_email,
           amount: rawAmount,
           transpact_number: transpactNumber,
           funded_at: now,
+          my_jobs_link: `https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs&session=${tx.session_id}`,
+          track_job_link: tx.customer_token ? `https://www.paintbookco.co.uk/job/${tx.customer_token}` : "",
         });
 
         await callWebhook(Deno.env.get("MAKE_CONTACT_SHARED_WEBHOOK"), {
           event: "contact_shared",
           transaction_id: tx.id,
+          job_ref: tx.invoice_id || `PBC-${tx.id.slice(-6).toUpperCase()}`,
+          painter_name: painter ? `${painter.first_name} ${painter.last_name}` : "",
           painter_email: painter?.email,
           customer_email: tx.customer_email,
           funded_at: now,
+          my_jobs_link: `https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs&session=${tx.session_id}`,
+          track_job_link: tx.customer_token ? `https://www.paintbookco.co.uk/job/${tx.customer_token}` : "",
         });
 
         await logAudit(serviceClient, "escrow_funded", tx.id, {
@@ -152,11 +160,17 @@ Deno.serve(async (req) => {
         await callWebhook(Deno.env.get("MAKE_JOB_COMPLETED_WEBHOOK"), {
           event: "job_completed",
           transaction_id: tx.id,
+          job_ref: tx.invoice_id || `PBC-${tx.id.slice(-6).toUpperCase()}`,
+          painter_name: painter ? `${painter.first_name} ${painter.last_name}` : "",
           painter_email: painter?.email,
           customer_email: tx.customer_email,
           amount: rawAmount,
+          painter_payout: tx.painter_payout ?? 0,
           transpact_number: transpactNumber,
           completed_at: now,
+          my_jobs_link: `https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs`,
+          track_job_link: tx.customer_token ? `https://www.paintbookco.co.uk/job/${tx.customer_token}` : "",
+          review_link: tx.customer_token ? `https://www.paintbookco.co.uk/job/${tx.customer_token}#review` : "",
         });
 
         await logAudit(serviceClient, "payment_released", tx.id, {
@@ -200,11 +214,16 @@ Deno.serve(async (req) => {
         await callWebhook(Deno.env.get("MAKE_DISPUTE_RAISED_WEBHOOK"), {
           event: "dispute_raised",
           transaction_id: tx.id,
+          job_ref: tx.invoice_id || `PBC-${tx.id.slice(-6).toUpperCase()}`,
+          painter_name: painter ? `${painter.first_name} ${painter.last_name}` : "",
           painter_email: painter?.email,
           customer_email: tx.customer_email,
           admin_email: Deno.env.get("ADMIN_EMAIL") ?? "",
           transpact_number: transpactNumber,
           raised_at: now,
+          my_jobs_link: `https://www.paintbookco.co.uk/dashboard/painter?tab=my-jobs&session=${tx.session_id}`,
+          track_job_link: tx.customer_token ? `https://www.paintbookco.co.uk/job/${tx.customer_token}` : "",
+          admin_link: "https://www.paintbookco.co.uk/admin",
         });
 
         await logAudit(serviceClient, "dispute_raised_transpact", tx.id, {

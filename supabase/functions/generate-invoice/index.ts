@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
 </html>`;
 
     // Create or update transaction
-    const customerToken = (session as Record<string, unknown>).customer_token as string | undefined;
+    const customerToken = (session as Record<string, unknown>)?.customer_token as string | undefined;
 
     if (txId) {
       await serviceClient.from("transactions").update({
@@ -320,7 +320,12 @@ Deno.serve(async (req) => {
     }
 
     const sessionToken = customerToken;
-    const paymentUrl = `https://www.paintbookco.co.uk/job/${sessionToken ?? txId}`;
+    if (!sessionToken) {
+      console.error("generate-invoice: customer_token missing from session — payment URL will use txId fallback");
+    }
+    const paymentUrl = sessionToken
+      ? `https://www.paintbookco.co.uk/job/${sessionToken}`
+      : `https://www.paintbookco.co.uk/job/${txId}`;
 
     // Replace placeholder with actual customer job page URL
     const finalInvoiceHtml = invoiceHtml.replace(payLinkPlaceholder, paymentUrl);
@@ -345,7 +350,7 @@ Deno.serve(async (req) => {
             amount,
             painter_name: `${painter.first_name} ${painter.last_name}`,
             payment_url: paymentUrl,
-            track_job_link: `https://www.paintbookco.co.uk/job/${sessionToken ?? txId}`,
+            track_job_link: paymentUrl,
             job_type: sess.job_type,
             job_description,
           }),

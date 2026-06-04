@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
 
     // Create chat link for both parties
     const baseUrl = "https://www.paintbookco.co.uk";
-    const painterChatLink = `${baseUrl}/dashboard?tab=jobs&highlight=${session_id}`;
+    const painterChatLink = `${baseUrl}/dashboard/painter?tab=my-jobs&session=${session_id}`;
     const customerTrackLink = `${baseUrl}/job/${session.customer_token}`;
     const customerChatLink = customerTrackLink; // Keep for backwards compat
 
@@ -136,9 +136,7 @@ Deno.serve(async (req) => {
             // Customer notification
             customer_email: session.email,
             customer_first_name: session.first_name || "",
-            customer_token: session.customer_token || "",
             track_job_link: customerTrackLink,
-            chat_link: customerChatLink,
             job_ref: jobRef,
             job_type: session.job_type,
             postcode: session.postcode,
@@ -146,11 +144,12 @@ Deno.serve(async (req) => {
             painter_email: painter.email,
             painter_name: `${painter.first_name} ${painter.last_name}`,
             painter_chat_link: painterChatLink,
+            session_id: session_id,
+            job_link_painter: painterChatLink,
             postcode_district: postcodeDistrict,
             // Session info
             channel_id: channelId,
             expires_at: expiresAt.toISOString(),
-            stream_api_key: streamApiKey,
           }),
         });
       } catch (webhookErr) {

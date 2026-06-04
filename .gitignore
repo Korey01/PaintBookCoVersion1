@@ -33,3 +33,4 @@ dist-ssr
 .supabase/
 /Main PaintBookCo Logo.png
 .claude/settings.local.json
+supabase/.temp/

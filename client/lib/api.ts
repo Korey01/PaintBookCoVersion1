@@ -15,11 +15,52 @@ const FUNCTIONS_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 // ── Helper: Call Edge Function ────────────────────────────────────────────
 
+const ALLOWED_FUNCTIONS = new Set([
+  "accept-job",
+  "admin-action",
+  "approve-milestone",
+  "auto-release-escrow",
+  "cancel-job",
+  "confirm-completion",
+  "contact-form",
+  "create-session",
+  "create-transpact",
+  "delete-my-account",
+  "didit-webhook",
+  "download-my-data",
+  "filter-message",
+  "generate-invoice",
+  "generate-stream-token",
+  "geocode-postcode",
+  "get-transpact-status",
+  "initiate-chat",
+  "match-job-to-painters",
+  "notify-job-completed",
+  "pass-on-job",
+  "process-payment",
+  "raise-dispute",
+  "register-painter",
+  "release-milestone-payment",
+  "request-milestone-changes",
+  "review-job",
+  "segment-walls",
+  "submit-insurance",
+  "submit-kyc",
+  "submit-milestone",
+  "submit-review",
+  "transpact-webhook-receiver",
+  "void-transpact",
+]);
+
 async function callFunction<T = any>(
   functionName: string,
   payload: Record<string, any> = {}
 ): Promise<{ data: T | null; error: string | null }> {
   try {
+    if (!ALLOWED_FUNCTIONS.has(functionName)) {
+      return { data: null, error: `Unknown function: ${functionName}` };
+    }
+
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData?.session?.access_token;
 

@@ -76,8 +76,13 @@ export async function callTranspact(
   }
 }
 
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export function parseTranspactResponse(xml: string, field: string): string {
-  const match = xml.match(new RegExp(`<${field}>([^<]*)<\\/${field}>`));
+  const safeField = escapeRegExp(field);
+  const match = xml.match(new RegExp(`<${safeField}>([^<]*)<\\/${safeField}>`));
   return match ? match[1] : "";
 }
 

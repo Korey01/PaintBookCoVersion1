@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         content_hash: contentHash,
       });
 
-      await maybeFireViolationWebhook(serviceClient, user.id, job_id);
+      await maybeFireViolationWebhook(serviceClient, user.id, job_id, sender_role ?? "unknown");
 
       return json({ blocked: true, message: BLOCK_MESSAGE });
     }
@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
         content_hash: contentHash,
       });
 
-      await maybeFireViolationWebhook(serviceClient, user.id, job_id);
+      await maybeFireViolationWebhook(serviceClient, user.id, job_id, sender_role ?? "unknown");
 
       console.log(
         `Layer 2 blocked message. Categories: ${matchedCategories.join(", ")}. ` +
@@ -216,6 +216,7 @@ async function maybeFireViolationWebhook(
   client: ReturnType<typeof createClient>,
   userId: string,
   jobId: string,
+  senderRole: string,
 ): Promise<void> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -236,7 +237,9 @@ async function maybeFireViolationWebhook(
         body: JSON.stringify({
           job_ref: `PBC-${jobId.slice(-6).toUpperCase()}`,
           violation_count: violationCount,
+          user_role: senderRole,
           admin_link: "https://www.paintbookco.co.uk/admin",
+          supabase_logs_link: "https://supabase.com/dashboard/project/kvuidnkmxqftbmlyvlyl/editor",
         }),
       }).catch((e) => console.error("MAKE_PII_VIOLATION_WEBHOOK failed:", e));
     }

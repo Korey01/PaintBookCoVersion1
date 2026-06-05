@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     // Look up transaction by Transpact ID
     const { data: tx } = await serviceClient
       .from("transactions")
-      .select("id, status, amount, painter_id, session_id, customer_email, invoice_id, painters(first_name, last_name, email, completed_jobs)")
+      .select("id, status, amount, painter_id, session_id, customer_email, customer_first_name, customer_last_name, customer_phone, customer_token, invoice_id, painters(id, first_name, last_name, email, phone, completed_jobs)")
       .eq("transpact_transaction_id", String(transpactNumber))
       .maybeSingle();
 
@@ -110,8 +110,13 @@ Deno.serve(async (req) => {
           transaction_id: tx.id,
           job_ref: tx.invoice_id || `PBC-${tx.id.slice(-6).toUpperCase()}`,
           painter_name: painter ? `${painter.first_name} ${painter.last_name}` : "",
+          painter_first_name: painter?.first_name ?? "",
           painter_email: painter?.email,
+          painter_phone: painter?.phone ?? "",
           customer_email: tx.customer_email,
+          customer_first_name: tx.customer_first_name ?? "",
+          customer_last_name: tx.customer_last_name ?? "",
+          customer_phone: tx.customer_phone ?? "",
           amount: rawAmount,
           transpact_number: transpactNumber,
           funded_at: now,

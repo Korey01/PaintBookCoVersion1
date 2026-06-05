@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             personalizations: [{ to: [{ email: body.email.toLowerCase().trim() }] }],
-            from: { email: "hello@paintbookco.co.uk", name: "PaintBookCo" },
+            from: { email: "noreply@paintbookco.co.uk", name: "PaintBookCo" },
             subject: "Your PaintBookCo job is live — track it here",
             content: [{
               type: "text/html",

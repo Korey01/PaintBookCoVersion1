@@ -373,30 +373,30 @@ const WALLPAPERS: Wallpaper[] = [
 
 // ── Wallpaper S3 pattern image URLs ───────────────────────────────────────────
 
-const S3_BASE = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/wallpaper-patterns/";
-const S3_FALLBACK = `${S3_BASE}textured-woodchip.png`;
+const SUPABASE_BASE = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/wallpaper-patterns/";
+const S3_FALLBACK = `${SUPABASE_BASE}textured-woodchip.png`;
 
 const WALLPAPER_PATTERN_URLS: Record<string, string> = {
-  "gb-superfresco-paste-white":  `${S3_BASE}geometric-white-trellis.png`,
-  "gb-superfresco-sage":         `${S3_BASE}floral-sage.png`,
-  "gb-paste-navy-stripe":        `${S3_BASE}stripe-navy.png`,
-  "arthouse-marble-grey":        `${S3_BASE}textured-marble-grey.png`,
-  "arthouse-tropical-green":     `${S3_BASE}nature-tropical.png`,
-  "arthouse-geometric-gold":     `${S3_BASE}geometric-gold.png`,
-  "holden-botanical-pink":       `${S3_BASE}floral-pink.png`,
-  "holden-concrete-grey":        `${S3_BASE}textured-concrete.png`,
-  "bq-fine-decor-white-brick":   `${S3_BASE}textured-white-brick.png`,
-  "bq-fine-decor-geo-teal":      `${S3_BASE}geometric-teal.png`,
-  "amazon-floral-mural-blue":    `${S3_BASE}feature-blue-floral.png`,
-  "amazon-abstract-terracotta":  `${S3_BASE}abstract-terracotta.png`,
-  "amazon-grasscloth-natural":   `${S3_BASE}textured-grasscloth.png`,
-  "amazon-dark-floral-green":    `${S3_BASE}floral-dark-green.png`,
-  "amazon-herringbone-grey":     `${S3_BASE}geometric-herringbone.png`,
-  "amazon-blush-stripe":         `${S3_BASE}stripe-blush.png`,
-  "amazon-navy-floral":          `${S3_BASE}floral-navy.png`,
-  "amazon-white-woodchip":       `${S3_BASE}textured-woodchip.png`,
-  "amazon-mustard-geometric":    `${S3_BASE}geometric-mustard.png`,
-  "amazon-silver-plain":         `${S3_BASE}plain-silver.png`,
+  "gb-superfresco-paste-white":  `${SUPABASE_BASE}geometric-white-trellis.png`,
+  "gb-superfresco-sage":         `${SUPABASE_BASE}floral-sage.png`,
+  "gb-paste-navy-stripe":        `${SUPABASE_BASE}stripe-navy.png`,
+  "arthouse-marble-grey":        `${SUPABASE_BASE}textured-marble-grey.png`,
+  "arthouse-tropical-green":     `${SUPABASE_BASE}nature-tropical.png`,
+  "arthouse-geometric-gold":     `${SUPABASE_BASE}geometric-gold.png`,
+  "holden-botanical-pink":       `${SUPABASE_BASE}floral-pink.png`,
+  "holden-concrete-grey":        `${SUPABASE_BASE}textured-concrete.png`,
+  "bq-fine-decor-white-brick":   `${SUPABASE_BASE}textured-white-brick.png`,
+  "bq-fine-decor-geo-teal":      `${SUPABASE_BASE}geometric-teal.png`,
+  "amazon-floral-mural-blue":    `${SUPABASE_BASE}feature-blue-floral.png`,
+  "amazon-abstract-terracotta":  `${SUPABASE_BASE}abstract-terracotta.png`,
+  "amazon-grasscloth-natural":   `${SUPABASE_BASE}textured-grasscloth.png`,
+  "amazon-dark-floral-green":    `${SUPABASE_BASE}floral-dark-green.png`,
+  "amazon-herringbone-grey":     `${SUPABASE_BASE}geometric-herringbone.png`,
+  "amazon-blush-stripe":         `${SUPABASE_BASE}stripe-blush.png`,
+  "amazon-navy-floral":          `${SUPABASE_BASE}floral-navy.png`,
+  "amazon-white-woodchip":       `${SUPABASE_BASE}textured-woodchip.png`,
+  "amazon-mustard-geometric":    `${SUPABASE_BASE}geometric-mustard.png`,
+  "amazon-silver-plain":         `${SUPABASE_BASE}plain-silver.png`,
 };
 
 function getPatternUrl(id: string): string {

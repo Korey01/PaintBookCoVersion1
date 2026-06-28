@@ -235,7 +235,7 @@ export default function PainterDashboard() {
       <header style={{ background: '#F5F0E8', borderBottom: '0.5px solid rgba(180,150,100,0.2)' }} className="px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <img
-            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+            src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
             alt="PaintBookCo"
             style={{ height: '24px', width: 'auto' }}
           />

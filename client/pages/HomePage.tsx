@@ -13,8 +13,8 @@ function Label({ children, className = "" }: { children: React.ReactNode; classN
   );
 }
 
-const VIDEO_SRC = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/hero-background.mp4";
-const LOGO_SRC = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
+const VIDEO_SRC = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/hero-background.mp4";
+const LOGO_SRC = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png";
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {

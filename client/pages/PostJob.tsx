@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { MapPin, Paintbrush, FileText, Home, Palette, Mail, CheckCircle2, Upload, AlertCircle } from "lucide-react";
 import { z } from "zod";
 
-const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
+const LOGO = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png";
 const fieldClass = "w-full text-sm py-3 placeholder:text-[#C4C2BA] focus:outline-none transition-colors duration-200 bg-transparent";
 
 const JOB_TYPES = [

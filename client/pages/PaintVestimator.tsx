@@ -373,7 +373,7 @@ const WALLPAPERS: Wallpaper[] = [
 
 // ── Wallpaper S3 pattern image URLs ───────────────────────────────────────────
 
-const S3_BASE = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/wallpaper-patterns/";
+const S3_BASE = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/wallpaper-patterns/";
 const S3_FALLBACK = `${S3_BASE}textured-woodchip.png`;
 
 const WALLPAPER_PATTERN_URLS: Record<string, string> = {

@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           <div className="col-span-2 md:col-span-1">
             <img
-              src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+              src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
               alt="PaintBookCo"
               style={{ height: '26px', width: 'auto', filter: 'brightness(0) invert(1)', opacity: 0.55, display: 'block', marginBottom: '12px' }}
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}

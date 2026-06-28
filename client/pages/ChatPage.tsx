@@ -245,7 +245,7 @@ export default function ChatPage() {
       {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <img src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png" alt="PaintBookCo" className="h-7 object-contain" />
+          <img src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png" alt="PaintBookCo" className="h-7 object-contain" />
           <div className="flex items-center gap-1.5 text-green-400 text-xs">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Monitored for safety</span>

@@ -1343,7 +1343,7 @@ function ProfilePictureUpload({ painter, supabase, onRefresh }: { painter: any; 
   )
 }
 
-const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
+const LOGO = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: BarChart3 },

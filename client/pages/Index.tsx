@@ -246,7 +246,7 @@ export default function Index() {
           <video
             className="w-full h-full object-cover"
             autoPlay muted loop playsInline
-            src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/hero-background.mp4"
+            src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/hero-background.mp4"
           />
         </div>
 

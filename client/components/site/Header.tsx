@@ -69,7 +69,7 @@ export default function Header() {
             className="flex-shrink-0 transition-opacity duration-200 hover:opacity-75"
           >
             <img
-              src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+              src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
               alt="PaintBookCo"
               className="h-7 w-auto transition-all duration-300"
               style={{ filter: isHome ? "brightness(0) invert(1)" : "none" }}
@@ -147,7 +147,7 @@ export default function Header() {
           <div className="flex items-center justify-between px-6 h-16 border-b border-border/40">
             <Link to="/" onClick={() => setMobileOpen(false)}>
               <img
-                src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png"
+                src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
                 alt="PaintBookCo"
                 className="h-6 w-auto"
               />

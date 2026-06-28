@@ -87,7 +87,7 @@ export default function KYCPainter() {
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       <header className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border">
         <a href="/">
-          <img src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png" alt="PaintBookCo" className="h-8 object-contain max-w-[140px]" />
+          <img src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png" alt="PaintBookCo" className="h-8 object-contain max-w-[140px]" />
         </a>
       </header>
 

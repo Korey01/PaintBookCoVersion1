@@ -41,7 +41,7 @@ serve(async (req) => {
           type: "text/html",
           value: `
             <div style="font-family: DM Sans, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: #FBF7F0;">
-              <img src="https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png" alt="PaintBookCo" style="height: 32px; margin-bottom: 24px;" />
+              <img src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png" alt="PaintBookCo" style="height: 32px; margin-bottom: 24px;" />
               <h2 style="font-family: Georgia, serif; color: #1A1A14; margin-bottom: 24px;">New contact form message</h2>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr><td style="padding: 8px 0; color: #6B6860; font-size: 13px; width: 100px;">Name</td><td style="padding: 8px 0; color: #1A1A14; font-size: 13px; font-weight: 500;">${name}</td></tr>

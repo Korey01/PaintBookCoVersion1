@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 const fieldClass = "w-full border-b border-border bg-transparent text-sm text-foreground py-3 placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors duration-200";
 
-const LOGO = "https://paintbookco-uploads.s3.eu-west-2.amazonaws.com/paintbookco-logo.png";
+const LOGO = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png";
 
 export default function ResetPassword() {
   useEffect(() => { document.title = "Reset Password | PaintBookCo"; }, []);

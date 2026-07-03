@@ -19,44 +19,62 @@ Deno.serve(async (req) => {
       });
     }
 
-    const segformerUrl = Deno.env.get("SEGFORMER_API_URL");
-    if (!segformerUrl) {
+    const hfToken = Deno.env.get("HUGGINGFACE_API_KEY");
+    if (!hfToken) {
       return new Response(
-        JSON.stringify({ error: "segmentation_unavailable", detail: "SEGFORMER_API_URL not configured" }),
+        JSON.stringify({ error: "segmentation_unavailable", detail: "HUGGINGFACE_API_KEY not configured" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Calling AWS SegFormer service");
+    const imageBytes = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0));
 
-    const res = await fetch(segformerUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image_base64, image_type }),
-    });
+    const hfResponse = await fetch(
+      "https://api-inference.huggingface.co/models/nvidia/segformer-b5-finetuned-ade-640-640",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${hfToken}`,
+          "Content-Type": image_type || "image/jpeg",
+        },
+        body: imageBytes,
+      }
+    );
 
-    const data = await res.json();
-    console.log("SegFormer response - wall coverage:", data.wall_coverage_percent, "%");
-
-    if (data.error) {
+    if (!hfResponse.ok) {
+      const err = await hfResponse.text();
       return new Response(
-        JSON.stringify({ error: "segmentation_unavailable", detail: data.error }),
+        JSON.stringify({ error: "segmentation_unavailable", detail: err }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Return in format frontend expects
+    const segments = await hfResponse.json();
+
+    let wallMask = null;
+    let exclusionMask = null;
+
+    for (const seg of segments) {
+      const label = seg.label?.toLowerCase();
+      if (label === "wall" && seg.mask) wallMask = seg.mask;
+      if (["floor", "ceiling", "window", "door", "furniture"].some(e => label?.includes(e))) {
+        exclusionMask = exclusionMask || seg.mask;
+      }
+    }
+
+    if (!wallMask) {
+      return new Response(
+        JSON.stringify({ error: "segmentation_unavailable", detail: "No wall detected" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({
-        output: data.wall_mask,
-        exclusion_mask: data.exclusion_mask,
-        wall_coverage: data.wall_coverage_percent,
-      }),
+      JSON.stringify({ output: wallMask, exclusion_mask: exclusionMask, wall_coverage: null }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (err) {
-    console.error("segment-walls error:", err);
     return new Response(
       JSON.stringify({ error: String(err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

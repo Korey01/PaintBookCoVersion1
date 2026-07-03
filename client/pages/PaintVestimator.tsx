@@ -1947,6 +1947,25 @@ export default function PaintVestimator() {
               Upload a room photo — AI detects your walls and previews any colour on them.
             </p>
 
+            {/* Step guide */}
+            <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+              {[
+                { step: 1, label: "Select Paint or Wallpaper" },
+                { step: 2, label: "Upload room photo" },
+                { step: 3, label: "Choose colour or wallpaper" },
+                { step: 4, label: "Apply to Walls" },
+                { step: 5, label: "Reload to try another" },
+              ].map(({ step, label }) => (
+                <div key={step} className="flex items-center gap-1">
+                  <div className="w-6 h-6 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center font-bold shrink-0">
+                    {step}
+                  </div>
+                  <span className="text-xs text-gray-600">{label}</span>
+                  {step < 5 && <span className="text-gray-300 ml-1">→</span>}
+                </div>
+              ))}
+            </div>
+
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Left: canvas area */}
               <div className="flex-1 min-w-0">
@@ -2228,6 +2247,27 @@ export default function PaintVestimator() {
                         />
                       </label>
                     </div>
+                    {visUploadedDataUrl && (selectedWallpaper || selectedColour) && (
+                      <button
+                        onClick={() => {
+                          if (visUploadedDataUrl) {
+                            const base64 = visUploadedDataUrl.split(",")[1];
+                            const mimeMatch = visUploadedDataUrl.match(/data:([^;]+);/);
+                            const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+                            segmentWalls(base64, mime);
+                          }
+                        }}
+                        title="Reload wallpaper"
+                        className="mt-2 w-full flex items-center justify-center py-2 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                          <path d="M21 3v5h-5"/>
+                          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                          <path d="M8 16H3v5"/>
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

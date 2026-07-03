@@ -83,6 +83,7 @@ export default {
         },
       },
       fontFamily: {
+        sans: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
         serif:   ['"DM Serif Display"', "Georgia", '"Times New Roman"', "serif"],
         sans:    ['"DM Sans"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
         display: ['"DM Serif Display"', "Georgia", "serif"],

@@ -27,16 +27,7 @@ export default function Layout({ children }: PropsWithChildren) {
           />
         </div>
       )}
-      {isFind && !isHome && (
-        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-          <img
-            src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
-            alt=""
-            className="h-full w-full object-cover -scale-x-100 opacity-70"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/70 to-transparent" />
-        </div>
-      )}
+
       {!isHome && !isFind && (
         <div aria-hidden className="fixed inset-0 -z-10 bg-background" />
       )}

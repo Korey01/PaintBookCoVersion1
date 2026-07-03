@@ -19,62 +19,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    const hfToken = Deno.env.get("HUGGINGFACE_API_KEY");
-    if (!hfToken) {
-      return new Response(
-        JSON.stringify({ error: "segmentation_unavailable", detail: "HUGGINGFACE_API_KEY not configured" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const imageBytes = Uint8Array.from(atob(image_base64), c => c.charCodeAt(0));
-
-    const hfResponse = await fetch(
-      "https://api-inference.huggingface.co/models/nvidia/segformer-b5-finetuned-ade-640-640",
+    const workerResponse = await fetch(
+      "https://paintbook-wall-segmentation.paintbookco.workers.dev",
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${hfToken}`,
-          "Content-Type": image_type || "image/jpeg",
-        },
-        body: imageBytes,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64, image_type }),
       }
     );
 
-    if (!hfResponse.ok) {
-      const err = await hfResponse.text();
-      return new Response(
-        JSON.stringify({ error: "segmentation_unavailable", detail: err }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const data = await workerResponse.json();
 
-    const segments = await hfResponse.json();
-
-    let wallMask = null;
-    let exclusionMask = null;
-
-    for (const seg of segments) {
-      const label = seg.label?.toLowerCase();
-      if (label === "wall" && seg.mask) wallMask = seg.mask;
-      if (["floor", "ceiling", "window", "door", "furniture"].some(e => label?.includes(e))) {
-        exclusionMask = exclusionMask || seg.mask;
-      }
-    }
-
-    if (!wallMask) {
-      return new Response(
-        JSON.stringify({ error: "segmentation_unavailable", detail: "No wall detected" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ output: wallMask, exclusion_mask: exclusionMask, wall_coverage: null }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
   } catch (err) {
+    console.error("segment-walls error:", err);
     return new Response(
       JSON.stringify({ error: String(err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

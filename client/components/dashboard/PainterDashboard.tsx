@@ -6,10 +6,6 @@ import { supabase } from "@/lib/supabase";
 import { PaintBookChat } from "@/components/chat/PaintBookChat";
 import { DisputeModal } from "@/components/dispute/DisputeModal";
 import {
-
-// Sanitize storage path to prevent path traversal
-const sanitizeStoragePath = (p: string) => p.replace(/\.\.[\/\\]/g, '').replace(/^\/+/, '');
-
   BarChart3,
   CheckCircle2,
   FileText,
@@ -28,6 +24,10 @@ const sanitizeStoragePath = (p: string) => p.replace(/\.\.[\/\\]/g, '').replace(
   Star,
   Camera,
 } from "lucide-react";
+
+// Sanitize storage path to prevent path traversal
+const sanitizeStoragePath = (p: string) => p.replace(/\.\.\/|\.\.\\/g, "").replace(/^\/+/, "");
+
 
 function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: () => void }) {
   const [form, setForm] = useState({

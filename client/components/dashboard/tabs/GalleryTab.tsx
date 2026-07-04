@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
+// Sanitize storage path to prevent path traversal
+const sanitizeStoragePath = (p: string) => p.replace(/\.\.[\/\\]/g, '').replace(/^\/+/, '');
+
+
 const MAX_GALLERY_BYTES = 104857600 // 100MB
 const MAX_FILE_BYTES = 10485760 // 10MB
 
@@ -57,7 +61,7 @@ export function GalleryTab({ painter }: { painter: any }) {
           setUploading(false)
           return
         }
-        const path = `${painter.id}/${Date.now()}_${file.name}`
+        const path = sanitizeStoragePath(`${painter.id}/${Date.now()}_${file.name}`)
         const { error: uploadError } = await supabase.storage
           .from('painter-gallery')
           .upload(path, compressed)

@@ -6,6 +6,10 @@ import { supabase } from "@/lib/supabase";
 import { PaintBookChat } from "@/components/chat/PaintBookChat";
 import { DisputeModal } from "@/components/dispute/DisputeModal";
 import {
+
+// Sanitize storage path to prevent path traversal
+const sanitizeStoragePath = (p: string) => p.replace(/\.\.[\/\\]/g, '').replace(/^\/+/, '');
+
   BarChart3,
   CheckCircle2,
   FileText,
@@ -56,7 +60,7 @@ function InsuranceUploadForm({ painter, onSuccess }: { painter: any, onSuccess: 
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setError("Session expired. Please log in again."); setFile(null); setUploading(false); return }
       const fileExt = selected.name.split(".").pop()
-      const path = `${painter.id}/${Date.now()}_insurance.${fileExt}`
+      const path = sanitizeStoragePath(`${painter.id}/${Date.now()}_insurance.${fileExt}`)
       const { error: uploadError } = await supabase.storage
         .from("painter-insurance")
         .upload(path, selected, { upsert: true })
@@ -504,7 +508,7 @@ function GalleryTab({ painter, supabase, onRefresh }: { painter: any, supabase: 
         try {
           const compressed = await compressImage(file)
           const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const path = `${painter.id}/${Date.now()}_${sanitizedName}`
+          const path = sanitizeStoragePath(`${painter.id}/${Date.now()}_${sanitizedName}`)
           const { error: uploadErr } = await supabase.storage
             .from("painter-gallery")
             .upload(path, compressed, { upsert: false })
@@ -1292,7 +1296,7 @@ function ProfilePictureUpload({ painter, supabase, onRefresh }: { painter: any; 
     setUploading(true)
     try {
       const compressed = await compressImage(file, 400)
-      const path = `${painter.id}/profile.jpg`
+      const path = sanitizeStoragePath(`${painter.id}/profile.jpg`)
       const { error: uploadErr } = await supabase.storage
         .from("painter-profiles")
         .upload(path, compressed, { upsert: true })

@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
 
+// Sanitize storage path to prevent path traversal
+const sanitizeStoragePath = (p: string) => p.replace(/\.\.[\/\\]/g, '').replace(/^\/+/, '');
+
+
 // ── Constants ─────────────────────────────────────────────────
 
 const SPECIALISMS = [
@@ -111,7 +115,7 @@ export default function PainterProfile({ painter, onSaved }: PainterProfileProps
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoUploading(true);
-    const path = `${painter.user_id}/profile.${file.name.split(".").pop()}`;
+    const path = sanitizeStoragePath(`${painter.user_id}/profile.${file.name.split(".").pop()}`);
     const { error } = await supabase.storage.from("painter-portfolios").upload(path, file, { upsert: true });
     if (!error) {
       const { data } = supabase.storage.from("painter-portfolios").getPublicUrl(path);
@@ -132,7 +136,7 @@ export default function PainterProfile({ painter, onSaved }: PainterProfileProps
     setUploading(true);
     const newUrls: string[] = [];
     for (const file of files) {
-      const path = `${painter.user_id}/portfolio/${Date.now()}-${file.name}`;
+      const path = sanitizeStoragePath(`${painter.user_id}/portfolio/${Date.now()}-${file.name}`);
       const { error } = await supabase.storage.from("painter-portfolios").upload(path, file);
       if (!error) {
         const { data } = supabase.storage.from("painter-portfolios").getPublicUrl(path);
@@ -155,7 +159,7 @@ export default function PainterProfile({ painter, onSaved }: PainterProfileProps
     const file = e.target.files?.[0];
     if (!file) return;
     setCertUploading(true);
-    const path = `${painter.user_id}/insurance-cert.${file.name.split(".").pop()}`;
+    const path = sanitizeStoragePath(`${painter.user_id}/insurance-cert.${file.name.split(".").pop()}`);
     const { error } = await supabase.storage.from("painter-insurance").upload(path, file, { upsert: true });
     if (!error) {
       const { data } = supabase.storage.from("painter-insurance").getPublicUrl(path);

@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
+// Sanitize storage path to prevent path traversal
+const sanitizeStoragePath = (p: string) => p.replace(/\.\.[\/\\]/g, '').replace(/^\/+/, '');
+
+
 const SPECIALISMS = [
   'Interior Painting', 'Exterior Painting', 'Wallpapering',
   'Feature Wall', 'TV/Media Wall', 'Commercial Painting',
@@ -86,7 +90,7 @@ export function ProfileSettingsTab({ painter, onRefresh }: { painter: any, onRef
     setSubmittingInsurance(true)
     try {
       const fileExt = insuranceFile.name.split('.').pop()
-      const path = `${painter.id}/${Date.now()}_insurance.${fileExt}`
+      const path = sanitizeStoragePath(`${painter.id}/${Date.now()}_insurance.${fileExt}`)
       const { error: uploadError } = await supabase.storage
         .from('painter-insurance')
         .upload(path, insuranceFile, { upsert: true })

@@ -1,5 +1,9 @@
 import React, { useState, useRef } from "react";
 
+// Sanitize storage path to prevent path traversal
+const sanitizeStoragePath = (p: string) => p.replace(/\.\.[\/\\]/g, '').replace(/^\/+/, '');
+
+
 interface DisputeModalProps {
   transactionId: string;
   sessionId: string;
@@ -66,7 +70,7 @@ export function DisputeModal({
       // Upload media files to Supabase storage
       const uploadedUrls: string[] = [];
       for (const file of files) {
-        const path = `disputes/${sessionId}/${Date.now()}-${file.name}`;
+        const path = sanitizeStoragePath(`disputes/${sessionId}/${Date.now()}-${file.name}`);
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("paintbookco-uploads")
           .upload(path, file, { upsert: false });

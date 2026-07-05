@@ -38,7 +38,6 @@ export default function Header() {
 
   const navLinks = [
     { to: "/vestimator",    label: "Estimate" },
-    { to: "/find-painters", label: "Find Painters" },
     { to: "/about",         label: "About" },
     { to: "/trust-safety",  label: "Trust & Safety" },
     ...(loggedIn ? [{ to: "/dashboard/painter", label: "Dashboard" }] : []),

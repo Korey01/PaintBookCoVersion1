@@ -41,15 +41,20 @@ export default function PostJob() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [params] = useSearchParams();
 
-  const [step, setStep] = useState<Step>(1);
+  const [searchParams] = useSearchParams();
+  const initStep = searchParams.get('step') === '3' ? 3 : 1;
+  const initPostcode = searchParams.get('postcode') || "";
+  const initJobType = searchParams.get('jobType') || "";
+
+  const [step, setStep] = useState<Step>(initStep as Step);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Step 1 - Location
-  const [postcode, setPostcode] = useState("");
+  const [postcode, setPostcode] = useState(initPostcode);
   const [city, setCity] = useState("");
 
   // Step 2 - Job Type
-  const [jobType, setJobType] = useState("");
+  const [jobType, setJobType] = useState(initJobType);
 
   // Step 3 - Description
   const [description, setDescription] = useState("");

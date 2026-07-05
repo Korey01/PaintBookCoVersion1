@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate} from "react-router-dom";
 import { ShieldCheck, BadgeCheck, Lock, Handshake, CheckCircle, ArrowRight } from "lucide-react";
 import { useScrollAnimation, useScrollAnimationList } from "@/hooks/useScrollAnimation";
 
@@ -18,6 +18,9 @@ const LOGO_SRC = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/pub
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
+  const navigate = useNavigate();
+  const [heroPostcode, setHeroPostcode] = React.useState("");
+  const [heroJobType, setHeroJobType] = React.useState("");
   const brushCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -206,7 +209,7 @@ function Hero() {
           Transform your home<br />
           with{' '}
           <em id="coral-word" style={{ color: '#D85A30', transition: 'color 0.8s ease' }}>
-            the best painters
+            the best painters & decorators
           </em>
         </h1>
 
@@ -218,22 +221,49 @@ function Hero() {
           Get matched to verified painters near you. Visualise your colours with our AI tool. Your money is held safely and released only when you're happy.
         </p>
 
-        <div className="flex flex-wrap gap-4 mb-8">
-          <Link
-            to="/post-job"
+        <div className="flex flex-col gap-3 mb-8" style={{ maxWidth: '520px' }}>
+          <div className="flex flex-wrap gap-3">
+            <input
+              type="text"
+              placeholder="Enter your postcode"
+              value={heroPostcode}
+              onChange={e => setHeroPostcode(e.target.value)}
+              className="px-4 py-3 rounded-sm text-sm font-medium bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/50 flex-1"
+              style={{ minWidth: '140px' }}
+            />
+            <select
+              value={heroJobType}
+              onChange={e => setHeroJobType(e.target.value)}
+              className="px-4 py-3 rounded-sm text-sm font-medium bg-white/10 border border-white/20 text-white focus:outline-none focus:border-white/50 flex-1"
+              style={{ minWidth: '180px' }}
+            >
+              <option value="" style={{ color: '#000' }}>Select job type</option>
+              <option value="Interior Painting" style={{ color: '#000' }}>Interior Painting</option>
+              <option value="Exterior Painting" style={{ color: '#000' }}>Exterior Painting</option>
+              <option value="Wallpapering" style={{ color: '#000' }}>Wallpapering</option>
+              <option value="Feature Wall" style={{ color: '#000' }}>Feature Wall</option>
+              <option value="TV/Media Wall" style={{ color: '#000' }}>TV/Media Wall</option>
+              <option value="Commercial Painting" style={{ color: '#000' }}>Commercial Painting</option>
+              <option value="Full Interior Refurb" style={{ color: '#000' }}>Full Interior Refurb</option>
+              <option value="Full Exterior Refurb" style={{ color: '#000' }}>Full Exterior Refurb</option>
+              <option value="New Build Decoration" style={{ color: '#000' }}>New Build Decoration</option>
+              <option value="Landlord Refresh" style={{ color: '#000' }}>Landlord Refresh</option>
+              <option value="Specialist / Other" style={{ color: '#000' }}>Specialist / Other</option>
+            </select>
+          </div>
+          <button
             id="main-cta"
-            className="inline-flex items-center gap-2 text-white px-8 py-4 rounded-sm text-sm font-medium hover:-translate-y-0.5 transition-all duration-500"
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (heroPostcode) params.set('postcode', heroPostcode);
+              if (heroJobType) params.set('jobType', heroJobType);
+              navigate(`/post-job?${params.toString()}&step=3`);
+            }}
+            className="inline-flex items-center justify-center gap-2 text-white px-8 py-4 rounded-sm text-sm font-medium hover:-translate-y-0.5 transition-all duration-500 w-full"
             style={{ background: '#D85A30' }}
           >
-            Get free quotes →
-          </Link>
-          <Link
-            to="/join-painter"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-sm text-sm font-medium transition-all duration-300"
-            style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.22)' }}
-          >
-            Join as painter/decorator →
-          </Link>
+            Find a painter/decorator →
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-5">

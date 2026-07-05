@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate} from "react-router-dom";
 import { ShieldCheck, BadgeCheck, Lock, Handshake, CheckCircle, ArrowRight } from "lucide-react";
 import { useScrollAnimation, useScrollAnimationList } from "@/hooks/useScrollAnimation";
@@ -19,8 +19,8 @@ const LOGO_SRC = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/pub
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   const navigate = useNavigate();
-  const [heroPostcode, setHeroPostcode] = React.useState("");
-  const [heroJobType, setHeroJobType] = React.useState("");
+  const [heroPostcode, setHeroPostcode] = useState("");
+  const [heroJobType, setHeroJobType] = useState("");
   const brushCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

@@ -376,9 +376,30 @@ function AvailableJobsTab({
         <div className="border border-border rounded-xl p-8 text-center space-y-3">
           <div className="text-4xl">🔒</div>
           <p className="font-medium">Complete your profile to unlock jobs</p>
-          <p className="text-sm text-muted-foreground">
-            You need KYC approval, insurance verification and account activation.
-          </p>
+
+          {painter?.kyc_status !== "approved" && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Complete identity verification before accessing jobs.</p>
+              <button onClick={() => navigate("/kyc-painter")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors">
+                Complete KYC verification →
+              </button>
+            </div>
+          )}
+
+          {painter?.kyc_status === "approved" && !painter?.insurance_submitted_at && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Your identity is verified. Please upload your insurance certificate to continue.</p>
+              <button onClick={() => navigate("/dashboard/painter?tab=profile")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors">
+                Upload insurance →
+              </button>
+            </div>
+          )}
+
+          {painter?.kyc_status === "approved" && painter?.insurance_submitted_at && !painter?.insurance_verified && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">⏳ Your insurance is under review. You will be notified once verified — usually within 1-2 working days.</p>
+            </div>
+          )}
         </div>
       </div>
     )

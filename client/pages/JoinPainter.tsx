@@ -356,9 +356,9 @@ export default function JoinPainter() {
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
 
-      // After signup, go to completed page
+      // After signup, go to KYC verification
       setIsSubmitting(false);
-      navigate("/join-painter/completed");
+      navigate("/kyc-painter");
     } catch (error: any) {
       setIsSubmitting(false);
       setErrors({ submit: error.message || "Registration failed" });

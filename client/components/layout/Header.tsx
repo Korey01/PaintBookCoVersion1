@@ -7,7 +7,6 @@ const LOGO = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/
 
 const NAV_LINKS = [
   { to: "/vestimator", label: "Vestimator" },
-  { to: "/find-painters", label: "Find Painters" },
   { to: "/about", label: "About" },
   { to: "/trust-safety", label: "Trust & Safety" },
 ];

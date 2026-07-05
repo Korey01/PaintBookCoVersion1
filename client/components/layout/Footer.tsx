@@ -20,7 +20,6 @@ export default function Footer() {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Platform</p>
             <ul className="space-y-2">
               <li><Link to="/how-it-works/customers" className="text-sm text-foreground hover:text-muted-foreground transition-colors">How It Works</Link></li>
-              <li><Link to="/find-painters" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Find Painters</Link></li>
               <li><Link to="/join-painter" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Join as a Decorator</Link></li>
               <li><Link to="/pricing" className="text-sm text-foreground hover:text-muted-foreground transition-colors">Pricing</Link></li>
             </ul>

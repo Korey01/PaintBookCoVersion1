@@ -21,7 +21,6 @@ export default function Footer() {
               title: 'Platform',
               links: [
                 { label: 'Post a job', to: '/post-job' },
-                { label: 'Find painters', to: '/find-painters' },
                 { label: 'Paint Vestimator', to: '/vestimator' },
                 { label: 'How it works', to: '/how-it-works/customers' },
               ],

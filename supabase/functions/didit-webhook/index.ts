@@ -62,6 +62,30 @@ Deno.serve(async (req) => {
     const normalizedStatus = status?.toLowerCase();
 
     if (normalizedStatus === "approved") {
+      // Name matching check — compare registered name against DidIt verified name
+      const verifiedFirstName = payload.decision?.kyc?.document?.first_name?.toLowerCase().trim() || "";
+      const verifiedLastName = payload.decision?.kyc?.document?.last_name?.toLowerCase().trim() || "";
+      const registeredFirstName = painter.first_name?.toLowerCase().trim() || "";
+      const registeredLastName = painter.last_name?.toLowerCase().trim() || "";
+
+      const firstNameMatch = verifiedFirstName && registeredFirstName && 
+        (verifiedFirstName.includes(registeredFirstName) || registeredFirstName.includes(verifiedFirstName));
+      const lastNameMatch = verifiedLastName && registeredLastName && 
+        (verifiedLastName.includes(registeredLastName) || registeredLastName.includes(verifiedLastName));
+
+      if (verifiedFirstName && verifiedLastName && (!firstNameMatch || !lastNameMatch)) {
+        // Name mismatch — reject and flag for manual review
+        console.warn(`Name mismatch: registered="${registeredFirstName} ${registeredLastName}" verified="${verifiedFirstName} ${verifiedLastName}"`);
+        await serviceClient
+          .from("painters")
+          .update({ 
+            kyc_status: "rejected",
+            kyc_rejection_reason: `Name mismatch: registered name "${painter.first_name} ${painter.last_name}" does not match verified name "${payload.decision?.kyc?.document?.first_name} ${payload.decision?.kyc?.document?.last_name}".`
+          })
+          .eq("id", painterId);
+        return json({ received: true, action: "name_mismatch_rejected" });
+      }
+
       // Update painter KYC status to approved
       await serviceClient
         .from("painters")

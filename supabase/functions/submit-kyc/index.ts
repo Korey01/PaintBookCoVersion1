@@ -54,6 +54,10 @@ Deno.serve(async (req) => {
           vendor_data: painter.id,
           callback: "https://www.paintbookco.co.uk/kyc/painter",
           workflow_id: Deno.env.get("DIDIT_WORKFLOW_ID"),
+          expected_details: {
+            first_name: painter.first_name,
+            last_name: painter.last_name,
+          },
         }),
       }
     );

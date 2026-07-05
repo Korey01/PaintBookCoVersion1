@@ -358,7 +358,7 @@ export default function JoinPainter() {
 
       // After signup, go to KYC verification
       setIsSubmitting(false);
-      navigate("/kyc-painter");
+      navigate("/kyc/painter");
     } catch (error: any) {
       setIsSubmitting(false);
       setErrors({ submit: error.message || "Registration failed" });

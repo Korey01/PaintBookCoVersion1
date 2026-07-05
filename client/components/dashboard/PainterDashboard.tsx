@@ -380,7 +380,7 @@ function AvailableJobsTab({
           {painter?.kyc_status !== "approved" && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">Complete identity verification before accessing jobs.</p>
-              <button onClick={() => navigate("/kyc-painter")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors">
+              <button onClick={() => navigate("/kyc/painter")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors">
                 Complete KYC verification →
               </button>
             </div>

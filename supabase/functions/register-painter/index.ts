@@ -97,13 +97,17 @@ Deno.serve(async (req) => {
       return json({ error: "Failed to create painter profile. Please try again." }, 500);
     }
 
-    // Send confirmation email
+    // Send confirmation email via Supabase Auth API
     try {
-      await serviceClient.auth.admin.generateLink({
+      const anonClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("ANON_KEY")!,
+      );
+      await anonClient.auth.resend({
         type: "signup",
         email: email.toLowerCase().trim(),
         options: {
-          redirectTo: "https://www.paintbookco.co.uk/login"
+          emailRedirectTo: "https://www.paintbookco.co.uk/login"
         }
       });
     } catch (emailErr) {

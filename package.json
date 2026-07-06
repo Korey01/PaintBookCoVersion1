@@ -41,7 +41,7 @@
     "i18next": "26.3.4",
     "jsonwebtoken": "^9.0.3",
     "socket.io": "^4.8.3",
-    "stream-chat": "^9.41.1",
+    "stream-chat": "^9.50.0",
     "stream-chat-react": "^13.14.4",
     "zod": "^4.4.0"
   },

@@ -1900,6 +1900,12 @@ export function PainterDashboard() {
                     </div>
                   </div>
 
+                  {/* Change Password */}
+                  <div className="border border-border rounded-lg p-4 sm:p-6">
+                    <h3 className="font-semibold mb-3 sm:mb-4">Change Password</h3>
+                    <ChangePasswordForm user={user} showToast={showToast} />
+                  </div>
+
                   {/* Insurance Section */}
                   <div className="border border-border rounded-lg p-4 sm:p-6">
                     <h3 className="font-semibold mb-3 sm:mb-4">Insurance Details</h3>
@@ -2007,6 +2013,57 @@ export function PainterDashboard() {
           ))}
         </div>
       </nav>
+    </div>
+  );
+}
+
+
+// ── Change Password Form ─────────────────────────────────────────────────────
+function ChangePasswordForm({ user, showToast }: { user: any; showToast: (msg: string, type?: string) => void }) {
+  const [currentPassword, setCurrentPassword] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [success, setSuccess] = React.useState(false);
+
+  async function handleChangePassword() {
+    setError("");
+    setSuccess(false);
+    if (!currentPassword) { setError("Please enter your current password."); return; }
+    if (newPassword.length < 8) { setError("New password must be at least 8 characters."); return; }
+    if (newPassword !== confirmPassword) { setError("New passwords do not match."); return; }
+    if (currentPassword === newPassword) { setError("New password must be different from current password."); return; }
+    setLoading(true);
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: user?.email, password: currentPassword });
+    if (signInError) { setError("Current password is incorrect."); setLoading(false); return; }
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (updateError) { setError(updateError.message); return; }
+    setSuccess(true);
+    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+    showToast("Password changed successfully.", "success");
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <div className="border border-red-800/40 bg-red-900/20 rounded-lg p-3"><p className="text-red-400 text-sm">{error}</p></div>}
+      {success && <div className="border border-green-800/40 bg-green-900/20 rounded-lg p-3"><p className="text-green-400 text-sm">✓ Password changed successfully.</p></div>}
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Current Password</label>
+        <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Enter current password" />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">New Password</label>
+        <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary" placeholder="At least 8 characters" />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Confirm New Password</label>
+        <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Repeat new password" />
+      </div>
+      <button onClick={handleChangePassword} disabled={loading} className="w-full py-2.5 bg-foreground text-background rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-40">
+        {loading ? "Updating..." : "Change Password"}
+      </button>
     </div>
   );
 }

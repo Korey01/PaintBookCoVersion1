@@ -423,7 +423,14 @@ Deno.serve(async (req) => {
               subject: "Action Required: Right to Work Verification — PaintBookCo",
               content: [{ type: "text/html", value: emailHtml }],
             }),
-          }).catch(e => console.error("RTW email error:", e));
+          .then(async (r) => {
+            if (!r.ok) {
+              const errText = await r.text();
+              console.error("RTW SendGrid error:", r.status, errText);
+            } else {
+              console.log("RTW email sent successfully to:", rtwPainter.email);
+            }
+          }).catch(e => console.error("RTW email fetch error:", e));
         }
 
         try {

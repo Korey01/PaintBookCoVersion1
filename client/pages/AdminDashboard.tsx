@@ -201,7 +201,7 @@ const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-type Tab = "kyc" | "insurance" | "activate" | "jobs" | "disputes";
+type Tab = "kyc" | "insurance" | "activate" | "jobs" | "disputes" | "rtw";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -364,6 +364,114 @@ function JobDetailModal({ job, onClose, onUpdateStatus }: {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+// ── Right to Work Tab ────────────────────────────────────────────────────────
+function RTWTab({ session, SUPABASE_URL, ANON_KEY, onRequestRTW }: { session: any; SUPABASE_URL: string; ANON_KEY: string; onRequestRTW: (p: any) => void }) {
+  const [painters, setPainters] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const headers = { "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY };
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      const dateStr = thirtyDaysFromNow.toISOString().split("T")[0];
+
+      // Get expired RTW painters
+      const expiredRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/painters?rtw_status=eq.expired&select=*&order=rtw_visa_expiry.asc`,
+        { headers }
+      );
+      // Get expiring within 30 days
+      const expiringRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/painters?rtw_visa_expiry=lte.${dateStr}&rtw_status=eq.verified&select=*&order=rtw_visa_expiry.asc`,
+        { headers }
+      );
+      // Get not checked
+      const uncheckedRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/painters?rtw_status=eq.not_checked&kyc_status=eq.approved&select=*&order=created_at.desc`,
+        { headers }
+      );
+
+      const expired = await expiredRes.json();
+      const expiring = await expiringRes.json();
+      const unchecked = await uncheckedRes.json();
+
+      const combined = [
+        ...(expired || []).map((p: any) => ({ ...p, rtw_flag: "expired" })),
+        ...(expiring || []).map((p: any) => ({ ...p, rtw_flag: "expiring" })),
+        ...(unchecked || []).map((p: any) => ({ ...p, rtw_flag: "unchecked" })),
+      ];
+      setPainters(combined);
+      setLoading(false);
+    }
+    load();
+  }, [session, SUPABASE_URL, ANON_KEY]);
+
+  function exportCSV() {
+    const rows = [
+      ["Name", "Email", "Phone", "RTW Status", "Visa Expiry", "Flag"],
+      ...painters.map(p => [
+        `${p.first_name} ${p.last_name}`, p.email, p.phone || "",
+        p.rtw_status, p.rtw_visa_expiry || "N/A", p.rtw_flag
+      ])
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "rtw_report.csv"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  if (loading) return <div className="text-center text-muted-foreground py-12">Loading RTW data...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Right to Work Report</h2>
+        <button onClick={exportCSV} className="px-4 py-2 border border-border rounded text-sm hover:bg-accent transition-colors">
+          ↓ Export CSV
+        </button>
+      </div>
+
+      {painters.length === 0 ? (
+        <div className="border border-border rounded-xl p-8 text-center text-muted-foreground">
+          <p>No RTW issues found</p>
+        </div>
+      ) : painters.map(p => (
+        <div key={p.id} className="border border-border rounded-xl p-4 space-y-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-medium">{p.first_name} {p.last_name}</p>
+              <p className="text-sm text-muted-foreground">{p.email} · {p.phone}</p>
+              {p.rtw_visa_expiry && (
+                <p className="text-sm text-muted-foreground">Visa expiry: {new Date(p.rtw_visa_expiry).toLocaleDateString("en-GB")}</p>
+              )}
+            </div>
+            <span className={`text-xs px-2 py-1 rounded font-medium ${
+              p.rtw_flag === "expired" ? "bg-red-900/40 text-red-400" :
+              p.rtw_flag === "expiring" ? "bg-amber-900/40 text-amber-400" :
+              "bg-blue-900/40 text-blue-400"
+            }`}>
+              {p.rtw_flag === "expired" ? "⚠️ RTW Expired" :
+               p.rtw_flag === "expiring" ? "⏰ Expiring Soon" :
+               "❓ Not Checked"}
+            </span>
+          </div>
+          <button
+            onClick={() => onRequestRTW(p)}
+            className="px-4 py-2 border border-amber-500 text-amber-500 rounded text-sm hover:bg-amber-500/10 transition-colors"
+          >
+            📋 Trigger RTW Check
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
@@ -657,6 +765,7 @@ export default function AdminDashboard() {
 
   const tabs = [
     { id: "kyc", label: "KYC Review", icon: Shield, count: stats.pendingKYC },
+    { id: "rtw", label: "Right to Work", icon: Shield, count: 0 },
     { id: "insurance", label: "Insurance", icon: CheckCircle2, count: stats.pendingInsurance },
     { id: "activate", label: "Activate", icon: Users, count: stats.readyToActivate },
     { id: "jobs", label: "All Jobs", icon: Briefcase, count: 0 },
@@ -1152,6 +1261,10 @@ export default function AdminDashboard() {
             )}
 
             {/* DISPUTES */}
+            {activeTab === "rtw" && (
+              <RTWTab session={session} SUPABASE_URL={SUPABASE_URL} ANON_KEY={ANON_KEY} onRequestRTW={(p: any) => setRtwModal(p)} />
+            )}
+
             {activeTab === "disputes" && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold">Disputes</h2>

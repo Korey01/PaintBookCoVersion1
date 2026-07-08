@@ -2118,12 +2118,12 @@ function CSCSUploadForm({ painter, supabase, onRefresh, showToast }: { painter: 
       const fileExt = cardFile.name.split(".").pop();
       const path = sanitizeStoragePath(`${painter.id}/cscs_${Date.now()}.${fileExt}`);
       const { error: uploadError } = await supabase.storage
-        .from("painter-insurance")
+        .from("cscs-cards")
         .upload(path, cardFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from("painter-insurance").getPublicUrl(path);
+      const { data: { publicUrl } } = supabase.storage.from("cscs-cards").getPublicUrl(path);
 
       // Update painter record
       const { error: updateError } = await supabase
@@ -2213,10 +2213,10 @@ function RTWSubmissionForm({ painter, supabase, onRefresh, showToast }: { painte
         const fileExt = docFile.name.split(".").pop();
         const path = sanitizeStoragePath(`${painter.id}/rtw_${Date.now()}.${fileExt}`);
         const { error: uploadError } = await supabase.storage
-          .from("documents")
+          .from("rtw-documents")
           .upload(path, docFile, { upsert: true });
         if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage.from("documents").getPublicUrl(path);
+          const { data: { publicUrl } } = supabase.storage.from("rtw-documents").getPublicUrl(path);
           docUrl = publicUrl;
         }
       }

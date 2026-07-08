@@ -397,12 +397,19 @@ function RTWTab({ session, SUPABASE_URL, ANON_KEY, onRequestRTW }: { session: an
         `${SUPABASE_URL}/rest/v1/painters?rtw_status=eq.not_checked&kyc_status=eq.approved&select=*&order=created_at.desc`,
         { headers }
       );
+      // Get submitted (painter has responded)
+      const submittedRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/painters?rtw_status=eq.submitted&select=*&order=created_at.desc`,
+        { headers }
+      );
 
       const expired = await expiredRes.json();
       const expiring = await expiringRes.json();
       const unchecked = await uncheckedRes.json();
+      const submitted = await submittedRes.json();
 
       const combined = [
+        ...(submitted || []).map((p: any) => ({ ...p, rtw_flag: "submitted" })),
         ...(expired || []).map((p: any) => ({ ...p, rtw_flag: "expired" })),
         ...(expiring || []).map((p: any) => ({ ...p, rtw_flag: "expiring" })),
         ...(unchecked || []).map((p: any) => ({ ...p, rtw_flag: "unchecked" })),
@@ -455,15 +462,43 @@ function RTWTab({ session, SUPABASE_URL, ANON_KEY, onRequestRTW }: { session: an
               )}
             </div>
             <span className={`text-xs px-2 py-1 rounded font-medium ${
+              p.rtw_flag === "submitted" ? "bg-blue-900/40 text-blue-400" :
               p.rtw_flag === "expired" ? "bg-red-900/40 text-red-400" :
               p.rtw_flag === "expiring" ? "bg-amber-900/40 text-amber-400" :
-              "bg-blue-900/40 text-blue-400"
+              "bg-gray-900/40 text-gray-400"
             }`}>
-              {p.rtw_flag === "expired" ? "⚠️ RTW Expired" :
+              {p.rtw_flag === "submitted" ? "📋 RTW Submitted" :
+               p.rtw_flag === "expired" ? "⚠️ RTW Expired" :
                p.rtw_flag === "expiring" ? "⏰ Expiring Soon" :
                "❓ Not Checked"}
             </span>
           </div>
+          {/* RTW Submission Details */}
+          {p.rtw_status === "submitted" && (
+            <div className="border border-blue-800/40 bg-blue-900/10 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-medium text-blue-400 uppercase tracking-wider">RTW Submission Received</p>
+              {p.rtw_share_code && (
+                <p className="text-sm text-muted-foreground">Share Code: <strong className="text-foreground">{p.rtw_share_code}</strong></p>
+              )}
+              {p.rtw_dob && (
+                <p className="text-sm text-muted-foreground">Date of Birth: <strong className="text-foreground">{new Date(p.rtw_dob).toLocaleDateString("en-GB")}</strong></p>
+              )}
+              {p.rtw_document_url && (
+                <a href={p.rtw_document_url} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-blue-400 underline hover:text-blue-300">
+                  📄 View RTW Document
+                </a>
+              )}
+              {p.rtw_share_code && (
+                <a href={`https://www.gov.uk/view-right-to-work?code=${p.rtw_share_code}&dob=${p.rtw_dob}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-green-400 underline hover:text-green-300 ml-4">
+                  🔗 Verify on gov.uk →
+                </a>
+              )}
+            </div>
+          )}
+
           <button
             onClick={() => onRequestRTW(p)}
             className="px-4 py-2 border border-amber-500 text-amber-500 rounded text-sm hover:bg-amber-500/10 transition-colors"

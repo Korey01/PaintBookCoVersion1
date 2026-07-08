@@ -414,7 +414,7 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-          await fetch("https://api.sendgrid.com/v3/mail/send", {
+          const sgRes = await fetch("https://api.sendgrid.com/v3/mail/send", {
             method: "POST",
             headers: { "Authorization": `Bearer ${sendgridKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -423,14 +423,14 @@ Deno.serve(async (req) => {
               subject: "Action Required: Right to Work Verification — PaintBookCo",
               content: [{ type: "text/html", value: emailHtml }],
             }),
-          .then(async (r) => {
-            if (!r.ok) {
-              const errText = await r.text();
-              console.error("RTW SendGrid error:", r.status, errText);
-            } else {
-              console.log("RTW email sent successfully to:", rtwPainter.email);
-            }
-          }).catch(e => console.error("RTW email fetch error:", e));
+;
+          // Log SendGrid response
+          if (!sgRes.ok) {
+            const errText = await sgRes.text();
+            console.error("RTW SendGrid error:", sgRes.status, errText);
+          } else {
+            console.log("RTW email sent successfully to:", rtwPainter.email);
+          }
         }
 
         try {

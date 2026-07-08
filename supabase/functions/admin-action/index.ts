@@ -258,6 +258,34 @@ Deno.serve(async (req) => {
         return json({ success: true });
       }
 
+      case "request_rtw": {
+        // Get painter details
+        const { data: painter } = await serviceClient
+          .from("painters")
+          .select("id, first_name, last_name, email, user_id")
+          .eq("email", painter_email)
+          .single();
+
+        if (!painter) return json({ error: "Painter not found" }, 404);
+
+        // Update RTW status to requested
+        await serviceClient
+          .from("painters")
+          .update({ rtw_status: "requested" })
+          .eq("email", painter_email);
+
+        // Log to audit
+        await serviceClient.from("audit_log").insert({
+          action: "rtw_check_requested",
+          actor_role: "admin",
+          entity_type: "painter",
+          entity_id: painter.id,
+          details: { painter_email, painter_name: `${painter.first_name} ${painter.last_name}` },
+        }).catch(() => {});
+
+        return json({ success: true, message: "RTW check requested" });
+      }
+
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }

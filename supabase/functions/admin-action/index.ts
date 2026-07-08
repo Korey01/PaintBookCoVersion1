@@ -338,7 +338,7 @@ Deno.serve(async (req) => {
         <tr>
           <td style="background:#1B3A5C;padding:24px 32px;text-align:center;">
             <img src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
-              alt="PaintBookCo" style="height:48px;object-fit:contain;display:block;margin:0 auto;" />
+              alt="PaintBookCo" style="height:36px;max-width:160px;object-fit:contain;display:block;margin:0 auto;" />
           </td>
         </tr>
         <!-- Body -->

@@ -1537,7 +1537,7 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full space-y-4">
             <h2 className="text-lg font-semibold">Request Right to Work — {rtwModal.first_name} {rtwModal.last_name}</h2>
-            <p className="text-sm text-muted-foreground">The following message will be sent via Stream Chat to the painter:</p>
+            <p className="text-sm text-muted-foreground">The following email will be sent to the painter via SendGrid:</p>
             <div className="bg-muted/40 rounded-lg p-3 text-sm text-muted-foreground border border-border leading-relaxed">
               Hello {rtwModal.first_name}, as part of our compliance process under UK immigration law, we need to verify your right to work in the UK. If you do not hold a British or Irish passport, please provide your share code and date of birth, or upload supporting documents via your dashboard. This is a legal requirement under the Immigration, Asylum and Nationality Act 2006. Please contact us at hello@paintbookco.co.uk if you need assistance.
             </div>

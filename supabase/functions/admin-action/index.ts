@@ -426,20 +426,24 @@ Deno.serve(async (req) => {
           }).catch(e => console.error("RTW email error:", e));
         }
 
-        await serviceClient.from("notifications").insert({
-          painter_id: rtwPainter.id,
-          title: "Right to Work Check Required",
-          message: "PaintBookCo needs to verify your right to work in the UK. Please check your email and complete the verification via your dashboard.",
-          type: "rtw_requested",
-        }).catch(() => {});
+        try {
+          await serviceClient.from("notifications").insert({
+            painter_id: rtwPainter.id,
+            title: "Right to Work Check Required",
+            message: "PaintBookCo needs to verify your right to work in the UK. Please check your email and complete the verification via your dashboard.",
+            type: "rtw_requested",
+          });
+        } catch (e) { console.error("RTW notification error:", e); }
 
-        await serviceClient.from("audit_log").insert({
-          action: "rtw_check_requested",
-          actor_role: "admin",
-          entity_type: "painter",
-          entity_id: rtwPainter.id,
-          details: { painter_email, painter_name: `${rtwPainter.first_name} ${rtwPainter.last_name}` },
-        }).catch(() => {});
+        try {
+          await serviceClient.from("audit_log").insert({
+            action: "rtw_check_requested",
+            actor_role: "admin",
+            entity_type: "painter",
+            entity_id: rtwPainter.id,
+            details: { painter_email, painter_name: `${rtwPainter.first_name} ${rtwPainter.last_name}` },
+          });
+        } catch (e) { console.error("RTW audit error:", e); }
 
         return json({ success: true, message: "RTW check requested and email sent" });
       }

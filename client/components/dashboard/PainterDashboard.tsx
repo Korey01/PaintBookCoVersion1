@@ -1389,7 +1389,8 @@ const REGISTRATION_STEPS = [
   { number: 4, label: "Insurance Verified", key: "insurance_verified" },
   { number: 5, label: "KYC Verification", key: "kyc_status" },
   { number: 6, label: "Right to Work", key: "rtw_status" },
-  { number: 7, label: "Account Activated", key: "is_active" },
+  { number: 7, label: "CSCS Card", key: "cscs_verified" },
+  { number: 8, label: "Account Activated", key: "is_active" },
 ];
 
 export function PainterDashboard() {
@@ -1779,6 +1780,7 @@ export function PainterDashboard() {
                     else if (step.key === "insurance_verified") isComplete = painter?.insurance_verified === true;
                     else if (step.key === "kyc_status") isComplete = painter?.kyc_status === "approved";
                     else if (step.key === "rtw_status") isComplete = painter?.rtw_status === "verified";
+                    else if (step.key === "cscs_verified") isComplete = painter?.cscs_verified === true;
                     else if (step.key === "is_active") isComplete = painter?.is_active === true;
 
                     return (
@@ -1812,9 +1814,10 @@ export function PainterDashboard() {
                       else if (s.key === "insurance_verified") return painter?.insurance_verified === true;
                       else if (s.key === "kyc_status") return painter?.kyc_status === "approved";
                       else if (s.key === "rtw_status") return painter?.rtw_status === "verified";
+                      else if (s.key === "cscs_verified") return painter?.cscs_verified === true;
                       else if (s.key === "is_active") return painter?.is_active === true;
                       return false;
-                    }).length}/7 steps
+                    }).length}/8 steps
                   </p>
                 </div>
               </div>
@@ -1957,6 +1960,36 @@ export function PainterDashboard() {
                     )}
                   </div>
 
+                  {/* CSCS Card Section */}
+                  <div className="border border-border rounded-lg p-4 sm:p-6">
+                    <h3 className="font-semibold mb-3 sm:mb-4">CSCS Card</h3>
+                    {painter.cscs_verified ? (
+                      <div className="border border-green-800/40 bg-green-900/20 rounded-lg p-4">
+                        <p className="text-green-400 font-medium">✓ CSCS Card Verified</p>
+                        <p className="text-sm text-muted-foreground mt-1">Card type: {painter.cscs_card_type}</p>
+                        <p className="text-sm text-muted-foreground">Card number: {painter.cscs_card_number}</p>
+                        <p className="text-sm text-muted-foreground">Expires: {painter.cscs_expiry_date ? new Date(painter.cscs_expiry_date).toLocaleDateString("en-GB") : "N/A"}</p>
+                      </div>
+                    ) : painter.cscs_submitted_at ? (
+                      <div className="border border-amber-800/40 bg-amber-900/20 rounded-lg p-4">
+                        <p className="text-amber-400 font-medium">⏳ CSCS Card Under Review</p>
+                        <p className="text-sm text-muted-foreground mt-1">Submitted {new Date(painter.cscs_submitted_at).toLocaleDateString()}</p>
+                        <p className="text-sm text-muted-foreground">Our team will verify within 1-2 working days.</p>
+                        {painter.cscs_rejection_reason && (
+                          <div className="mt-3 border border-red-800/40 bg-red-900/20 rounded p-3">
+                            <p className="text-red-400 text-sm">Rejected: {painter.cscs_rejection_reason}</p>
+                            <p className="text-sm text-muted-foreground mt-1">Please resubmit with correct details.</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">Upload your CSCS card to verify your qualifications. This is required to access jobs.</p>
+                        <CSCSUploadForm painter={painter} supabase={supabase} onRefresh={loadDashboard} showToast={showToast} />
+                      </div>
+                    )}
+                  </div>
+
                   {/* Account Actions */}
                   <div className="border border-border rounded-lg p-4 sm:p-6">
                     <h3 className="font-semibold mb-3 sm:mb-4">Account Actions</h3>
@@ -2047,6 +2080,116 @@ export function PainterDashboard() {
 }
 
 
+
+
+// ── CSCS Upload Form ─────────────────────────────────────────────────────────
+function CSCSUploadForm({ painter, supabase, onRefresh, showToast }: { painter: any; supabase: any; onRefresh: () => void; showToast: (msg: string, type?: string) => void }) {
+  const [cardNumber, setCardNumber] = React.useState(painter.cscs_card_number || "");
+  const [cardType, setCardType] = React.useState(painter.cscs_card_type || "");
+  const [expiryDate, setExpiryDate] = React.useState(painter.cscs_expiry_date || "");
+  const [cardFile, setCardFile] = React.useState<File | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const CSCS_CARD_TYPES = [
+    "Green Card (Labourer)",
+    "Blue Card (Skilled Worker)",
+    "Gold Card (Supervisory)",
+    "Black Card (Manager)",
+    "Platinum Card (Senior Manager)",
+    "Red Card (Trainee/Apprentice)",
+    "White Card (Professionally Qualified)",
+    "Yellow Card (Academically Qualified)",
+  ];
+
+  async function handleSubmit() {
+    setError("");
+    if (!cardNumber) { setError("Please enter your CSCS card number."); return; }
+    if (!cardType) { setError("Please select your card type."); return; }
+    if (!expiryDate) { setError("Please enter your card expiry date."); return; }
+    if (!cardFile) { setError("Please upload a photo or scan of your CSCS card."); return; }
+
+    const expiry = new Date(expiryDate);
+    if (expiry < new Date()) { setError("Your CSCS card has expired. Please renew before submitting."); return; }
+
+    setLoading(true);
+    try {
+      // Upload card image
+      const fileExt = cardFile.name.split(".").pop();
+      const path = sanitizeStoragePath(`${painter.id}/cscs_${Date.now()}.${fileExt}`);
+      const { error: uploadError } = await supabase.storage
+        .from("painter-insurance")
+        .upload(path, cardFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from("painter-insurance").getPublicUrl(path);
+
+      // Update painter record
+      const { error: updateError } = await supabase
+        .from("painters")
+        .update({
+          cscs_card_url: publicUrl,
+          cscs_card_number: cardNumber,
+          cscs_card_type: cardType,
+          cscs_expiry_date: expiryDate,
+          cscs_submitted_at: new Date().toISOString(),
+          cscs_verified: false,
+          cscs_rejection_reason: null,
+        })
+        .eq("id", painter.id);
+
+      if (updateError) throw updateError;
+
+      showToast("CSCS card submitted for verification.", "success");
+      onRefresh();
+    } catch (err: any) {
+      setError(err.message || "Submission failed. Please try again.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <div className="border border-red-800/40 bg-red-900/20 rounded-lg p-3"><p className="text-red-400 text-sm">{error}</p></div>}
+
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">CSCS Card Number</label>
+        <input type="text" value={cardNumber} onChange={e => setCardNumber(e.target.value)}
+          placeholder="e.g. 1234567890"
+          className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Card Type</label>
+        <select value={cardType} onChange={e => setCardType(e.target.value)}
+          className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary">
+          <option value="">Select card type</option>
+          {CSCS_CARD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Card Expiry Date</label>
+        <input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)}
+          min={new Date().toISOString().split("T")[0]}
+          className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Upload CSCS Card (Photo or PDF)</label>
+        <input type="file" accept=".pdf,image/*"
+          onChange={e => setCardFile(e.target.files?.[0] || null)}
+          className="w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-foreground file:text-background hover:file:bg-foreground/90" />
+      </div>
+
+      <button onClick={handleSubmit} disabled={loading}
+        className="w-full py-2.5 bg-foreground text-background rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-40">
+        {loading ? "Submitting..." : "Submit CSCS Card"}
+      </button>
+    </div>
+  );
+}
 
 // ── Right to Work Submission Form ────────────────────────────────────────────
 function RTWSubmissionForm({ painter, supabase, onRefresh, showToast }: { painter: any; supabase: any; onRefresh: () => void; showToast: (msg: string, type?: string) => void }) {

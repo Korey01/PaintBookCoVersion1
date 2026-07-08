@@ -201,7 +201,7 @@ const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-type Tab = "kyc" | "insurance" | "activate" | "jobs" | "disputes" | "rtw";
+type Tab = "kyc" | "insurance" | "cscs" | "activate" | "jobs" | "disputes" | "rtw";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -486,6 +486,7 @@ export default function AdminDashboard() {
   // Data
   const [pendingKYC, setPendingKYC] = useState<any[]>([]);
   const [pendingInsurance, setPendingInsurance] = useState<any[]>([]);
+  const [pendingCSCS, setPendingCSCS] = useState<any[]>([]);
   const [readyToActivate, setReadyToActivate] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -518,7 +519,7 @@ export default function AdminDashboard() {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   const [stats, setStats] = useState({
-    pendingKYC: 0, pendingInsurance: 0,
+    pendingKYC: 0, pendingInsurance: 0, pendingCSCS: 0,
     readyToActivate: 0, activePainters: 0,
     openDisputes: 0, jobsToday: 0,
   });
@@ -583,7 +584,7 @@ export default function AdminDashboard() {
       const [
         kycRes, insuranceRes, activateRes,
         sessionsRes, transactionsRes, disputesRes,
-        activePaintersRes
+        activePaintersRes, cscsRes
       ] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=in.(pending,submitted)&select=*&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?insurance_submitted_at=not.is.null&insurance_verified=eq.false&select=*&order=insurance_submitted_at.desc`, { headers }),
@@ -592,12 +593,14 @@ export default function AdminDashboard() {
         fetch(`${SUPABASE_URL}/rest/v1/transactions?select=*&order=created_at.desc&limit=50`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/disputes?select=*,transactions(id,amount,painter_id,customer_email,customer_first_name,customer_last_name,disputed_at,painters(id,first_name,last_name,email,phone))&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?is_active=eq.true&select=id`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/painters?cscs_submitted_at=not.is.null&cscs_verified=eq.false&select=*&order=cscs_submitted_at.desc`, { headers }),
       ]);
 
-      const [kyc, insurance, activate, sess, trans, disp, active] = await Promise.all([
+      const [kyc, insurance, activate, sess, trans, disp, active, cscs] = await Promise.all([
         kycRes.json(), insuranceRes.json(), activateRes.json(),
         sessionsRes.json(), transactionsRes.json(), disputesRes.json(),
         activePaintersRes.json(),
+        cscsRes.json(),
       ]);
 
       const today = new Date().toISOString().split("T")[0];
@@ -606,6 +609,7 @@ export default function AdminDashboard() {
       ).length;
 
       setPendingKYC(kyc || []);
+      setPendingCSCS(cscs || []);
       setPendingInsurance(insurance || []);
       setReadyToActivate(activate || []);
       setSessions(sess || []);
@@ -614,6 +618,7 @@ export default function AdminDashboard() {
       setStats({
         pendingKYC: (kyc || []).length,
         pendingInsurance: (insurance || []).length,
+        pendingCSCS: (cscs || []).length,
         readyToActivate: (activate || []).length,
         activePainters: (active || []).length,
         openDisputes: (disp || []).filter((d: any) => d.status !== "resolved").length,
@@ -767,6 +772,7 @@ export default function AdminDashboard() {
     { id: "kyc", label: "KYC Review", icon: Shield, count: stats.pendingKYC },
     { id: "rtw", label: "Right to Work", icon: Shield, count: 0 },
     { id: "insurance", label: "Insurance", icon: CheckCircle2, count: stats.pendingInsurance },
+    { id: "cscs", label: "CSCS Cards", icon: Shield, count: stats.pendingCSCS },
     { id: "activate", label: "Activate", icon: Users, count: stats.readyToActivate },
     { id: "jobs", label: "All Jobs", icon: Briefcase, count: 0 },
     { id: "disputes", label: "Disputes", icon: AlertTriangle, count: stats.openDisputes },
@@ -823,6 +829,7 @@ export default function AdminDashboard() {
         {[
           { label: "Pending KYC", value: stats.pendingKYC, color: "text-amber-400" },
           { label: "Pending Insurance", value: stats.pendingInsurance, color: "text-blue-400" },
+          { label: "Pending CSCS", value: stats.pendingCSCS, color: "text-purple-400" },
           { label: "Ready to Activate", value: stats.readyToActivate, color: "text-orange-400" },
           { label: "Active Painters", value: stats.activePainters, color: "text-green-400" },
           { label: "Open Disputes", value: stats.openDisputes, color: "text-red-400" },
@@ -1055,6 +1062,79 @@ export default function AdminDashboard() {
             )}
 
             {/* ACTIVATE PAINTERS */}
+
+            {activeTab === "cscs" && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold">CSCS Card Review</h2>
+                {pendingCSCS.length === 0 ? (
+                  <div className="border border-border rounded-xl p-8 text-center text-muted-foreground">
+                    <Shield className="h-8 w-8 mx-auto mb-3 opacity-40" />
+                    <p>No pending CSCS card submissions</p>
+                  </div>
+                ) : pendingCSCS.map(p => (
+                  <div key={p.id} className="border border-border rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium">{p.first_name} {p.last_name}</p>
+                        <p className="text-sm text-muted-foreground">{p.email}</p>
+                        <p className="text-sm text-muted-foreground">Card type: {p.cscs_card_type}</p>
+                        <p className="text-sm text-muted-foreground">Card number: {p.cscs_card_number}</p>
+                        <p className="text-sm text-muted-foreground">Expires: {p.cscs_expiry_date ? new Date(p.cscs_expiry_date).toLocaleDateString("en-GB") : "N/A"}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Submitted: {new Date(p.cscs_submitted_at).toLocaleDateString("en-GB")}</p>
+                      </div>
+                      <StatusBadge status={p.cscs_verified ? "approved" : "submitted"} />
+                    </div>
+
+                    {p.cscs_card_url && (
+                      <div className="flex gap-2">
+                        <a href={p.cscs_card_url} target="_blank" rel="noopener noreferrer"
+                          className="text-sm text-blue-400 underline hover:text-blue-300">
+                          📄 View CSCS Card
+                        </a>
+                      </div>
+                    )}
+
+                    {rejectingId === p.id ? (
+                      <div className="space-y-2">
+                        <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                          placeholder="Rejection reason..." rows={2}
+                          className="w-full bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none focus:border-foreground" />
+                        <div className="flex gap-2">
+                          <button onClick={async () => {
+                            await fetch(`${SUPABASE_URL}/rest/v1/painters?id=eq.${p.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+                              body: JSON.stringify({ cscs_rejection_reason: rejectReason, cscs_submitted_at: null }),
+                            });
+                            setMessage({ text: "CSCS card rejected", type: "success" });
+                            setRejectingId(null);
+                            setRejectReason("");
+                            await loadAll(session.access_token);
+                            setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+                          }} className={btnRed}>Confirm Reject</button>
+                          <button onClick={() => setRejectingId(null)} className="px-4 py-2 border border-border text-muted-foreground rounded text-sm hover:bg-accent">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 flex-wrap">
+                        <button onClick={async () => {
+                          await fetch(`${SUPABASE_URL}/rest/v1/painters?id=eq.${p.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+                            body: JSON.stringify({ cscs_verified: true, cscs_verified_at: new Date().toISOString(), cscs_verified_by: session.user.email }),
+                          });
+                          setMessage({ text: `✓ CSCS card verified for ${p.first_name}`, type: "success" });
+                          await loadAll(session.access_token);
+                          setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+                        }} className={btnGreen}>✓ Verify CSCS</button>
+                        <button onClick={() => { setRejectingId(p.id); setRejectReason(""); }} className={btnRed}>✕ Reject CSCS</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {activeTab === "activate" && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold">Ready to Activate</h2>

@@ -14,10 +14,9 @@ export default function ConfirmPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
         setStatus("success");
-        setMessage("Email confirmed.");
-        // Sign out and send to login — login handles all role-based routing
+        setMessage("Your email has been confirmed successfully. Your PaintBookCo account is now active.");
+        // Sign out so they go through proper login flow
         await supabase.auth.signOut();
-        setTimeout(() => navigate("/login", { replace: true }), 1500);
       } else if (event === "PASSWORD_RECOVERY") {
         navigate("/reset-password", { replace: true });
       }
@@ -53,10 +52,18 @@ export default function ConfirmPage() {
           )}
           {status === "success" && (
             <>
-              <CheckCircle2 className="h-10 w-10 text-green-600 mx-auto" />
-              <h1 className="text-xl font-semibold">Email confirmed</h1>
-              <p className="text-sm text-muted-foreground">{message}</p>
-              <p className="text-xs text-muted-foreground">Redirecting you to login…</p>
+              <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto" />
+              <h1 className="text-2xl font-semibold">Account Confirmed!</h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
+              <p className="text-sm text-muted-foreground">
+                You can now sign in and complete your identity verification to start receiving jobs.
+              </p>
+              <Link
+                to="/login"
+                className="inline-block w-full bg-foreground text-background py-3 rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors text-center mt-2"
+              >
+                Sign in to PaintBookCo →
+              </Link>
             </>
           )}
           {status === "error" && (

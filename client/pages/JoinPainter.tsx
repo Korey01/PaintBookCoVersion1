@@ -70,16 +70,23 @@ export function JoinPainterComplete() {
         </a>
       </header>
       <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm text-center space-y-6">
-          <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-            <Mail className="h-7 w-7 text-green-600" />
+        <div className="w-full max-w-md text-center space-y-6">
+          <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+            <Mail className="h-8 w-8 text-green-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold mb-2">Check your inbox</h1>
+            <h1 className="text-2xl font-semibold mb-2">Registration Submitted!</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              We've sent a confirmation link to your email address.
-              Click the link to confirm your account, then come back
-              here to sign in and complete your identity verification.
+              Thank you for registering as a painter & decorator with PaintBookCo.
+              We have sent a confirmation link to your email address.
+              Please click the link in your email to confirm your account before signing in.
+            </p>
+          </div>
+          <div className="border border-amber-500/30 bg-amber-500/5 rounded-xl p-4 text-left">
+            <p className="text-xs font-medium text-amber-600 uppercase tracking-wider mb-1">Important</p>
+            <p className="text-sm text-muted-foreground">
+              You must confirm your email before you can sign in and complete identity verification.
+              Check your spam folder if you don't see the email.
             </p>
           </div>
           <div className="space-y-2 text-left border border-border rounded-xl p-4">
@@ -356,9 +363,9 @@ export default function JoinPainter() {
         options: { emailRedirectTo: `${window.location.origin}/verify-email` },
       });
 
-      // After signup, go to KYC verification
+      // After signup, show confirmation then go to KYC
       setIsSubmitting(false);
-      navigate("/kyc/painter");
+      navigate("/join-decorator/completed");
     } catch (error: any) {
       setIsSubmitting(false);
       setErrors({ submit: error.message || "Registration failed" });

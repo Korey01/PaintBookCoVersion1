@@ -423,7 +423,7 @@ Deno.serve(async (req) => {
               subject: "Action Required: Right to Work Verification — PaintBookCo",
               content: [{ type: "text/html", value: emailHtml }],
             }),
-;
+          });
           // Log SendGrid response
           if (!sgRes.ok) {
             const errText = await sgRes.text();

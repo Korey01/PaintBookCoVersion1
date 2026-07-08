@@ -418,6 +418,13 @@ export default function AdminDashboard() {
   // Rejection reason state
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [rtwModal, setRtwModal] = useState<any | null>(null);
+  const [approveKycModal, setApproveKycModal] = useState<any | null>(null);
+  const [rtwEligible, setRtwEligible] = useState<boolean | null>(null);
+  const [rtwVisaExpiry, setRtwVisaExpiry] = useState("");
+  const [rtwNoExpiry, setRtwNoExpiry] = useState(false);
+  const [rtwNotes, setRtwNotes] = useState("");
+  const [rtwSending, setRtwSending] = useState(false);
 
   // Job detail modal
   const [selectedJob, setSelectedJob] = useState<any>(null);
@@ -805,15 +812,20 @@ export default function AdminDashboard() {
                     ) : (
                       <div className="flex gap-2 flex-wrap">
                         <button
-                          onClick={() => adminAction("approve_kyc", p.email)}
+                          onClick={() => { setApproveKycModal(p); setRtwEligible(null); setRtwVisaExpiry(""); setRtwNoExpiry(false); setRtwNotes(""); }}
                           disabled={actionLoading === `approve_kyc-${p.email}`}
                           className={btnGreen}>
-                          {actionLoading === `approve_kyc-${p.email}` ? "Approving..." : "✓ Approve KYC"}
+                          ✓ Approve KYC
                         </button>
                         <button
                           onClick={() => { setRejectingId(p.id); setRejectReason(""); }}
                           className={btnRed}>
                           ✕ Reject KYC
+                        </button>
+                        <button
+                          onClick={() => setRtwModal(p)}
+                          className="px-4 py-2 border border-amber-500 text-amber-500 rounded text-sm hover:bg-amber-500/10 transition-colors">
+                          📋 Request RTW
                         </button>
                       </div>
                     )}
@@ -1326,6 +1338,114 @@ export default function AdminDashboard() {
           ANON_KEY={ANON_KEY}
         />
       )}
+
+      {/* RTW Request Modal */}
+      {rtwModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full space-y-4">
+            <h2 className="text-lg font-semibold">Request Right to Work — {rtwModal.first_name} {rtwModal.last_name}</h2>
+            <p className="text-sm text-muted-foreground">The following message will be sent via Stream Chat to the painter:</p>
+            <div className="bg-muted/40 rounded-lg p-3 text-sm text-muted-foreground border border-border leading-relaxed">
+              Hello {rtwModal.first_name}, as part of our compliance process under UK immigration law, we need to verify your right to work in the UK. If you do not hold a British or Irish passport, please provide your share code and date of birth, or upload supporting documents via your dashboard. This is a legal requirement under the Immigration, Asylum and Nationality Act 2006. Please contact us at hello@paintbookco.co.uk if you need assistance.
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  setRtwSending(true);
+                  try {
+                    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-action`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY },
+                      body: JSON.stringify({ action: "request_rtw", painter_email: rtwModal.email }),
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                      setMessage({ text: `✓ RTW request sent to ${rtwModal.first_name}`, type: "success" });
+                      setRtwModal(null);
+                    } else {
+                      setMessage({ text: result.error || "Failed to send RTW request", type: "error" });
+                    }
+                  } catch { setMessage({ text: "Network error", type: "error" }); }
+                  setRtwSending(false);
+                  setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+                }}
+                disabled={rtwSending}
+                className={btnGreen}
+              >
+                {rtwSending ? "Sending..." : "Send RTW Request"}
+              </button>
+              <button onClick={() => setRtwModal(null)} className="px-4 py-2 border border-border rounded text-sm hover:bg-accent">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve KYC Modal with RTW Check */}
+      {approveKycModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-background border border-border rounded-xl p-6 max-w-md w-full space-y-4">
+            <h2 className="text-lg font-semibold">Approve KYC — {approveKycModal.first_name} {approveKycModal.last_name}</h2>
+            <p className="text-sm text-muted-foreground">Please confirm Right to Work eligibility before approving KYC.</p>
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Is this painter eligible to work in the UK?</p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="radio" name="rtw_eligible" checked={rtwEligible === true} onChange={() => setRtwEligible(true)} /> Yes
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="radio" name="rtw_eligible" checked={rtwEligible === false} onChange={() => setRtwEligible(false)} /> No
+                </label>
+              </div>
+              {rtwEligible === true && (
+                <div className="space-y-3 border border-border rounded-lg p-3">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={rtwNoExpiry} onChange={e => { setRtwNoExpiry(e.target.checked); setRtwVisaExpiry(""); }} />
+                    No expiry — British/Irish passport or EU Settled Status
+                  </label>
+                  {!rtwNoExpiry && (
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Visa Expiry Date</label>
+                      <input type="date" value={rtwVisaExpiry} onChange={e => setRtwVisaExpiry(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                        className="w-full border border-border rounded px-3 py-2 text-sm bg-background focus:outline-none focus:border-foreground" />
+                    </div>
+                  )}
+                </div>
+              )}
+              {rtwEligible === false && (
+                <div className="border border-red-800/40 bg-red-900/20 rounded-lg p-3">
+                  <p className="text-red-400 text-sm">⚠️ This painter cannot be approved — they are not eligible to work in the UK.</p>
+                </div>
+              )}
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Notes</label>
+                <textarea value={rtwNotes} onChange={e => setRtwNotes(e.target.value)} rows={2}
+                  placeholder="e.g. British passport verified, Tier 2 visa confirmed..."
+                  className="w-full border border-border rounded px-3 py-2 text-sm bg-background focus:outline-none focus:border-foreground" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                disabled={!(rtwEligible === true && (rtwNoExpiry || rtwVisaExpiry)) || actionLoading === `approve_kyc-${approveKycModal.email}`}
+                onClick={async () => {
+                  await fetch(`${SUPABASE_URL}/rest/v1/painters?email=eq.${encodeURIComponent(approveKycModal.email)}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+                    body: JSON.stringify({ rtw_eligible: true, rtw_visa_expiry: rtwNoExpiry ? null : rtwVisaExpiry, rtw_status: "verified", rtw_checked_at: new Date().toISOString(), rtw_checked_by: session.user.email, rtw_notes: rtwNotes }),
+                  });
+                  await adminAction("approve_kyc", approveKycModal.email);
+                  setApproveKycModal(null);
+                }}
+                className={`${btnGreen} disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                {actionLoading === `approve_kyc-${approveKycModal.email}` ? "Approving..." : "✓ Confirm & Approve KYC"}
+              </button>
+              <button onClick={() => setApproveKycModal(null)} className="px-4 py-2 border border-border rounded text-sm hover:bg-accent">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

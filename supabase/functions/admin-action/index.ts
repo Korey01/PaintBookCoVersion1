@@ -316,31 +316,132 @@ Deno.serve(async (req) => {
       }
 
       case "request_rtw": {
-        // Get painter details
-        const { data: painter } = await serviceClient
+        const { data: rtwPainter } = await serviceClient
           .from("painters")
           .select("id, first_name, last_name, email, user_id")
           .eq("email", painter_email)
           .single();
 
-        if (!painter) return json({ error: "Painter not found" }, 404);
+        if (!rtwPainter) return json({ error: "Painter not found" }, 404);
 
-        // Update RTW status to requested
-        await serviceClient
-          .from("painters")
-          .update({ rtw_status: "requested" })
-          .eq("email", painter_email);
+        await serviceClient.from("painters").update({ rtw_status: "requested" }).eq("email", painter_email);
 
-        // Log to audit
+        const sendgridKey = Deno.env.get("SENDGRID_API_KEY");
+        if (sendgridKey) {
+          const emailHtml = `<!DOCTYPE html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <!-- Header with logo -->
+        <tr>
+          <td style="background:#1B3A5C;padding:24px 32px;text-align:center;">
+            <img src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
+              alt="PaintBookCo" style="height:48px;object-fit:contain;display:block;margin:0 auto;" />
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px;">
+            <p style="font-size:16px;color:#333;margin-top:0;">Dear ${rtwPainter.first_name},</p>
+            <p style="font-size:15px;color:#333;line-height:1.7;">
+              As part of our compliance obligations under the
+              <strong>Immigration, Asylum and Nationality Act 2006</strong>,
+              PaintBookCo is required to verify the right to work of all painters
+              and decorators registered on our platform.
+            </p>
+            <p style="font-size:15px;color:#333;line-height:1.7;">
+              We need to verify your right to work in the United Kingdom.
+              Please log in to your dashboard and provide <strong>one</strong> of the following:
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;">
+              <tr>
+                <td style="padding:8px 0;font-size:14px;color:#333;line-height:1.7;">
+                  ✅ <strong>Share Code</strong> — if you have a Biometric Residence Permit, visa,
+                  or digital immigration status.<br>
+                  <span style="color:#666;font-size:13px;">Get your share code at
+                    <a href="https://www.gov.uk/prove-right-to-work" style="color:#D85A30;">gov.uk/prove-right-to-work</a>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;font-size:14px;color:#333;line-height:1.7;">
+                  ✅ <strong>Document Upload</strong> — a copy of your British or Irish passport,
+                  or other accepted right to work documents
+                </td>
+              </tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0"
+              style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px;margin:16px 0;">
+              <tr>
+                <td style="font-size:14px;color:#856404;">
+                  ⚠️ <strong>Important:</strong> Failure to provide this information within
+                  <strong>7 days</strong> may result in your account being suspended until
+                  verification is complete.
+                </td>
+              </tr>
+            </table>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="https://www.paintbookco.co.uk/dashboard/painter?tab=profile"
+                style="background:#D85A30;color:#ffffff;padding:16px 36px;border-radius:6px;
+                text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;">
+                Complete Right to Work Check →
+              </a>
+            </div>
+            <p style="font-size:13px;color:#666;line-height:1.7;">
+              If you have any questions or need assistance, please contact us at
+              <a href="mailto:hello@paintbookco.co.uk" style="color:#D85A30;">hello@paintbookco.co.uk</a>
+            </p>
+            <p style="font-size:13px;color:#666;line-height:1.7;">
+              This is a legal requirement. PaintBookCo is committed to ensuring all workers
+              on our platform are legally authorised to work in the UK.
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8f9fa;padding:20px 32px;border-top:1px solid #e5e5e5;text-align:center;">
+            <p style="font-size:11px;color:#999;margin:0;">
+              © PaintBookCo — The Paint Book Company Ltd · Company No. 16690724<br>
+              <a href="mailto:noreply@paintbookco.co.uk" style="color:#bbb;text-decoration:none;">noreply@paintbookco.co.uk</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+          await fetch("https://api.sendgrid.com/v3/mail/send", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${sendgridKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              personalizations: [{ to: [{ email: rtwPainter.email }] }],
+              from: { email: "noreply@paintbookco.co.uk", name: "PaintBookCo" },
+              subject: "Action Required: Right to Work Verification — PaintBookCo",
+              content: [{ type: "text/html", value: emailHtml }],
+            }),
+          }).catch(e => console.error("RTW email error:", e));
+        }
+
+        await serviceClient.from("notifications").insert({
+          painter_id: rtwPainter.id,
+          title: "Right to Work Check Required",
+          message: "PaintBookCo needs to verify your right to work in the UK. Please check your email and complete the verification via your dashboard.",
+          type: "rtw_requested",
+        }).catch(() => {});
+
         await serviceClient.from("audit_log").insert({
           action: "rtw_check_requested",
           actor_role: "admin",
           entity_type: "painter",
-          entity_id: painter.id,
-          details: { painter_email, painter_name: `${painter.first_name} ${painter.last_name}` },
+          entity_id: rtwPainter.id,
+          details: { painter_email, painter_name: `${rtwPainter.first_name} ${rtwPainter.last_name}` },
         }).catch(() => {});
 
-        return json({ success: true, message: "RTW check requested" });
+        return json({ success: true, message: "RTW check requested and email sent" });
       }
 
       default:

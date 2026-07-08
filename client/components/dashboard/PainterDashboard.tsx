@@ -1906,6 +1906,32 @@ export function PainterDashboard() {
                     <ChangePasswordForm user={user} showToast={showToast} />
                   </div>
 
+                  {/* Right to Work Section */}
+                  {painter.rtw_status === "requested" && (
+                    <div className="border border-amber-500/40 rounded-lg p-4 sm:p-6 bg-amber-500/5">
+                      <h3 className="font-semibold mb-1 text-amber-500">Right to Work Check Required</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        PaintBookCo is required by UK law to verify your right to work. Please provide the information below.
+                      </p>
+                      <RTWSubmissionForm painter={painter} supabase={supabase} onRefresh={loadDashboard} showToast={showToast} />
+                    </div>
+                  )}
+                  {painter.rtw_status === "verified" && (
+                    <div className="border border-green-800/40 bg-green-900/20 rounded-lg p-4 sm:p-6">
+                      <h3 className="font-semibold text-green-400 mb-1">✓ Right to Work Verified</h3>
+                      {painter.rtw_visa_expiry && (
+                        <p className="text-sm text-muted-foreground">Visa valid until: {new Date(painter.rtw_visa_expiry).toLocaleDateString("en-GB")}</p>
+                      )}
+                    </div>
+                  )}
+                  {painter.rtw_status === "expired" && (
+                    <div className="border border-red-800/40 bg-red-900/20 rounded-lg p-4 sm:p-6">
+                      <h3 className="font-semibold text-red-400 mb-1">⚠️ Right to Work Expired</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Your right to work has expired. Please provide updated documentation.</p>
+                      <RTWSubmissionForm painter={painter} supabase={supabase} onRefresh={loadDashboard} showToast={showToast} />
+                    </div>
+                  )}
+
                   {/* Insurance Section */}
                   <div className="border border-border rounded-lg p-4 sm:p-6">
                     <h3 className="font-semibold mb-3 sm:mb-4">Insurance Details</h3>
@@ -2017,6 +2043,94 @@ export function PainterDashboard() {
   );
 }
 
+
+
+// ── Right to Work Submission Form ────────────────────────────────────────────
+function RTWSubmissionForm({ painter, supabase, onRefresh, showToast }: { painter: any; supabase: any; onRefresh: () => void; showToast: (msg: string, type?: string) => void }) {
+  const [shareCode, setShareCode] = React.useState("");
+  const [dob, setDob] = React.useState("");
+  const [docFile, setDocFile] = React.useState<File | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  async function handleSubmit() {
+    setError("");
+    if (!shareCode && !docFile) { setError("Please provide a share code or upload a document."); return; }
+    if (shareCode && !dob) { setError("Please enter your date of birth with your share code."); return; }
+
+    setLoading(true);
+    try {
+      let docUrl = null;
+
+      // Upload document if provided
+      if (docFile) {
+        const fileExt = docFile.name.split(".").pop();
+        const path = sanitizeStoragePath(`${painter.id}/rtw_${Date.now()}.${fileExt}`);
+        const { error: uploadError } = await supabase.storage
+          .from("documents")
+          .upload(path, docFile, { upsert: true });
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage.from("documents").getPublicUrl(path);
+          docUrl = publicUrl;
+        }
+      }
+
+      // Update painter RTW fields
+      const { error: updateError } = await supabase
+        .from("painters")
+        .update({
+          rtw_share_code: shareCode || null,
+          rtw_dob: dob || null,
+          rtw_document_url: docUrl,
+          rtw_status: "submitted",
+        })
+        .eq("id", painter.id);
+
+      if (updateError) throw updateError;
+
+      showToast("Right to Work information submitted successfully.", "success");
+      onRefresh();
+    } catch (err: any) {
+      setError(err.message || "Submission failed. Please try again.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <div className="border border-red-800/40 bg-red-900/20 rounded-lg p-3"><p className="text-red-400 text-sm">{error}</p></div>}
+
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Share Code (if applicable)</label>
+        <input type="text" value={shareCode} onChange={e => setShareCode(e.target.value)}
+          placeholder="e.g. W2J34K"
+          className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+        <p className="text-xs text-muted-foreground mt-1">Get your share code at gov.uk/prove-right-to-work</p>
+      </div>
+
+      {shareCode && (
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Date of Birth</label>
+          <input type="date" value={dob} onChange={e => setDob(e.target.value)}
+            className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+        </div>
+      )}
+
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Upload Document (PDF or Image)</label>
+        <input type="file" accept=".pdf,image/*"
+          onChange={e => setDocFile(e.target.files?.[0] || null)}
+          className="w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-foreground file:text-background hover:file:bg-foreground/90" />
+        <p className="text-xs text-muted-foreground mt-1">Accepted: passport, visa, biometric residence permit, or other RTW documents</p>
+      </div>
+
+      <button onClick={handleSubmit} disabled={loading}
+        className="w-full py-2.5 bg-amber-600 text-white rounded-md text-sm font-medium hover:bg-amber-700 transition-colors disabled:opacity-40">
+        {loading ? "Submitting..." : "Submit Right to Work Information"}
+      </button>
+    </div>
+  );
+}
 
 // ── Change Password Form ─────────────────────────────────────────────────────
 function ChangePasswordForm({ user, showToast }: { user: any; showToast: (msg: string, type?: string) => void }) {

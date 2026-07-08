@@ -1388,7 +1388,8 @@ const REGISTRATION_STEPS = [
   { number: 3, label: "Insurance Submitted", key: "insurance_submitted" },
   { number: 4, label: "Insurance Verified", key: "insurance_verified" },
   { number: 5, label: "KYC Verification", key: "kyc_status" },
-  { number: 6, label: "Account Activated", key: "is_active" },
+  { number: 6, label: "Right to Work", key: "rtw_status" },
+  { number: 7, label: "Account Activated", key: "is_active" },
 ];
 
 export function PainterDashboard() {
@@ -1777,6 +1778,7 @@ export function PainterDashboard() {
                     else if (step.key === "insurance_submitted") isComplete = painter?.insurance_submitted_at !== null;
                     else if (step.key === "insurance_verified") isComplete = painter?.insurance_verified === true;
                     else if (step.key === "kyc_status") isComplete = painter?.kyc_status === "approved";
+                    else if (step.key === "rtw_status") isComplete = painter?.rtw_status === "verified";
                     else if (step.key === "is_active") isComplete = painter?.is_active === true;
 
                     return (
@@ -1809,9 +1811,10 @@ export function PainterDashboard() {
                       else if (s.key === "insurance_submitted") return painter?.insurance_submitted_at !== null;
                       else if (s.key === "insurance_verified") return painter?.insurance_verified === true;
                       else if (s.key === "kyc_status") return painter?.kyc_status === "approved";
+                      else if (s.key === "rtw_status") return painter?.rtw_status === "verified";
                       else if (s.key === "is_active") return painter?.is_active === true;
                       return false;
-                    }).length}/6 steps
+                    }).length}/7 steps
                   </p>
                 </div>
               </div>

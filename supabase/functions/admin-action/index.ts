@@ -258,6 +258,63 @@ Deno.serve(async (req) => {
         return json({ success: true });
       }
 
+      case "rtw_verified": {
+        // Admin confirms RTW is verified after reviewing painter submission
+        const { rtw_visa_expiry, rtw_notes } = body as any;
+        await serviceClient.from("painters").update({
+          rtw_status: "verified",
+          rtw_visa_expiry: rtw_visa_expiry || null,
+          rtw_checked_at: new Date().toISOString(),
+          rtw_notes: rtw_notes || null,
+        }).eq("email", painter_email);
+
+        // In-app notification
+        const { data: p1 } = await serviceClient.from("painters").select("id, first_name, last_name, email").eq("email", painter_email).single();
+        if (p1) {
+          await serviceClient.from("notifications").insert({
+            painter_id: p1.id,
+            title: "Right to Work Verified",
+            message: "Your right to work in the UK has been successfully verified by PaintBookCo.",
+            type: "rtw_verified",
+          }).catch(() => {});
+
+          // Email via Make.com
+          const rtwWebhook = Deno.env.get("MAKE_RTW_VERIFIED_WEBHOOK");
+          if (rtwWebhook) {
+            await fetch(rtwWebhook, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                painter_email: p1.email,
+                painter_first_name: p1.first_name,
+                painter_name: `${p1.first_name} ${p1.last_name}`,
+                dashboard_link: "https://www.paintbookco.co.uk/dashboard/painter?tab=profile",
+              }),
+            }).catch(() => {});
+          }
+        }
+        return json({ success: true, message: "RTW verified" });
+      }
+
+      case "rtw_rejected": {
+        const { rtw_notes } = body as any;
+        await serviceClient.from("painters").update({
+          rtw_status: "rejected",
+          rtw_notes: rtw_notes || null,
+        }).eq("email", painter_email);
+
+        const { data: p2 } = await serviceClient.from("painters").select("id, first_name, last_name, email").eq("email", painter_email).single();
+        if (p2) {
+          await serviceClient.from("notifications").insert({
+            painter_id: p2.id,
+            title: "Right to Work Check Failed",
+            message: rtw_notes || "We were unable to verify your right to work. Please contact hello@paintbookco.co.uk for assistance.",
+            type: "rtw_rejected",
+          }).catch(() => {});
+        }
+        return json({ success: true, message: "RTW rejected" });
+      }
+
       case "request_rtw": {
         // Get painter details
         const { data: painter } = await serviceClient

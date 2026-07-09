@@ -622,7 +622,7 @@ export default function AdminDashboard() {
       const [
         kycRes, insuranceRes, activateRes,
         sessionsRes, transactionsRes, disputesRes,
-        activePaintersRes, cscsRes
+        activePaintersRes, cscsRes, allPaintersRes
       ] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=in.(pending,submitted)&select=*&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?insurance_submitted_at=not.is.null&insurance_verified=eq.false&select=*&order=insurance_submitted_at.desc`, { headers }),
@@ -640,6 +640,7 @@ export default function AdminDashboard() {
         sessionsRes.json(), transactionsRes.json(), disputesRes.json(),
         activePaintersRes.json(),
         cscsRes.json(),
+        allPaintersRes.json(),
       ]);
 
       const today = new Date().toISOString().split("T")[0];

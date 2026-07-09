@@ -563,6 +563,12 @@ export default function AdminDashboard() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rtwModal, setRtwModal] = useState<any | null>(null);
+  const [emailModal, setEmailModal] = useState<{ to: string; toName: string } | null>(null);
+  const [emailFrom, setEmailFrom] = useState("noreply@paintbookco.co.uk");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [emailFile, setEmailFile] = useState<File | null>(null);
+  const [emailSending, setEmailSending] = useState(false);
   const [allPainters, setAllPainters] = useState<any[]>([]);
   const [paintersSearch, setPaintersSearch] = useState("");
   const [paintersFilter, setPaintersFilter] = useState({ specialism: "", kyc: "", insurance: "", cscs: "", active: "" });
@@ -1461,6 +1467,12 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                           </div>
+                          {p.is_blocklisted && (
+                            <div className="border border-red-800/40 bg-red-900/20 rounded-lg px-3 py-2">
+                              <p className="text-red-400 text-xs font-medium">🔒 Blocklisted{p.blocklisted_at ? ` on ${new Date(p.blocklisted_at).toLocaleDateString("en-GB")}` : ""}</p>
+                              {p.blocklist_reason && <p className="text-red-300/70 text-xs mt-0.5">Reason: {p.blocklist_reason}</p>}
+                            </div>
+                          )}
                           {p.specialisms?.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {p.specialisms.map((s: string) => (
@@ -1469,14 +1481,37 @@ export default function AdminDashboard() {
                             </div>
                           )}
                           <div className="flex flex-wrap gap-2 pt-1">
-                            <a href={`mailto:${p.email}`} className="px-3 py-1.5 border border-border rounded text-xs hover:bg-accent transition-colors">✉️ Email</a>
+                            <button onClick={() => setEmailModal({ to: p.email, toName: p.first_name + " " + p.last_name })} className="px-3 py-1.5 border border-border rounded text-xs hover:bg-accent transition-colors">✉️ Email</button>
                             <button onClick={() => adminAction(p.is_active ? "deactivate_painter" : "activate_painter", p.email)}
                               className={`px-3 py-1.5 rounded text-xs transition-colors ${p.is_active ? "border border-red-500 text-red-400 hover:bg-red-500/10" : "border border-green-500 text-green-400 hover:bg-green-500/10"}`}>
                               {p.is_active ? "⛔ Deactivate" : "✅ Activate"}
                             </button>
                             <button onClick={() => setRtwModal(p)} className="px-3 py-1.5 border border-amber-500 text-amber-400 rounded text-xs hover:bg-amber-500/10 transition-colors">📋 RTW Check</button>
-                            <button onClick={() => { const reason = prompt(`Blocklist reason for ${p.first_name} ${p.last_name}:`); if (reason) adminAction("deactivate_painter", p.email, reason); }}
-                              className="px-3 py-1.5 border border-red-800 text-red-400 rounded text-xs hover:bg-red-500/10 transition-colors">🔒 Blocklist</button>
+                            {p.is_blocklisted ? (
+                              <button onClick={async () => {
+                                await fetch(`${SUPABASE_URL}/rest/v1/painters?id=eq.${p.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+                                  body: JSON.stringify({ is_blocklisted: false, blocklist_reason: null, is_active: true }),
+                                });
+                                setMessage({ text: `✅ ${p.first_name} released from blocklist`, type: "success" });
+                                await loadAll(session.access_token);
+                                setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+                              }} className="px-3 py-1.5 border border-green-500 text-green-400 rounded text-xs hover:bg-green-500/10 transition-colors">🔓 Release</button>
+                            ) : (
+                              <button onClick={async () => {
+                                const reason = prompt(`Blocklist reason for ${p.first_name} ${p.last_name}:`);
+                                if (!reason) return;
+                                await fetch(`${SUPABASE_URL}/rest/v1/painters?id=eq.${p.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+                                  body: JSON.stringify({ is_blocklisted: true, blocklist_reason: reason, blocklisted_at: new Date().toISOString(), blocklisted_by: session.user.email, is_active: false }),
+                                });
+                                setMessage({ text: `🔒 ${p.first_name} blocklisted`, type: "success" });
+                                await loadAll(session.access_token);
+                                setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+                              }} className="px-3 py-1.5 border border-red-800 text-red-400 rounded text-xs hover:bg-red-500/10 transition-colors">🔒 Blocklist</button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1671,6 +1706,105 @@ export default function AdminDashboard() {
           SUPABASE_URL={SUPABASE_URL}
           ANON_KEY={ANON_KEY}
         />
+      )}
+
+
+      {/* Email Compose Modal */}
+      {emailModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-background border border-border rounded-xl p-6 max-w-lg w-full space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Compose Email</h2>
+              <button onClick={() => { setEmailModal(null); setEmailSubject(""); setEmailBody(""); setEmailFile(null); }}
+                className="text-muted-foreground hover:text-foreground">✕</button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">From</label>
+                <select value={emailFrom} onChange={e => setEmailFrom(e.target.value)}
+                  className="w-full border border-border rounded px-3 py-2 text-sm bg-background focus:outline-none focus:border-foreground">
+                  <option value="noreply@paintbookco.co.uk">noreply@paintbookco.co.uk</option>
+                  <option value="hello@paintbookco.co.uk">hello@paintbookco.co.uk</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">To</label>
+                <input type="text" value={`${emailModal.toName} <${emailModal.to}>`} readOnly
+                  className="w-full border border-border rounded px-3 py-2 text-sm bg-muted/30 text-muted-foreground" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Subject</label>
+                <input type="text" value={emailSubject} onChange={e => setEmailSubject(e.target.value)}
+                  placeholder="Email subject..."
+                  className="w-full border border-border rounded px-3 py-2 text-sm bg-background focus:outline-none focus:border-foreground" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Message</label>
+                <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)}
+                  placeholder={`Dear ${emailModal.toName.split(" ")[0]},\n\n`}
+                  rows={8}
+                  className="w-full border border-border rounded px-3 py-2 text-sm bg-background focus:outline-none focus:border-foreground resize-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">Attachment (optional)</label>
+                <input type="file" accept=".pdf,image/*,.doc,.docx"
+                  onChange={e => setEmailFile(e.target.files?.[0] || null)}
+                  className="w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-foreground file:text-background" />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                disabled={!emailSubject || !emailBody || emailSending}
+                onClick={async () => {
+                  if (!emailSubject || !emailBody) return;
+                  setEmailSending(true);
+                  try {
+                    let attachmentData = null;
+                    if (emailFile) {
+                      const reader = new FileReader();
+                      attachmentData = await new Promise<string>((resolve) => {
+                        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+                        reader.readAsDataURL(emailFile);
+                      });
+                    }
+                    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-admin-email`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY },
+                      body: JSON.stringify({
+                        from: emailFrom,
+                        to: emailModal.to,
+                        toName: emailModal.toName,
+                        subject: emailSubject,
+                        body: emailBody,
+                        attachmentBase64: attachmentData,
+                        attachmentName: emailFile?.name,
+                        attachmentType: emailFile?.type,
+                      }),
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                      setMessage({ text: `✓ Email sent to ${emailModal.toName}`, type: "success" });
+                      setEmailModal(null);
+                      setEmailSubject("");
+                      setEmailBody("");
+                      setEmailFile(null);
+                    } else {
+                      setMessage({ text: result.error || "Failed to send email", type: "error" });
+                    }
+                  } catch { setMessage({ text: "Network error", type: "error" }); }
+                  setEmailSending(false);
+                  setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+                }}
+                className="flex-1 py-2.5 bg-foreground text-background rounded text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-40">
+                {emailSending ? "Sending..." : "Send Email"}
+              </button>
+              <button onClick={() => { setEmailModal(null); setEmailSubject(""); setEmailBody(""); setEmailFile(null); }}
+                className="px-4 py-2.5 border border-border rounded text-sm hover:bg-accent transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* RTW Request Modal */}

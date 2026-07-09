@@ -603,6 +603,12 @@ export default function AdminDashboard() {
   const [disputeChatTab, setDisputeChatTab] = useState<string>("customer");
   const [disputeUnread, setDisputeUnread] = useState<Record<string, number>>({});
 
+  // Re-assign job state
+  const [reassignModal, setReassignModal] = useState<{ job: any; currentPainterId: string } | null>(null);
+  const [activePaintersList, setActivePaintersList] = useState<any[]>([]);
+  const [reassigning, setReassigning] = useState(false);
+  const [reassignSearch, setReassignSearch] = useState("");
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session || session.user.email !== ADMIN_EMAIL) {
@@ -818,6 +824,77 @@ export default function AdminDashboard() {
 
   const resolveDispute = (dispute: any) => {
     setResolvingDispute(dispute);
+  };
+
+  const openReassignModal = async (job: any, currentPainterId: string) => {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/painters?is_active=eq.true&kyc_status=eq.approved&insurance_verified=eq.true&select=id,first_name,last_name,email,postcode,specialisms&order=first_name.asc`,
+      { headers: { "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY } }
+    );
+    const painters = await res.json();
+    setActivePaintersList((painters || []).filter((p: any) => p.id !== currentPainterId));
+    setReassignModal({ job, currentPainterId });
+  };
+
+  const confirmReassign = async (newPainter: any) => {
+    if (!reassignModal) return;
+    setReassigning(true);
+    try {
+      const { job, currentPainterId } = reassignModal;
+      await fetch(`${SUPABASE_URL}/rest/v1/sessions?id=eq.${job.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+        body: JSON.stringify({ painter_id: newPainter.id }),
+      });
+
+      const oldPainter = allPainters.find((p: any) => p.id === currentPainterId);
+      const jobLabel = `${job.job_type || "Job"} ${job.postcode || ""}`.trim();
+
+      if (oldPainter?.email) {
+        await fetch(`${SUPABASE_URL}/functions/v1/send-admin-email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY },
+          body: JSON.stringify({
+            from: "noreply@paintbookco.co.uk",
+            to: oldPainter.email,
+            toName: `${oldPainter.first_name} ${oldPainter.last_name}`,
+            subject: "Job Reassigned",
+            body: `A job has been reassigned from your account. Job: ${jobLabel}`,
+          }),
+        });
+      }
+
+      await fetch(`${SUPABASE_URL}/functions/v1/send-admin-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY },
+        body: JSON.stringify({
+          from: "noreply@paintbookco.co.uk",
+          to: newPainter.email,
+          toName: `${newPainter.first_name} ${newPainter.last_name}`,
+          subject: "New Job Assigned",
+          body: `A new job has been assigned to you. Job: ${jobLabel}. Please log in to your dashboard to view details.`,
+        }),
+      });
+
+      setMessage({ text: `✓ Job reassigned to ${newPainter.first_name} ${newPainter.last_name}`, type: "success" });
+      setReassignModal(null);
+      setReassignSearch("");
+
+      if (painterDetail) {
+        setPainterJobsLoading(true);
+        const jobsRes = await fetch(`${SUPABASE_URL}/rest/v1/sessions?painter_id=eq.${painterDetail.id}&select=*&order=created_at.desc`, {
+          headers: { "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY }
+        });
+        const jobs = await jobsRes.json();
+        setPainterJobs(jobs || []);
+        setPainterJobsLoading(false);
+      }
+      await loadAll(session.access_token);
+    } catch {
+      setMessage({ text: "Failed to reassign job", type: "error" });
+    }
+    setReassigning(false);
+    setTimeout(() => setMessage({ text: "", type: "" }), 4000);
   };
 
   const tabs = [
@@ -1322,7 +1399,7 @@ export default function AdminDashboard() {
                       <table className="w-full text-sm">
                         <thead className="border-b border-border bg-accent/30">
                           <tr>
-                            {["Ref", "Job Type", "Postcode", "Rooms", "Status", "Amount", "Painter Payout", "Commission", "Income", "Email", "Posted"].map(h => (
+                            {["Ref", "Job Type", "Postcode", "Rooms", "Status", "Amount", "Painter Payout", "Commission", "Income", "Email", "Posted", "Actions"].map(h => (
                               <th key={h} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                 {h}
                               </th>
@@ -1348,6 +1425,16 @@ export default function AdminDashboard() {
                               <td className="px-4 py-3 text-muted-foreground">{s.email || "Anonymous"}</td>
                               <td className="px-4 py-3 text-muted-foreground text-xs">
                                 {new Date(s.created_at).toLocaleDateString("en-GB")}
+                              </td>
+                              <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                                {s.painter_id && (
+                                  <button
+                                    onClick={() => openReassignModal(s, s.painter_id)}
+                                    className="px-3 py-1.5 border border-blue-500 text-blue-400 rounded text-xs hover:bg-blue-500/10 transition-colors whitespace-nowrap"
+                                  >
+                                    Re-assign
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}
@@ -1819,6 +1906,14 @@ export default function AdminDashboard() {
                           {job.customer_first_name && <p className="text-xs text-muted-foreground">Customer: {job.customer_first_name} {job.customer_last_name}</p>}
                         </div>
                         <StatusBadge status={job.status} />
+                        {(job.status === "assigned" || job.status === "active") && (
+                          <button
+                            onClick={() => openReassignModal(job, painterDetail.id)}
+                            className="px-3 py-1.5 border border-blue-500 text-blue-400 rounded text-xs hover:bg-blue-500/10 transition-colors whitespace-nowrap"
+                          >
+                            Re-assign →
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1882,6 +1977,67 @@ export default function AdminDashboard() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reassign Job Modal */}
+      {reassignModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-background border border-border rounded-xl p-6 max-w-lg w-full space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">
+                Re-assign Job — {reassignModal.job.job_type || "Job"} {reassignModal.job.postcode || ""}
+              </h2>
+              <button onClick={() => { setReassignModal(null); setReassignSearch(""); }} className="text-muted-foreground hover:text-foreground">✕</button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Currently assigned to: {(() => {
+                const cur = allPainters.find((p: any) => p.id === reassignModal.currentPainterId);
+                return cur ? `${cur.first_name} ${cur.last_name}` : "Unassigned";
+              })()}
+            </p>
+            <input
+              type="text"
+              placeholder="Search by name or postcode..."
+              value={reassignSearch}
+              onChange={e => setReassignSearch(e.target.value)}
+              className="w-full border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+            />
+            <div className="space-y-2">
+              {activePaintersList
+                .filter((p: any) => {
+                  if (!reassignSearch) return true;
+                  const q = reassignSearch.toLowerCase();
+                  const name = `${p.first_name || ""} ${p.last_name || ""}`.toLowerCase();
+                  return name.includes(q) || (p.postcode || "").toLowerCase().includes(q);
+                })
+                .map((p: any) => (
+                  <div key={p.id} className="border border-border rounded-lg p-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{p.first_name} {p.last_name}</p>
+                      <p className="text-xs text-muted-foreground">{p.postcode || "—"}</p>
+                      {p.specialisms?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {p.specialisms.map((s: string) => (
+                            <span key={s} className="text-xs bg-accent px-2 py-0.5 rounded">{s}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      disabled={reassigning}
+                      onClick={() => confirmReassign(p)}
+                      className="px-3 py-1.5 bg-foreground text-background rounded text-xs font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                      Assign to this painter →
+                    </button>
+                  </div>
+                ))}
+              {activePaintersList.length === 0 && (
+                <p className="text-sm text-muted-foreground">No other active verified painters available.</p>
+              )}
+            </div>
           </div>
         </div>
       )}

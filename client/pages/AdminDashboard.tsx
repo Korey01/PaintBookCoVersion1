@@ -201,7 +201,7 @@ const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-type Tab = "kyc" | "insurance" | "cscs" | "activate" | "jobs" | "disputes" | "rtw";
+type Tab = "kyc" | "insurance" | "cscs" | "activate" | "jobs" | "disputes" | "rtw" | "painters";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -563,6 +563,9 @@ export default function AdminDashboard() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rtwModal, setRtwModal] = useState<any | null>(null);
+  const [allPainters, setAllPainters] = useState<any[]>([]);
+  const [paintersSearch, setPaintersSearch] = useState("");
+  const [paintersFilter, setPaintersFilter] = useState({ specialism: "", kyc: "", insurance: "", cscs: "", active: "" });
   const [approveKycModal, setApproveKycModal] = useState<any | null>(null);
   const [rtwEligible, setRtwEligible] = useState<boolean | null>(null);
   const [rtwVisaExpiry, setRtwVisaExpiry] = useState("");
@@ -629,9 +632,10 @@ export default function AdminDashboard() {
         fetch(`${SUPABASE_URL}/rest/v1/disputes?select=*,transactions(id,amount,painter_id,customer_email,customer_first_name,customer_last_name,disputed_at,painters(id,first_name,last_name,email,phone))&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?is_active=eq.true&select=id`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?cscs_submitted_at=not.is.null&cscs_verified=eq.false&select=*&order=cscs_submitted_at.desc`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/painters?select=*&order=created_at.desc`, { headers }),
       ]);
 
-      const [kyc, insurance, activate, sess, trans, disp, active, cscs] = await Promise.all([
+      const [kyc, insurance, activate, sess, trans, disp, active, cscs, allP] = await Promise.all([
         kycRes.json(), insuranceRes.json(), activateRes.json(),
         sessionsRes.json(), transactionsRes.json(), disputesRes.json(),
         activePaintersRes.json(),
@@ -645,6 +649,7 @@ export default function AdminDashboard() {
 
       setPendingKYC(kyc || []);
       setPendingCSCS(cscs || []);
+      setAllPainters(allP || []);
       setPendingInsurance(insurance || []);
       setReadyToActivate(activate || []);
       setSessions(sess || []);
@@ -806,6 +811,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: "kyc", label: "KYC Review", icon: Shield, count: stats.pendingKYC },
     { id: "rtw", label: "Right to Work", icon: Shield, count: 0 },
+    { id: "painters", label: "All Painters", icon: Shield, count: allPainters.length },
     { id: "insurance", label: "Insurance", icon: CheckCircle2, count: stats.pendingInsurance },
     { id: "cscs", label: "CSCS Cards", icon: Shield, count: stats.pendingCSCS },
     { id: "activate", label: "Activate", icon: Users, count: stats.readyToActivate },
@@ -862,15 +868,16 @@ export default function AdminDashboard() {
       {/* Stats */}
       <div className="px-6 py-5 grid grid-cols-2 md:grid-cols-6 gap-3">
         {[
-          { label: "Pending KYC", value: stats.pendingKYC, color: "text-amber-400" },
-          { label: "Pending Insurance", value: stats.pendingInsurance, color: "text-blue-400" },
-          { label: "Pending CSCS", value: stats.pendingCSCS, color: "text-purple-400" },
-          { label: "Ready to Activate", value: stats.readyToActivate, color: "text-orange-400" },
-          { label: "Active Painters", value: stats.activePainters, color: "text-green-400" },
-          { label: "Open Disputes", value: stats.openDisputes, color: "text-red-400" },
-          { label: "Jobs Today", value: stats.jobsToday, color: "text-purple-400" },
+          { label: "Pending KYC", value: stats.pendingKYC, color: "text-amber-400", tab: "kyc" },
+          { label: "Pending Insurance", value: stats.pendingInsurance, color: "text-blue-400", tab: "insurance" },
+          { label: "Pending CSCS", value: stats.pendingCSCS, color: "text-purple-400", tab: "cscs" },
+          { label: "Ready to Activate", value: stats.readyToActivate, color: "text-orange-400", tab: "activate" },
+          { label: "Active Painters", value: stats.activePainters, color: "text-green-400", tab: "painters" },
+          { label: "Open Disputes", value: stats.openDisputes, color: "text-red-400", tab: "disputes" },
+          { label: "Jobs Today", value: stats.jobsToday, color: "text-purple-400", tab: "jobs" },
         ].map(s => (
-          <div key={s.label} className="border border-border rounded-lg p-3 bg-card">
+          <div key={s.label} onClick={() => setActiveTab(s.tab as Tab)}
+            className="border border-border rounded-lg p-3 bg-card cursor-pointer hover:border-foreground hover:shadow-md transition-all duration-200">
             <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
           </div>
@@ -1378,6 +1385,104 @@ export default function AdminDashboard() {
             {/* DISPUTES */}
             {activeTab === "rtw" && (
               <RTWTab session={session} SUPABASE_URL={SUPABASE_URL} ANON_KEY={ANON_KEY} onRequestRTW={(p: any) => setRtwModal(p)} />
+            )}
+
+
+            {activeTab === "painters" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">All Painters ({allPainters.length})</h2>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <input type="text" placeholder="Search name or email..." value={paintersSearch}
+                    onChange={e => setPaintersSearch(e.target.value)}
+                    className="col-span-2 md:col-span-1 bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none focus:border-foreground" />
+                  <select value={paintersFilter.kyc} onChange={e => setPaintersFilter(f => ({ ...f, kyc: e.target.value }))}
+                    className="bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none">
+                    <option value="">All KYC</option>
+                    <option value="pending">Pending</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <select value={paintersFilter.insurance} onChange={e => setPaintersFilter(f => ({ ...f, insurance: e.target.value }))}
+                    className="bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none">
+                    <option value="">All Insurance</option>
+                    <option value="verified">Verified</option>
+                    <option value="pending">Pending</option>
+                    <option value="not_submitted">Not Submitted</option>
+                  </select>
+                  <select value={paintersFilter.active} onChange={e => setPaintersFilter(f => ({ ...f, active: e.target.value }))}
+                    className="bg-background border border-border rounded px-3 py-2 text-sm focus:outline-none">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  <button onClick={() => { setPaintersSearch(""); setPaintersFilter({ specialism: "", kyc: "", insurance: "", cscs: "", active: "" }); }}
+                    className="px-3 py-2 border border-border rounded text-sm hover:bg-accent transition-colors">Clear Filters</button>
+                </div>
+                {(() => {
+                  const filtered = allPainters.filter(p => {
+                    const search = paintersSearch.toLowerCase();
+                    if (search && !`${p.first_name} ${p.last_name} ${p.email}`.toLowerCase().includes(search)) return false;
+                    if (paintersFilter.kyc && p.kyc_status !== paintersFilter.kyc) return false;
+                    if (paintersFilter.insurance === "verified" && !p.insurance_verified) return false;
+                    if (paintersFilter.insurance === "pending" && (!p.insurance_submitted_at || p.insurance_verified)) return false;
+                    if (paintersFilter.insurance === "not_submitted" && p.insurance_submitted_at) return false;
+                    if (paintersFilter.active === "active" && !p.is_active) return false;
+                    if (paintersFilter.active === "inactive" && p.is_active) return false;
+                    return true;
+                  });
+                  return (
+                    <div className="space-y-3">
+                      <p className="text-xs text-muted-foreground">Showing {filtered.length} of {allPainters.length} painters</p>
+                      {filtered.length === 0 ? (
+                        <div className="border border-border rounded-xl p-8 text-center text-muted-foreground"><p>No painters match your filters</p></div>
+                      ) : filtered.map(p => (
+                        <div key={p.id} className="border border-border rounded-xl p-4 space-y-3 hover:border-foreground/40 transition-colors">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                              <p className="font-medium">{p.first_name} {p.last_name}</p>
+                              <p className="text-sm text-muted-foreground">{p.email}</p>
+                              <p className="text-sm text-muted-foreground">{p.phone} · {p.postcode}</p>
+                              <p className="text-xs text-muted-foreground">Joined: {new Date(p.created_at).toLocaleDateString("en-GB")}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-1 justify-end shrink-0">
+                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${p.is_active ? "bg-green-900/40 text-green-400" : "bg-red-900/40 text-red-400"}`}>
+                                {p.is_active ? "Active" : "Inactive"}
+                              </span>
+                              <StatusBadge status={p.kyc_status} />
+                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${p.insurance_verified ? "bg-green-900/40 text-green-400" : p.insurance_submitted_at ? "bg-amber-900/40 text-amber-400" : "bg-gray-900/40 text-gray-400"}`}>
+                                {p.insurance_verified ? "✓ Insured" : p.insurance_submitted_at ? "⏳ Insurance" : "No Insurance"}
+                              </span>
+                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${p.cscs_verified ? "bg-green-900/40 text-green-400" : p.cscs_submitted_at ? "bg-amber-900/40 text-amber-400" : "bg-gray-900/40 text-gray-400"}`}>
+                                {p.cscs_verified ? "✓ CSCS" : p.cscs_submitted_at ? "⏳ CSCS" : "No CSCS"}
+                              </span>
+                            </div>
+                          </div>
+                          {p.specialisms?.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {p.specialisms.map((s: string) => (
+                                <span key={s} className="text-xs bg-accent px-2 py-0.5 rounded">{s}</span>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <a href={`mailto:${p.email}`} className="px-3 py-1.5 border border-border rounded text-xs hover:bg-accent transition-colors">✉️ Email</a>
+                            <button onClick={() => adminAction(p.is_active ? "deactivate_painter" : "activate_painter", p.email)}
+                              className={`px-3 py-1.5 rounded text-xs transition-colors ${p.is_active ? "border border-red-500 text-red-400 hover:bg-red-500/10" : "border border-green-500 text-green-400 hover:bg-green-500/10"}`}>
+                              {p.is_active ? "⛔ Deactivate" : "✅ Activate"}
+                            </button>
+                            <button onClick={() => setRtwModal(p)} className="px-3 py-1.5 border border-amber-500 text-amber-400 rounded text-xs hover:bg-amber-500/10 transition-colors">📋 RTW Check</button>
+                            <button onClick={() => { const reason = prompt(`Blocklist reason for ${p.first_name} ${p.last_name}:`); if (reason) adminAction("deactivate_painter", p.email, reason); }}
+                              className="px-3 py-1.5 border border-red-800 text-red-400 rounded text-xs hover:bg-red-500/10 transition-colors">🔒 Blocklist</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
             )}
 
             {activeTab === "disputes" && (

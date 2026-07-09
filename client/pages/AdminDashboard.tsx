@@ -564,6 +564,11 @@ export default function AdminDashboard() {
   const [rejectReason, setRejectReason] = useState("");
   const [rtwModal, setRtwModal] = useState<any | null>(null);
   const [emailModal, setEmailModal] = useState<{ to: string; toName: string } | null>(null);
+  const [painterDetail, setPainterDetail] = useState<any | null>(null);
+  const [painterJobs, setPainterJobs] = useState<any[]>([]);
+  const [painterJobsLoading, setPainterJobsLoading] = useState(false);
+  const [assignJobModal, setAssignJobModal] = useState<any | null>(null);
+  const [availableJobs, setAvailableJobs] = useState<any[]>([]);
   const [emailFrom, setEmailFrom] = useState("noreply@paintbookco.co.uk");
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
@@ -1488,6 +1493,17 @@ export default function AdminDashboard() {
                               className={`px-3 py-1.5 rounded text-xs transition-colors ${p.is_active ? "border border-red-500 text-red-400 hover:bg-red-500/10" : "border border-green-500 text-green-400 hover:bg-green-500/10"}`}>
                               {p.is_active ? "⛔ Deactivate" : "✅ Activate"}
                             </button>
+                            <button onClick={async () => {
+                              setPainterDetail(p);
+                              setPainterJobsLoading(true);
+                              setPainterJobs([]);
+                              const res = await fetch(`${SUPABASE_URL}/rest/v1/sessions?painter_id=eq.${p.id}&select=*&order=created_at.desc`, {
+                                headers: { "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY }
+                              });
+                              const jobs = await res.json();
+                              setPainterJobs(jobs || []);
+                              setPainterJobsLoading(false);
+                            }} className="px-3 py-1.5 border border-border rounded text-xs hover:bg-accent transition-colors">👁 View Details</button>
                             <button onClick={() => setRtwModal(p)} className="px-3 py-1.5 border border-amber-500 text-amber-400 rounded text-xs hover:bg-amber-500/10 transition-colors">📋 RTW Check</button>
                             {p.is_blocklisted ? (
                               <button onClick={async () => {
@@ -1710,6 +1726,165 @@ export default function AdminDashboard() {
         />
       )}
 
+
+
+      {/* Painter Detail Panel */}
+      {painterDetail && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-background border border-border rounded-t-2xl sm:rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">{painterDetail.first_name} {painterDetail.last_name}</h2>
+                <p className="text-sm text-muted-foreground">{painterDetail.email}</p>
+              </div>
+              <button onClick={() => { setPainterDetail(null); setPainterJobs([]); }}
+                className="text-muted-foreground hover:text-foreground text-xl">✕</button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Identity */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Phone</p><p>{painterDetail.phone || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Postcode</p><p>{painterDetail.postcode || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Joined</p><p>{new Date(painterDetail.created_at).toLocaleDateString("en-GB")}</p></div>
+                <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                  <span className={`text-xs px-2 py-0.5 rounded font-medium ${painterDetail.is_active ? "bg-green-900/40 text-green-400" : "bg-red-900/40 text-red-400"}`}>
+                    {painterDetail.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Compliance */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">Compliance</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between border border-border rounded-lg px-4 py-2">
+                    <span className="text-sm">KYC Verification</span>
+                    <StatusBadge status={painterDetail.kyc_status} />
+                  </div>
+                  <div className="flex items-center justify-between border border-border rounded-lg px-4 py-2">
+                    <span className="text-sm">Insurance</span>
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${painterDetail.insurance_verified ? "bg-green-900/40 text-green-400" : painterDetail.insurance_submitted_at ? "bg-amber-900/40 text-amber-400" : "bg-gray-900/40 text-gray-400"}`}>
+                      {painterDetail.insurance_verified ? "✓ Verified" : painterDetail.insurance_submitted_at ? "⏳ Pending" : "Not Submitted"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border border-border rounded-lg px-4 py-2">
+                    <span className="text-sm">CSCS Card {painterDetail.cscs_card_type ? `(${painterDetail.cscs_card_type})` : ""}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${painterDetail.cscs_verified ? "bg-green-900/40 text-green-400" : painterDetail.cscs_submitted_at ? "bg-amber-900/40 text-amber-400" : "bg-gray-900/40 text-gray-400"}`}>
+                      {painterDetail.cscs_verified ? "✓ Verified" : painterDetail.cscs_submitted_at ? "⏳ Pending" : "Not Submitted"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border border-border rounded-lg px-4 py-2">
+                    <span className="text-sm">Right to Work {painterDetail.rtw_visa_expiry ? `(expires ${new Date(painterDetail.rtw_visa_expiry).toLocaleDateString("en-GB")})` : ""}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${painterDetail.rtw_status === "verified" ? "bg-green-900/40 text-green-400" : painterDetail.rtw_status === "expired" ? "bg-red-900/40 text-red-400" : "bg-gray-900/40 text-gray-400"}`}>
+                      {painterDetail.rtw_status === "verified" ? "✓ Verified" : painterDetail.rtw_status === "expired" ? "⚠️ Expired" : painterDetail.rtw_status === "submitted" ? "⏳ Submitted" : "Not Checked"}
+                    </span>
+                  </div>
+                  {painterDetail.is_blocklisted && (
+                    <div className="border border-red-800/40 bg-red-900/20 rounded-lg px-4 py-2">
+                      <p className="text-red-400 text-sm font-medium">🔒 Blocklisted</p>
+                      {painterDetail.blocklist_reason && <p className="text-red-300/70 text-xs mt-1">Reason: {painterDetail.blocklist_reason}</p>}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Specialisms */}
+              {painterDetail.specialisms?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-2 uppercase tracking-wider text-muted-foreground">Specialisms</h3>
+                  <div className="flex flex-wrap gap-1">
+                    {painterDetail.specialisms.map((s: string) => (
+                      <span key={s} className="text-xs bg-accent px-2 py-0.5 rounded">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Job History */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">Job History</h3>
+                {painterJobsLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading jobs...</p>
+                ) : painterJobs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No jobs found.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {painterJobs.map((job: any) => (
+                      <div key={job.id} className="border border-border rounded-lg px-4 py-3 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{job.job_type || "Job"}</p>
+                          <p className="text-xs text-muted-foreground">{job.postcode} · {new Date(job.created_at).toLocaleDateString("en-GB")}</p>
+                          {job.customer_first_name && <p className="text-xs text-muted-foreground">Customer: {job.customer_first_name} {job.customer_last_name}</p>}
+                        </div>
+                        <StatusBadge status={job.status} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">Actions</h3>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => { setEmailModal({ to: painterDetail.email, toName: `${painterDetail.first_name} ${painterDetail.last_name}` }); setPainterDetail(null); }}
+                    className="px-4 py-2 border border-border rounded text-sm hover:bg-accent transition-colors">✉️ Send Email</button>
+                  <button onClick={() => adminAction(painterDetail.is_active ? "deactivate_painter" : "activate_painter", painterDetail.email)}
+                    className={`px-4 py-2 rounded text-sm transition-colors ${painterDetail.is_active ? "border border-red-500 text-red-400 hover:bg-red-500/10" : "border border-green-500 text-green-400 hover:bg-green-500/10"}`}>
+                    {painterDetail.is_active ? "⛔ Deactivate" : "✅ Activate"}
+                  </button>
+                  <button onClick={() => setRtwModal(painterDetail)}
+                    className="px-4 py-2 border border-amber-500 text-amber-400 rounded text-sm hover:bg-amber-500/10 transition-colors">📋 Request RTW</button>
+                  <button onClick={async () => {
+                    const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs?status=eq.open&select=*&order=created_at.desc&limit=20`, {
+                      headers: { "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY }
+                    });
+                    const jobs = await res.json();
+                    setAvailableJobs(jobs || []);
+                    setAssignJobModal(painterDetail);
+                  }} className="px-4 py-2 border border-blue-500 text-blue-400 rounded text-sm hover:bg-blue-500/10 transition-colors">🔄 Assign Job</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Job Modal */}
+      {assignJobModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-background border border-border rounded-xl p-6 max-w-lg w-full space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Assign Job to {assignJobModal.first_name}</h2>
+              <button onClick={() => setAssignJobModal(null)} className="text-muted-foreground hover:text-foreground">✕</button>
+            </div>
+            {availableJobs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No open jobs available to assign.</p>
+            ) : availableJobs.map((job: any) => (
+              <div key={job.id} className="border border-border rounded-lg p-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">{job.job_type || "Job"}</p>
+                  <p className="text-xs text-muted-foreground">{job.postcode} · {new Date(job.created_at).toLocaleDateString("en-GB")}</p>
+                </div>
+                <button onClick={async () => {
+                  await fetch(`${SUPABASE_URL}/rest/v1/jobs?id=eq.${job.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": ANON_KEY, "Prefer": "return=minimal" },
+                    body: JSON.stringify({ painter_id: assignJobModal.id, status: "assigned" }),
+                  });
+                  setMessage({ text: `✓ Job assigned to ${assignJobModal.first_name}`, type: "success" });
+                  setAssignJobModal(null);
+                  setTimeout(() => setMessage({ text: "", type: "" }), 4000);
+                }} className="px-3 py-1.5 bg-foreground text-background rounded text-xs font-medium hover:bg-foreground/90 transition-colors">
+                  Assign →
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Email Compose Modal */}
       {emailModal && (

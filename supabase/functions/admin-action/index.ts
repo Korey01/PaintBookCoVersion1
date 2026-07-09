@@ -336,7 +336,7 @@ Deno.serve(async (req) => {
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <!-- Header with logo -->
         <tr>
-          <td style="background:#1B3A5C;padding:24px 32px;text-align:center;">
+          <td style="padding:24px 32px 8px 32px;text-align:center;">
             <img src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png"
               alt="PaintBookCo" style="height:36px;max-width:160px;object-fit:contain;display:block;margin:0 auto;" />
           </td>

@@ -1424,6 +1424,7 @@ export default function AdminDashboard() {
                     <option value="">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
+                    <option value="blocklisted">Blocklisted</option>
                   </select>
                   <button onClick={() => { setPaintersSearch(""); setPaintersFilter({ specialism: "", kyc: "", insurance: "", cscs: "", active: "" }); }}
                     className="px-3 py-2 border border-border rounded text-sm hover:bg-accent transition-colors">Clear Filters</button>
@@ -1438,6 +1439,7 @@ export default function AdminDashboard() {
                     if (paintersFilter.insurance === "not_submitted" && p.insurance_submitted_at) return false;
                     if (paintersFilter.active === "active" && !p.is_active) return false;
                     if (paintersFilter.active === "inactive" && p.is_active) return false;
+                    if (paintersFilter.active === "blocklisted" && !p.is_blocklisted) return false;
                     return true;
                   });
                   return (

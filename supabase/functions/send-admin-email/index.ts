@@ -108,12 +108,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SERVICE_ROLE_KEY")!,
     );
-    await serviceClient.from("audit_log").insert({
-      action: "admin_email_sent",
-      actor_id: user.id,
-      actor_role: "admin",
-      details: { from, to, subject },
-    }).catch(() => {});
+    try {
+      await serviceClient.from("audit_log").insert({
+        action: "admin_email_sent",
+        actor_id: user.id,
+        actor_role: "admin",
+        details: { from, to, subject },
+      });
+    } catch (e) { console.error("Audit log error:", e); }
 
     return json({ success: true });
   } catch (err) {

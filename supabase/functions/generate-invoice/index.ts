@@ -245,17 +245,12 @@ Deno.serve(async (req) => {
     </p>
   </div>
 
-  <!-- Pay Now button -->
-  <div style="text-align:center;margin-bottom:32px;">
-    <a href="${payLinkPlaceholder}" style="display:inline-block;background:#f97316;color:#fff;font-weight:700;font-size:16px;padding:16px 40px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">
-      Pay Now — £${Number(amount).toFixed(2)}
-    </a>
-    <div style="font-size:11px;color:#666;margin-top:8px;">Secure payment via Transpact Escrow</div>
-  </div>
+
 
   <!-- Footer -->
   <div style="border-top:1px solid #1e1e1e;padding-top:20px;text-align:center;">
-    <div style="font-size:11px;color:#555;">PaintBookCo · The PaintBook Company Ltd · Co. No. 16690724</div>
+    <img src="https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png" alt="PaintBookCo" style="height:32px;object-fit:contain;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;" />
+    <div style="font-size:11px;color:#555;">The PaintBook Company Ltd · Co. No. 16690724</div>
     <div style="font-size:10px;color:#444;margin-top:4px;">Questions? Visit paintbookco.co.uk/help</div>
   </div>
 

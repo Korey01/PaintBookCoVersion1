@@ -453,10 +453,10 @@ export default function JobSessionPage() {
               onClick={handlePayNow}
               disabled={payLoading}
               className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-white"
-              style={{ background: "#2D5A3D" }}
+              style={{ background: "#D85A30" }}
             >
               {payLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Pay Now — Secure Escrow
+              Pay Now — £{transaction?.amount?.toFixed(2)}
             </button>
           </div>
         )}

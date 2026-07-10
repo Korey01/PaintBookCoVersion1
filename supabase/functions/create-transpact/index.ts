@@ -88,6 +88,78 @@ Deno.serve(async (req) => {
       const testSuffix = isTest ? "&Test=1" : "";
       const enc = encodeURIComponent;
       const paymentUrl = `https://www.transpact.com/Secure/Login.aspx?Em=${enc(transaction.customer_email)}&co=PaintBookCo${testSuffix}`;
+
+      // Send notification emails via SendGrid
+      const sendgridKey = Deno.env.get("SENDGRID_API_KEY");
+      const LOGO = "https://kvuidnkmxqftbmlyvlyl.supabase.co/storage/v1/object/public/assets/paintbookco-logo.png";
+      if (sendgridKey) {
+        const customerName = transaction.customer_first_name || "Customer";
+        const painterName = `${painter.first_name} ${painter.last_name}`;
+        const amount = transaction.amount;
+
+        // Email to customer with payment link
+        const customerHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:0 auto;padding:24px;">
+          <div style="text-align:center;padding:16px 0;">
+            <img src="${LOGO}" alt="PaintBookCo" style="height:36px;object-fit:contain;" />
+          </div>
+          <div style="background:#f9f9f9;padding:24px;border:1px solid #e5e5e5;border-radius:8px;">
+            <p>Dear ${customerName},</p>
+            <p>Your invoice for <strong>£${Number(amount).toFixed(2)}</strong> has been prepared. Please click the button below to log into Transpact and make your secure escrow payment.</p>
+            <p style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:12px;font-size:14px;">
+              💡 Your payment is held securely by <strong>Transpact</strong> — it is only released to the painter once you confirm the work is complete.
+            </p>
+            <div style="text-align:center;margin:24px 0;">
+              <a href="${paymentUrl}" style="background:#D85A30;color:#fff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;">
+                Pay Now — £${Number(amount).toFixed(2)} →
+              </a>
+            </div>
+            <p style="font-size:13px;color:#666;">If you have any questions, contact us at <a href="mailto:hello@paintbookco.co.uk" style="color:#D85A30;">hello@paintbookco.co.uk</a></p>
+          </div>
+          <p style="font-size:11px;color:#999;text-align:center;margin-top:16px;">© PaintBookCo — The Paint Book Company Ltd · Co. No. 16690724</p>
+        </body></html>`;
+
+        // Email to painter notifying payment is being processed
+        const painterHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:560px;margin:0 auto;padding:24px;">
+          <div style="text-align:center;padding:16px 0;">
+            <img src="${LOGO}" alt="PaintBookCo" style="height:36px;object-fit:contain;" />
+          </div>
+          <div style="background:#f9f9f9;padding:24px;border:1px solid #e5e5e5;border-radius:8px;">
+            <p>Dear ${painter.first_name},</p>
+            <p>Great news! Your customer is in the process of funding the escrow for your job worth <strong>£${Number(amount).toFixed(2)}</strong>.</p>
+            <p>Once the escrow is funded, you will receive a confirmation and can proceed with the work. Funds will be released to you once the customer confirms the work is complete.</p>
+            <div style="text-align:center;margin:24px 0;">
+              <a href="https://www.paintbookco.co.uk/dashboard/painter" style="background:#2D5A3D;color:#fff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:15px;display:inline-block;">
+                View Your Dashboard →
+              </a>
+            </div>
+            <p style="font-size:13px;color:#666;">If you have any questions, contact us at <a href="mailto:hello@paintbookco.co.uk" style="color:#D85A30;">hello@paintbookco.co.uk</a></p>
+          </div>
+          <p style="font-size:11px;color:#999;text-align:center;margin-top:16px;">© PaintBookCo — The Paint Book Company Ltd · Co. No. 16690724</p>
+        </body></html>`;
+
+        await Promise.all([
+          fetch("https://api.sendgrid.com/v3/mail/send", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${sendgridKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              personalizations: [{ to: [{ email: transaction.customer_email, name: customerName }] }],
+              from: { email: "noreply@paintbookco.co.uk", name: "PaintBookCo" },
+              subject: `Action Required: Pay £${Number(amount).toFixed(2)} via Transpact Escrow`,
+              content: [{ type: "text/html", value: customerHtml }],
+            }),
+          }).catch(e => console.error("Customer email error:", e)),
+          fetch("https://api.sendgrid.com/v3/mail/send", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${sendgridKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              personalizations: [{ to: [{ email: painter.email, name: painterName }] }],
+              from: { email: "noreply@paintbookco.co.uk", name: "PaintBookCo" },
+              subject: "Payment in progress — Escrow being funded",
+              content: [{ type: "text/html", value: painterHtml }],
+            }),
+          }).catch(e => console.error("Painter email error:", e)),
+        ]);
+      }
       return json({ success: true, payment_url: paymentUrl });
     }
 

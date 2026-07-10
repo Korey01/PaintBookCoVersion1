@@ -14,37 +14,78 @@ import { supabase } from "../../lib/supabase";
 // ── PII regex patterns ────────────────────────────────────────────────────────
 // Normalise message — strip spaces/special chars between digits for evasion detection
 function normaliseText(text: string): string {
-  return text
-    .replace(/[\s\.\-_\*\/\|,;:'"(){}\[\]!?]/g, "") // strip separators
-    .toLowerCase();
+  return text.replace(/[\s\.\-_\*\/\|,;:'"(){}\[\]!?]/g, "").toLowerCase();
+}
+
+// Track last 5 messages per session to detect split PII
+const recentMessages: string[] = [];
+
+function addToHistory(text: string) {
+  recentMessages.push(text);
+  if (recentMessages.length > 5) recentMessages.shift();
+}
+
+function getCombinedRecentText(): string {
+  return recentMessages.join(" ");
 }
 
 const PII_PATTERNS: RegExp[] = [
-  // UK mobile — catches 07xxx with any separators e.g. 07 481 439 567 or 07-481-439.567
+  // UK mobile numbers — all formats including spaced, dashed, dotted
   /(\+\s*4\s*4\s*|0\s*0\s*4\s*4\s*|0)\s*7\s*[\d\s\.\-_]{9,14}/g,
-  // UK landline — 01, 02, 03 numbers
+  // UK landline
   /(\+\s*4\s*4\s*|0\s*0\s*4\s*4\s*|0)\s*[123]\s*[\d\s\.\-_]{8,12}/g,
-  // Email addresses
+  // International numbers starting with +
+  /\+\s*\d[\d\s\.\-_]{9,14}/g,
+  // Email addresses including obfuscated ones (e.g. john at gmail dot com)
   /[a-zA-Z0-9._%+\-]+\s*@\s*[a-zA-Z0-9.\-]+\s*\.\s*[a-zA-Z]{2,}/g,
-  // UK postcodes — full postcode e.g. M28 3YU or M28-3YU or M283YU
+  /\b\w+\s+(at|@)\s+\w+\s+(dot|\.)\s*(com|co\.uk|net|org|uk)\b/gi,
+  // UK full postcodes
   /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/gi,
-  // URLs and social links
+  // UK partial postcodes that could be split (outward codes like M28, SW1, EC2A)
+  /\b[A-Z]{1,2}\d{1,2}[A-Z]?\b/g,
+  // URLs
   /(https?:\/\/|www\.|http)/gi,
-  // Social media handles
+  // Social media handles and platforms
   /@[a-zA-Z0-9_.]{2,}/g,
-  // Social media platform names
-  /(whatsapp|telegram|signal|snapchat|instagram|facebook|fb\.com|tiktok|twitter|linkedin|messenger)/gi,
+  // Social media platforms
+  /\b(whatsapp|telegram|signal|snapchat|instagram|facebook|fb\.com|tiktok|twitter|linkedin|messenger|wechat|viber)\b/gi,
   // Street addresses — number followed by road type
-  /\d+\s*[a-zA-Z]+\s*(street|st|road|rd|avenue|ave|lane|ln|drive|dr|close|cl|way|court|ct|place|pl|crescent|cres|terrace|ter|grove|row|gardens|gate)/gi,
+  /\d+\s+[a-zA-Z]+\s+(street|st|road|rd|avenue|ave|lane|ln|drive|dr|close|cl|way|court|ct|place|pl|crescent|cres|terrace|ter|grove|row|gardens|gate)\b/gi,
 ];
 
-// Also check normalised text for digit-only evasion (e.g. "07 4 8 1 4 3 9 5 6 7")
 function containsHiddenPhone(text: string): boolean {
   const digits = text.replace(/\D/g, "");
-  // UK mobile: 11 digits starting with 07, or 12 starting with 447
-  if (/^(07\d{9}|447\d{9}|0044\d{9})/.test(digits)) return true;
-  // Any 11-digit sequence starting with 0 (UK landline)
-  if (/0\d{10}/.test(digits)) return true;
+  // UK mobile
+  if (/07\d{9}/.test(digits)) return true;
+  if (/447\d{9}/.test(digits)) return true;
+  if (/00447\d{9}/.test(digits)) return true;
+  // UK landline 11 digits starting with 0
+  if (/0[123]\d{9}/.test(digits)) return true;
+  // Any 10+ digit sequence that could be a phone
+  if (digits.length >= 10 && digits.length <= 13) return true;
+  return false;
+}
+
+function checkSplitPII(currentMessage: string): boolean {
+  const combined = getCombinedRecentText() + " " + currentMessage;
+  const normCombined = normaliseText(combined);
+  // Check if combined recent messages form a complete UK postcode
+  if (/[a-z]{1,2}\d{1,2}[a-z]?\d[a-z]{2}/.test(normCombined)) return true;
+  // Check if combined messages form a phone number
+  const digits = combined.replace(/\D/g, "");
+  if (/07\d{9}/.test(digits) || /0[123]\d{9}/.test(digits)) return true;
+  return false;
+}
+
+function detectPII(text: string): boolean {
+  // Check current message
+  if (PII_PATTERNS.some(p => { p.lastIndex = 0; return p.test(text); })) return true;
+  if (containsHiddenPhone(text)) return true;
+  // Check normalised text
+  const norm = normaliseText(text);
+  if (containsHiddenPhone(norm)) return true;
+  // Check combined with recent messages for split PII
+  if (checkSplitPII(text)) return true;
   return false;
 }
 
@@ -215,10 +256,7 @@ export function PaintBookChat({
     setPiiWarning(false);
     setBlockedMessage("");
 
-    const hasPII = PII_PATTERNS.some(p => {
-      p.lastIndex = 0;
-      return p.test(content);
-    }) || containsHiddenPhone(content);
+    const hasPII = detectPII(content);
 
     if (hasPII) {
       setPiiWarning(true);
@@ -257,6 +295,7 @@ export function PaintBookChat({
     }
 
     await channelRef.current?.sendMessage({ text: content });
+    addToHistory(content);
   };
 
   // ── Invoice generation ────────────────────────────────────────────────────
@@ -370,10 +409,7 @@ export function PaintBookChat({
       const content = text.trim();
       if (!content) return;
 
-      const hasPII = PII_PATTERNS.some(p => {
-        p.lastIndex = 0;
-        return p.test(content);
-      }) || containsHiddenPhone(content);
+      const hasPII = detectPII(content);
 
       if (hasPII) {
         setBlocked("⚠️ Contact details cannot be shared before payment is secured.");
@@ -384,6 +420,7 @@ export function PaintBookChat({
       setText("");
       setBlocked("");
       await channelRef.current?.sendMessage({ text: content });
+      addToHistory(content);
     };
 
     return (

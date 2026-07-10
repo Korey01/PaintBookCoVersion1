@@ -38,6 +38,51 @@ const BLOCK_MESSAGE =
   "Once your booking is confirmed, PaintBookCo shares contact information " +
   "through official platform communications only.";
 
+// ── Server-side PII patterns (fast path, avoids SightEngine call) ─────────────
+
+const SERVER_PII_PATTERNS = [
+  /(\+44|0044|0)7\d{9}/,
+  /(\+44|0044|0)[123]\d{9}/,
+  /\+\d{10,13}/,
+  /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
+  /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i,
+  /(whatsapp|telegram|signal|snapchat|instagram|facebook|tiktok|twitter|linkedin)/i,
+  /\d+\s+[a-zA-Z]+\s+(street|st|road|rd|avenue|ave|lane|ln|drive|dr|close|cl|way)\b/i,
+];
+
+function serverDetectPII(text: string): boolean {
+  const norm = text.replace(/[\s\.\-_]/g, "");
+  if (SERVER_PII_PATTERNS.some((p) => p.test(text) || p.test(norm))) return true;
+  const digits = text.replace(/\D/g, "");
+  if (/07\d{9}/.test(digits) || /0[123]\d{9}/.test(digits)) return true;
+  if (digits.length >= 10 && digits.length <= 13 && /^0/.test(digits)) return true;
+  return false;
+}
+
+// ── Recent-message buffer for split-PII detection ──────────────────────────────
+// In-memory only — resets on cold start, keyed by job_id:user_id
+
+const recentMessagesBuffer = new Map<string, string[]>();
+
+function addToServerBuffer(key: string, text: string): void {
+  const history = recentMessagesBuffer.get(key) ?? [];
+  history.push(text);
+  if (history.length > 3) history.shift();
+  recentMessagesBuffer.set(key, history);
+}
+
+function checkServerSplitPII(key: string, currentMessage: string): boolean {
+  const history = recentMessagesBuffer.get(key) ?? [];
+  const combined = [...history, currentMessage].join(" ");
+  const norm = combined.replace(/[\s\.\-_]/g, "").toLowerCase();
+  // Combined recent messages forming a complete UK postcode
+  if (/[a-z]{1,2}\d{1,2}[a-z]?\d[a-z]{2}/.test(norm)) return true;
+  // Combined messages forming a phone number
+  const digits = combined.replace(/\D/g, "");
+  if (/07\d{9}/.test(digits) || /0[123]\d{9}/.test(digits)) return true;
+  return false;
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -122,6 +167,23 @@ Deno.serve(async (req) => {
 
       return json({ blocked: true, message: BLOCK_MESSAGE });
     }
+
+    // ── Layer 1.5: server-side regex fast path (before SightEngine) ─
+    const bufferKey = `${job_id}:${user.id}`;
+    if (serverDetectPII(content) || checkServerSplitPII(bufferKey, content)) {
+      await logBlock(serviceClient, {
+        job_id,
+        sender_user_id: user.id,
+        sender_role: sender_role ?? "unknown",
+        filter_triggered: "layer2_regex",
+        content_hash: contentHash,
+      });
+
+      await maybeFireViolationWebhook(serviceClient, user.id, job_id, sender_role ?? "unknown");
+
+      return json({ blocked: true, message: BLOCK_MESSAGE });
+    }
+    addToServerBuffer(bufferKey, content);
 
     // ── Layer 2: SightEngine text moderation ──────────────────
     const sightEngineUser = Deno.env.get("SIGHTENGINE_API_USER");

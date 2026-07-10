@@ -228,7 +228,9 @@ function Hero() {
               placeholder="Enter your postcode"
               value={heroPostcode}
               onChange={e => setHeroPostcode(e.target.value)}
-              className="px-4 py-3 rounded-sm text-sm font-medium bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/50 flex-1"
+              className={`px-4 py-3 rounded-sm text-sm font-medium bg-white/10 border text-white placeholder-white/40 focus:outline-none focus:border-white/50 flex-1 ${
+                heroPostcode.trim().length > 0 && heroPostcode.trim().length < 3 ? 'border-red-500' : 'border-white/20'
+              }`}
               style={{ minWidth: '140px' }}
             />
             <select
@@ -253,17 +255,23 @@ function Hero() {
           </div>
           <button
             id="main-cta"
+            disabled={!heroPostcode.trim() || !heroJobType}
             onClick={() => {
               const params = new URLSearchParams();
               if (heroPostcode) params.set('postcode', heroPostcode);
               if (heroJobType) params.set('jobType', heroJobType);
               navigate(`/post-job?${params.toString()}&step=3`);
             }}
-            className="inline-flex items-center justify-center gap-2 text-white px-8 py-4 rounded-sm text-sm font-medium hover:-translate-y-0.5 transition-all duration-500 w-full"
+            className="inline-flex items-center justify-center gap-2 text-white px-8 py-4 rounded-sm text-sm font-medium hover:-translate-y-0.5 transition-all duration-500 w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             style={{ background: '#D85A30' }}
           >
             Find a painter/decorator →
           </button>
+          {(!heroPostcode.trim() || !heroJobType) && (
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              Please enter your postcode and select a job type to continue
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-5">

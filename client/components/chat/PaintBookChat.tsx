@@ -88,6 +88,11 @@ export function PaintBookChat({
   const [piiWarning, setPiiWarning] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState("");
 
+  const [showDurationNotice, setShowDurationNotice] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem(`chat_duration_notice_dismissed_${sessionId}`) !== "true";
+  });
+
   // Invoice modal state
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceDescription, setInvoiceDescription] = useState("");
@@ -413,6 +418,23 @@ export function PaintBookChat({
   return (
     <>
       <div className="relative flex flex-col h-full border rounded-xl overflow-hidden">
+        {/* Session duration notice */}
+        {showDurationNotice && (
+          <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-2">
+            <span>⏱</span>
+            <span>Chat sessions are active for 30 minutes. Both parties will be notified 5 minutes before the session ends. Messages are saved and can be reviewed after the session.</span>
+            <button
+              onClick={() => {
+                setShowDurationNotice(false);
+                sessionStorage.setItem(`chat_duration_notice_dismissed_${sessionId}`, "true");
+              }}
+              className="ml-auto text-amber-600 hover:text-amber-800"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Warning banners */}
         {piiWarning && (
           <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex items-center gap-2">

@@ -201,7 +201,7 @@ const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-type Tab = "kyc" | "insurance" | "cscs" | "activate" | "jobs" | "disputes" | "rtw" | "painters";
+type Tab = "kyc" | "insurance" | "cscs" | "activate" | "jobs" | "disputes" | "rtw" | "painters" | "pii";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -609,6 +609,14 @@ export default function AdminDashboard() {
   const [reassigning, setReassigning] = useState(false);
   const [reassignSearch, setReassignSearch] = useState("");
 
+  // PII Violations tab state
+  const [piiViolations, setPiiViolations] = useState<any[]>([]);
+  const [piiCounts, setPiiCounts] = useState<Record<string, number>>({});
+  const [piiSearch, setPiiSearch] = useState("");
+  const [piiLayerFilter, setPiiLayerFilter] = useState("all");
+  const [piiDateFrom, setPiiDateFrom] = useState("");
+  const [piiDateTo, setPiiDateTo] = useState("");
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session || session.user.email !== ADMIN_EMAIL) {
@@ -639,7 +647,8 @@ export default function AdminDashboard() {
       const [
         kycRes, insuranceRes, activateRes,
         sessionsRes, transactionsRes, disputesRes,
-        activePaintersRes, cscsRes, allPaintersRes
+        activePaintersRes, cscsRes, allPaintersRes,
+        piiViolationsRes, piiCountsRes
       ] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/painters?kyc_status=in.(pending,submitted)&select=*&order=created_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?insurance_submitted_at=not.is.null&insurance_verified=eq.false&select=*&order=insurance_submitted_at.desc`, { headers }),
@@ -650,14 +659,18 @@ export default function AdminDashboard() {
         fetch(`${SUPABASE_URL}/rest/v1/painters?is_active=eq.true&select=id`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?cscs_submitted_at=not.is.null&cscs_verified=eq.false&select=*&order=cscs_submitted_at.desc`, { headers }),
         fetch(`${SUPABASE_URL}/rest/v1/painters?select=*&order=created_at.desc`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/pii_violations?select=*&order=created_at.desc&limit=100`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/pii_violations?select=sender_id,id&order=created_at.desc`, { headers }),
       ]);
 
-      const [kyc, insurance, activate, sess, trans, disp, active, cscs, allP] = await Promise.all([
+      const [kyc, insurance, activate, sess, trans, disp, active, cscs, allP, piiV, piiC] = await Promise.all([
         kycRes.json(), insuranceRes.json(), activateRes.json(),
         sessionsRes.json(), transactionsRes.json(), disputesRes.json(),
         activePaintersRes.json(),
         cscsRes.json(),
         allPaintersRes.json(),
+        piiViolationsRes.json(),
+        piiCountsRes.json(),
       ]);
 
       const today = new Date().toISOString().split("T")[0];
@@ -673,6 +686,12 @@ export default function AdminDashboard() {
       setSessions(sess || []);
       setTransactions(trans || []);
       setDisputes(disp || []);
+      setPiiViolations(piiV || []);
+      const piiCountMap: Record<string, number> = {};
+      (piiC || []).forEach((v: any) => {
+        if (v.sender_id) piiCountMap[v.sender_id] = (piiCountMap[v.sender_id] || 0) + 1;
+      });
+      setPiiCounts(piiCountMap);
       setStats({
         pendingKYC: (kyc || []).length,
         pendingInsurance: (insurance || []).length,
@@ -906,6 +925,7 @@ export default function AdminDashboard() {
     { id: "activate", label: "Activate", icon: Users, count: stats.readyToActivate },
     { id: "jobs", label: "All Jobs", icon: Briefcase, count: 0 },
     { id: "disputes", label: "Disputes", icon: AlertTriangle, count: stats.openDisputes },
+    { id: "pii", label: "PII Violations", icon: AlertTriangle, count: piiViolations.length },
   ];
 
   const cardClass = "border border-border rounded-xl p-5 bg-card space-y-3";
@@ -1417,7 +1437,19 @@ export default function AdminDashboard() {
                               <td className="px-4 py-3">{s.job_type || "—"}</td>
                               <td className="px-4 py-3">{s.postcode || "—"}</td>
                               <td className="px-4 py-3">{s.rooms?.length || 0}</td>
-                              <td className="px-4 py-3"><StatusBadge status={s.status || "browsing"} /></td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-1.5">
+                                  <StatusBadge status={s.status || "browsing"} />
+                                  {(() => {
+                                    const piiCount = piiViolations.filter((v: any) => v.job_id === s.id).length;
+                                    return piiCount > 0 ? (
+                                      <span className="text-xs px-2 py-0.5 rounded font-medium bg-red-900/40 text-red-400 whitespace-nowrap">
+                                        ⚠️ {piiCount} PII attempts
+                                      </span>
+                                    ) : null;
+                                  })()}
+                                </div>
+                              </td>
                               <td className="px-4 py-3">{s.transactions?.[0]?.amount ? `£${Number(s.transactions[0].amount).toFixed(2)}` : "—"}</td>
                               <td className="px-4 py-3 text-green-400">{s.transactions?.[0]?.painter_payout ? `£${Number(s.transactions[0].painter_payout).toFixed(2)}` : "—"}</td>
                               <td className="px-4 py-3 text-muted-foreground">{s.transactions?.[0]?.commission_rate ? `${s.transactions[0].commission_rate}%` : "—"}</td>
@@ -1559,6 +1591,14 @@ export default function AdminDashboard() {
                               <span className={`text-xs px-2 py-0.5 rounded font-medium ${p.cscs_verified ? "bg-green-900/40 text-green-400" : p.cscs_submitted_at ? "bg-amber-900/40 text-amber-400" : "bg-gray-900/40 text-gray-400"}`}>
                                 {p.cscs_verified ? "✓ CSCS" : p.cscs_submitted_at ? "⏳ CSCS" : "No CSCS"}
                               </span>
+                              {(piiCounts[p.user_id] || 0) > 0 && (
+                                <span
+                                  className="text-xs px-2 py-0.5 rounded font-medium bg-red-900/40 text-red-400 cursor-pointer"
+                                  onClick={() => setActiveTab("pii")}
+                                >
+                                  ⚠️ {piiCounts[p.user_id] || 0} PII violations
+                                </span>
+                              )}
                             </div>
                           </div>
                           {p.is_blocklisted && (
@@ -1783,6 +1823,135 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* PII VIOLATIONS */}
+            {activeTab === "pii" && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold">PII Violations Log</h2>
+
+                {(() => {
+                  const filtered = piiViolations.filter((v: any) => {
+                    if (piiSearch) {
+                      const q = piiSearch.toLowerCase();
+                      const matchesEmail = (v.sender_email || "").toLowerCase().includes(q);
+                      const matchesJob = (v.job_id || "").toLowerCase().includes(q);
+                      if (!matchesEmail && !matchesJob) return false;
+                    }
+                    if (piiLayerFilter !== "all" && v.detection_layer !== piiLayerFilter) return false;
+                    if (piiDateFrom && new Date(v.created_at) < new Date(piiDateFrom)) return false;
+                    if (piiDateTo && new Date(v.created_at) > new Date(piiDateTo + "T23:59:59")) return false;
+                    return true;
+                  });
+                  const layer1Count = piiViolations.filter((v: any) => v.detection_layer === "client").length;
+                  const layer2Count = piiViolations.filter((v: any) => v.detection_layer === "server").length;
+                  const uniqueSenders = new Set(piiViolations.map((v: any) => v.sender_id).filter(Boolean)).size;
+
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="border border-border rounded-lg p-3 bg-card">
+                          <p className="text-xs text-muted-foreground mb-1">Total Violations</p>
+                          <p className="text-2xl font-bold text-red-400">{piiViolations.length}</p>
+                        </div>
+                        <div className="border border-border rounded-lg p-3 bg-card">
+                          <p className="text-xs text-muted-foreground mb-1">Layer 1 (Client)</p>
+                          <p className="text-2xl font-bold text-amber-400">{layer1Count}</p>
+                        </div>
+                        <div className="border border-border rounded-lg p-3 bg-card">
+                          <p className="text-xs text-muted-foreground mb-1">Layer 2 (Server)</p>
+                          <p className="text-2xl font-bold text-purple-400">{layer2Count}</p>
+                        </div>
+                        <div className="border border-border rounded-lg p-3 bg-card">
+                          <p className="text-xs text-muted-foreground mb-1">Unique Senders</p>
+                          <p className="text-2xl font-bold text-blue-400">{uniqueSenders}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <input
+                          type="text"
+                          placeholder="Search by sender email or job id..."
+                          value={piiSearch}
+                          onChange={e => setPiiSearch(e.target.value)}
+                          className="border border-border bg-background text-sm rounded-md px-3 py-2 flex-1 min-w-[200px] focus:outline-none focus:border-foreground"
+                        />
+                        <select
+                          value={piiLayerFilter}
+                          onChange={e => setPiiLayerFilter(e.target.value)}
+                          className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                        >
+                          <option value="all">All Layers</option>
+                          <option value="client">Client (Layer 1)</option>
+                          <option value="server">Server (Layer 2)</option>
+                        </select>
+                        <input
+                          type="date"
+                          value={piiDateFrom}
+                          onChange={e => setPiiDateFrom(e.target.value)}
+                          className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                          title="From date"
+                        />
+                        <input
+                          type="date"
+                          value={piiDateTo}
+                          onChange={e => setPiiDateTo(e.target.value)}
+                          className="border border-border bg-background text-sm rounded-md px-3 py-2 focus:outline-none focus:border-foreground"
+                          title="To date"
+                        />
+                        {(piiSearch || piiLayerFilter !== "all" || piiDateFrom || piiDateTo) && (
+                          <button
+                            onClick={() => { setPiiSearch(""); setPiiLayerFilter("all"); setPiiDateFrom(""); setPiiDateTo(""); }}
+                            className="border border-border text-sm px-3 py-2 rounded-md hover:bg-accent transition-colors text-muted-foreground"
+                          >
+                            Clear Filters
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Showing {filtered.length} of {piiViolations.length} violations
+                      </p>
+
+                      {filtered.length === 0 ? (
+                        <div className="border border-border rounded-xl p-8 text-center text-muted-foreground">
+                          <AlertTriangle className="h-8 w-8 mx-auto mb-3 opacity-40" />
+                          <p>No PII violations found</p>
+                        </div>
+                      ) : filtered.map((v: any) => (
+                        <div key={v.id} className="border border-border rounded-xl p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium">{v.sender_email || "Unknown sender"}</p>
+                              <p className="text-xs text-muted-foreground">Role: {v.sender_role || "unknown"}</p>
+                            </div>
+                            <span className={`text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap ${
+                              v.detection_layer === "client" ? "bg-amber-900/40 text-amber-400" : "bg-purple-900/40 text-purple-400"
+                            }`}>
+                              {v.detection_layer === "client" ? "Client (Layer 1)" : "Server (Layer 2)"}
+                            </span>
+                          </div>
+                          {v.job_id && (
+                            <button
+                              onClick={() => { setJobSearch(`pbc-${v.job_id.slice(-6).toLowerCase()}`); setActiveTab("jobs"); }}
+                              className="text-xs text-blue-400 underline hover:text-blue-300"
+                            >
+                              Job: PBC-{v.job_id.slice(-6).toUpperCase()} →
+                            </button>
+                          )}
+                          {v.blocked_content && (
+                            <p className="text-xs bg-accent/40 border border-border rounded px-2 py-1.5 font-mono">
+                              {v.blocked_content.slice(0, 100)}{v.blocked_content.length > 100 ? "..." : ""}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(v.created_at).toLocaleString("en-GB")}
+                          </p>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
             )}
           </>

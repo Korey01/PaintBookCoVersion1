@@ -34,9 +34,10 @@ const corsHeaders = {
 // ── Block message shown to users ──────────────────────────────────────────────
 
 const BLOCK_MESSAGE =
-  "For security, contact details cannot be shared in chat. " +
-  "Once your booking is confirmed, PaintBookCo shares contact information " +
-  "through official platform communications only.";
+  "🚫 This message has been blocked. PaintBookCo does not allow sharing of contact details, " +
+  "personal information, or off-platform communication in chat. Contact details are only " +
+  "shared by PaintBookCo once an agreement has been reached and escrow has been funded. " +
+  "Repeated violations may result in account suspension.";
 
 // ── Server-side PII patterns (fast path, avoids SightEngine call) ─────────────
 
@@ -48,6 +49,29 @@ const SERVER_PII_PATTERNS = [
   /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i,
   /(whatsapp|telegram|signal|snapchat|instagram|facebook|tiktok|twitter|linkedin)/i,
   /\d+\s+[a-zA-Z]+\s+(street|st|road|rd|avenue|ave|lane|ln|drive|dr|close|cl|way)\b/i,
+
+  // Intent patterns — asking for contact details
+  /\b(what'?s?|give me|send me|drop|share|tell me|provide|can i (get|have)|let me (get|have)|do you have)\s+your\s*(number|phone|mobile|email|address|postcode|post\s*code|contact|details|whatsapp|instagram|facebook|telegram|signal)\b/i,
+  /\b(how (can|do) i (contact|reach|call|text|ring|get) you)\b/i,
+  /\b(can (i|we) (call|talk|chat|speak|connect|communicate) (you|outside|off|away|elsewhere))\b/i,
+  /\b(take this (off|outside|away from) (platform|here|chat|app))\b/i,
+  /\b(let'?s? (talk|chat|speak|connect|communicate) (off|outside|elsewhere|directly|privately))\b/i,
+  /\b(dm me|text me|call me|ring me|message me|contact me|reach me|find me)\b/i,
+  /\b(add me on|find me on|search (for )?me on|follow me on)\b/i,
+
+  // Intent patterns — offering contact details
+  /\b(my (number|phone|mobile|email|address|postcode|post\s*code|contact|whatsapp) (is|:|'?s?|=))/i,
+  /\b(here'?s? my (number|phone|mobile|email|address|postcode|contact|details|whatsapp))\b/i,
+  /\b(you can (call|text|ring|reach|contact|email|message) me (at|on|via|through)?)\b/i,
+  /\b(reach me (at|on|via|through|by))\b/i,
+  /\b(contact me (at|on|via|through|by))\b/i,
+  /\b(i'?m? (at|on|available (at|on)))\s+[\d\+]/i,
+  /\b(this is (my )?(number|phone|mobile|email|contact|whatsapp|address))\b/i,
+  /\b(call me on|ring me on|text me on|message me on|whatsapp me (on|at)?)\b/i,
+
+  // Evasion attempts
+  /\b(outside|off([ -]?platform)?|away from (here|chat|this))\b/i,
+  /\b(privately|in private|direct(ly)?|one[ -]on[ -]one)\b.*\b(contact|speak|talk|chat)\b/i,
 ];
 
 function serverDetectPII(text: string): boolean {
@@ -153,6 +177,22 @@ Deno.serve(async (req) => {
     // ── SHA-256 hash of content (never store raw blocked text) ─
     const contentHash = await sha256Hex(content);
 
+    // ── PII violations log (best-effort, never blocks message sending) ─
+    async function logPiiViolation(): Promise<void> {
+      try {
+        await serviceClient.from("pii_violations").insert({
+          job_id: job_id || null,
+          sender_id: user.id,
+          sender_role: sender_role || "unknown",
+          sender_email: user.email,
+          blocked_content: content?.substring(0, 500),
+          detection_layer: layer1_blocked ? "client" : "server",
+        });
+      } catch (e) {
+        console.error("pii_violations insert error:", e);
+      }
+    }
+
     // ── Layer 1 audit log ─────────────────────────────────────
     if (layer1_blocked) {
       await logBlock(serviceClient, {
@@ -164,6 +204,7 @@ Deno.serve(async (req) => {
       });
 
       await maybeFireViolationWebhook(serviceClient, user.id, job_id, sender_role ?? "unknown");
+      await logPiiViolation();
 
       return json({ blocked: true, message: BLOCK_MESSAGE });
     }
@@ -180,6 +221,7 @@ Deno.serve(async (req) => {
       });
 
       await maybeFireViolationWebhook(serviceClient, user.id, job_id, sender_role ?? "unknown");
+      await logPiiViolation();
 
       return json({ blocked: true, message: BLOCK_MESSAGE });
     }
@@ -215,6 +257,7 @@ Deno.serve(async (req) => {
       const errText = await seRes.text().catch(() => "(unreadable)");
       console.error(`SightEngine error ${seRes.status}: ${errText}`);
       // Fail closed — block the message if moderation service is down
+      await logPiiViolation();
       return json({ blocked: true, message: BLOCK_MESSAGE });
     }
 
@@ -240,6 +283,7 @@ Deno.serve(async (req) => {
       });
 
       await maybeFireViolationWebhook(serviceClient, user.id, job_id, sender_role ?? "unknown");
+      await logPiiViolation();
 
       console.log(
         `Layer 2 blocked message. Categories: ${matchedCategories.join(", ")}. ` +

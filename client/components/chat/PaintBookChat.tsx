@@ -51,6 +51,29 @@ const PII_PATTERNS: RegExp[] = [
   /\b(whatsapp|telegram|signal|snapchat|instagram|facebook|fb\.com|tiktok|twitter|linkedin|messenger|wechat|viber)\b/gi,
   // Street addresses — number followed by road type
   /\d+\s+[a-zA-Z]+\s+(street|st|road|rd|avenue|ave|lane|ln|drive|dr|close|cl|way|court|ct|place|pl|crescent|cres|terrace|ter|grove|row|gardens|gate)\b/gi,
+
+  // Intent patterns — asking for contact details
+  /\b(what'?s?|give me|send me|drop|share|tell me|provide|can i (get|have)|let me (get|have)|do you have)\s+your\s*(number|phone|mobile|email|address|postcode|post\s*code|contact|details|whatsapp|instagram|facebook|telegram|signal)\b/gi,
+  /\b(how (can|do) i (contact|reach|call|text|ring|get) you)\b/gi,
+  /\b(can (i|we) (call|talk|chat|speak|connect|communicate) (you|outside|off|away|elsewhere))\b/gi,
+  /\b(take this (off|outside|away from) (platform|here|chat|app))\b/gi,
+  /\b(let'?s? (talk|chat|speak|connect|communicate) (off|outside|elsewhere|directly|privately))\b/gi,
+  /\b(dm me|text me|call me|ring me|message me|contact me|reach me|find me)\b/gi,
+  /\b(add me on|find me on|search (for )?me on|follow me on)\b/gi,
+
+  // Intent patterns — offering contact details
+  /\b(my (number|phone|mobile|email|address|postcode|post\s*code|contact|whatsapp) (is|:|'?s?|=))/gi,
+  /\b(here'?s? my (number|phone|mobile|email|address|postcode|contact|details|whatsapp))\b/gi,
+  /\b(you can (call|text|ring|reach|contact|email|message) me (at|on|via|through)?)\b/gi,
+  /\b(reach me (at|on|via|through|by))\b/gi,
+  /\b(contact me (at|on|via|through|by))\b/gi,
+  /\b(i'?m? (at|on|available (at|on)))\s+[\d\+]/gi,
+  /\b(this is (my )?(number|phone|mobile|email|contact|whatsapp|address))\b/gi,
+  /\b(call me on|ring me on|text me on|message me on|whatsapp me (on|at)?)\b/gi,
+
+  // Evasion attempts
+  /\b(outside|off([ -]?platform)?|away from (here|chat|this))\b/gi,
+  /\b(privately|in private|direct(ly)?|one[ -]on[ -]one)\b.*\b(contact|speak|talk|chat)\b/gi,
 ];
 
 function containsHiddenPhone(text: string): boolean {

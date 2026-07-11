@@ -69,13 +69,16 @@ Deno.serve(async (req) => {
     );
 
     // Load transaction with painter details
-    const { data: transaction } = await serviceClient
+    const { data: transaction, error: txError } = await serviceClient
       .from("transactions")
       .select("*, painters(first_name, last_name, email, completed_jobs), sessions(id, customer_token, status, description, job_type, city, postcode)")
       .eq("id", transaction_id)
       .single();
 
-    if (!transaction) return json({ error: "Transaction not found" }, 404);
+    if (txError || !transaction) {
+      console.error("Transaction lookup failed:", txError);
+      return json({ error: "Transaction not found", detail: txError?.message }, 404);
+    }
 
     // Verify customer token
     if (transaction.customer_token !== customer_token) {

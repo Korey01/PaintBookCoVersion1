@@ -43,7 +43,7 @@ Payment will be released to the painter when the customer confirms the job is co
 CANCELLATION TERMS:
 If customer cancels with more than 7 days notice: 10% of net job value paid to painter.
 If customer cancels with 3-7 days notice: 20% of net job value paid to painter.
-If customer cancels with less than 72 hours notice: 30% of net job value paid to painter.
+If customer cancels with less than 72 hours notice: 30% of net job value paid to painter. IMPORTANT: PaintBookCo's platform commission is retained in full and is non-refundable once payment has been made, regardless of when cancellation occurs, in addition to the painter cancellation percentage stated above.
 
 DISPUTE RESOLUTION:
 Disputes are handled first through PaintBookCo mediation at no cost. If unresolved, either party may escalate to formal Transpact arbitration (£20 per party, refunded to the winning party). The Transpact-nominated independent referee makes a binding decision under the Arbitration Act 1996.
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     // Load transaction with painter details
     const { data: transaction, error: txError } = await serviceClient
       .from("transactions")
-      .select("*, painters(first_name, last_name, email, completed_jobs), sessions(id, customer_token, status, description, job_type, city, postcode)")
+      .select("*, painters(first_name, last_name, email, completed_jobs), sessions(id, customer_token, status, job_description, job_type, city, postcode)")
       .eq("id", transaction_id)
       .single();
 
@@ -84,6 +84,8 @@ Deno.serve(async (req) => {
     if (transaction.customer_token !== customer_token) {
       return json({ error: "Invalid customer token" }, 403);
     }
+
+    const painter = transaction.painters;
 
     // If already has a Transpact transaction, return existing payment URL
     if (transaction.transpact_transaction_id) {
@@ -171,7 +173,6 @@ Deno.serve(async (req) => {
       return json({ error: "Payment can only be initiated for invoice_sent transactions" }, 400);
     }
 
-    const painter = transaction.painters;
     if (!painter) return json({ error: "Painter not found" }, 404);
 
     const amount = Number(transaction.amount);
@@ -186,7 +187,7 @@ Deno.serve(async (req) => {
     const painterPayout = parseFloat((amount - commissionAmount).toFixed(2));
 
     const invoiceRef = transaction.invoice_id ?? `PBC-${transaction_id.slice(-6).toUpperCase()}`;
-    const jobDescription = transaction.sessions?.description?.trim() ||
+    const jobDescription = transaction.sessions?.job_description?.trim() ||
                            transaction.sessions?.job_type ||
                            "Painting and decorating services as agreed between the parties.";
     const jobAddress = `${transaction.sessions?.city || ""}${transaction.sessions?.city && transaction.sessions?.postcode ? ", " : ""}${transaction.sessions?.postcode || ""}`.trim() || "Address provided to painter upon escrow funding";
